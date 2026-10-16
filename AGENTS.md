@@ -56,7 +56,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `build_admin`, `dump_schema` (29 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `build_admin`, `dump_schema` (48 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (27 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/brands/` | two example brands: `freshorama` (dark SaaS), `minimal-light` |
@@ -81,7 +81,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
 cd app && npm test                          # 27 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 29 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 48 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -133,13 +133,20 @@ Run workflow) or push a `v*` tag. Never add plain-push triggers; put
 is committed — regenerate it whenever `Cargo.toml` changes (the nix
 `cargoLock` and guix vendor builds depend on it).
 
-## State as of 2026-10
+## State as of 2026-10-17
 
 - Shipped on `ai/main` (default branch): plugin, thin client, demo
   backend, Nix + Guix packaging, README, AI-REVIEW. `ai/mvp-build`
   (demo-CI fixes + pinned Cargo.lock) is merged in and can be pruned.
-- Open, roughly by priority: AI-REVIEW.org P0 security review; CSP is
-  `null` in `tauri.conf.json`; placeholder icons; demo-CI
-  android/nix/guix jobs never went green; web-mode secrets in
-  localStorage; `plugin/src/admincraft.egg-info/` is tracked
-  build output that should be untracked and ignored.
+- Fixed & merged on `ai/main` (P0→P1; `pytest` 48/48): `brand.json` closed
+  schema + realpath/commonpath jail on all writes; demo-backend dev-only
+  DEBUG/CORS startup warning (`DEMO_DEV=1` ack); `api.ts` secret redaction +
+  credentials stripped from URLs; `chat.ts` SSE oversized-line cap (1 MB,
+  skip+warn); `secrets.ts` one-time web-localStorage SECURITY warning;
+  `tauri.conf.json` CSP `null` → working dev policy (localhost/ws + inline
+  styles, no wildcards); `RecordForm.buildPayload` omits empty non-nullable
+  fields; `DataTable` nested `{#each}` keyed on `col.name`; widgets
+  auto-imported via `import.meta.glob` (`meta{title,size}`).
+- Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still
+  in localStorage (accepted P2 — now warned, not eliminated); placeholder
+  icons; demo-CI android/nix/guix jobs never went green.
