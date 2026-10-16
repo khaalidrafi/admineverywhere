@@ -172,3 +172,136 @@ class TestInjectBrand:
         (tmp_path / "brand.json").write_text(json.dumps(VALID_BRAND))
         with pytest.raises(FileNotFoundError):
             branding.inject_brand(app_dir, tmp_path / "brand.json")
+
+
+# ---------------------------------------------------------------------------
+# P0 hardening: strict (closed) brand.json schema + path jail on every
+# write/copy. Written BEFORE the fix — these are red against the lenient
+# implementation (see commit history).
+# ---------------------------------------------------------------------------
+import os  # noqa: E402 (kept next to the jail tests that use realpath)
+
+
+class TestValidateBrandStrictSchema:
+    def test_unknown_top_level_key_rejected(self):
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand["primaryColour"] = "#000000"  # typo'd key: dead config, must be loud
+        errors = branding.validate_brand(brand)
+        assert any("unknown keys" in e and "primaryColour" in e for e in errors)
+
+    def test_unknown_color_key_rejected(self):
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand["colors"]["outline"] = "#000000"
+        errors = branding.validate_brand(brand)
+        assert any("unknown" in e and "outline" in e for e in errors)
+
+    def test_tagline_wrong_type_rejected(self):
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand["tagline"] = ["manage", "things"]
+        assert any("tagline" in e for e in branding.validate_brand(brand))
+
+    def test_tagline_too_long_rejected(self):
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand["tagline"] = "x" * 141
+        assert any("tagline" in e for e in branding.validate_brand(brand))
+
+    def test_asset_wrong_type_rejected(self):
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand["logo"] = 42
+        assert any("logo" in e for e in branding.validate_brand(brand))
+
+    @pytest.mark.parametrize("bad", [
+        "/etc/passwd",               # absolute-path injection
+        "../../secret.svg",          # ../ chain out of the brand folder
+        "assets/../../secret.svg",   # ../ buried mid-path
+        "C:\\x\\logo.svg",           # windows-style absolute
+    ])
+    def test_escaping_asset_paths_rejected(self, bad):
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand["logo"] = bad
+        assert any("logo" in e for e in branding.validate_brand(brand))
+
+
+class TestJail:
+    """_jailed(): the realpath + commonpath guard behind every read/write."""
+
+    def test_absolute_path_outside_refused(self, tmp_path):
+        with pytest.raises(ValueError, match="escape"):
+            branding._jailed(tmp_path, "/etc/passwd", "test")
+
+    def test_dotdot_chain_refused(self, tmp_path):
+        with pytest.raises(ValueError, match="escape"):
+            branding._jailed(tmp_path, "../evil.css", "test")
+
+    def test_legal_absolute_spelling_allowed(self, tmp_path):
+        # absolute path that already resolves INSIDE the base is accepted
+        target = branding._jailed(tmp_path, str(tmp_path / "ok.css"), "test")
+        assert target == Path(os.path.realpath(tmp_path / "ok.css"))
+
+
+class TestInjectBrandTraversal:
+    """Hostile brand.json / planted symlinks must not read or write outside."""
+
+    @staticmethod
+    def _brand_with_assets(tmp_path, **overrides):
+        brand_dir = tmp_path / "brand"
+        (brand_dir / "assets").mkdir(parents=True)
+        (brand_dir / "assets" / "logo.svg").write_bytes(TINY_SVG)
+        (brand_dir / "assets" / "icon.png").write_bytes(TINY_PNG)
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand.update(overrides)
+        (brand_dir / "brand.json").write_text(json.dumps(brand))
+        return brand_dir / "brand.json"
+
+    def test_dotdot_logo_source_refused(self, tmp_path, app_dir):
+        # "../secret.svg" would copy a file from OUTSIDE the brand folder
+        # into the shipped app (exfiltration) — must be refused
+        secret = tmp_path / "secret.svg"
+        secret.write_bytes(TINY_SVG)
+        brand_path = self._brand_with_assets(tmp_path, logo="../secret.svg")
+        with pytest.raises(ValueError, match="logo"):
+            branding.inject_brand(app_dir, brand_path)
+        assert not (app_dir / "public" / "secret.svg").exists()
+
+    def test_symlinked_asset_source_refused(self, tmp_path, app_dir):
+        # brand.json is clean; the asset itself symlinks outside the brand folder
+        secret = tmp_path / "id_rsa"
+        secret.write_bytes(b"PRIVATE")
+        brand_path = self._brand_with_assets(tmp_path)
+        (brand_path.parent / "assets" / "logo.svg").unlink()
+        (brand_path.parent / "assets" / "logo.svg").symlink_to(secret)
+        with pytest.raises(ValueError, match="logo"):
+            branding.inject_brand(app_dir, brand_path)
+        assert not (app_dir / "public" / "logo.svg").exists()
+
+    def test_symlinked_css_destination_refused(self, tmp_path, app_dir):
+        # planted symlink: public/brand.css -> file outside the app
+        victim = tmp_path / "stolen.txt"
+        victim.write_text("KEEP ME")
+        (app_dir / "public" / "brand.css").symlink_to(victim)
+        brand_path = self._brand_with_assets(tmp_path)
+        with pytest.raises(ValueError, match="brand.css"):
+            branding.inject_brand(app_dir, brand_path)
+        assert victim.read_text() == "KEEP ME"  # not clobbered through the link
+
+    def test_symlinked_logo_destination_refused(self, tmp_path, app_dir):
+        # shutil.copy2 follows a planted destination symlink — must be refused
+        victim = tmp_path / "stolen.png"
+        victim.write_bytes(b"KEEP ME")
+        (app_dir / "public" / "logo.svg").symlink_to(victim)
+        brand_path = self._brand_with_assets(tmp_path)
+        with pytest.raises(ValueError, match="logo"):
+            branding.inject_brand(app_dir, brand_path)
+        assert victim.read_bytes() == b"KEEP ME"
+
+    def test_symlinked_tauri_conf_refused(self, tmp_path, app_dir):
+        # tauri.conf.json symlinked outside src-tauri/ must not be patched
+        victim = tmp_path / "tauri.victim.json"
+        victim.write_text("{}")
+        conf = app_dir / "src-tauri" / "tauri.conf.json"
+        conf.unlink()
+        conf.symlink_to(victim)
+        brand_path = self._brand_with_assets(tmp_path)
+        with pytest.raises(ValueError, match="tauri.conf.json"):
+            branding.inject_brand(app_dir, brand_path)
+        assert victim.read_text() == "{}"
