@@ -1,13 +1,13 @@
 # AI-REVIEW.org — review priorities for humans
 
-Generated app: django-ai-dashboard (Django plugin + Tauri 2/Svelte 5 thin client).
+Generated app: admincraft (Django plugin + Tauri 2/Svelte 5 thin client).
 AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk first.
 
 * TODO P0 — security & money-adjacent paths (review before any client demo)
   - [ ] app/src/lib/api.ts        — token handling, error paths, no secrets in URLs
   - [ ] app/src/lib/chat.ts       — API key flow; SSE parser on hostile chunks
   - [ ] app/src/lib/secrets.ts    — keyring vs localStorage fallback (web mode warning)
-  - [ ] plugin/src/ai_dashboard/branding.py — brand.json validation; file writes (path traversal?)
+  - [ ] plugin/src/admincraft/branding.py — brand.json validation; file writes (path traversal?)
   - [ ] demo-backend settings     — DEBUG, CORS allow-all is DEV ONLY; token auth scheme
   - [ ] src-tauri/tauri.conf.json — csp: null currently; set a CSP before production
 * TODO P1 — correctness core
