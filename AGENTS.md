@@ -29,6 +29,29 @@ Product constraints — do not relax:
   `import.meta.glob`. No registry to edit.
 - Deliberately out of scope: virtual scrolling, command palette, alerts.
 
+## Product spec (from MVP brief)
+
+Acceptance criteria the brief pins down beyond the constraints above.
+
+- **AI chat panel** — one floating panel, opened by Ctrl+K or a button.
+  Settings are *exactly* three inputs — base URL, API key, model name —
+  under the hint "Works with OpenAI, Groq, Ollama & more". Streaming is
+  non-negotiable; the system prompt embeds a schema summary so answers
+  track the live API, and the key lives in the Tauri keyring. The panel
+  stays fully functional when unconfigured: a friendly setup prompt, not
+  an error. The v2 exclusions above (no tool calling / history / provider
+  abstraction) still apply.
+- **CRUD spec** — `RecordForm` renders text, number, bool, date,
+  enum-select and FK-dropdown fields; schema-driven, graceful when the
+  schema omits constraints. `DataTable` = pagination + search + delete.
+  Login is token auth against `config.apiUrl` with a settings field.
+- **Scope rationale & demo flow** — the out-of-scope line above plus
+  multi-provider abstraction, tool calling and history are all *v2*; the
+  nav is built so ⌘K drops in later. Definition of done (demo flow):
+  login `admin` / `admin123` → dashboard widgets → Product table → New
+  Order → Ctrl+K streams (via `scripts/mock_openai.js` on `:11435`) →
+  rebrand with `build_admin`.
+
 ## Layout
 
 | path | role |
