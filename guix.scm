@@ -1,4 +1,4 @@
-;;; django-ai-dashboard — Guix package definition
+;;; admincraft — Guix package definition
 ;;;
 ;;; Written against the Guix manual ("Defining Packages" + "Build Systems").
 ;;; The official cargo-build-system expects every crate as a separate Guix
@@ -29,7 +29,7 @@
   ;; Repo checkout including the prebuilt web bundle (app/dist) and the
   ;; vendored crates (app/src-tauri/vendor) — everything except bulky
   ;; build caches.
-  (local-file "." "django-ai-dashboard-checkout"
+  (local-file "." "admincraft-checkout"
               #:recursive? #t
               #:select? (lambda (file stat)
                           (not (or (string-contains file "node_modules")
@@ -44,9 +44,9 @@
                                    (string-contains file "/result")
                                    (string-contains file ".tar.gz"))))))
 
-(define-public django-ai-dashboard
+(define-public admincraft
   (package
-    (name "django-ai-dashboard")
+    (name "admincraft")
     (version "0.1.0")
     (source %source)
     (build-system gnu-build-system)
@@ -74,31 +74,31 @@
           (replace 'install
             (lambda* (#:key outputs #:allow-other-keys)
               (let ((out (assoc-ref outputs "out")))
-                (install-file "app/src-tauri/target/release/django-ai-dashboard"
+                (install-file "app/src-tauri/target/release/admincraft"
                               (string-append out "/bin"))
                 (let ((icons (string-append out "/share/icons/hicolor/128x128/apps"))
                       (apps (string-append out "/share/applications")))
                   (mkdir-p icons)
                   (install-file "app/src-tauri/icons/128x128.png"
-                                (string-append icons "/django-ai-dashboard.png"))
+                                (string-append icons "/admincraft.png"))
                   (mkdir-p apps)
                   (call-with-output-file
-                      (string-append apps "/com.khaalidrafi.django-ai-dashboard.desktop")
+                      (string-append apps "/com.khaalidrafi.admincraft.desktop")
                     (lambda (port)
                       (format port
                               "[Desktop Entry]~%
 Type=Application~%
-Name=Django AI Dashboard~%
+Name=Admincraft~%
 Comment=Branded schema-driven admin for Django REST Framework APIs~%
-Exec=django-ai-dashboard~%
-Icon=django-ai-dashboard~%
+Exec=admincraft~%
+Icon=admincraft~%
 Categories=Development;Utility;~%")))))))
           (add-after 'install 'wrap-runtime
             (lambda* (#:key inputs outputs #:allow-other-keys)
               (let ((out (assoc-ref outputs "out"))
                     (glib-networking (assoc-ref inputs "glib-networking"))
                     (gtk (assoc-ref inputs "gtk+")))
-                (wrap-program (string-append out "/bin/django-ai-dashboard")
+                (wrap-program (string-append out "/bin/admincraft")
                   `("GIO_EXTRA_MODULES" ":" prefix
                     (,(string-append glib-networking "/lib/gio/modules")))
                   `("XDG_DATA_DIRS" ":" suffix
@@ -109,14 +109,14 @@ Categories=Development;Utility;~%")))))))
     (native-inputs (list pkg-config rust `(,rust "cargo")))
     (synopsis "Branded, schema-driven admin client for Django REST Framework APIs")
     (description
-     "django-ai-dashboard is a Tauri 2 thin client that renders a complete
+     "admincraft is a Tauri 2 thin client that renders a complete
 branded CRUD admin from the drf-spectacular OpenAPI schema of any Django
 REST Framework backend, with a streaming OpenAI-compatible assistant.  Point
 it at your API, log in with token credentials, and manage every model — no
 per-model configuration.  The login screen accepts the API URL, so the same
 binary works against any DRF deployment.")
-    (home-page "https://github.com/khaalidrafi/django-ai-dashboard")
+    (home-page "https://github.com/khaalidrafi/admincraft")
     (license license:expat)))
 
 ;; `guix build -f guix.scm` evaluates this file; return the package.
-django-ai-dashboard
+admincraft
