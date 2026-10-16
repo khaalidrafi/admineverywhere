@@ -81,6 +81,9 @@
           <input id="api" class="input" type="url" bind:value={apiUrl}
                  placeholder="https://your-api.example.com" />
           <div class="mt-1 text-[11px] text-text/40">DRF + drf-spectacular backend (token auth)</div>
+          <div class="mt-2 text-[11px] text-text/40">
+            No API at hand? Run the bundled demo backend — see <code>README → demo-backend/</code> (admin / admin123).
+          </div>
         </div>
 
         {#if error}
