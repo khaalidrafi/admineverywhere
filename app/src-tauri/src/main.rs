@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    django_ai_dashboard_lib::run()
+    admincraft_lib::run()
 }

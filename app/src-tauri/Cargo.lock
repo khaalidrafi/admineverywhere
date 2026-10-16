@@ -621,7 +621,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "django-ai-dashboard"
+name = "admincraft"
 version = "0.1.0"
 dependencies = [
  "keyring",
