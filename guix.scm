@@ -65,9 +65,12 @@
                       (string-append
                        "{\"build\":{\"frontendDist\":\""
                        (getcwd) "/app/dist\"}}"))
-              (invoke "cargo" "build"
-                      "--release" "--offline" "--frozen"
-                      "--manifest-path" "app/src-tauri/Cargo.toml")))
+              ;; cargo discovers .cargo/config.toml by walking up from the
+              ;; CWD (not the manifest path), so build from app/src-tauri —
+              ;; that's where `cargo vendor` put .cargo/config.toml.
+              (with-directory-excursion "app/src-tauri"
+                (invoke "cargo" "build"
+                        "--release" "--offline" "--frozen"))))
           (replace 'install
             (lambda* (#:key outputs #:allow-other-keys)
               (let ((out (assoc-ref outputs "out")))
