@@ -1,5 +1,5 @@
 /** chat.ts tests — SSE parser edge cases (network chunking is hostile). */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { chatEndpoint, createSSEParser, systemPrompt } from "../chat";
 
 describe("createSSEParser", () => {
@@ -45,6 +45,21 @@ describe("createSSEParser", () => {
     expect(got).toEqual([]);
     feed(":1}\n");
     expect(got).toEqual(['{"partial":1}']);
+  });
+
+  it("drops oversized SSE lines (cap ~1MB, skip+log)", () => {
+    const { got, feed } = collect();
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const hugeLine = "x".repeat(1024 * 1024 + 100); // >1MB without newline
+    feed(hugeLine);
+    expect(got).toEqual([]);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[chat] Dropping oversized SSE line fragment")
+    );
+    // After dropping, can still parse normal events
+    feed('\ndata: {"ok":true}\n\n');
+    expect(got).toEqual(['{"ok":true}']);
+    warnSpy.mockRestore();
   });
 });
 
