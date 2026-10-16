@@ -53,9 +53,9 @@ jobs:
         run: |
           git config user.name "GLM-5.3"
           git config user.email "glm-5.3@z.ai"
-          if git diff --quiet -- app/src-tauri/Cargo.lock; then
-            echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          else
+          # NOTE: git diff --quiet does NOT see untracked files — a brand-new
+          # Cargo.lock is untracked — so test with status --porcelain.
+          if git status --porcelain -- app/src-tauri/Cargo.lock | grep -q .; then
             if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
               echo "Cargo.lock changed on a tag build — dispatch from a branch first." >&2
               exit 1
@@ -67,6 +67,8 @@ jobs:
               -m "Co-authored-by: Khalid Rafi <khaalidrafi@gmail.com>"
             git push
             echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
           fi
 
   # ------------------------------------------------------------------ web ---
@@ -204,11 +206,15 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
-      - name: Install NDK
+      # No android-actions/setup-android here: it chokes installing the
+      # deprecated `tools` package. GitHub runners already ship the SDK
+      # (ANDROID_HOME) with licenses pre-accepted — we only add the NDK.
+      - name: Install NDK into the preinstalled SDK
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "ndk;27.0.12077973"
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" --install "ndk;27.0.12077973" | tail -n 2
+          test -d "$ANDROID_HOME/ndk/27.0.12077973"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> "$GITHUB_ENV"
           echo "NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
