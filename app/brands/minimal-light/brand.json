@@ -1,0 +1,15 @@
+{
+  "appName": "Ledgerly",
+  "tagline": "Quiet tools for careful teams",
+  "logo": "assets/logo.svg",
+  "favicon": "assets/icon.png",
+  "colors": {
+    "primary": "#2563eb",
+    "accent": "#059669",
+    "bg": "#faf9f7",
+    "surface": "#ffffff",
+    "text": "#1c1917"
+  },
+  "radius": "0.5rem",
+  "font": "Space Grotesk"
+}
