@@ -54,3 +54,4 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   3. Node >= 16 fires req.on('close') right after body 'end' — using it to
      "clean up on client disconnect" clears stream timers before their first
      tick (mock_openai.js: listen on res 'close' instead).
+- [ ] REVIEW: 381bed3 rename refactor deleted demo-backend/shop/urls.py with no boot check — how did CI/pytest miss it?
