@@ -26,7 +26,15 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   - [ ] no command palette (⌘K opens the AI chat instead — nav kept flat for future palette)
   - [ ] auth token kept in localStorage on web mode
 * TODO P3 — build & release
-  - [ ] CI workflows (apk/exe/AppImage) never ran in sandbox — verify first artifacts
+  - [ ] build-demo.yml dispatched from GH runners — first real run; expect
+    iterations (tauri CLI env, NDK pin, guix-install on systemd-less runner)
+  - [ ] nix: wrapGAppsHook3 attr name vs nixpkgs-unstable drift; cargoLock
+    may demand a vendorHash on first run (manual says it shouldn't)
+  - [ ] guix: webkitgtk API must be 4.1 (soup3) for Tauri 2; guix-install.sh
+    driven non-interactively with `yes |` on an ubuntu runner; guix-daemon
+    started manually (no systemd) — fragile, re-verify on runner image bumps
+  - [ ] Cargo.lock is committed by the CI lockfile job (not by hand) — keep
+    it in sync when editing Cargo.toml
   - [ ] icons are generated placeholders; replace before client release
   - [ ] keyring crate on Linux needs Secret Service; headless CI caveat
 
