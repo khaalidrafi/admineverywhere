@@ -7,36 +7,49 @@
    *  Picks the first model with a datetime field (drives off schema only —
    *  no hardcoded model names), buckets the first pages of data by day.
    */
-  import { onMount } from "svelte";
-  import { app, effectiveConfig, handleApiError } from "../lib/stores.svelte";
+  import { get } from "svelte/store";
+  import { app, effectiveConfig, handleApiError } from "../lib/stores";
   import { listRecords } from "../lib/api";
-  import type { ModelSpec, RecordRow } from "../lib/types";
+  import type { AdminSchema, ModelSpec, RecordRow } from "../lib/types";
 
   const DAYS = 14;
   let buckets = $state<number[]>([]);
   let modelName = $state("");
   let fieldName = $state("");
   let state = $state<"loading" | "ready" | "empty" | "error">("loading");
+  let started = false;
 
-  function pickModel(): { model: ModelSpec; field: string } | null {
-    for (const m of app.schema?.models ?? []) {
-      const dt = m.fields.find((f) => f.type === "datetime" && f.name === "created_at")
-        ?? m.fields.find((f) => f.type === "datetime");
-      if (dt) return { model: m, field: dt.name };
+  function pickModel(schema: AdminSchema): { model: ModelSpec; field: string } | null {
+    // prefer auto timestamps (readOnly) on fields named created_at, then any
+    // readOnly datetime — manually-set datetimes (e.g. Category.created_at)
+    // usually describe old backfill, not recent activity
+    const rank = (f: { type: string; name: string; readOnly: boolean }) =>
+      (f.type === "datetime" ? 0 : 99) + (f.readOnly ? 0 : 10) + (f.name === "created_at" ? 0 : 1);
+    let best: { model: ModelSpec; field: string; score: number } | null = null;
+    for (const m of schema.models) {
+      for (const f of m.fields) {
+        if (f.type !== "datetime") continue;
+        const score = rank(f);
+        if (!best || score < best.score) best = { model: m, field: f.name, score };
+      }
     }
-    return null;
+    return best ? { model: best.model, field: best.field } : null;
   }
 
-  function dayKey(iso: string): string {
-    return String(iso).slice(0, 10);
-  }
-
-  onMount(async () => {
-    const picked = pickModel();
+  // widgets can mount before the schema finishes loading -> react to it
+  $effect(() => {
+    const schema = $app.schema;
+    if (!schema || started) return;
+    started = true;
+    const picked = pickModel(schema);
     if (!picked) {
       state = "empty";
       return;
     }
+    void load(picked);
+  });
+
+  async function load(picked: { model: ModelSpec; field: string }) {
     modelName = picked.model.name;
     fieldName = picked.field;
     const today = new Date();
@@ -51,12 +64,12 @@
     try {
       let rows: RecordRow[] = [];
       for (let page = 1; page <= 3; page++) {
-        const p = await listRecords(effectiveConfig(), app.token || null, picked.model, { page });
+        const p = await listRecords(effectiveConfig(), get(app).token || null, picked.model, { page });
         rows = rows.concat(p.results);
         if (!p.next) break;
       }
       for (const row of rows) {
-        const k = dayKey(String(row[picked.field] ?? ""));
+        const k = String(row[picked.field] ?? "").slice(0, 10);
         if (byDay.has(k)) byDay.set(k, (byDay.get(k) ?? 0) + 1);
       }
       buckets = keys.map((k) => byDay.get(k) ?? 0);
@@ -65,7 +78,7 @@
       handleApiError(err);
       state = "error";
     }
-  });
+  }
 
   const W = 560;
   const H = 160;
@@ -84,9 +97,7 @@
       .join(" ");
   });
 
-  const area = $derived(
-    points ? `${points} L${W - PAD},${H - PAD} L${PAD},${H - PAD} Z` : "",
-  );
+  const area = $derived((points ? `${points} L${W - PAD},${H - PAD} L${PAD},${H - PAD} Z` : ""));
 </script>
 
 {#if state === "loading"}

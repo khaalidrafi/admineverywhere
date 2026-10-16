@@ -4,20 +4,31 @@
 
 <script lang="ts">
   /** StatsCards — record count per model (from pagination count). */
-  import { onMount } from "svelte";
-  import { app, effectiveConfig, handleApiError } from "../lib/stores.svelte";
+  import { get } from "svelte/store";
+  import { app, effectiveConfig, handleApiError } from "../lib/stores";
   import { listRecords } from "../lib/api";
-  import { navigate } from "../lib/router.svelte";
+  import { navigate } from "../lib/router";
+  import type { AdminSchema } from "../lib/types";
 
   let counts = $state<Record<string, number | null>>({});
   let failed = $state(false);
+  let modelName = $state<Record<string, string>>({});
+  let started = false;
 
-  onMount(async () => {
-    if (!app.schema) return;
+  // widgets can mount before the schema finishes loading -> react to it
+  $effect(() => {
+    const schema = $app.schema;
+    if (!schema || started) return;
+    started = true;
+    void loadCounts(schema);
+  });
+
+  async function loadCounts(schema: AdminSchema) {
     await Promise.all(
-      app.schema.models.map(async (m) => {
+      schema.models.map(async (m) => {
+        modelName[m.id] = m.name;
         try {
-          const page = await listRecords(effectiveConfig(), app.token || null, m, {
+          const page = await listRecords(effectiveConfig(), get(app).token || null, m, {
             page: 1,
             pageSize: 1,
           });
@@ -28,7 +39,7 @@
         }
       }),
     );
-  });
+  }
 </script>
 
 {#if Object.keys(counts).length}
@@ -42,7 +53,7 @@
           {n === null ? "—" : n}
         </div>
         <div class="mt-0.5 text-xs text-text/50 group-hover:text-text/70">
-          {app.schema?.byId[id]?.name ?? id}
+          {modelName[id] ?? id}
         </div>
       </button>
     {/each}

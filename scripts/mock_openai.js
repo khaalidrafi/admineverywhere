@@ -111,7 +111,7 @@ const server = http.createServer((req, res) => {
         };
         res.write(`data: ${JSON.stringify(evt)}\n\n`);
       }, 45);
-      req.on("close", () => clearInterval(timer));
+      res.on("close", () => clearInterval(timer)); // client disconnected
     });
     return;
   }

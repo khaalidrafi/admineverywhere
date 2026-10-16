@@ -1,14 +1,9 @@
 <script lang="ts">
   /** Schema-driven model CRUD: search + paginated table + create/edit modal. */
-  import { app, toast, handleApiError } from "../lib/stores.svelte";
-  import { effectiveConfig } from "../lib/stores.svelte";
-  import {
-    ApiError,
-    deleteRecord,
-    listRecords,
-    retrieveRecord,
-  } from "../lib/api";
-  import { navigate } from "../lib/router.svelte";
+  import { get } from "svelte/store";
+  import { app, effectiveConfig, handleApiError, toast } from "../lib/stores";
+  import { deleteRecord, listRecords, retrieveRecord } from "../lib/api";
+  import { navigate } from "../lib/router";
   import { debounce } from "../lib/utils";
   import DataTable from "../components/DataTable.svelte";
   import RecordForm from "../components/RecordForm.svelte";
@@ -17,7 +12,8 @@
 
   let { id, recordId }: { id: string; recordId?: string } = $props();
 
-  const model = $derived(app.schema?.byId[id]);
+  const model = $derived($app.schema?.byId[id]);
+  const listPath = $derived(model?.listPath ?? "");
 
   let rows = $state<RecordRow[]>([]);
   let count = $state(0);
@@ -29,6 +25,7 @@
   let searchTerm = $state("");
   let formOpen = $state(false);
   let editing = $state<RecordRow | null>(null);
+  let reqId = 0; // drop stale responses
 
   const pages = $derived(count ? Math.ceil(count / (rows.length || 10)) : 1);
 
@@ -37,36 +34,28 @@
     page = 1;
   }, 300);
 
-  function reset() {
-    rows = [];
-    count = 0;
-    page = 1;
-    searchInput = "";
-    searchTerm = "";
-    formOpen = false;
-    editing = null;
-  }
-
   async function load() {
     if (!model) return;
+    const mine = ++reqId;
     loading = true;
     try {
-      const p = await listRecords(effectiveConfig(), app.token || null, model, {
+      const p = await listRecords(effectiveConfig(), get(app).token || null, model, {
         page,
         search: searchTerm,
       });
+      if (mine !== reqId) return; // a newer request superseded this one
       rows = p.results;
       count = p.count;
       hasNext = Boolean(p.next);
       hasPrev = Boolean(p.previous);
     } catch (err) {
-      handleApiError(err);
+      if (mine === reqId) handleApiError(err);
     } finally {
-      loading = false;
+      if (mine === reqId) loading = false;
     }
   }
 
-  // reload on model / page / search changes (writes don't loop: load only reads these)
+  // reload when model / page / search changes
   $effect(() => {
     if (model) void load();
   });
@@ -76,7 +65,7 @@
     if (recordId && model) {
       const rid = recordId;
       recordId = undefined; // consume once
-      retrieveRecord(effectiveConfig(), app.token || null, model, rid)
+      retrieveRecord(effectiveConfig(), get(app).token || null, model, rid)
         .then((row) => {
           editing = row;
           formOpen = true;
@@ -91,7 +80,7 @@
     const label = row[model.labelField] ?? row.id;
     if (!confirm(`Delete ${model.name} "${label}"? This cannot be undone.`)) return;
     try {
-      await deleteRecord(effectiveConfig(), app.token || null, model, row.id as any);
+      await deleteRecord(effectiveConfig(), get(app).token || null, model, row.id as any);
       toast("success", `${model.name} deleted`);
       if (rows.length === 1 && page > 1) page -= 1;
       else void load();

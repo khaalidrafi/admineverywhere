@@ -6,6 +6,8 @@ Routes:
   #/m/<modelId>     model table
   #/m/<modelId>/<recordId>  open record for editing
 */
+import { writable } from "svelte/store";
+
 export type Route =
   | { name: "login" }
   | { name: "dashboard" }
@@ -21,17 +23,15 @@ export function parseHash(hash: string = location.hash): Route {
   return { name: "dashboard" };
 }
 
-export const route = $state<Route>(parseHash());
+export const route = writable<Route>(parseHash());
 
 if (typeof window !== "undefined") {
-  window.addEventListener("hashchange", () => {
-    Object.assign(route, parseHash());
-  });
+  window.addEventListener("hashchange", () => route.set(parseHash()));
 }
 
 export function navigate(hash: string): void {
   if (location.hash === hash) {
-    Object.assign(route, parseHash()); // re-trigger for same-hash nav
+    route.set(parseHash()); // re-trigger for same-hash nav
   } else {
     location.hash = hash;
   }

@@ -7,7 +7,7 @@
    *  Random curated quote; click flips to a new one (CSS 3D flip).
    */
   import { QUOTES, randomQuote } from "./quotes";
-  import { app } from "../lib/stores.svelte";
+  import { app } from "../lib/stores";
 
   let index = $state(randomQuote());
   let flipping = $state(false);
@@ -31,7 +31,7 @@
   <div class="flip-card card relative min-h-[11rem] p-4 {flipping ? 'flipping' : ''}">
     <div class="mb-2 flex items-center justify-between">
       <span class="text-[10px] font-semibold uppercase tracking-widest text-accent">
-        {app.brand.appName} · Daily Spark
+        {$app.brand.appName} · Daily Spark
       </span>
       <span class="text-text/30 transition-transform {flipping ? 'rotate-180' : ''}">↻</span>
     </div>

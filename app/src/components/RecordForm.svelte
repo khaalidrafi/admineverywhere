@@ -4,7 +4,8 @@
    *  driven entirely by FieldSpecs. Client-side required validation plus
    *  DRF 400 field errors rendered under each input.
    */
-  import { app, effectiveConfig, handleApiError, toast } from "../lib/stores.svelte";
+  import { get } from "svelte/store";
+  import { app, effectiveConfig, handleApiError, toast } from "../lib/stores";
   import { ApiError, createRecord, fetchAllRecords, fieldErrors, updateRecord } from "../lib/api";
   import Icon from "./Icon.svelte";
   import { toISOOrNull } from "../lib/utils";
@@ -56,12 +57,12 @@
     .map((f) => f.fkModel!))];
   for (const target of fkTargets) {
     fkLoading[target] = true;
-    const targetModel = app.schema?.byId[target];
+    const targetModel = get(app).schema?.byId[target];
     if (!targetModel) {
       fkLoading[target] = false;
       continue;
     }
-    fetchAllRecords(effectiveConfig(), app.token || null, targetModel)
+    fetchAllRecords(effectiveConfig(), get(app).token || null, targetModel)
       .then((rows) => (fkOptions[target] = rows))
       .catch((err) => handleApiError(err))
       .finally(() => (fkLoading[target] = false));
@@ -78,7 +79,7 @@
   }
 
   function fkLabel(f: FieldSpec, row: RecordRow): string {
-    const target = app.schema?.byId[f.fkModel!];
+    const target = get(app).schema?.byId[f.fkModel!];
     const label = target ? row[target.labelField] : row.name ?? row.id;
     return label !== undefined && label !== null ? String(label) : `#${row.id}`;
   }
@@ -99,22 +100,27 @@
     const payload: Record<string, any> = {};
     for (const f of editable) {
       const v = values[f.name];
+      /** empty + not explicitly nullable -> OMIT the key entirely:
+       *  DRF then applies field defaults; sending null would 400 on
+       *  non-nullable fields (e.g. DecimalField(default=0)). */
+      const empty = v === "" || v === null || v === undefined;
+      const omit = empty && !f.nullable;
       switch (f.type) {
         case "boolean":
           payload[f.name] = Boolean(v);
           break;
         case "number":
         case "fk":
-          payload[f.name] = v === "" || v === null ? null : Number(v);
+          payload[f.name] = omit ? undefined : empty ? null : Number(v);
           break;
         case "date":
-          payload[f.name] = v || null;
+          payload[f.name] = omit ? undefined : v || null;
           break;
         case "datetime":
-          payload[f.name] = toISOOrNull(v);
+          payload[f.name] = omit ? undefined : toISOOrNull(v);
           break;
         default:
-          payload[f.name] = v === "" ? (f.nullable ? null : "") : v;
+          payload[f.name] = empty ? (f.nullable ? null : "") : v;
       }
     }
     return payload;
@@ -128,10 +134,10 @@
     try {
       const payload = buildPayload();
       if (record?.id !== undefined) {
-        await updateRecord(effectiveConfig(), app.token || null, model, record.id, payload);
+        await updateRecord(effectiveConfig(), get(app).token || null, model, record.id, payload);
         toast("success", `${model.name} updated`);
       } else {
-        await createRecord(effectiveConfig(), app.token || null, model, payload);
+        await createRecord(effectiveConfig(), get(app).token || null, model, payload);
         toast("success", `${model.name} created`);
       }
       onsaved();
