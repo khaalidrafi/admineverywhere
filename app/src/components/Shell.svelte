@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { app } from "../lib/stores.svelte";
-  import { route } from "../lib/router.svelte";
+  import { app } from "../lib/stores";
+  import { route } from "../lib/router";
   import Sidebar from "./Sidebar.svelte";
   import Dashboard from "../pages/Dashboard.svelte";
   import ModelPage from "../pages/ModelPage.svelte";
@@ -20,10 +20,10 @@
     <button class="btn btn-ghost p-2" onclick={toggleSidebar} aria-label="Menu">
       <Icon name="menu" />
     </button>
-    <span class="font-semibold">{app.brand.appName}</span>
+    <span class="font-semibold">{$app.brand.appName}</span>
   </div>
 
-  <!-- sidebar: fixed on mobile (overlay), static on md+ -->
+  <!-- sidebar: fixed overlay on mobile, static on md+ -->
   <div
     class="fixed inset-y-0 left-0 z-40 md:static md:z-0 {sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} transition-transform"
   >
@@ -38,11 +38,11 @@
   {/if}
 
   <main class="flex-1 px-4 pb-24 pt-20 md:px-8 md:pb-10 md:pt-6">
-    {#if route.name === "dashboard"}
+    {#if $route.name === "dashboard"}
       <Dashboard />
-    {:else if route.name === "model"}
-      {#key route.id}
-        <ModelPage id={route.id} recordId={route.recordId} />
+    {:else if $route.name === "model"}
+      {#key $route.id}
+        <ModelPage id={$route.id} recordId={$route.recordId} />
       {/key}
     {:else}
       <div class="p-8 text-text/60">Unknown route — pick a model from the sidebar.</div>
