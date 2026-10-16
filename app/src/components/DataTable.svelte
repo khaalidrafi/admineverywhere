@@ -36,7 +36,7 @@
         {#if loading}
           {#each Array(6) as _, r (r)}
             <tr class="border-b border-text/5">
-              {#each columns as _}
+              {#each columns as col (col.name)}
                 <td class="px-4 py-3"><div class="skeleton h-4 w-24"></div></td>
               {/each}
               <td class="px-4 py-3"><div class="skeleton ml-auto h-4 w-16"></div></td>
