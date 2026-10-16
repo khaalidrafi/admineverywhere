@@ -21,5 +21,7 @@ export default defineConfig({
     // stale module graphs create ghost duplicate instances of stores
     headers: { "Cache-Control": "no-store" },
   },
-  test: { environment: "node", include: ["src/**/*.test.ts"] },
+  // happy-dom (not "node") because secrets/widgets tests touch localStorage
+  // and location (via router.ts), which only exist under a DOM environment.
+  test: { environment: "happy-dom", include: ["src/**/*.test.ts"] },
 });
