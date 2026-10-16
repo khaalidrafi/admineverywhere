@@ -19,6 +19,7 @@
              (guix gexp)
              ((guix licenses) #:prefix license:)
              (gnu packages glib)
+             (gnu packages gnome)
              (gnu packages gtk)
              (gnu packages webkit)
              (gnu packages pkg-config)
