@@ -6,7 +6,7 @@ style) apply as-is and are deliberately not repeated here.
 
 ## What this repo is
 
-A branded, AI-assisted admin client for an **existing** Django REST
+A branded, AI-assisted admin app builder for an **existing** Django REST
 Framework backend. No Django runs locally in the shipped product: `plugin/`
 is a pip package (branding engine + schema tooling) installed in the
 *server* project, and `app/` is a Tauri 2 / Svelte 5 / Tailwind 4 thin
