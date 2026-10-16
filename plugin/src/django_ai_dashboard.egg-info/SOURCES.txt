@@ -1,0 +1,15 @@
+pyproject.toml
+src/ai_dashboard/__init__.py
+src/ai_dashboard/apps.py
+src/ai_dashboard/branding.py
+src/ai_dashboard/management/__init__.py
+src/ai_dashboard/management/commands/__init__.py
+src/ai_dashboard/management/commands/build_admin.py
+src/ai_dashboard/management/commands/dump_schema.py
+src/django_ai_dashboard.egg-info/PKG-INFO
+src/django_ai_dashboard.egg-info/SOURCES.txt
+src/django_ai_dashboard.egg-info/dependency_links.txt
+src/django_ai_dashboard.egg-info/requires.txt
+src/django_ai_dashboard.egg-info/top_level.txt
+tests/test_branding.py
+tests/test_commands.py
