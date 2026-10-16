@@ -114,13 +114,13 @@
           payload[f.name] = omit ? undefined : empty ? null : Number(v);
           break;
         case "date":
-          payload[f.name] = omit ? undefined : v || null;
+          payload[f.name] = omit ? undefined : (empty ? null : v);
           break;
         case "datetime":
           payload[f.name] = omit ? undefined : toISOOrNull(v);
           break;
         default:
-          payload[f.name] = empty ? (f.nullable ? null : "") : v;
+          payload[f.name] = omit ? undefined : (empty ? null : v);
       }
     }
     return payload;
