@@ -1,4 +1,4 @@
-# AGENTS.md — django-ai-dashboard
+# AGENTS.md — admincraft
 
 Repo-specific notes for AI agents working in this repository. Global agent
 instructions (authorship, commit hygiene, review-first workflow, reply
@@ -33,7 +33,7 @@ Product constraints — do not relax:
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `django-ai-dashboard` — `branding.py`, `build_admin`, `dump_schema` (29 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `build_admin`, `dump_schema` (29 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (27 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/brands/` | two example brands: `freshorama` (dark SaaS), `minimal-light` |
@@ -118,5 +118,5 @@ is committed — regenerate it whenever `Cargo.toml` changes (the nix
 - Open, roughly by priority: AI-REVIEW.org P0 security review; CSP is
   `null` in `tauri.conf.json`; placeholder icons; demo-CI
   android/nix/guix jobs never went green; web-mode secrets in
-  localStorage; `plugin/src/django_ai_dashboard.egg-info/` is tracked
+  localStorage; `plugin/src/admincraft.egg-info/` is tracked
   build output that should be untracked and ignored.
