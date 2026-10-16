@@ -3,6 +3,8 @@ Django settings for the demo backend. DEV-ONLY values are marked.
 Everything aggressive here (CORS allow-all, DEBUG) is intentional for
 local testing only — see AI-REVIEW.org before reusing anywhere.
 """
+import os
+import warnings
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,3 +72,33 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ---------------------------------------------------------------------------
+# P0: loud dev-only warning — the aggressive values above are intentionally
+# UNCHANGED. This rig runs wide open (tracebacks on, any host, any origin).
+# Anyone importing these settings outside the local demo must find out at
+# startup, not in an incident review. Acknowledge the demo rig explicitly
+# to silence it:  DEMO_DEV=1 python manage.py runserver
+# ---------------------------------------------------------------------------
+def _dev_only_active() -> list[str]:
+    """Names of the dangerous demo values that are currently switched on."""
+    active = []
+    if DEBUG:
+        active.append("DEBUG=True")
+    if "*" in ALLOWED_HOSTS:
+        active.append("ALLOWED_HOSTS=['*']")
+    if CORS_ALLOW_ALL_ORIGINS:
+        active.append("CORS_ALLOW_ALL_ORIGINS=True")
+    if CORS_ALLOW_HEADERS == ["*"]:
+        active.append("CORS_ALLOW_HEADERS=['*']")
+    return active
+
+
+if _dev_only_active() and os.environ.get("DEMO_DEV") != "1":
+    warnings.warn(
+        "demo-backend settings are DEV-ONLY ("
+        + ", ".join(_dev_only_active())
+        + ") — never deploy this rig; see AI-REVIEW.org. "
+        "Set DEMO_DEV=1 to acknowledge and silence this warning.",
+        stacklevel=2,
+    )
