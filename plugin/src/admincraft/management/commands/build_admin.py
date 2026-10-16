@@ -8,7 +8,7 @@ Usage:
 """
 from django.core.management.base import BaseCommand, CommandError
 
-from ai_dashboard import branding
+from admincraft import branding
 
 
 class Command(BaseCommand):
