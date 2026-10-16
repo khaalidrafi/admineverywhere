@@ -1,0 +1,27 @@
+# AI-REVIEW.org — review priorities for humans
+
+Generated app: django-branded-admin (Django plugin + Tauri 2/Svelte 5 thin client).
+AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk first.
+
+* TODO P0 — security & money-adjacent paths (review before any client demo)
+  - [ ] app/src/lib/api.ts        — token handling, error paths, no secrets in URLs
+  - [ ] app/src/lib/ai/chat.ts    — API key flow; SSE parser on hostile chunks
+  - [ ] app/src/lib/secrets.ts    — keyring vs localStorage fallback (web mode warning)
+  - [ ] plugin/src/branded_admin/branding.py — brand.json validation, file writes (path traversal?)
+  - [ ] demo-backend settings     — DEBUG, CORS allow-all is DEV ONLY; token auth scheme
+* TODO P1 — correctness core
+  - [ ] app/src/lib/openapi.ts    — normalizer heuristics (FK/enum detection) vs real schemas
+  - [ ] app/src/lib/widgets.ts    — glob auto-import & widget contract
+  - [ ] app/src/components/RecordForm.svelte — field types, required validation
+  - [ ] plugin/src/branded_admin/management/commands/build_admin.py — file patching of tauri.conf.json
+* TODO P2 — known simplifications (accepted for MVP, fix in v2)
+  - [ ] API key in localStorage on web mode (Tauri uses OS keychain) — acceptable?
+  - [ ] search is client-side on current page + server `?search=` best-effort
+  - [ ] ActivityChart buckets only first page(s) of a model list
+  - [ ] FK label field guessed from name/title/username/email heuristics
+  - [ ] no CSP set in tauri.conf.json (csp: null) — set one before production
+  - [ ] auth token kept in localStorage on web mode
+* TODO P3 — build & release
+  - [ ] CI workflows (apk/exe/AppImage) never ran in sandbox — verify first artifacts
+  - [ ] icons are placeholder-generated; replace before client release
+  - [ ] keyring crate on Linux needs Secret Service (gnome-keyring); headless CI caveat
