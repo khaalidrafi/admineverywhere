@@ -20,8 +20,13 @@ export interface ChatConfig {
  *  Handles: partial lines across chunks, CRLF, comment lines, keep-alives. */
 export function createSSEParser(onData: (payload: string) => void) {
   let buffer = "";
+  const MAX_LINE = 1024 * 1024;
   return (chunk: string) => {
     buffer += chunk;
+    if (buffer.length > MAX_LINE && !buffer.includes("\n")) {
+      console.warn(`[chat] Dropping oversized SSE line fragment (>${MAX_LINE} bytes)`);
+      buffer = "";
+    }
     const lines = buffer.split("\n");
     buffer = lines.pop() ?? ""; // incomplete tail stays buffered
     for (const raw of lines) {

@@ -1,7 +1,9 @@
 /** openapi.ts normalizer — drf-spectacular OpenAPI 3 -> internal AdminSchema.
 
 Written against the REAL fixture captured from the demo backend
-(src/lib/__tests__/fixtures/openapi.json). Heuristics, deliberately MVP:
+(src/lib/__tests__/fixtures/openapi.json).
+Verified deviations: none (FKs, decimals, enums, COMPONENT_SPLIT_REQUEST all correct).
+Heuristics, deliberately MVP:
 - models = paths with GET+POST and a trailing slash, no '{id}'
 - FK = integer/number/string property whose name matches another model's
   singular/id (drf-spectacular emits FKs as bare `type: integer`)
