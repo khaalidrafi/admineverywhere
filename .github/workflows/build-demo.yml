@@ -1,0 +1,363 @@
+name: Demo builds
+
+# ---------------------------------------------------------------------------
+# Demo / testing builds ONLY — no GitHub releases, no push triggers.
+#
+# Every artifact this workflow produces exists so users can PLAY with the
+# app against their own Django REST Framework API: launch the binary, enter
+# your API URL + token credentials on the login screen, done. For a local
+# playground in 60 seconds see demo-backend/ (login: admin / admin123).
+#
+# Dispatch by hand (workflow_dispatch) or push a v* tag. Never on plain
+# pushes — CI minutes are precious. (Note: standard runners are free once
+# the repo is made public.)
+#
+# Artifacts (14-day retention):
+#   demo-web-dist      — static web build (serve it, log in, play)
+#   demo-windows-setup — NSIS .exe installer
+#   demo-linux-appimage / demo-linux-deb
+#   demo-android-apk   — debug-signed (installable) universal APK
+#   demo-nix-out-path  — result of the verified `nix build` (NixOS/flake)
+#   demo-guix-package  — result of the verified `guix build` (Guix System)
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # lockfile job commits Cargo.lock
+
+concurrency:
+  group: demo-builds
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------- lockfile ---
+  # Cargo.lock is required by the Nix (cargoLock) and Guix (cargo vendor)
+  # builds and makes every other native build reproducible. Generated once,
+  # committed, consumed by all downstream jobs via `ref:`.
+  lockfile:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Generate Cargo.lock
+        working-directory: app/src-tauri
+        run: cargo generate-lockfile
+      - name: Commit lockfile when it changed
+        id: commit
+        run: |
+          git config user.name "GLM-5.3"
+          git config user.email "glm-5.3@z.ai"
+          if git diff --quiet -- app/src-tauri/Cargo.lock; then
+            echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          else
+            if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+              echo "Cargo.lock changed on a tag build — dispatch from a branch first." >&2
+              exit 1
+            fi
+            git add app/src-tauri/Cargo.lock
+            git commit \
+              -m "chore(ci): pin Cargo.lock for demo builds" \
+              -m "Co-authored-by: Z.ai Agent <agent@chat.z.ai>" \
+              -m "Co-authored-by: Khalid Rafi <khaalidrafi@gmail.com>"
+            git push
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ------------------------------------------------------------------ web ---
+  web:
+    needs: lockfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.lockfile.outputs.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Build web bundle
+        working-directory: app
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-web-dist
+          path: app/dist/
+          retention-days: 14
+      - name: Write summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## demo-web-dist — zero-install web demo
+          Serve `dist/` statically (e.g. `npx serve dist`), open it, then log in
+          with **your** DRF API URL + token credentials. For a backend in 60s:
+          `demo-backend/` (`admin` / `admin123`).
+          EOF
+
+  # -------------------------------------------------------------- windows ---
+  windows:
+    needs: lockfile
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.lockfile.outputs.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri -> target
+      - name: Build Windows demo (NSIS .exe)
+        working-directory: app
+        shell: bash
+        run: |
+          npm ci --no-audit --no-fund
+          npx tauri build --bundles nsis
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-windows-setup
+          path: app/src-tauri/target/release/bundle/nsis/*.exe
+          retention-days: 14
+          if-no-files-found: error
+      - name: Write summary
+        shell: bash
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## demo-windows-setup
+          Run the NSIS installer, launch the app, enter **your** DRF API URL +
+          username + password on the login screen. No bundled server — the app
+          talks to whatever API you register.
+          EOF
+
+  # ---------------------------------------------------------------- linux ---
+  linux:
+    needs: lockfile
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.lockfile.outputs.sha }}
+      - name: Install Linux webview deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri -> target
+      - name: Build Linux demo (.AppImage + .deb)
+        working-directory: app
+        run: |
+          npm ci --no-audit --no-fund
+          npx tauri build --bundles appimage,deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-linux-appimage
+          path: app/src-tauri/target/release/bundle/appimage/*.AppImage
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-linux-deb
+          path: app/src-tauri/target/release/bundle/deb/*.deb
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Write summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## demo-linux-appimage / demo-linux-deb
+          `chmod +x *.AppImage && ./django-ai-dashboard*.AppImage` (or install
+          the .deb), then register **your** DRF API in the login screen.
+          Guix and Nix users: see the `guix` and `nix` jobs — native packages,
+          not the FHS AppImage.
+          EOF
+
+  # -------------------------------------------------------------- android ---
+  android:
+    needs: lockfile
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.lockfile.outputs.sha }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Install NDK
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "ndk;27.0.12077973"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri -> target
+      - name: Build Android demo APK (debug-signed → sideloadable)
+        working-directory: app
+        run: |
+          npm ci --no-audit --no-fund
+          npx tauri android init
+          npx tauri android build --apk --debug --target aarch64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-android-apk
+          path: app/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          retention-days: 14
+          if-no-files-found: error
+      - name: Write summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## demo-android-apk
+          `adb install app-aarch64-debug.apk` (debug-signed for testing). On
+          first launch, enter **your** DRF API URL + credentials. The demo
+          backend works over `http://<your-LAN-IP>:8000` (CORS is dev-open).
+          EOF
+
+  # ------------------------------------------------------------------ nix ---
+  # Per the nixpkgs manual (Rust chapter): buildRustPackage with
+  # cargoLock.lockFile — deps vendored straight from Cargo.lock, no manual
+  # hashes. The web bundle is passed as the `frontend-dist` flake input.
+  nix:
+    needs: [lockfile, web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.lockfile.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: demo-web-dist
+          path: app/dist
+      - uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ github.token }}
+      - name: Build via flake
+        run: |
+          FRONTEND=$(nix store add-path --name frontend-dist app/dist)
+          nix build --print-build-logs \
+            --override-input frontend-dist "path:$FRONTEND" \
+            .#django-ai-dashboard
+      - name: Pack result
+        run: |
+          storepath=$(realpath result)
+          tar -czf django-ai-dashboard-nix.tar.gz -C / "$storepath"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-nix-out-path
+          path: django-ai-dashboard-nix.tar.gz
+          retention-days: 14
+      - name: Write summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## demo-nix-out-path — Nix package verified
+          `nix build .#django-ai-dashboard` (rustPlatform.buildRustPackage +
+          cargoLock, per the nixpkgs manual) is green. On any Linux with Nix:
+
+              git clone https://github.com/khaalidrafi/django-ai-dashboard
+              cd django-ai-dashboard
+              (cd app && npm ci && npm run build)
+              nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#django-ai-dashboard
+              ./result/bin/django-ai-dashboard
+
+          (CI passes the freshly built web bundle via `nix store add-path`.)
+          EOF
+
+  # ----------------------------------------------------------------- guix ---
+  # Per the Guix manual (Defining Packages): a classic package record on
+  # gnu-build-system. Crates are vendored ahead of the build (`cargo vendor`)
+  # so `guix build` stays offline (--frozen), avoiding cargo-build-system's
+  # per-crate inputs requirement.
+  guix:
+    needs: [lockfile, web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.lockfile.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: demo-web-dist
+          path: app/dist
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Vendor crates for the offline Guix build
+        working-directory: app/src-tauri
+        run: |
+          cargo vendor vendor > .cargo-config
+          mkdir -p .cargo
+          mv .cargo-config .cargo/config.toml
+          du -sh vendor
+      - name: Install Guix (prebuilt binary + build users)
+        run: |
+          wget -q https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
+          yes | sudo sh guix-install.sh
+      - name: Ensure guix-daemon is running (runners lack usable systemd)
+        run: |
+          if ! sudo systemctl is-active --quiet guix-daemon 2>/dev/null; then
+            sudo sh -c 'nohup /var/guix/profiles/per-user/root/current-guix/bin/guix-daemon --build-users-group=guixbuild >/dev/null 2>&1 &'
+            sleep 15
+          fi
+          sudo /var/guix/profiles/per-user/root/current-guix/bin/guix build --version
+      - name: Guix pull (installer ships Guix 1.4 — too old for the Rust MSRV)
+        run: |
+          sudo /var/guix/profiles/per-user/root/current-guix/bin/guix pull
+      - name: Build the package
+        run: |
+          set -e
+          OUT=$(sudo /root/.config/guix/current/bin/guix build -f guix.scm)
+          echo "guix build output: $OUT"
+          sudo tar -czf django-ai-dashboard-guix.tar.gz -C / "$OUT"
+          sudo chown "$(id -un):$(id -gn)" django-ai-dashboard-guix.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-guix-package
+          path: django-ai-dashboard-guix.tar.gz
+          retention-days: 14
+      - name: Write summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## demo-guix-package — Guix package verified
+          `guix build -f guix.scm` (gnu-build-system, vendored Cargo,
+          `--release --offline --frozen`) is green. On Guix System:
+
+              git clone https://github.com/khaalidrafi/django-ai-dashboard
+              cd django-ai-dashboard
+              (cd app && npm ci && npm run build)
+              (cd app/src-tauri && cargo vendor vendor > .cargo/config.toml)
+              guix build -f guix.scm
+              $(guix build -f guix.scm)/bin/django-ai-dashboard
+
+          (CI vendors the crates and the web bundle before building.)
+          EOF

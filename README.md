@@ -40,7 +40,9 @@ identity, one second.
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat (27 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | two example brands: dark SaaS (Freshorama) + light minimal (Ledgerly) |
-| `.github/workflows/` | .exe/.AppImage + Android .apk builds (tag/dispatch only, no push CI) |
+| `.github/workflows/` | `build-demo.yml` — demo/test artifacts only: .exe/.AppImage/.deb/.apk + **Nix** flake build + **Guix** package (dispatch/tag, no push CI) |
+| `flake.nix` | Nix package — `rustPlatform.buildRustPackage` + `cargoLock` (nixpkgs manual recipe) |
+| `guix.scm` | Guix package — `gnu-build-system`, vendored Cargo, offline `--frozen` (Guix manual recipe) |
 
 ## Extending
 
@@ -60,6 +62,55 @@ cd app && npm test                    # 27 vitest (schema normalizer, SSE parser
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 29 pytest
 ```
 
+## Demo builds (CI — testing/demo only)
+
+The [`build-demo.yml`](.github/workflows/build-demo.yml) workflow produces
+**demo binaries whose whole purpose is for users to register their own DRF
+API and play**: launch one, type your API URL + username + password in the
+login screen, and you're managing your models. Nothing is bundled, nothing
+calls home. Run it manually (Actions → *Demo builds* → Run) or by pushing a
+`v*` tag; it never triggers on plain pushes (CI credits — flip the repo
+public and standard runners are free). Artifacts (14-day retention):
+
+| artifact | platform | how to use |
+| --- | --- | --- |
+| `demo-web-dist` | any (browser) | serve `dist/` statically, open, log in |
+| `demo-windows-setup` | Windows | run the NSIS `.exe` installer |
+| `demo-linux-appimage` / `demo-linux-deb` | most distros | `chmod +x` & run, or install the deb |
+| `demo-android-apk` | Android (aarch64) | `adb install` — debug-signed for testing |
+| `demo-nix-out-path` | NixOS / any Linux + Nix | verified `nix build` result |
+| `demo-guix-package` | Guix System | verified `guix build` result |
+
+## Nix
+
+Per the nixpkgs manual (Rust chapter) — `buildRustPackage` with
+`cargoLock.lockFile`, so dependencies vendor straight from `Cargo.lock`
+with no manual hashes. The web bundle is injected via the `frontend-dist`
+flake input (the repo ships no prebuilt assets — see `frontend-dist/`):
+
+```bash
+nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#django-ai-dashboard
+./result/bin/django-ai-dashboard
+```
+
+(Build the web bundle first: `cd app && npm ci && npm run build`.)
+`nix develop` drops you in a shell with node, cargo, and webkitgtk.
+
+## Guix
+
+Per the Guix manual (Defining Packages) — a package record on
+`gnu-build-system`. Tauri's ~600-crate tree doesn't fit
+`cargo-build-system`'s per-crate inputs, so crates are vendored ahead of
+the build and compiled offline:
+
+```bash
+(cd app && npm ci && npm run build)
+(cd app/src-tauri && mkdir -p .cargo && cargo vendor vendor > .cargo/config.toml)
+guix build -f guix.scm
+```
+
+The binary lands in `$(guix build -f guix.scm)/bin/django-ai-dashboard`.
+
 ## Notes
 
 - AI chat: streaming, no tool calling / history persistence (v2 material).
@@ -67,5 +118,5 @@ cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 29 pytest
   `AI-REVIEW.org` before reusing anywhere.
 - Placeholder icons are generated (`scripts/../gen_icon.py` +
   `npx tauri icon`); replace for client releases.
-- Build desktop/mobile bundles: push a `v*` tag or run the GitHub workflows
-  manually (`.github/workflows/`).
+- Build demo bundles: Actions → *Demo builds* → Run workflow (or push a
+  `v*` tag). Artifacts are demo/test-only — no releases.
