@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { app, login, toast, handleApiError, loadSchema } from "../lib/stores.svelte";
-  import { navigate } from "../lib/router.svelte";
+  import { app, handleApiError, loadSchema, login, toast } from "../lib/stores";
+  import { navigate } from "../lib/router";
   import Icon from "../components/Icon.svelte";
   import { ApiError } from "../lib/api";
 
@@ -12,7 +12,7 @@
 
   // prefill the one settings field from config/override
   $effect(() => {
-    if (app.config) apiUrl = app.apiUrlOverride || app.config.apiUrl;
+    if ($app.config) apiUrl = $app.apiUrlOverride || $app.config.apiUrl;
   });
 
   async function submit(e: SubmitEvent) {
@@ -25,8 +25,8 @@
     }
     busy = true;
     try {
-      app.apiUrlOverride = apiUrl.trim();
-      localStorage.setItem("dad.apiUrl", app.apiUrlOverride);
+      app.update((a) => ({ ...a, apiUrlOverride: apiUrl.trim() }));
+      localStorage.setItem("dad.apiUrl", apiUrl.trim());
       await login(username, password);
       toast("success", `Welcome, ${username}!`);
       navigate("#/");
@@ -52,15 +52,15 @@
     <div class="card p-8 shadow-2xl">
       <!-- brand -->
       <div class="mb-6 flex flex-col items-center gap-3 text-center">
-        {#if app.brand.logo}
-          <img src={app.brand.logo} alt="logo" class="size-14 rounded-2xl" />
+        {#if $app.brand.logo}
+          <img src={$app.brand.logo} alt="logo" class="size-14 rounded-2xl" />
         {:else}
           <div class="size-14 rounded-2xl bg-gradient-to-br from-primary to-accent"></div>
         {/if}
         <div>
-          <div class="text-xl font-semibold">{app.brand.appName}</div>
-          {#if app.brand.tagline}
-            <div class="mt-1 text-sm text-text/50">{app.brand.tagline}</div>
+          <div class="text-xl font-semibold">{$app.brand.appName}</div>
+          {#if $app.brand.tagline}
+            <div class="mt-1 text-sm text-text/50">{$app.brand.tagline}</div>
           {/if}
         </div>
       </div>

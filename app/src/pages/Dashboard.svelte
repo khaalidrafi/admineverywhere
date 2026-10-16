@@ -1,13 +1,13 @@
 <script lang="ts">
   import { widgets } from "../widgets";
-  import { app } from "../lib/stores.svelte";
+  import { app } from "../lib/stores";
 </script>
 
 <div class="mx-auto max-w-6xl">
   <div class="mb-6">
     <h1 class="text-2xl font-semibold">Dashboard</h1>
     <p class="text-sm text-text/50">
-      {app.schema ? `${app.schema.models.length} models · ` : ""}
+      {$app.schema ? `${$app.schema.models.length} models · ` : ""}
       {widgets.length} widgets · press <kbd class="rounded border border-text/20 bg-text/10 px-1.5 py-0.5 text-[11px]">Ctrl+K</kbd> for AI
     </p>
   </div>

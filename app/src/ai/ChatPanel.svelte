@@ -4,7 +4,8 @@
    *  No tool calling, no history persistence (v2 material).
    */
   import { onMount } from "svelte";
-  import { ai, app, loadAiSettings, saveAiSettings, toast } from "../lib/stores.svelte";
+  import { get } from "svelte/store";
+  import { ai, app, loadAiSettings, saveAiSettings, toast } from "../lib/stores";
   import { ChatError, streamChatCompletion, systemPrompt, type ChatMessage } from "../lib/chat";
   import { schemaSummary } from "../lib/openapi";
   import { isWebStorage } from "../lib/secrets";
@@ -25,13 +26,13 @@
 
   let abort: AbortController | null = null;
 
-  const configured = $derived(Boolean(ai.baseUrl && ai.model));
+  const configured = $derived(Boolean($ai.baseUrl && $ai.model));
 
   $effect(() => {
-    baseUrl = ai.baseUrl;
-    apiKey = ai.apiKey;
-    model = ai.model;
-    if (!ai.baseUrl) showSettings = open && true;
+    baseUrl = $ai.baseUrl;
+    apiKey = $ai.apiKey;
+    model = $ai.model;
+    if (!$ai.baseUrl) showSettings = open && true;
   });
 
   onMount(() => {
@@ -61,10 +62,11 @@
     input = "";
     streamError = "";
 
-    const history: ChatMessage[] = [
+    const a = get(app);
+    const outgoing: ChatMessage[] = [
       {
         role: "system",
-        content: systemPrompt(app.brand.appName, app.schema ? schemaSummary(app.schema) : "no schema loaded"),
+        content: systemPrompt(a.brand.appName, a.schema ? schemaSummary(a.schema) : "no schema loaded"),
       },
       ...messages.slice(-8), // short memory, no persistence by design
       { role: "user", content: text },
@@ -77,8 +79,8 @@
     abort = new AbortController();
     try {
       await streamChatCompletion(
-        { baseUrl: ai.baseUrl, apiKey: ai.apiKey, model: ai.model },
-        history,
+        get(ai),
+        outgoing,
         (delta) => {
           messages[messages.length - 1].content += delta;
           scrollToBottom();
@@ -135,7 +137,7 @@
         <span class="text-sm font-semibold">AI Assistant</span>
         {#if configured}
           <span class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-500">
-            {ai.model}
+            {$ai.model}
           </span>
         {/if}
       </div>
@@ -189,7 +191,7 @@
         <div class="text-sm font-semibold">Talk to your data</div>
         <p class="text-xs leading-relaxed text-text/50">
           Connect any OpenAI-compatible provider — OpenAI, Groq, Ollama, LM Studio —
-          and ask questions about your {app.brand.appName} models.
+          and ask questions about your {$app.brand.appName} models.
         </p>
         <button class="btn btn-primary mt-1" onclick={() => (showSettings = true)}>
           <Icon name="gear" size={15} />
