@@ -1,0 +1,48 @@
+# TEAM-CHARTER.org — admincraft agent team
+
+Derived from: Google/MIT "Science of Scaling Agent Systems" (centralized topology for
+sequential work; supervised teams amplify errors ~4x vs ~17x unsupervised), agent
+management best practices 2026 (structured handoffs, tiered architecture, state store).
+
+## ORG CHART (centralized, tiers)
+- Owner / CEO: Khalid Rafi — sole human. Relay-only during sessions. Ticks items, decides BLOCKED.
+- Tier 3 — Shepherd/EM/HR/PM: Kimi-K2.6 @ kimi.ai. Owns queue, specs, staffing, discipline,
+  live-product PM audits (via reports; no hands). Never writes application code.
+- Tier 2 — Team Lead / PA: Qwen3.8-Flash @ Qoder. Sole machine+hands. Relays specs verbatim,
+  verifies evidence (runs tests, checks origin), executes only machine-gated or trivial tasks.
+  Never authors specs, never staffs, never merges without EM sign-off.
+- Tier 1 — Specialists (hands-less, brains-only):
+  - Senior Frontend Engineer: Qwen3.8-Max @ chat.qwen.ai — all Svelte/TS/CSP.
+  - Senior Backend Engineer: GLM-5.3 @ chat.z.ai — Python P0/security.
+  - Junior Backend/Tweak: GLM-5.3-Flash Free @ OpenCode (loops) — guardrailed tasks only.
+  - Design (on demand): DeepSeek V4.1-Flash @ CodeBuddy — verify free promo label first.
+- Bench rules: two failures on one task = BENCHED (reason logged in SCOUT-LOG);
+  two clean successes = PROVEN.
+
+## ADDRESSING & MANNERS
+- Address by ROLE + model@platform, e.g. "Senior Frontend Engineer — Qwen3.8-Max".
+- Junior/PA addresses EM as "Mr. EM"; EM addresses hires by role title. Khalid = "Owner".
+- Every claim carries evidence (sha / command output / file:line). "Done" without evidence = PENDING.
+- Never imply verification not performed; say "not run (reason)" explicitly.
+- Never invent work. If the spec premise is wrong (already done), report DONE-with-evidence.
+- Ask before blast radius (installs, servers, writes): state impact, await CLEARANCE.
+- Breach of protocol = EM note (public, one line, no insults); twice = watch; thrice = benched.
+
+## MESSAGE TYPES (the only four)
+1. SPEC (Shepherd → anyone, via PA): ROLE | TASK | ACCEPTANCE | DEADLINE-ORDER | GUARDRAILS.
+2. REPORT (any hire → PA → EM): TASK | STATUS | EVIDENCE | BLOCKER — one row per spec item.
+3. CLEARANCE (any hire → EM, via Owner relay): numbered blast-radius items; EM answers GO/NO-GO per item.
+4. HANDOFF (EM → repo): session close state.
+
+## THE LOOP (continuous communication)
+Owner pastes STATE.org to EM → EM writes/updates specs + staffing → PA relays to best-candidate
+hire → hire executes + REPORTs → PA verifies evidence on machine → EM reviews diff, merges,
+updates STATE.org → repeat. Owner decisions stay BLOCKED (never EM-resolved). PM audits the
+running product at each stable point and files customer-perspective verdicts.
+STATE.org is the single source of truth — every cycle starts and ends with it.
+
+## SHARED STATE
+- STATE.org: queue, staffing, scout-log (pasted back each session — the only cross-message memory).
+- HANDOFF.org: committed at session close.
+- MODEL-RANKING: cached herd table (re-run on "herd" or a model failure).
+- TEAM-CHARTER.org: this file. Amendments: EM proposes, Owner approves.
