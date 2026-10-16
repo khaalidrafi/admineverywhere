@@ -4,6 +4,7 @@ src-tauri/target/
 src-tauri/gen/
 __pycache__/
 *.pyc
+*.egg-info/
 .venv/
 venv/
 db.sqlite3
