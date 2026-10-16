@@ -20,6 +20,21 @@ export class ApiError extends Error {
   }
 }
 
+/** Redact tokens/passwords from error details to prevent leakage in logs. */
+function redactSecrets(obj: any): any {
+  if (!obj || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(redactSecrets);
+  const out: any = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (/^(token|password|api_?key|secret|authorization)$/i.test(k)) {
+      out[k] = "********";
+    } else {
+      out[k] = redactSecrets(v);
+    }
+  }
+  return out;
+}
+
 async function request<T>(cfg: AppConfig, token: string | null, path: string,
                           init: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
@@ -27,11 +42,22 @@ async function request<T>(cfg: AppConfig, token: string | null, path: string,
     ...(init.body ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Token ${token}` } : {}),
   };
+  
+  // Strip credentials from URL if present (secrets never in URLs)
+  let url = cfg.apiUrl.replace(/\/+$/, "");
+  try {
+    const u = new URL(url);
+    if (u.username || u.password) {
+      u.username = "";
+      u.password = "";
+      url = u.toString().replace(/\/$/, "");
+    }
+  } catch {}
   let resp: Response;
   try {
-    resp = await fetch(cfg.apiUrl.replace(/\/+$/, "") + path, { ...init, headers });
+    resp = await fetch(url + path, { ...init, headers });
   } catch (err: any) {
-    throw new ApiError(`Cannot reach backend at ${cfg.apiUrl}`, { network: true, detail: err });
+    throw new ApiError(`Cannot reach backend at ${url}`, { network: true, detail: redactSecrets(err) });
   }
   if (resp.status === 204) return undefined as T;
   const text = await resp.text();
@@ -42,7 +68,7 @@ async function request<T>(cfg: AppConfig, token: string | null, path: string,
   if (!resp.ok) {
     throw new ApiError(`API ${resp.status} on ${path}`, {
       status: resp.status,
-      detail: data,
+      detail: redactSecrets(data),
     });
   }
   return data as T;
@@ -54,7 +80,7 @@ export async function login(cfg: AppConfig, username: string, password: string):
     body: JSON.stringify({ username, password }),
   });
   const token = data?.token;
-  if (!token) throw new ApiError("Login succeeded but no token in response", { detail: data });
+  if (!token) throw new ApiError("Login succeeded but no token in response", { detail: redactSecrets(data) });
   return String(token);
 }
 

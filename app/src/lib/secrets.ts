@@ -16,12 +16,24 @@ export function isWebStorage(): boolean {
   return !isTauri();
 }
 
+let webWarned = false;
+function warnWebFallback() {
+  if (!webWarned) {
+    console.warn(
+      "SECURITY WARNING: Tauri keyring not available. Falling back to plain-text localStorage for secrets. " +
+      "Do not use sensitive keys in web mode!"
+    );
+    webWarned = true;
+  }
+}
+
 export async function saveSecret(key: string, value: string): Promise<void> {
   if (isTauri()) {
     const { invoke } = await import("@tauri-apps/api/core");
     await invoke("save_secret", { service: SERVICE, key, value });
     return;
   }
+  warnWebFallback();
   localStorage.setItem(`dad.secret.${key}`, value);
 }
 
@@ -34,6 +46,7 @@ export async function loadSecret(key: string): Promise<string | null> {
       return null; // missing entry or keychain unavailable
     }
   }
+  warnWebFallback();
   return localStorage.getItem(`dad.secret.${key}`);
 }
 
@@ -45,5 +58,6 @@ export async function deleteSecret(key: string): Promise<void> {
     } catch { /* already gone */ }
     return;
   }
+  warnWebFallback();
   localStorage.removeItem(`dad.secret.${key}`);
 }
