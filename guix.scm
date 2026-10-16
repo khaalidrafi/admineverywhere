@@ -11,8 +11,8 @@
 ;;;        > .cargo/config.toml)
 ;;;   3. guix build -f guix.scm                   ; fully offline (--frozen)
 ;;;
-;;; CI (`.github/workflows/build-demo.yml`, `guix` job) runs exactly these
-;;; steps, so the vendored source never has to be committed to the repo.
+;;; The parked demo-CI (`.github/workflows/build-demo.yml.disabled`, `guix`
+;;; job) runs exactly these steps, so the vendored source never has to be committed to the repo.
 
 (use-modules (guix packages)
              (guix build-system gnu)

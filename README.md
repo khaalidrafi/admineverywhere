@@ -1,6 +1,6 @@
 # admincraft
 
-A branded, extensible, AI-powered admin dashboard for any Django REST
+A branded, extensible, AI-powered admin app builder for any Django REST
 Framework backend — pip-installable plugin (branding + schema tooling) plus a
 Tauri 2 / Svelte 5 thin client that renders your entire CRUD UI from your
 drf-spectacular OpenAPI schema. Includes an OpenAI-compatible streaming AI
@@ -39,7 +39,9 @@ identity, one second.
 | `plugin/` | pip package `admincraft` — `build_admin` (brand injection), `dump_schema`, branding engine (29 pytest cases) |
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat (27 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
-| `app/brands/` | two example brands: dark SaaS (Freshorama) + light minimal (Ledgerly) |
+| `app/brands/` | two example brands: `freshorama` (dark SaaS) + `minimal-light` (light) |
+| `frontend-dist/` | stub for the Nix flake input — the repo ships no prebuilt web assets |
+| `docs/` | E2E screenshots |
 | `.github/workflows/` | `build-demo.yml.disabled` — demo-CI **parked** (credits); re-enable by renaming back to `.yml` |
 | `AGENTS.md` | repo-specific agent notes — constraints, hard-won contracts, commands, current state |
 | `flake.nix` | Nix package — `rustPlatform.buildRustPackage` + `cargoLock` (nixpkgs manual recipe) |
@@ -123,8 +125,7 @@ The binary lands in `$(guix build -f guix.scm)/bin/admincraft`.
 - AI chat: streaming, no tool calling / history persistence (v2 material).
 - Dev-only values in `demo-backend/` (CORS allow-all, DEBUG) — see
   `AI-REVIEW.org` before reusing anywhere.
-- Placeholder icons are generated (`scripts/../gen_icon.py` +
-  `npx tauri icon`); replace for client releases.
+- Placeholder icons are generated with `npx tauri icon`; replace for client releases.
 - Demo CI is parked (`.github/workflows/build-demo.yml.disabled`) —
   rename back to `.yml` and dispatch (Actions → *Demo builds*) to build
   demo bundles. Artifacts are demo/test-only — no releases.
