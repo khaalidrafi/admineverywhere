@@ -1,3 +1,13 @@
+# PARKED (2026-10) — CI disabled to save Actions credits on this private
+# repo. Renamed to *.disabled because Actions only reads *.yml/*.yaml in
+# .github/workflows/, so this file is fully inert: no dispatch, no tag
+# triggers, nothing runs.
+#
+# To re-enable: git mv build-demo.yml.disabled build-demo.yml, then dispatch
+# (Actions → "Demo builds" → Run workflow) or push a v* tag.
+# State when parked: web/windows/linux jobs green; android/nix/guix never
+# verified (three failed dispatches — iteration notes in AI-REVIEW.org, P3).
+# ---------------------------------------------------------------------------
 name: Demo builds
 
 # ---------------------------------------------------------------------------

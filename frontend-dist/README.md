@@ -10,5 +10,6 @@ real Vite bundle:
     cd app && npm ci && npm run build
     nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#django-ai-dashboard
 
-CI (`.github/workflows/build-demo.yml`, `nix` job) does exactly this after
+The demo-CI `nix` job (`.github/workflows/build-demo.yml.disabled` while CI
+is parked — rename back to `.yml` when re-enabling) does exactly this after
 building the web bundle.

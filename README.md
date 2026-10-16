@@ -40,7 +40,8 @@ identity, one second.
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat (27 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | two example brands: dark SaaS (Freshorama) + light minimal (Ledgerly) |
-| `.github/workflows/` | `build-demo.yml` — demo/test artifacts only: .exe/.AppImage/.deb/.apk + **Nix** flake build + **Guix** package (dispatch/tag, no push CI) |
+| `.github/workflows/` | `build-demo.yml.disabled` — demo-CI **parked** (credits); re-enable by renaming back to `.yml` |
+| `AGENTS.md` | repo-specific agent notes — constraints, hard-won contracts, commands, current state |
 | `flake.nix` | Nix package — `rustPlatform.buildRustPackage` + `cargoLock` (nixpkgs manual recipe) |
 | `guix.scm` | Guix package — `gnu-build-system`, vendored Cargo, offline `--frozen` (Guix manual recipe) |
 
@@ -62,15 +63,21 @@ cd app && npm test                    # 27 vitest (schema normalizer, SSE parser
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 29 pytest
 ```
 
-## Demo builds (CI — testing/demo only)
+## Demo builds (CI — currently parked)
 
-The [`build-demo.yml`](.github/workflows/build-demo.yml) workflow produces
-**demo binaries whose whole purpose is for users to register their own DRF
-API and play**: launch one, type your API URL + username + password in the
-login screen, and you're managing your models. Nothing is bundled, nothing
-calls home. Run it manually (Actions → *Demo builds* → Run) or by pushing a
-`v*` tag; it never triggers on plain pushes (CI credits — flip the repo
-public and standard runners are free). Artifacts (14-day retention):
+CI is **disabled** to save Actions credits on this private repo: the
+workflow is parked at `.github/workflows/build-demo.yml.disabled` (Actions
+only reads `*.yml` there, so it is inert — no dispatch, no tag triggers).
+Its purpose was demo/test-only binaries: launch one, type your DRF API URL
++ credentials on the login screen, and you're managing your models —
+nothing is bundled, nothing calls home. Three dispatched runs failed
+during bring-up (web/windows/linux jobs green; android/nix/guix
+unverified).
+
+To re-enable: `git mv .github/workflows/build-demo.yml.disabled .github/workflows/build-demo.yml`, then run it manually (Actions → *Demo builds* →
+Run workflow) or push a `v*` tag. It never triggers on plain pushes (CI
+credits — flip the repo public and standard runners are free). Expected
+artifacts once green (14-day retention):
 
 | artifact | platform | how to use |
 | --- | --- | --- |
@@ -118,5 +125,6 @@ The binary lands in `$(guix build -f guix.scm)/bin/django-ai-dashboard`.
   `AI-REVIEW.org` before reusing anywhere.
 - Placeholder icons are generated (`scripts/../gen_icon.py` +
   `npx tauri icon`); replace for client releases.
-- Build demo bundles: Actions → *Demo builds* → Run workflow (or push a
-  `v*` tag). Artifacts are demo/test-only — no releases.
+- Demo CI is parked (`.github/workflows/build-demo.yml.disabled`) —
+  rename back to `.yml` and dispatch (Actions → *Demo builds*) to build
+  demo bundles. Artifacts are demo/test-only — no releases.
