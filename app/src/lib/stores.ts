@@ -23,7 +23,7 @@ export interface AppState {
 }
 
 const DEFAULT_BRAND: Brand = {
-  appName: "AI Dashboard",
+  appName: "Admincraft",
   tagline: "Django-powered admin",
   colors: {},
   radius: "0.75rem",

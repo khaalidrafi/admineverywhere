@@ -1,5 +1,5 @@
 [package]
-name = "django-ai-dashboard"
+name = "admincraft"
 version = "0.1.0"
 description = "Branded, extensible admin dashboard — thin client for DRF + drf-spectacular backends"
 license = "MIT"
@@ -8,7 +8,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "django_ai_dashboard_lib"
+name = "admincraft_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

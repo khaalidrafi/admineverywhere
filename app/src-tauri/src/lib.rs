@@ -1,4 +1,4 @@
-//! django-ai-dashboard thin client — Rust side.
+//! admincraft thin client — Rust side.
 //!
 //! The app is a web-first SPA; Tauri wraps it in a native window and adds
 //! ONE thing the browser can't do securely: OS keychain storage for the AI
@@ -7,7 +7,7 @@
 
 use keyring::Entry;
 
-const DEFAULT_SERVICE: &str = "django-ai-dashboard";
+const DEFAULT_SERVICE: &str = "admincraft";
 
 #[tauri::command]
 fn save_secret(service: String, key: String, value: String) -> Result<(), String> {
