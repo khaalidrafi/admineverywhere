@@ -1,4 +1,4 @@
-# django-ai-dashboard
+# admincraft
 
 A branded, extensible, AI-powered admin dashboard for any Django REST
 Framework backend — pip-installable plugin (branding + schema tooling) plus a
@@ -8,7 +8,7 @@ assistant (Ctrl+K) that knows your models. One `brand.json` rebrands the whole
 app in under a second. Ships as Android .apk, Windows .exe and Linux
 .AppImage.
 
-**Repo:** `khaalidrafi/django-ai-dashboard` · stack: Django plugin (pip) +
+**Repo:** `khaalidrafi/admincraft` · stack: Django plugin (pip) +
 Tauri 2 + Svelte 5 + Tailwind 4 + DRF/drf-spectacular backend.
 
 ## Try it in 3 steps
@@ -36,7 +36,7 @@ identity, one second.
 
 | dir | what |
 | --- | --- |
-| `plugin/` | pip package `django-ai-dashboard` — `build_admin` (brand injection), `dump_schema`, branding engine (29 pytest cases) |
+| `plugin/` | pip package `admincraft` — `build_admin` (brand injection), `dump_schema`, branding engine (29 pytest cases) |
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat (27 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | two example brands: dark SaaS (Freshorama) + light minimal (Ledgerly) |
@@ -96,8 +96,8 @@ with no manual hashes. The web bundle is injected via the `frontend-dist`
 flake input (the repo ships no prebuilt assets — see `frontend-dist/`):
 
 ```bash
-nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#django-ai-dashboard
-./result/bin/django-ai-dashboard
+nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admincraft
+./result/bin/admincraft
 ```
 
 (Build the web bundle first: `cd app && npm ci && npm run build`.)
@@ -116,7 +116,7 @@ the build and compiled offline:
 guix build -f guix.scm
 ```
 
-The binary lands in `$(guix build -f guix.scm)/bin/django-ai-dashboard`.
+The binary lands in `$(guix build -f guix.scm)/bin/admincraft`.
 
 ## Notes
 
