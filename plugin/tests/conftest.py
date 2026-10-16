@@ -13,7 +13,7 @@ def pytest_configure():
             INSTALLED_APPS=[
                 "django.contrib.contenttypes",
                 "django.contrib.auth",
-                "ai_dashboard",
+                "admincraft",
             ],
             DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},
             USE_TZ=True,

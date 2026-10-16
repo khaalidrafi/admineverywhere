@@ -7,7 +7,7 @@ from urllib.error import URLError
 import pytest
 from django.core.management import CommandError, call_command
 
-from ai_dashboard import branding
+from admincraft import branding
 
 from test_branding import VALID_BRAND, TINY_PNG, TINY_SVG  # noqa: F401
 

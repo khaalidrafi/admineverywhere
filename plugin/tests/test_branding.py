@@ -1,4 +1,4 @@
-"""Tests for ai_dashboard.branding — the pure branding engine.
+"""Tests for admincraft.branding — the pure branding engine.
 
 Rule: written BEFORE implementation (red -> green).
 Contract under test (the "30-second rebrand" promise):
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ai_dashboard import branding
+from admincraft import branding
 
 VALID_BRAND = {
     "appName": "Freshorama Admin",
