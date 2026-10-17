@@ -66,6 +66,12 @@ SPECTACULAR_SETTINGS = {
     "COMPONENT_SPLIT_REQUEST": True,  # separate request/response schemas
 }
 
+# Runtime brand store for the in-app branding editor (see
+# admincraft.brandstore): one dir with brand.json + logo/favicon. The
+# editor creates it on first save; until then the client shows its
+# bundled static brand. Runtime state — never commit it.
+ADMINCRAFT_BRAND_DIR = BASE_DIR / "admincraft_brand"
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True

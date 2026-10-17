@@ -61,8 +61,23 @@
     {/if}
   </nav>
 
-  <!-- footer -->
+  <!-- settings -->
   <div class="border-t border-text/10 px-3 py-3">
+    <div class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text/40">
+      Settings
+    </div>
+    <button
+      class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
+        {$route.name === 'branding' ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
+      onclick={() => go("#/branding")}
+    >
+      <Icon name="gear" size={16} />
+      Branding
+    </button>
+  </div>
+
+  <!-- footer -->
+  <div class="px-3 py-3">
     <div class="flex items-center justify-between gap-2 px-2 pb-2 text-xs text-text/50">
       <span class="truncate">@{$app.username || "admin"}</span>
       <button

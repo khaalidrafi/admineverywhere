@@ -1,9 +1,10 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default capability: core window + our secret commands",
+  "description": "Default capability: core window (incl. runtime title for in-app rebranding) + our secret commands",
   "windows": ["main"],
   "permissions": [
-    "core:default"
+    "core:default",
+    "core:window:allow-set-title"
   ]
 }
