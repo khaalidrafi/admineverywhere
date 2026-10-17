@@ -29,3 +29,8 @@
 - Qwen3.8-Max: code quality strong; cannot execute tests (sandbox) — always pair with BRE verification
 - GLM-5.3: PROVEN P0; GLM-5.3-Flash Free @ OpenCode: loop tier
 - 381bed3 author: flagged in AI-REVIEW.org for human review
+
+## UPDATE 2026-10-17 07:05 (+06) — docs-audit pass
+- Suites at HEAD 69c9434: pytest 53/53 (incl. BE-6 boot gate), vitest 51/51. Smoke green (token/schema/mock/vite).
+- Docs now truthful: AGENTS.md State rewritten (10 topic branches merged, prod-CSP OPEN, BE-3/BE-6 recorded); README ships-claim corrected (apk/exe/AppImage are Tauri TARGETS; demo-CI parked, android/nix/guix never green); AI-REVIEW.org premises corrected, no boxes ticked.
+- OPEN: production CSP (dev CSP done); nothing in CI/packaging runs either suite (BE-6 fires only on manual pytest); E2 build-all.yml in flight (GLM-5.3, ai/ci-1, not yet pushed); Owner visual PM audit still pending.
