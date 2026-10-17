@@ -119,3 +119,9 @@ Etiquette: plain facts, no self-praise, no apologies theater; errors stated once
 with correction; never claim what you did not run (UNVERIFIED label); one report per task
 close; the follow-up fence is not optional — a report without it is INCOMPLETE.
 
+
+## CLIENT CRAFT RULE (2026-10-18, owner ruling)
+Client-specific brands/builds NEVER land in admincraft core — not even as example
+folders if they carry real client identity (logo, name, baked client tree). Core ships
+neutral brands only. Client craft lives in the client's own repo/fork/build input.
+Deleting such a branch is owner-ordered, no review needed.
