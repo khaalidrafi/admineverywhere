@@ -156,7 +156,8 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
 ## CI — build-all, live
 
 `.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
-(vitest 51 + pytest 53) runs FIRST and every build leg `needs:` it, so a
+(vitest 51 + pytest 86, plus a CSP-hygiene check on the shipped
+tauri.conf.json) runs FIRST and every build leg `needs:` it, so a
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
 (.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
 with `--target aarch64 --target armv7` (repeated flags, NOT a comma
@@ -263,6 +264,17 @@ once (one-time signature change from the stable key).
   boots the real `core.settings` in a subprocess, runs Django's system checks,
   and resolves `api/auth/token/`, the `shop.urls` router routes and
   `/api/schema/`. Needs no database.
+- Fixed & pushed to `ai/csp-1` (not yet merged), later the same day: the
+  **production CSP policy** item is closed. `tauri.conf.json` ships
+  self-only script/img/font/media/worker + style-src 'unsafe-inline'
+  (Tailwind) + connect-src 'self' https://API_HOST — a placeholder, no
+  localhost, no wildcards. `build_admin --api-host <origin>` substitutes
+  the deployed origin at deploy build time via
+  `branding.normalize_api_host` (https only, dotted DNS, optional port;
+  localhost/loopback, wildcards, paths, userinfo fail loudly; CSP drift
+  fails loudly; same-origin re-runs are idempotent no-ops). 33 new pytest
+  cases (53 → 86), all green. CI test-gate gained a CSP-hygiene step that
+  fails if localhost/http/ws/wildcards ever reappear in the shipped conf.
 - v0.1.0 released 2026-10-17: tag on `f1678cd`, assets from green run
   39000890302 (wheel + sdist, NSIS exe, AppImage, aarch64 debug apk, web
   bundle, nix/guix store tarballs, SHA256SUMS). All six build legs are
@@ -277,5 +289,6 @@ once (one-time signature change from the stable key).
   localStorage (accepted P2 — warned, not eliminated); icons are neutral
   generated grid marks — real product art still welcome; full skill eval
   loop (subagent runs + benchmark viewer) not yet executed — the scripts
-  are functionally verified, the prompts in `evals/` are unrun; production
-  CSP hardening (consider per-instance CSP from the brand origin).
+  are functionally verified, the prompts in `evals/` are unrun. (Closed
+  2026-10-17 on `ai/csp-1`: production CSP policy + build-time API_HOST
+  substitution; the per-instance-CSP idea remains open.)
