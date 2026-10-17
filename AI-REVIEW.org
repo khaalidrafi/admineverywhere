@@ -59,3 +59,5 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
      "clean up on client disconnect" clears stream timers before their first
      tick (mock_openai.js: listen on res 'close' instead).
 - [ ] REVIEW: 381bed3 rename refactor deleted demo-backend/shop/urls.py with no boot check — how did CI/pytest miss it?
+
+- [ ] P0 REVIEW: prod-CSP strictness vs branding features — csp-1 sets font-src/img-src 'self' only; brand.json promises webfont (fonts.googleapis/gstatic) + logo hosting; loosen (img-src 'self' data: https:, font-src + Google Fonts) or make origins substituted like API_HOST. BRE Finding 2, 2026-10-17.
