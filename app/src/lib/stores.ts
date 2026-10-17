@@ -6,7 +6,15 @@
  *  auto-subscription; logic reads via get(store).
  */
 import { get, writable } from "svelte/store";
-import { ApiError, fetchSchema as apiFetchSchema, login as apiLogin } from "./api";
+import {
+  ApiError,
+  fetchBranding as apiFetchBranding,
+  fetchSchema as apiFetchSchema,
+  login as apiLogin,
+  resolveApiUrl,
+  saveBranding as apiSaveBranding,
+} from "./api";
+import { injectBrandCss } from "./branding";
 import { loadSecret, saveSecret } from "./secrets";
 import type { AdminSchema, AppConfig, Brand } from "./types";
 
@@ -67,10 +75,60 @@ export async function initApp(): Promise<void> {
     brand: brand?.appName ? brand : a.brand,
     booted: true,
   }));
-  const a = get(app);
-  document.title = a.brand.appName;
+  applyBrand(get(app).brand);
+  // Backend branding (when the API runs the admincraft plugin): the
+  // server brand wins over the bundled static one — this is the
+  // rebrand-from-inside-the-app path. A backend without the plugin
+  // (plain DRF) silently keeps the static brand; network failures are
+  // already surfaced by the schema flow, not here.
+  const cfg = effectiveConfig();
+  if (cfg.apiUrl) {
+    const data = await apiFetchBranding(cfg);
+    if (data?.brand?.appName) {
+      applyBrand(brandWithResolvedAssets(cfg, data.brand));
+    }
+  }
+}
+
+function brandWithResolvedAssets(cfg: AppConfig, brand: Brand): Brand {
+  return {
+    ...brand,
+    logo: resolveApiUrl(cfg, brand.logo),
+    favicon: resolveApiUrl(cfg, brand.favicon),
+  };
+}
+
+/** Apply a brand everywhere it lives: store (UI text/logos), tab title,
+ *  favicon, runtime CSS variables, and the native window title in Tauri.
+ *  Launcher/dock names are baked at build time (see the branding skill). */
+export function applyBrand(brand: Brand): void {
+  app.update((a) => ({ ...a, brand }));
+  document.title = brand.appName;
   const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
-  if (favicon && a.brand.favicon) favicon.href = a.brand.favicon;
+  if (favicon && brand.favicon) favicon.href = brand.favicon;
+  injectBrandCss(brand);
+  void setNativeWindowTitle(brand.appName);
+}
+
+async function setNativeWindowTitle(title: string): Promise<void> {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) return;
+  try {
+    const { getCurrentWindow } = await import("@tauri-apps/api/window");
+    await getCurrentWindow().setTitle(title);
+  } catch {
+    // non-fatal: window title falls back to the build-time productName
+  }
+}
+
+/** Persist a new brand through the backend plugin (staff token), then
+ *  apply it live. Throws ApiError (400 detail = {errors: [...]}) upward —
+ *  the editor renders the field problems. */
+export async function saveBrand(brand: Brand): Promise<Brand> {
+  const cfg = effectiveConfig();
+  const data = await apiSaveBranding(cfg, get(app).token || null, brand);
+  const resolved = brandWithResolvedAssets(cfg, data.brand);
+  applyBrand(resolved);
+  return resolved;
 }
 
 export async function login(username: string, password: string): Promise<void> {
