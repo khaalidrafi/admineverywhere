@@ -57,7 +57,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `build_admin`, `dump_schema` (53 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (27 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (51 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/brands/` | two example brands: `freshorama` (dark SaaS), `minimal-light` |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
@@ -80,7 +80,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 27 vitest
+cd app && npm test                          # 51 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 53 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
