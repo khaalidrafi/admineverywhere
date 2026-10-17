@@ -1,5 +1,6 @@
 #+TITLE: AGENT-TEAM-TODOS — admincraft
-#+TODO: TODO(t) ONGOING(o) WAIT(w@) | DONE(d!) CANCELLED(c@) DEFERRED(f@)
+#+TODO: TODO(t) ONGOING(o) WAIT(w@) PENDING(p@) | DONE(d!) CANCELLED(c@) DEFERRED(f@)
+#+COLUMNS: %40ITEM %TODO %CLOCKSUM_EFFORT(Clocked)
 # Hiring rule: the assignee flips its item to ONGOING at task start (first commit of its branch). Marking DONE/CANCELLED is Lead-only.
 #+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
 #+PROPERTY: ORDERED t
@@ -27,3 +28,13 @@
 ** TODO E1 go/no-go
 * DONE (recent)
 ** DONE FE-1..FE-5, BE-1..BE-6, E2 CI (v0.1.1 released)
+
+* WORKFLOW (read first — replaces all report channels)
+Members own their task item; Lead is the only one who flips DONE.
+- Start: TODO -> ONGOING; add CLOCK start line under the item (CLOCK: [YYYY-MM-DD Ddd HH:MM]).
+- Progress: append notes into the item's :LOGBOOK: drawer: "- Note taken on [date] :: <fact, evidence pointer, UNVERIFIED labels>".
+- Need input from Lead or any member: flip to WAIT (keep clock running).
+- Finished: close the CLOCK line ([end] => HH:MM), flip to PENDING. Lead reviews evidence, flips DONE.
+- Direct-push members (Build & Relay Engineer, sandbox/box Flashes) commit todos edits
+  straight to ai/main. Branch-workers include the edit in their task branch; Lead
+  resolves at merge. Never touch others' items. Bare fences only in notes.
