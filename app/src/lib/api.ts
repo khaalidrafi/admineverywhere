@@ -6,7 +6,7 @@ Every failure is normalized to ApiError so the UI can react:
 - status:400     -> validation errors (field-level display)
 */
 import { normalizeOpenAPI } from "./openapi";
-import type { AdminSchema, AppConfig, ModelSpec, Page, RecordRow } from "./types";
+import type { AdminSchema, AppConfig, Brand, ModelSpec, Page, RecordRow } from "./types";
 
 export class ApiError extends Error {
   status?: number;
@@ -87,6 +87,46 @@ export async function login(cfg: AppConfig, username: string, password: string):
 export async function fetchSchema(cfg: AppConfig, token: string | null): Promise<AdminSchema> {
   const doc = await request<any>(cfg, token, cfg.schemaPath);
   return normalizeOpenAPI(doc);
+}
+
+/* ---- runtime branding (backends running the admincraft plugin) ---- */
+
+export interface BrandingResponse {
+  brand: Brand;
+  rev: number;
+}
+
+/** Resolve an API-relative path (e.g. "/admincraft/branding/asset/logo.png")
+ *  against the configured API base. Absolute/data URLs pass through. */
+export function resolveApiUrl(cfg: AppConfig, path: string | undefined): string | undefined {
+  if (!path) return undefined;
+  if (/^(https?:|data:|blob:)/i.test(path)) return path;
+  return cfg.apiUrl.replace(/\/+$/, "") + path;
+}
+
+/** Public brand read; null = backend has no admincraft branding configured
+ *  (or is unreachable) — caller keeps the bundled static brand. */
+export async function fetchBranding(cfg: AppConfig): Promise<BrandingResponse | null> {
+  try {
+    const resp = await fetch(resolveApiUrl(cfg, "/admincraft/branding/")!, {
+      headers: { Accept: "application/json" },
+    });
+    if (!resp.ok) return null;
+    return (await resp.json()) as BrandingResponse;
+  } catch {
+    return null;
+  }
+}
+
+/** Replace the server-side brand (staff token required). Throws ApiError
+ *  with a 400 `detail` = {errors: [...]} on validation problems. */
+export async function saveBranding(
+  cfg: AppConfig, token: string | null, brand: Brand,
+): Promise<BrandingResponse> {
+  return request<BrandingResponse>(cfg, token, "/admincraft/branding/", {
+    method: "PUT",
+    body: JSON.stringify(brand),
+  });
 }
 
 function toPage<T = RecordRow>(data: any): Page<T> {
