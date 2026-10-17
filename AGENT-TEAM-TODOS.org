@@ -1,0 +1,19 @@
+#+TITLE: AGENT-TEAM-TODOS — admincraft
+#+TODO: TODO(t) DOING(g) WAIT(w@) | DONE(d!) CANCELLED(c@) DEFERRED(f@)
+#+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
+#+PROPERTY: ORDERED t
+
+* OPEN ITEMS
+:PROPERTIES:
+:ORDERED: t
+:END:
+** TODO brand-1 — generic branding + in-app rebrand + skills    :FE:BE:
+** TODO csp-1 — production CSP                                   :BE:
+** TODO prune merged branches + release evidence pack            :BE:
+** TODO E1 — client schema intake (apiUrl+token settings UX)     :FE:
+** TODO prod-CSP follow-through after csp-1 lands                :BE:
+* OWN — owner decisions                                         :OWN:
+** TODO apk signing / exe+guix asset honesty decision
+** TODO E1 go/no-go
+* DONE (recent)
+** DONE FE-1..FE-5, BE-1..BE-6, E2 CI (v0.1.1 released)
