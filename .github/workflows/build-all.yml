@@ -178,9 +178,14 @@ jobs:
           if-no-files-found: error
 
   # -------------------------------------------------------------- android ---
-  # Debug-signed universal(ish) APK: sideloadable for testing. Carried over
-  # from the parked leg, re-enabled per E2 request. No
-  # android-actions/setup-android: it chokes installing the deprecated
+  # Debug-signed UNIVERSAL APK (aarch64 + armv7), sideloadable on any
+  # Android 7.0+ phone, 64- or 32-bit. v0.1.0 shipped aarch64-only and
+  # died with "app not installed" on 32-bit devices; every runner also
+  # minted a fresh debug key per run, so no build could update over
+  # another. Both fixed: both rust targets, and the committed
+  # app/src-tauri/signing/debug.keystore copied over the ephemeral
+  # ~/.android/debug.keystore so the signature is identical every run.
+  # No android-actions/setup-android: it chokes installing the deprecated
   # `tools` package. GitHub runners already ship the SDK (ANDROID_HOME)
   # with licenses pre-accepted -- we only add the NDK.
   android:
@@ -208,16 +213,35 @@ jobs:
           cache-dependency-path: app/package-lock.json
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android
+          targets: aarch64-linux-android,armv7-linux-androideabi
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: app/src-tauri -> target
-      - name: Build Android APK (debug-signed, aarch64)
+      - name: Install the stable debug signing keystore
+        run: |
+          mkdir -p "$HOME/.android"
+          cp app/src-tauri/signing/debug.keystore "$HOME/.android/debug.keystore"
+          # Cert fingerprint into the log for cross-checking apksigner below.
+          keytool -list -v -keystore "$HOME/.android/debug.keystore" \
+            -storepass android | grep -E '^Alias name|^SHA256:' | head -n 2
+      - name: Build Android APK (debug-signed, aarch64 + armv7)
         working-directory: app
         run: |
           npm ci --no-audit --no-fund
           npx tauri android init
-          npx tauri android build --apk --debug --target aarch64
+          npx tauri android build --apk --debug --target aarch64,armv7
+      - name: Verify APK (stable signer + both ABIs present)
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
+          APK=$(ls app/src-tauri/gen/android/app/build/outputs/apk/universal/debug/*.apk)
+          echo "apk: $APK"
+          "$APKSIGNER" verify --print-certs "$APK"
+          echo "--- ABI coverage (must be > 0 for both) ---"
+          for abi in arm64-v8a armeabi-v7a; do
+            n=$(unzip -l "$APK" | grep -c "lib/$abi/")
+            echo "lib/$abi entries: $n"
+            test "$n" -gt 0
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk
@@ -383,8 +407,9 @@ jobs:
           mv artifacts/guix-out/admincraft-guix.tar.gz "release/admincraft-$VERSION-guix.tar.gz"
           mv "$(find artifacts/windows-setup -name '*-setup.exe')" "release/admincraft_${VERSION}_x64-setup.exe"
           mv "$(find artifacts/linux-appimage -name '*.AppImage')" "release/admincraft_${VERSION}_amd64.AppImage"
-          # apk: tauri android build --target aarch64 -> a single apk, ABI arm64-v8a
-          mv "$(find artifacts/android-apk -name '*.apk')" "release/admincraft-$VERSION-android-aarch64-debug.apk"
+          # apk: tauri android build --target aarch64,armv7 -> one universal
+          # apk carrying lib/arm64-v8a + lib/armeabi-v7a, stable-signatured
+          mv "$(find artifacts/android-apk -name '*.apk')" "release/admincraft-$VERSION-android-universal-debug.apk"
           webroot=artifacts/web-dist
           if [ -d "$webroot/dist" ]; then webroot="$webroot/dist"; fi
           test -f "$webroot/index.html"
