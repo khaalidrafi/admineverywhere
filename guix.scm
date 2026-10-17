@@ -125,7 +125,13 @@ Categories=Development;Utility;~%")))))))
                     (,(string-append gtk "/share")))
                   ;; Common fix for WebKitGTK rendering on Wayland/NVIDIA.
                   `("WEBKIT_DISABLE_DMABUF_RENDERER" = ("1")))))))))
-    (inputs (list glib glib-networking gtk+ webkitgtk))
+    (inputs (list glib glib-networking gtk+
+                  ;; Tauri 2/wry targets the GTK3 webview API:
+                  ;; webkit2gtk-4.1.pc + javascriptcoregtk-4.1.pc. Guix's
+                  ;; plain `webkitgtk' is the GTK4/WPE 6.0 API and ships
+                  ;; neither (run 38998256298: javascriptcore-rs-sys
+                  ;; build-script died on the missing .pc).
+                  webkitgtk-for-gtk3))
     (native-inputs (list pkg-config rust `(,rust "cargo")))
     (synopsis "Branded, schema-driven admin client for Django REST Framework APIs")
     (description
