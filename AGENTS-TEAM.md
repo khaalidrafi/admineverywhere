@@ -139,3 +139,8 @@ flip WAIT when they need input from anyone, and flip PENDING when finished (cloc
 closed). Only the Lead flips DONE after evidence review. Direct-push members commit
 todos edits to ai/main; branch-workers carry the edit in their task branch. The Lead
 polls the file via PAT each cycle — Owner relay retired for routine traffic.
+
+## LOCAL-AGENT PUSH RULE (2026-10-18, owner ruling)
+Local agents (Qoder, OMP, OpenCode, Goose) ALWAYS push at the end of every work
+segment — even mid-task, even partial: push the branch AND the todos-file edit.
+The Lead verifies via PAT; unpushed local work does not exist.
