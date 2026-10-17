@@ -5,18 +5,21 @@ Routes:
   #/                dashboard
   #/m/<modelId>     model table
   #/m/<modelId>/<recordId>  open record for editing
+  #/branding        in-app brand editor (staff)
 */
 import { writable } from "svelte/store";
 
 export type Route =
   | { name: "login" }
   | { name: "dashboard" }
-  | { name: "model"; id: string; recordId?: string };
+  | { name: "model"; id: string; recordId?: string }
+  | { name: "branding" };
 
 export function parseHash(hash: string = location.hash): Route {
   const h = (hash || "#/").replace(/^#/, "");
   const parts = h.split("/").filter(Boolean);
   if (parts[0] === "login") return { name: "login" };
+  if (parts[0] === "branding") return { name: "branding" };
   if (parts[0] === "m" && parts[1]) {
     return { name: "model", id: decodeURIComponent(parts[1]), recordId: parts[2] };
   }
