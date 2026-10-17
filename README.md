@@ -6,8 +6,9 @@ Tauri 2 / Svelte 5 thin client that renders your entire CRUD UI from your
 drf-spectacular OpenAPI schema. Includes an OpenAI-compatible streaming AI
 assistant (Ctrl+K) that knows your models. One `brand.json` rebrands the whole
 app in under a second. Tauri 2 targets Android .apk, Windows .exe and Linux
-.AppImage — the demo-CI that built those is currently parked (see *Demo
-builds*), so today you build locally or from source via Nix/Guix.
+.AppImage — prebuilt for every release (see
+[Releases](https://github.com/khaalidrafi/admincraft/releases)), or build
+locally / from source via Nix/Guix.
 
 **Repo:** `khaalidrafi/admincraft` · stack: Django plugin (pip) +
 Tauri 2 + Svelte 5 + Tailwind 4 + DRF/drf-spectacular backend.
@@ -43,7 +44,7 @@ identity, one second.
 | `app/brands/` | two example brands: `freshorama` (dark SaaS) + `minimal-light` (light) |
 | `frontend-dist/` | stub for the Nix flake input — the repo ships no prebuilt web assets |
 | `docs/` | E2E screenshots |
-| `.github/workflows/` | `build-demo.yml.disabled` — demo-CI **parked** (credits); re-enable by renaming back to `.yml` |
+| `.github/workflows/` | `build-all.yml` — live CI: test gate + six build legs + tag-triggered releases (`build-demo.yml.disabled` — the old parked demo-CI) |
 | `AGENTS.md` | repo-specific agent notes — constraints, hard-won contracts, commands, current state |
 | `flake.nix` | Nix package — `rustPlatform.buildRustPackage` + `cargoLock` (nixpkgs manual recipe) |
 | `guix.scm` | Guix package — `gnu-build-system`, vendored Cargo, offline `--frozen` (Guix manual recipe) |
@@ -66,30 +67,29 @@ cd app && npm test                    # 51 vitest (schema normalizer, SSE parser
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 53 pytest
 ```
 
-## Demo builds (CI — currently parked)
+## Builds & releases (CI — live)
 
-CI is **disabled** to save Actions credits on this private repo: the
-workflow is parked at `.github/workflows/build-demo.yml.disabled` (Actions
-only reads `*.yml` there, so it is inert — no dispatch, no tag triggers).
-Its purpose was demo/test-only binaries: launch one, type your DRF API URL
-+ credentials on the login screen, and you're managing your models —
-nothing is bundled, nothing calls home. Three dispatched runs failed
-during bring-up (web/windows/linux jobs green; android/nix/guix
-unverified).
+`.github/workflows/build-all.yml` runs on every push and PR to `ai/main`:
+a test gate (51 vitest + 53 pytest) first, then six build legs — web
+bundle, Windows NSIS `.exe`, Linux `.AppImage`, Android `.apk` (aarch64,
+debug-signed) and the Nix + Guix packages. Every run uploads its
+artifacts (14-day retention) so you can grab a client, point it at your
+own DRF API on the login screen, and start managing your models —
+nothing bundled, nothing calls home.
 
-To re-enable: `git mv .github/workflows/build-demo.yml.disabled .github/workflows/build-demo.yml`, then run it manually (Actions → *Demo builds* →
-Run workflow) or push a `v*` tag. It never triggers on plain pushes (CI
-credits — flip the repo public and standard runners are free). Expected
-artifacts once green (14-day retention):
+Push a `v*` tag and the same pipeline also cuts a GitHub Release with all
+assets attached. Current set (see
+[v0.1.0](https://github.com/khaalidrafi/admincraft/releases/tag/v0.1.0)):
 
-| artifact | platform | how to use |
+| asset | platform | how to use |
 | --- | --- | --- |
-| `demo-web-dist` | any (browser) | serve `dist/` statically, open, log in |
-| `demo-windows-setup` | Windows | run the NSIS `.exe` installer |
-| `demo-linux-appimage` / `demo-linux-deb` | most distros | `chmod +x` & run, or install the deb |
-| `demo-android-apk` | Android (aarch64) | `adb install` — debug-signed for testing |
-| `demo-nix-out-path` | NixOS / any Linux + Nix | verified `nix build` result |
-| `demo-guix-package` | Guix System | verified `guix build` result |
+| `admincraft-0.1.0-py3-none-any.whl` (+ sdist) | any Python ≥ 3.10 | `pip install` — the Django plugin |
+| `admincraft_0.1.0_x64-setup.exe` | Windows | run the NSIS installer |
+| `admincraft_0.1.0_amd64.AppImage` | most distros | `chmod +x` and run |
+| `admincraft-0.1.0-android-aarch64-debug.apk` | Android (aarch64) | `adb install` — debug-signed for testing |
+| `admincraft-0.1.0-web.tar.gz` | any (browser) | serve the contents statically, open, log in |
+| `admincraft-0.1.0-nix.tar.gz` / `-guix.tar.gz` | Nix / Guix | verified store-path builds (absolute `/nix/store` / `/gnu/store` paths) |
+| `SHA256SUMS.txt` | — | checksums for everything above |
 
 ## Nix
 
@@ -127,6 +127,7 @@ The binary lands in `$(guix build -f guix.scm)/bin/admincraft`.
 - Dev-only values in `demo-backend/` (CORS allow-all, DEBUG) — see
   `AI-REVIEW.org` before reusing anywhere.
 - Placeholder icons are generated with `npx tauri icon`; replace for client releases.
-- Demo CI is parked (`.github/workflows/build-demo.yml.disabled`) —
-  rename back to `.yml` and dispatch (Actions → *Demo builds*) to build
-  demo bundles. Artifacts are demo/test-only — no releases.
+- Prebuilt clients ship on the
+  [Releases](https://github.com/khaalidrafi/admincraft/releases) page
+  (tag-triggered CI). They are demo/test-only builds — nothing bundled,
+  nothing calls home.
