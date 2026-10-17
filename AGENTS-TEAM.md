@@ -119,10 +119,3 @@ Etiquette: plain facts, no self-praise, no apologies theater; errors stated once
 with correction; never claim what you did not run (UNVERIFIED label); one report per task
 close; the follow-up fence is not optional — a report without it is INCOMPLETE.
 
-## MEMBER-TO-MEMBER CONTACT
-Channel: TEAM-INBOX.org at repo root (the only channel every member can reach —
-direct pushes or branch pushes). One mailbox heading per member ID. Read yours at task
-start and before finish; send by appending under the recipient's mailbox (timestamp +
-sender ID + one-line subject; replies nest under the original). Work-only, brief,
-professional. Never edit others' entries. Lead monitors but does NOT relay. Escalate
-to lead only for: spec conflicts, priority disputes, 2-failure stalls, ai/main touches.
