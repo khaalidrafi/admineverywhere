@@ -23,7 +23,17 @@ Product constraints — do not relax:
 - All visual identity comes from a single `brand.json` (colors, radius,
   font, logo). Components carry zero hard-coded colors: Tailwind 4
   `@theme inline` maps `--color-*` utilities onto the runtime `--brand-*`
-  variables written by `build_admin`.
+  variables. **Release builds never carry a product name**: the shipped
+  default brand is neutral (`app/brands/default/` = "Admincraft"), and
+  every user's identity rides on top — either baked in via `build_admin`
+  (launcher + bundled assets) or live via the runtime branding API
+  (everything in-app: name, colors, font, logos, titles).
+- Branding has TWO layers, never blur them: **runtime** (in-app editor
+  `#/branding`, `GET/PUT /admincraft/branding/` — applies instantly, no
+  rebuild) vs **build-time** (`tauri.conf.json` productName + platform
+  icons — set by `build_admin` / `npx tauri icon` before packaging). The
+  Android launcher label is build-time; the desktop window title is
+  runtime (Tauri setTitle follows the live brand).
 - New dashboard widget = drop one `.svelte` file in `app/src/widgets/`
   exporting `const meta = { title, size }` — auto-discovered via
   `import.meta.glob`. No registry to edit.
@@ -56,10 +66,11 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `build_admin`, `dump_schema` (53 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (51 vitest) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (75 pytest, written first) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (58 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
-| `app/brands/` | two example brands: `freshorama` (dark SaaS), `minimal-light` |
+| `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
+| `skills/` | the two agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
 `app/src-tauri/signing/` | committed stable debug keystore for the android apk — why it exists + rotation notes in its README |
 | `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, date, bool, readonly datetime) |
@@ -82,14 +93,20 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 51 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 53 pytest
+cd app && npm test                          # 58 vitest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 75 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
-# rebrand the whole client in one command
-cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/minimal-light/brand.json --app ../app
+# rebrand the whole client in one command (build-time layer)
+cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
+
+# regenerate launcher icons from a 1024px source (in app/)
+npx tauri icon ../app/brands/default/assets/icon-1024.png
+
+# derive a brand from any repo's own source (no logo needed)
+python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo>/brand
 ```
 
 ## Hard-won contracts (don't relearn these)
@@ -122,6 +139,19 @@ cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/
 - Vite: `optimizeDeps.include` covers all svelte entrypoints (prevents two
   svelte-internals instances); the dev server sends
   `Cache-Control: no-store`.
+- Runtime branding flow: the client boots with the bundled static brand
+  (`public/brand.{css,json}` — first paint, no FOUC), then `initApp()`
+  tries `GET <api>/admincraft/branding/`; a server brand replaces the
+  static one, and `applyBrand()` fans it out (store + `document.title` +
+  favicon + `injectBrandCss()` writing a `<style id="brand-runtime">`
+  with the same `--brand-*` variables + Tauri `setTitle`). `brandToCss()`
+  mirrors `branding.render_css()` output — keep them in sync. Plain DRF
+  backends without the plugin degrade silently to the static brand.
+- Brand writes are staff-only (DRF token auth) and validated server-side
+  by the SAME closed schema as `build_admin` (`brandstore.save_brand`);
+  uploads must be data URLs (png/jpeg/svg, magic-byte checked, 1 MB cap).
+  `rev` (mtime+1) advances on every save so clients can poll for remote
+  rebrands.
 
 ## CI — build-all, live
 
@@ -175,13 +205,41 @@ from the **release** asset (run-page artifacts download as a zip —
 extract first), and devices that had the v0.1.0 apk must uninstall it
 once (one-time signature change from the stable key).
 
-## State as of 2026-10-17
+## State as of 2026-10-17 (after the branding-flexibility pass)
 
+- **Neutral default brand landed**: `app/brands/default/` ("Admincraft",
+  neutral grid-mark logo + regenerated full icon set via `npx tauri icon`).
+  `tauri.conf.json` productName/window title no longer say "Freshorama
+  Admin" — release builds ship generic, users brand on top. freshorama +
+  minimal-light remain as examples only.
+- **Runtime branding API + in-app editor landed** (75 pytest / 58 vitest,
+  both suites extended test-first): `plugin` gained
+  `brandstore.py`/`views.py`/`urls.py` (GET public, PUT staff-token,
+  closed schema, magic-byte-checked data-URL uploads ≤ 1 MB, jailed
+  writes, `rev` counter); demo-backend mounts `/admincraft/` and points
+  `ADMINCRAFT_BRAND_DIR` at a gitignored runtime dir. Client: brand store
+  fetch on boot with silent fallback, `applyBrand()` live re-theme
+  (CSS vars + titles + favicon + Tauri window title via the new
+  `core:window:allow-set-title` capability), and the `#/branding` editor
+  page with live preview + server-error rendering.
+- **CSP widened deliberately** (was dev-only localhost policy): the
+  product's promise is "point the client at ANY DRF API", so
+  `connect-src`/`img-src` now allow any http/https origin and
+  `style-src`/`font-src` allow Google Fonts for branded fonts;
+  `script-src 'self'` unchanged. Documented tradeoff: script execution
+  stays locked down, network egress does not.
+- **`skills/` shipped**: `admincraft-onboard` + `admincraft-craft`
+  (duplicated stdlib engine scripts by design — `inspect_project.py`,
+  `derive_brand.py` — ask/auto modes, references, evals). Verified live
+  against demo-backend and a scratch client dir.
+- v0.1.2 released 2026-10-17: first release carrying the neutral
+  identity (see *Releases* for the version-bump checklist — all four
+  carriers were bumped before tagging).
 - Shipped on `ai/main` (default branch): plugin, thin client, demo backend,
   Nix + Guix packaging, README, AI-REVIEW. Every topic branch — `be-1`, `be-2`,
   `be-3`, `be-6`, `fe-1`…`fe-5`, `mvp-build` — is merged in and safe to prune;
   checked with `git merge-base --is-ancestor <tip> ai/main`, not assumed.
-- Suites, both green at this HEAD: `pytest` 53/53, `vitest` 51/51. On this
+- Suites, both green at this HEAD: `pytest` 75/75, `vitest` 58/58. On this
   4 GB box run vitest capped:
   `NODE_OPTIONS=--max-old-space-size=1024 npx vitest run --maxWorkers=1`.
 - Fixed & merged, P0→P1: `brand.json` closed schema + realpath/commonpath jail
@@ -216,6 +274,8 @@ once (one-time signature change from the stable key).
   ephemeral per-run signing key). First live fire of the automated
   `release` job (v0.1.0 was cut by hand).
 - Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still in
-  localStorage (accepted P2 — warned, not eliminated); production CSP policy;
-  placeholder icons; the boot gate now also runs in CI via
-  test-gate, not only when a human runs pytest locally.
+  localStorage (accepted P2 — warned, not eliminated); icons are neutral
+  generated grid marks — real product art still welcome; full skill eval
+  loop (subagent runs + benchmark viewer) not yet executed — the scripts
+  are functionally verified, the prompts in `evals/` are unrun; production
+  CSP hardening (consider per-instance CSP from the brand origin).
