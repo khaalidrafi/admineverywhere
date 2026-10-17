@@ -221,6 +221,18 @@ def render_css(brand: dict) -> str:
 # with the deployed origin at build time — the ONLY sanctioned way a real
 # host enters the CSP (validated below: https only, dotted DNS, no
 # localhost/loopback, no wildcards, no paths/userinfo).
+#
+# WHY img-src/font-src/style-src are not 'self'-only (BRE Finding 2): two
+# product promises need third-party origins, and a self-only policy would
+# break both silently — the app just falls back to no logo / system font:
+#   - brand.json names a webfont; render_css() (and the client's
+#     brandToCss()) emit @import url('https://fonts.googleapis.com/css2?..'),
+#     which is gated by STYLE-src (the @import fetch), then the .woff2 files
+#     load from fonts.gstatic.com under FONT-src. Both origins are required.
+#   - a brand logo may be a hosted URL (not only a data: upload), so IMG-src
+#     needs https: — and data: stays for the runtime branding API.
+# script-src 'self' is untouched: execution stays locked, only egress for
+# these two known brand origins widens. Pinned by TestProdCspBrandOrigins.
 # ---------------------------------------------------------------------------
 
 def normalize_api_host(api_host: str) -> str:
