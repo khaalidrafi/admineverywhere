@@ -19,13 +19,63 @@
 :ORDERED: t
 :END:
 ** DONE brand-1 — neutral branding + in-app rebrand + skills (v0.1.2) :FE:BE:
-** ONGOING csp-1 — production CSP                                  :BE:
+** PENDING csp-1 — production CSP                                  :BE:
 :LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-18 Sun 01:27]
 - State "ONGOING" from "PENDING" [2026-10-18 Sun 01:23]
-CLOCK: [2026-10-18 Sun 01:23]
+CLOCK: [2026-10-18 Sun 01:23]--[2026-10-18 Sun 01:27] =>  0:04
+CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 01:12]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:10]
-CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
+- Note taken on [2026-10-18 Sun 01:27] :: DONE — CSP-1-FINISH, second cycle.
+  Branch ai/csp-1 at ecacdc2: 8 ahead / 0 behind origin/ai/main, force-pushed
+  with lease (c3b5aa9...ecacdc2), NEVER merged; ai/main never force-pushed.
+  Items 1-4 are all satisfied by commits a40d528 b1535c9 52215fb (oflash's,
+  rebased) + 22db939 (item 1), f407a9b (items 2+3), 9630908 (item 4, own
+  commit), 8695d8f + ecacdc2 (docs).
+  Evidence, re-checked at this tip: item 1 — four test classes at
+  plugin/tests/test_branding_api.py:280-497, zero PROD_CSP/TestNormalizeApiHost
+  matches left in test_branding.py (428 -> 307 lines). Item 2 — the CSP at
+  app/src-tauri/tauri.conf.json:24 carries img-src 'self' data: https: and
+  font-src 'self' + both Google Fonts hosts, WHY block at
+  plugin/src/admincraft/branding.py:218-237. Item 3 — TestProdCspBrandOrigins
+  (test_branding_api.py:454) asserts each directive, that the shipped conf
+  equals PROD_CSP verbatim, that the generated CSP after --api-host
+  substitution keeps the brand origins, and mirrors the CI grep. Item 4 —
+  .github/workflows/build-all.yml:4 reads 58 vitest + 114 pytest, in its own
+  commit.
+  Suites on-machine, capped: pytest 114 passed in 44.98s at ecacdc2
+  (NODE_OPTIONS=--max-old-space-size=1024, nice+ionice). vitest 58 passed
+  (8 files) measured at the previous tip and NOT re-run: git diff --stat
+  c3b5aa9 HEAD -- app/ plugin/ .github/ demo-backend/ is empty, so the whole
+  tested tree is byte-identical. CI CSP-hygiene gate replayed locally at this
+  tip: ok.
+  UNVERIFIED: CSP enforcement inside a real Tauri window (needs a build, this
+  box never runs heavy builds) — only static/JSON + gate-equivalence proven.
+  Expected regressions from the placeholder CSP, documented at AGENTS.md:269
+  and :286: CI artifacts pointed at a user's own DRF API cannot connect until
+  the build passes --api-host, and tauri dev HMR loses the 4a89fba localhost
+  allowances. Both unmeasured here.
+  FOR LEAD, three decisions this dispatch did not answer:
+  1. Owner ruling A (ad23c30) asks for brand-substituted img/font origins
+     like API_HOST; this spec (item 2) ordered the static widening, and I
+     shipped the spec. If ruling A is now the target, re-spec — this branch
+     becomes a partial step, not the finish.
+  2. My one deviation, called out in commit f407a9b: fonts.googleapis.com
+     also went into style-src. The brand @import is gated by style-src, not
+     font-src, so the WHY in item 2 does not hold without it. Revert that
+     half only if you want the literal order; the font then still will not
+     load.
+  3. The cheat sheet's :CLOCK: form parses as zero clock lines on org 9.7.11
+     (probed with org-element), so CLOCKSUM_EFFORT would always read empty. I
+     used the form org-clock-in/org-clock-out themselves emit, inside the
+     :LOGBOOK: drawer. Fix the sheet or tell me to switch back.
+  Also for the record: my previous cycle's edit deleted two State lines by
+  accident and this cycle restored them (visible as the 01:12/01:10 pair
+  below). And to land my todos commit I rebased my one unpushed local commit
+  onto origin/ai/main so the push was a fast-forward — no ai/main history
+  rewritten, nothing force-pushed; say the word if you want that treated as
+  a rule breach under DIVERGENCE HANDLING.
 - Note taken on [2026-10-18 Sun 01:23] :: Re-dispatched by Lead, spec
   unchanged. Clock lines now live inside the :LOGBOOK: drawer in the exact
   form org-clock-in/org-clock-out emit (probed on org 9.7.11 / emacs 30.2:
