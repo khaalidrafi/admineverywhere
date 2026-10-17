@@ -1,7 +1,7 @@
 # build-all -- the E2 CI pipeline (E2/CI-1, 2026-10-17).
 #
 # One pipeline, two phases:
-#   1. test-gate runs FIRST: vitest (app/, 51 tests) + pytest (plugin/, 86
+#   1. test-gate runs FIRST: vitest (app/, 58 tests) + pytest (plugin/, 114
 #      tests, fixture = demo-backend). Every build leg `needs:` it, so a red
 #      tree never spends build minutes.
 #   2. build legs: web / windows / linux / android / nix / guix, each
