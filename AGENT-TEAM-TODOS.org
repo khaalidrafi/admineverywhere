@@ -76,3 +76,16 @@ Members own their task item; Lead is the only one who flips DONE.
 - Direct-push members (Build & Relay Engineer, sandbox/box Flashes) commit todos edits
   straight to ai/main. Branch-workers include the edit in their task branch; Lead
   resolves at merge. Never touch others' items. Bare fences only in notes.
+
+* ORG SYNTAX CHEAT SHEET (exact forms — copy, never invent)
+A task item looks like: ** ONGOING my task title                    :FE:
+Start clock (open, running):  :CLOCK: [2026-10-18 Sun 01:10]
+Clock out (closed, effort computed by Org):  :CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 02:05] => 0:55
+LOGBOOK drawer under the item:
+:LOGBOOK:
+- State "ONGOING" from "TODO" [2026-10-18 Sun 01:10]
+- Note taken on [2026-10-18 Sun 01:40] :: pytest 86 passed; API_HOST tests relocated; UNVERIFIED: on-device CSP behavior
+- Note taken on [2026-10-18 Sun 02:05] :: done — see commit ede483c; needs Lead merge review
+:END:
+Waiting on Owner: flip keyword WAIT, add :OWN: to the tags line, one Note line naming the decision.
+State lines are added by Org on C-c C-t — when editing as text, write them exactly as shown.
