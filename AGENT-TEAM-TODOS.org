@@ -7,9 +7,38 @@
 
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
 ** TODO FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
-*** ONGOING FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
+*** WAIT FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
 :LOGBOOK:
 CLOCK: [2026-10-18 Sun 01:58]
+- State "WAIT" from "ONGOING" [2026-10-18 Sun 02:00]
+- Note taken on [2026-10-18 Sun 02:00] :: Rebase STOP per DIVERGENCE HANDLING.
+  Trial rebase of ai/fr-r001-be (a816b81, 1 ahead / 65 behind) onto
+  origin/ai/main (now 0b6fe9a) CONFLICTS on exactly three files, verified by
+  trial rebase then aborted clean (branch back at a816b81, no merge-commit
+  mess, ai/main untouched by the trial):
+  1. plugin/tests/conftest.py — real design collision, needs Lead/senior
+     arbitration, not a whitespace pick: upstream (csp-1 replay) mounts the
+     plugin API surface (rest_framework.authtoken, SECRET_KEY,
+     ROOT_URLCONF=admincraft.urls) plus a session-scoped autouse _migrate_db
+     fixture (no pytest-django); my branch mounts the demo rig (shop,
+     corsheaders, drf_spectacular, ROOT_URLCONF=core.urls, REST_FRAMEWORK +
+     SPECTACULAR_SETTINGS, sys.path insert for CI-from-root) so the 37
+     lifecycle tests can hit the real endpoints in-process. Both mutate the
+     same configure() block; the merge is obvious but it is a design call,
+     so I did not resolve it silently.
+  2. AGENTS.md — count lines: upstream 58 vitest + 114 pytest; my branch says
+     90 (53 + 37). After my tests land the honest total is 151 — someone must
+     own that number at merge.
+  3. AI-REVIEW.org — both sides appended at EOF (upstream: ruling-A
+     follow-up item; mine: FR-R001 review item).
+  Per the PUSH RULE the un-rebased branch is pushed as-is (first push, no
+  force): ai/fr-r001-be @ a816b81 — implementation reviewable on origin while
+  the conflict is resolved. Clock left RUNNING per workflow. UNVERIFIED:
+  CI gate (branch never ran it), rebase fidelity, upstream-interaction tests.
+  Proposed resolution for Lead (one look, then I execute): merge the two
+  conftest designs (keep upstream's authtoken/SECRET_KEY/_migrate_db AND add
+  the demo-rig apps + core.urls + sys.path insert; autouse migrate already
+  covers my needs), take 151 as the count, keep both AI-REVIEW appends.
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:58]
 - Note taken on [2026-10-18 Sun 01:58] :: Item created by me on dispatch — the
   queue had only the combined R-001 parent above (:BE:FE), and the workflow
