@@ -305,3 +305,124 @@ class TestInjectBrandTraversal:
         with pytest.raises(ValueError, match="tauri.conf.json"):
             branding.inject_brand(app_dir, brand_path)
         assert victim.read_text() == "{}"
+
+
+# ---------------------------------------------------------------------------
+# Production CSP: the shipped tauri.conf.json carries connect-src
+# 'self' https://API_HOST; build_admin --api-host substitutes the deployed
+# origin at build time. Covers normalize_api_host (closed shape: https,
+# dotted DNS, optional port — localhost/loopback/wildcards/paths/userinfo
+# fail loudly), substitute_api_host (idempotent, drift fails) and
+# inject_brand(api_host=...) end to end.
+# ---------------------------------------------------------------------------
+
+PROD_CSP = (
+    "default-src 'self'; connect-src 'self' https://API_HOST; "
+    "script-src 'self'; img-src 'self'; font-src 'self'; "
+    "media-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'"
+)
+
+
+@pytest.fixture
+def app_dir_csp(app_dir):
+    """app_dir whose tauri.conf.json ships the production CSP placeholder."""
+    conf_path = app_dir / "src-tauri" / "tauri.conf.json"
+    conf = json.loads(conf_path.read_text())
+    conf["app"]["security"] = {"csp": PROD_CSP}
+    conf_path.write_text(json.dumps(conf))
+    return app_dir
+
+
+class TestNormalizeApiHost:
+    @pytest.mark.parametrize("raw, want", [
+        ("admin.example.com", "https://admin.example.com"),
+        ("https://admin.example.com", "https://admin.example.com"),
+        ("https://admin.example.com/", "https://admin.example.com"),
+        ("HTTPS://Admin.Example.COM", "https://admin.example.com"),
+        ("https://admin.example.com:8443", "https://admin.example.com:8443"),
+        ("https://my-api.example.co.uk", "https://my-api.example.co.uk"),
+    ])
+    def test_accepts_and_normalizes(self, raw, want):
+        assert branding.normalize_api_host(raw) == want
+
+    @pytest.mark.parametrize("bad", [
+        "", "   ", None,
+        "http://admin.example.com",        # not https
+        "ftp://admin.example.com",         # not https
+        "https://localhost",               # loopback host
+        "https://api.localhost",           # *.localhost
+        "https://127.0.0.1",               # loopback ip
+        "https://0.0.0.0",                 # loopback ip
+        "https://*.example.com",           # wildcard
+        "https://api",                     # single-label host
+        "https://admin.example.com/api",   # path
+        "https://u:p@admin.example.com",   # userinfo
+        "https://admin .example.com",      # inner whitespace
+    ])
+    def test_rejects_what_must_never_ship(self, bad):
+        with pytest.raises(ValueError):
+            branding.normalize_api_host(bad)
+
+
+class TestSubstituteApiHost:
+    @staticmethod
+    def _conf():
+        return {"app": {"security": {"csp": PROD_CSP}}}
+
+    def test_replaces_placeholder(self):
+        conf = self._conf()
+        origin = branding.substitute_api_host(conf, "admin.example.com")
+        assert origin == "https://admin.example.com"
+        csp = conf["app"]["security"]["csp"]
+        assert "https://admin.example.com" in csp
+        assert "API_HOST" not in csp
+
+    def test_idempotent_same_origin(self):
+        conf = self._conf()
+        branding.substitute_api_host(conf, "https://admin.example.com")
+        assert branding.substitute_api_host(conf, "https://admin.example.com") is None
+        assert conf["app"]["security"]["csp"].count("https://admin.example.com") == 1
+
+    def test_different_origin_after_substitution_raises(self):
+        conf = self._conf()
+        branding.substitute_api_host(conf, "https://admin.example.com")
+        with pytest.raises(ValueError, match="drift"):
+            branding.substitute_api_host(conf, "https://other.example.com")
+
+    def test_missing_csp_raises(self):
+        with pytest.raises(ValueError, match="csp missing"):
+            branding.substitute_api_host({"app": {}}, "https://admin.example.com")
+
+    def test_localhost_rejected_before_any_substitution(self):
+        conf = self._conf()
+        with pytest.raises(ValueError, match="localhost"):
+            branding.substitute_api_host(conf, "https://localhost")
+        assert "https://localhost" not in conf["app"]["security"]["csp"]
+
+
+class TestInjectBrandCsp:
+    def test_without_api_host_placeholder_stays(self, brand_dir, app_dir_csp):
+        branding.inject_brand(app_dir_csp, brand_dir / "brand.json")
+        conf = json.loads((app_dir_csp / "src-tauri" / "tauri.conf.json").read_text())
+        assert "https://API_HOST" in conf["app"]["security"]["csp"]
+        assert conf["productName"] == "Freshorama Admin"   # other patching intact
+
+    def test_with_api_host_substitutes_in_written_conf(self, brand_dir, app_dir_csp):
+        summary = branding.inject_brand(app_dir_csp, brand_dir / "brand.json",
+                                        api_host="https://admin.freshorama.com")
+        conf = json.loads((app_dir_csp / "src-tauri" / "tauri.conf.json").read_text())
+        csp = conf["app"]["security"]["csp"]
+        assert "https://admin.freshorama.com" in csp
+        assert "API_HOST" not in csp
+        assert "localhost" not in csp and "*" not in csp
+        assert summary["csp_api_host"] == "https://admin.freshorama.com"
+
+    def test_invalid_api_host_fails_before_any_write(self, brand_dir, app_dir_csp):
+        with pytest.raises(ValueError, match="localhost"):
+            branding.inject_brand(app_dir_csp, brand_dir / "brand.json",
+                                  api_host="https://localhost")
+        assert not (app_dir_csp / "public" / "brand.css").exists()  # nothing written
+
+    def test_summary_reports_no_substitution_without_api_host(self, brand_dir, app_dir_csp):
+        summary = branding.inject_brand(app_dir_csp, brand_dir / "brand.json")
+        assert summary["csp_api_host"] is None
