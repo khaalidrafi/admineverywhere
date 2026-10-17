@@ -37,7 +37,7 @@ identity, one second.
 | dir | what |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `build_admin` (brand injection), `dump_schema`, branding engine (29 pytest cases) |
-| `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat (27 vitest cases) |
+| `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat (51 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | two example brands: `freshorama` (dark SaaS) + `minimal-light` (light) |
 | `frontend-dist/` | stub for the Nix flake input — the repo ships no prebuilt web assets |
@@ -61,7 +61,7 @@ identity, one second.
 ## Tests
 
 ```bash
-cd app && npm test                    # 27 vitest (schema normalizer, SSE parser)
+cd app && npm test                    # 51 vitest (schema normalizer, SSE parser)
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 29 pytest
 ```
 
