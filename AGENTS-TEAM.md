@@ -130,3 +130,13 @@ Members are identified by full role + model@platform, never abbreviations.
 ## FENCE FORMAT (2026-10-18, owner ruling)
 All fenced blocks are BARE fences: ``` on its own line, NEVER a language/block name
 (no ```followup, no ```bash, no ```text). Applies to follow-up blocks, code, reports.
+
+## INBOX PROTOCOL (2026-10-18)
+INBOX.org at repo root = the completion channel. Members write ON TASK COMPLETION:
+TO/FROM full role - model@platform, TASK id, RESULT, COMMIT/BRANCH, facts with
+UNVERIFIED labels, NEEDED. Direct-push members (Build & Relay Engineer, sandbox and
+box loop Flashes) commit INBOX entries straight to ai/main (INBOX-only; code never).
+Branch-workers (Senior Frontend Engineer, Senior Backend Engineer, GLM-5.3) include
+the entry in their task branch; Lead resolves at merge. Lead polls INBOX via PAT every
+cycle and acts (merge/verify/spec) without Owner relay. Newest entries at top; never
+edit others' entries.
