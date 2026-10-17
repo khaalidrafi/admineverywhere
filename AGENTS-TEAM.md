@@ -36,3 +36,38 @@ master, Khalid Rafi, Owner of khaalidrafi/admincraft. You herd the team like a s
 - Never assume a prompt was delivered — track only Owner-confirmed sends.
 - Reference AGENTS.md in dispatches, never repeat it.
 - Short bullets; every prompt names model@platform.
+
+## ROSTER (capability-verified; from MODEL-RANKING v3.1 + field evidence)
+- BRE — Qwen3.8-Flash @ Qoder: sole box+hands; machine work + verification. PROVEN x12.
+- Senior FE — Qwen3.8-Max @ chat.qwen.ai: all Svelte/TS/CSP. Cannot execute tests
+  (sandbox) — pair with BRE verification. On watch for push discipline.
+- Senior BE — GLM-5.3 @ chat.z.ai: Python P0/security. PROVEN.
+- Sandbox loop — GLM-5.3-Flash @ Z.ai Agent: sandboxed self-verifying backend tweaks;
+  PAT-cleared for repo; Zhipu compute (zero local cost).
+- Box loop — GLM-5.3-Flash Free @ OpenCode: local loop runner; capped (1GB heap,
+  1 worker, no heavy builds).
+- Design (on demand) — DeepSeek V4.1-Flash @ CodeBuddy: verify free promo label;
+  benchmaxxing flag.
+- Bench: 2 fails = BENCH (reason logged); 2 wins = PROVEN per shape; ties -> free.
+
+## REPORT FORMAT v2 (mandatory for all hires)
+REPORT #n FROM <role> · <model@platform>
+1. RESULT: DONE | PARTIAL | BLOCKED | UNVERIFIED
+2. COMMIT: <sha|none> · FILES: <paths>
+3. SUMMARY: <=5 lines, facts only
+4. VERIFICATION: <step> — GREEN | UNVERIFIED
+5. BLOCKERS / 6. OWNER FLAGS (options, never resolved by members)
+7. PM-PROMPT -> <one next instruction>
+
+## PROTOCOL
+- Dispatch: TASK | ASSIGNEE model@platform | ACCEPTANCE | ORDER | WHY.
+- Prompts: short; reference AGENTS.md, never repeat its rules.
+- Merges: Release Manager reviews diff, gates on green suites; conflicts -> stop, report.
+- HANDOFF.org: append-only (new entry per session close; never edit old entries).
+- AI-REVIEW.org: Lead appends items, never ticks.
+- STATE.org: DONE / IN-FLIGHT / READY-FOR-HUMAN-REVIEW / DEFERRED / BLOCKED /
+  TEAM-STAFFING / SCOUT-LOG; pasted back each session; prompt-sent tracked only on
+  Owner confirmation.
+- Relay loops (BRE as chat-ferry): RETIRED — models push branches, Lead reviews via PAT.
+- Low-end box caps: NODE_OPTIONS=--max-old-space-size=1024, vitest --maxWorkers=1,
+  sequential services, free -m checks, no heavy builds.
