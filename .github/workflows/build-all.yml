@@ -222,14 +222,17 @@ jobs:
           mkdir -p "$HOME/.android"
           cp app/src-tauri/signing/debug.keystore "$HOME/.android/debug.keystore"
           # Cert fingerprint into the log for cross-checking apksigner below.
+          # (keytool prints SHA256: with leading whitespace -- no ^ anchor.)
           keytool -list -v -keystore "$HOME/.android/debug.keystore" \
-            -storepass android | grep -E '^Alias name|^SHA256:' | head -n 2
+            -storepass android | grep -E 'Alias name|SHA256:' | head -n 2
       - name: Build Android APK (debug-signed, aarch64 + armv7)
         working-directory: app
         run: |
           npm ci --no-audit --no-fund
           npx tauri android init
-          npx tauri android build --apk --debug --target aarch64,armv7
+          # NOTE: this tauri CLI takes repeated --target flags, NOT a comma
+          # list (clap rejects 'aarch64,armv7' with exit 2 -- cost one run).
+          npx tauri android build --apk --debug --target aarch64 --target armv7
       - name: Verify APK (stable signer + both ABIs present)
         run: |
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n 1)
@@ -407,8 +410,9 @@ jobs:
           mv artifacts/guix-out/admincraft-guix.tar.gz "release/admincraft-$VERSION-guix.tar.gz"
           mv "$(find artifacts/windows-setup -name '*-setup.exe')" "release/admincraft_${VERSION}_x64-setup.exe"
           mv "$(find artifacts/linux-appimage -name '*.AppImage')" "release/admincraft_${VERSION}_amd64.AppImage"
-          # apk: tauri android build --target aarch64,armv7 -> one universal
-          # apk carrying lib/arm64-v8a + lib/armeabi-v7a, stable-signatured
+          # apk: tauri android build --target aarch64 --target armv7 -> one
+          # universal apk carrying lib/arm64-v8a + lib/armeabi-v7a,
+          # stable-signatured
           mv "$(find artifacts/android-apk -name '*.apk')" "release/admincraft-$VERSION-android-universal-debug.apk"
           webroot=artifacts/web-dist
           if [ -d "$webroot/dist" ]; then webroot="$webroot/dist"; fi
