@@ -8,7 +8,7 @@
 :PROPERTIES:
 :ORDERED: t
 :END:
-** TODO brand-1 — generic branding + in-app rebrand + skills    :FE:BE:
+** DONE brand-1 — neutral branding + in-app rebrand + skills (v0.1.2) :FE:BE:
 ** TODO csp-1 — production CSP                                   :BE:
 ** TODO prune merged branches + release evidence pack            :BE:
 ** TODO E1 — client schema intake (apiUrl+token settings UX)     :FE:
