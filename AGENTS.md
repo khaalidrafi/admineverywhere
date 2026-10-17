@@ -63,7 +63,8 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
 | `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, date, bool, readonly datetime) |
 | `flake.nix`, `guix.scm`, `frontend-dist/` | Nix + Guix packaging — rationale in the file headers |
-| `.github/workflows/build-demo.yml.disabled` | demo-CI, parked (see *CI* below) |
+| `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix (see *CI*) |
+| `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
 | `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
 | `docs/` | E2E screenshots |
 
@@ -121,22 +122,21 @@ cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/
   svelte-internals instances); the dev server sends
   `Cache-Control: no-store`.
 
-## CI — parked
+## CI — build-all, live
 
-`build-demo.yml` is renamed to `build-demo.yml.disabled` (Actions only
-reads `*.yml`/`*.yaml` in that directory, so the file is fully inert) to
-stop burning credits on this private repo — three dispatched runs failed
-during bring-up (web/windows/linux jobs were green; android/nix/guix were
-never verified). The artifacts were demo/test-only: binaries a user
-launches, registers their own DRF API URL + credentials against on the
-login screen, and plays. No releases, nothing bundled, nothing calls home.
-
-To re-enable: `git mv .github/workflows/build-demo.yml.disabled
-.github/workflows/build-demo.yml`, then dispatch (Actions → *Demo builds* →
-Run workflow) or push a `v*` tag. Never add plain-push triggers; put
-`[skip ci]` on pushes that don't need artifacts. `app/src-tauri/Cargo.lock`
-is committed — regenerate it whenever `Cargo.toml` changes (the nix
-`cargoLock` and guix vendor builds depend on it).
+`.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
+(vitest 51 + pytest 53) runs FIRST and every build leg `needs:` it, so a
+red tree spends zero build minutes. Legs: web / windows (.exe) / linux
+(.AppImage) / android (.apk) / nix / guix, each uploading test-only
+artifacts a user launches and registers their own DRF API against on the
+login screen — no releases, nothing bundled, nothing calls home.
+Triggers: push + pull_request on `ai/main`, plus `workflow_dispatch` for
+manual runs from any branch. Paid minutes on this private repo — use
+sparing, and put `[skip ci]` on doc-only pushes to ai/main that don't
+need artifacts. The old `build-demo.yml.disabled` stays parked (its legs
+were reused for build-all). `app/src-tauri/Cargo.lock` is committed —
+regenerate it whenever `Cargo.toml` changes (the nix `cargoLock` and
+guix vendor builds depend on it).
 
 ## State as of 2026-10-17
 
@@ -170,6 +170,6 @@ is committed — regenerate it whenever `Cargo.toml` changes (the nix
   `/api/schema/`. Needs no database.
 - Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still in
   localStorage (accepted P2 — warned, not eliminated); production CSP policy;
-  placeholder icons; demo-CI android/nix/guix jobs never went green (workflow
-  parked); and — because nothing in CI or packaging runs the suites — the boot
-  gate above only fires when a human runs pytest locally.
+  placeholder icons; android/nix/guix legs of build-all not yet proven green
+  (first live run pending); the boot gate now also runs in CI via
+  test-gate, not only when a human runs pytest locally.
