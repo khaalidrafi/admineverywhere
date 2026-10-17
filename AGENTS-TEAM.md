@@ -125,3 +125,10 @@ Client-specific brands/builds NEVER land in admincraft core — not even as exam
 folders if they carry real client identity (logo, name, baked client tree). Core ships
 neutral brands only. Client craft lives in the client's own repo/fork/build input.
 Deleting such a branch is owner-ordered, no review needed.
+
+## DISPATCH PREAMBLE RULE (2026-10-18)
+Local agents (BRE @ Qoder, OpenCode, Goose) auto-load AGENTS.md from the repo — their
+prompts need only "git pull first". Web chats (Qwen3.8-Max, GLM-5.3, Z.ai Agent) load
+nothing — every web-chat dispatch MUST open with: "Clone/pull the repo first, then read
+AGENTS.md + AGENTS-TEAM.md + STATE.org before touching anything. You are ID: <id>."
+IDs are assigned by the dispatch, never assumed: glm53, qwmax, bre, zflash, oflash.
