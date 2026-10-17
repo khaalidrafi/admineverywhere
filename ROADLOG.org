@@ -1,0 +1,48 @@
+#+TITLE: ROADLOG — admincraft framework gaps (client: Freshorama e-commerce)
+# Filed 2026-10-17 by Admincraft Lead per dispatch "Platform gaps". Additive-only
+# answers; client ships on fixtures tonight, these upgrade fixtures into bindings.
+
+* R-001 Lifecycle state machine :NEEDS-ADD:
+Minimal: convention, not framework — DRF side exposes @action transition endpoints
+(confirm/cancel) + a read-only history endpoint; admin side adds a status column,
+transition buttons rendered from model config (statusTransitions registry beside
+schema), history as a record sub-view. Zero renderer change for models without the
+registry. Risk: low. Blocks the most client surface (orders).
+
+* R-002 Separated status fields :EXISTS:
+Independent enums already render as independent select fields (schema-driven
+RecordForm); guardrails: never derive one from the other in client code. Doc path:
+AGENTS.md hard-won contracts. Kanban over them needs R-001/R-004.
+
+* R-003 Custom actions + audit :NEEDS-ADD:
+Drop-in action registry mirroring the widget contract: one .ts file exporting
+meta{label,scope:record|bulk,confirm?,handler} + DRF @action endpoints; audit entries
+via an append-only endpoint, rendered in a record sub-view (shares R-001 history UI).
+Risk: low-medium (audit ordering). Unblocks invoices/tel/import client surface.
+
+* R-004 Kanban view :NEEDS-ADD:
+ModelPage gains view=toggle (table|kanban); kanban groups records by enum field,
+drag-drop fires the R-001 transition API. Reuses everything from R-001. Risk: medium
+(drag a11y). Do after R-001.
+
+* R-005 Canonical CSV export :NEEDS-ADD:
+Small: DataTable "Export" — visible-columns CSV client-side; line-level (child rows
+w/ parent IDs, stable order) needs a server @action export endpoint; admin binds a
+button to it when present. Risk: low.
+
+* R-006 Page registration :NEEDS-ADD:
+Mirror the widget glob contract for pages: src/pages/*.svelte exporting
+meta{title,path,nav} auto-register route + sidebar entry. Non-CRUD modules stop
+being forks. Risk: low (routing already dynamic).
+
+* R-007 RBAC + audit screen :NEEDS-ADD:
+Phased: (a) client-side menu/action filtering from role claims (server must emit
+roles), (b) activity-log screen reading the R-003 audit endpoint, list view.
+Biggest item; last. Risk: medium-high (server cooperation required).
+
+* R-008 Widget data sources + charts :NEEDS-ADD:
+Extend widget meta with optional {data:{endpoint,aggregate,pollInterval}}; poll via
+existing apiFetch; new chart Svelte components (area, donut, hbar, heat-strip, delta
+chip) alongside current line chart — same drop-in contract. Risk: low-medium.
+
+* Proposed order: R-001 -> R-003 -> R-002(doc) -> R-004 -> R-005 -> R-006 -> R-008 -> R-007
