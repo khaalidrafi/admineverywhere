@@ -235,11 +235,70 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
   also added to style-src (the @import is gated there, not by font-src).
   Lead: re-spec or accept-then-replace before merge.
 :END:
-** WAIT verify-cool-chat-2 — Senior FE send-back on ai/cool-chat                :BE:
+** PENDING verify-cool-chat-2 — Senior FE send-back on ai/cool-chat            :BE:
 :LOGBOOK:
+- State "PENDING" from "WAIT" [2026-10-18 Sun 02:05]
+CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
 - State "WAIT" from "ONGOING" [2026-10-18 Sun 01:53]
-CLOCK: [2026-10-18 Sun 01:47]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:47]
+- Note taken on [2026-10-18 Sun 02:05] :: Ruling applied, all four specced
+  checks green on the pushed tree, two findings left standing for you.
+  REBASE + PUSH: ai/cool-chat rebased on origin/ai/main and force-pushed with
+  lease a571257...f3fd51e; now 1 ahead / 0 behind. git diff --name-only
+  origin/ai/main ai/cool-chat lists exactly app/src/ai/ChatPanel.svelte,
+  app/src/lib/__tests__/chat.test.ts, app/src/lib/chat.ts — no governance file,
+  and after the second rebase not even the todos file, so step 4 never came
+  into play: as a direct-push member my item edits live on ai/main, and the
+  branch carries none, which is also why the rebase had nothing to re-append.
+  Commit author preserved as Qwen3.8-Max; I took no authorship of FE work.
+  STEP 2 — one honest exception to report rather than obey blindly. Check 1
+  (MEMBER IDS) is EMPTY, pass. Check 2 (the language-named follow-up fence)
+  HITS one line: AGENTS-TEAM.md:132, which reads "(no ```followup, no ```bash,
+  no ```text)" — that is mainline's OWN FENCE FORMAT prohibition, the rule
+  naming the thing it forbids. Proof it is not branch content: AGENTS-TEAM.md
+  is byte-identical to ai/main (git diff --stat origin/ai/main ai/cool-chat --
+  AGENTS-TEAM.md is empty). A literal STOP on that hit would be a false
+  positive that no resolution can clear, since the file is already ai/main's.
+  So I read the stop condition as "the branch must not introduce governance
+  text", verified that it introduces none, and continued. Overrule me if you
+  meant the literal string.
+  ITEM 1, re-measured at f3fd51e rather than inherited: hex/rgb/hsl pattern —
+  ZERO hits across all three touched files; Tailwind palette pattern — ZERO
+  hits. The control from the 01:53 note still holds (same pattern caught
+  ChatPanel.svelte:139 bg-emerald-500/15 ... text-emerald-500 and :224
+  border-red-500/40 bg-red-950/40 ... text-red-200 before the sweep), so the
+  zero is a clean file, not a dead grep.
+  ITEM 2: one ChatPanel file (app/src/ai/ChatPanel.svelte), one importer
+  (components/Shell.svelte:8) and one mount (Shell.svelte:56).
+  ITEM 3: vitest 63 passed (8 files) in 37.33s under
+  NODE_OPTIONS=--max-old-space-size=1024 --maxWorkers=1 with nice+ionice;
+  production build compile green — vite build, 132 modules transformed, built
+  in 14.66s, dist/assets byte-identical in size to the previous cycle's build
+  (CSS 34.35 kB, index js 94.58 kB). Bundle contains the panel (one "AI
+  Assistant" match) and the sweep really compiled to brand vars: CSS carries
+  color-mix(in srgb,var(--brand-accent) 15%,transparent), var(--brand-text)
+  15% and 40%, var(--brand-surface) 40%. Palette utilities still emitted in the
+  CSS (.bg-emerald-500, .bg-red-500, .bg-red-950, .border-red-400/500,
+  .text-red-100/200/300/400) come from the six out-of-scope files listed in the
+  01:53 note, not from this branch.
+  FINDINGS 1 AND 2 FROM THE 01:53 NOTE ARE UNCHANGED AND UNFIXED — deliberately:
+  the ruling authorized only the docs resolution, and app/src is the Senior
+  FE's domain, so I touched nothing there. buildSchemaPrompt (chat.ts:48) ships
+  with 5 tests and no caller, while the live prompt path stays
+  ChatPanel.svelte:69 -> schemaSummary (openapi.ts:188) -> systemPrompt; and the
+  same commit removed systemPrompt's "Available models (fields in parentheses;
+  fk = foreign key to that model):" legend while the panel still passes
+  schemaSummary output. My four checks cannot see either: the sweep is about
+  colors, the panel count is about files, and the suite feeds systemPrompt a
+  hand-written string. Still merge-blocking in my view.
+  UNVERIFIED: no browser E2E against the demo backend and no Tauri window run,
+  so the panel was not exercised as a user would; no pytest (branch touches no
+  plugin/ file). Refs left behind: ai/cool-chat-verify2 (49e67fa) is the
+  superseded interim publication — its content is what f3fd51e now carries, so
+  it is safe to delete on your word; local-only safety ref
+  backup/cool-chat-original still points at a571257. Clock covers the WAIT idle
+  window too (0:18 total, 01:47 to 02:05), per the workflow rule that WAIT keeps
+  the clock running — don't read the effort figure as pure work.
 - Note taken on [2026-10-18 Sun 01:53] :: WAIT — one conflicted file and it is
   not a code file: AGENTS-TEAM.md. Clock kept open per the workflow (WAIT keeps
   the clock running), so CLOCKSUM here includes idle time awaiting your ruling.
