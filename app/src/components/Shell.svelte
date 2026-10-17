@@ -4,6 +4,7 @@
   import Sidebar from "./Sidebar.svelte";
   import Dashboard from "../pages/Dashboard.svelte";
   import ModelPage from "../pages/ModelPage.svelte";
+  import Branding from "../pages/Branding.svelte";
   import ChatPanel from "../ai/ChatPanel.svelte";
   import Icon from "./Icon.svelte";
 
@@ -40,6 +41,8 @@
   <main class="flex-1 px-4 pb-24 pt-20 md:px-8 md:pb-10 md:pt-6">
     {#if $route.name === "dashboard"}
       <Dashboard />
+    {:else if $route.name === "branding"}
+      <Branding />
     {:else if $route.name === "model"}
       {#key $route.id}
         <ModelPage id={$route.id} recordId={$route.recordId} />
