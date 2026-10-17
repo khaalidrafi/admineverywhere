@@ -178,10 +178,84 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
   also added to style-src (the @import is gated there, not by font-src).
   Lead: re-spec or accept-then-replace before merge.
 :END:
-** ONGOING verify-cool-chat-2 — Senior FE send-back on ai/cool-chat   :BE:
+** WAIT verify-cool-chat-2 — Senior FE send-back on ai/cool-chat                :BE:
 :LOGBOOK:
+- State "WAIT" from "ONGOING" [2026-10-18 Sun 01:53]
 CLOCK: [2026-10-18 Sun 01:47]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:47]
+- Note taken on [2026-10-18 Sun 01:53] :: WAIT — one conflicted file and it is
+  not a code file: AGENTS-TEAM.md. Clock kept open per the workflow (WAIT keeps
+  the clock running), so CLOCKSUM here includes idle time awaiting your ruling.
+  REBASE: git rebase origin/ai/main on ai/cool-chat stopped with CONFLICT
+  (content) in AGENTS-TEAM.md only; app/src/ai/ChatPanel.svelte,
+  app/src/lib/chat.ts and app/src/lib/__tests__/chat.test.ts applied clean. I
+  did NOT resolve it on another member's branch, because the branch side of
+  that conflict reinstates the MEMBER IDS section, restores the language-named
+  follow-up fence, and deletes DISPATCH PREAMBLE RULE and FENCE FORMAT — silent
+  reversals of 4337e1a and 88fc8bb, both confirmed ancestors of ai/main. The
+  dangerous part: the MEMBER IDS hunk and the fence hunk applied CLEANLY
+  outside the conflict region, so a mechanical --continue would have produced a
+  green rebase that quietly rewrote governance.
+  WHAT I DID INSTEAD (loses nothing, rewrites nothing of yours): resolved the
+  rebase locally with AGENTS-TEAM.md taken verbatim from mainline (git checkout
+  --ours), which leaves the rebased commit diffing against ai/main in the three
+  app/ files only, and pushed that tree as a NEW ref ai/cool-chat-verify2 (tip
+  49e67fa, 1 ahead / 0 behind, commit author preserved as Qwen3.8-Max).
+  ai/cool-chat itself is untouched — local pointer reset back to a571257 ==
+  origin, no force-push of another member's branch. Safety ref
+  backup/cool-chat-original at a571257. NEEDED FROM YOU: approve the
+  resolution and I force-push ai/cool-chat with a lease, or you rebase it.
+  Note the send-back message claims "(rebased on ai/main)" while the branch sat
+  26 behind on a stale AGENTS-TEAM.md base; the claim is false as of this
+  segment.
+  ITEM 1 — zero hits, both patterns, on all three touched files. Hex/rgb/hsl
+  (hash + 3-8 hex digits, rgba?(, hsla?(): no matches. Tailwind palette
+  (dash + color name + dash + digits): no matches. Control that the palette
+  pattern is actually live, run against the pre-sweep file a571257~1: line 139
+  "bg-emerald-500/15 ... text-emerald-500" and line 224 "border-red-500/40
+  bg-red-950/40 ... text-red-200" — exactly the two lines the sweep replaced,
+  and those are the only hits. Compiled proof at the rebased tip: dist CSS
+  carries color-mix(in srgb,var(--brand-accent) 15%,transparent),
+  var(--brand-text) 40% and var(--brand-surface) 40%.
+  Adjacent fact, outside the dispatch scope: 8 palette hits remain elsewhere —
+  ErrorBanner.svelte:12,13, DataTable.svelte:69,90, RecordForm.svelte:226,
+  Toaster.svelte:9, Login.svelte:90, Branding.svelte:153 — so the
+  no-hardcoded-colors guardrail is not repo-wide; Login.svelte:90 is the same
+  red-box pattern this sweep just retired inside the panel.
+  ITEM 2 — one panel exists, but not because of this branch. At the tip the
+  only ChatPanel file is app/src/ai/ChatPanel.svelte, and mainline already had
+  exactly that one. git log --all --diff-filter=A and --diff-filter=D over
+  app/src/components/ChatPanel.svelte both return nothing: no commit ever added
+  or removed that path, so "duplicate folded into src/ai/ChatPanel.svelte"
+  describes an uncommitted working file in the FE sandbox, not a repo change —
+  UNVERIFIABLE here, and nothing to delete. Mount and export intact:
+  components/Shell.svelte:8 imports ../ai/ChatPanel.svelte, :56 renders
+  <ChatPanel />; single import, single mount; the bundle still contains the
+  panel (one "AI Assistant" match in dist/assets/index-*.js).
+  ITEM 3 — vitest 63 passed (8 files) in 49.35s under
+  NODE_OPTIONS=--max-old-space-size=1024 and --maxWorkers=1, nice+ionice.
+  Mainline records 58, so this is mainline + the branch's 5 new chat tests
+  (chat.test.ts 9 -> 14), with no regression. Production build compile green:
+  vite build, 132 modules transformed, built in 14.60s, dist emitted; one
+  pre-existing compiler warning printed for a modal backdrop onclick handler
+  (not one of the branch's files, build unaffected).
+  FINDING 1, needs your ruling and I would block merge on it: chat.ts:48 gains
+  buildSchemaPrompt plus 5 tests for it, and NOTHING in app/ calls it. The
+  panel still builds its prompt at ChatPanel.svelte:69 from schemaSummary
+  (openapi.ts:188) via systemPrompt. So the branch ships a second, weaker
+  schema prompt (Models: Name (N fields)) as dead code, tested green while
+  disconnected from the live path.
+  FINDING 2: the same commit deletes systemPrompt's framing line "Available
+  models (fields in parentheses; fk = foreign key to that model):" — the line
+  that explained exactly what schemaSummary emits (name(type), name(fk->Model))
+  — while the panel keeps passing schemaSummary output. The streaming system
+  prompt lost its legend. The suite cannot catch this: chat.test.ts:127 feeds
+  systemPrompt a hand-written "Models: Product (3 fields)" string, not real
+  schemaSummary output.
+  UNVERIFIED in this segment: no browser E2E against the demo backend and no
+  Tauri window run, so the panel was not exercised as a user would; evidence is
+  static grep + unit + build only. pytest not run — the branch touches no
+  plugin/ file. Box was at load 3.8 with 1.1 GB available throughout.
 - Note taken on [2026-10-18 Sun 01:47] :: Item created by me on dispatch —
   VERIFY-COOL-CHAT-2 arrived with no todos item, and the workflow requires an
   item to clock, so this is the report container. Not a spec item I authored:
