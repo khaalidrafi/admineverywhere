@@ -400,6 +400,8 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   FE's branch. I am executing the dispatch, keeping a safety ref at the
   original tip, and I will not push anything that moves AGENTS-TEAM.md
   backwards.
+:END:
+** TODO prune merged branches + release evidence pack            :BE:
 ** TODO E1 — client schema intake (apiUrl+token settings UX)     :FE:
 ** TODO prod-CSP follow-through after csp-1 lands                :BE:
 * OWN — owner decisions                                         :OWN:
