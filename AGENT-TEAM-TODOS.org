@@ -178,7 +178,38 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
   also added to style-src (the @import is gated there, not by font-src).
   Lead: re-spec or accept-then-replace before merge.
 :END:
-** TODO prune merged branches + release evidence pack            :BE:
+** ONGOING verify-cool-chat-2 — Senior FE send-back on ai/cool-chat   :BE:
+:LOGBOOK:
+CLOCK: [2026-10-18 Sun 01:47]
+- State "ONGOING" from "TODO" [2026-10-18 Sun 01:47]
+- Note taken on [2026-10-18 Sun 01:47] :: Item created by me on dispatch —
+  VERIFY-COOL-CHAT-2 arrived with no todos item, and the workflow requires an
+  item to clock, so this is the report container. Not a spec item I authored:
+  the Lead may reword or move it.
+  Start-of-segment divergence, measured: origin/ai/cool-chat is 1 ahead /
+  26 behind origin/ai/main (the dispatch said 16 behind — mainline moved again
+  in between; csp-1 merged as 26ea4a9 plus the todos pushes). Ahead commit is
+  a571257 fix(chat): branding sweep + integration (rebased on ai/main) — that
+  message claims a rebase it did not actually do, see the next note.
+  Files a571257 touches: AGENTS-TEAM.md, app/src/ai/ChatPanel.svelte,
+  app/src/lib/chat.ts, app/src/lib/__tests__/chat.test.ts. No branding.py or
+  plugin test touch, contrary to the dispatch's expectation.
+  FLAG BEFORE ANY REBASE: a571257's AGENTS-TEAM.md hunk ADDS a "## MEMBER IDS"
+  section, changes the mandatory follow-up fence to a language-named block
+  (three backticks followed by the word followup), and DELETES
+  "## DISPATCH PREAMBLE RULE" and "## FENCE FORMAT". Both deleted sections and
+  both opposite rules are in ai/main right now — 4337e1a (drop member IDs) and
+  88fc8bb (bare-fence rule) are confirmed ancestors of origin/ai/main via
+  git merge-base --is-ancestor, and mainline AGENTS-TEAM.md has zero "MEMBER
+  IDS" matches with FENCE FORMAT at :130. So the send-back commit carries a
+  silent reversal of two owner rulings, almost certainly a stale-file edit in
+  the web chat. A rebase may apply that reversal cleanly rather than conflict,
+  which is the dangerous case: green rebase, red rules file.
+  Standing-rule tension, stated once: DIVERGENCE HANDLING says force-push YOUR
+  task branch only; this dispatch orders me to rebase and force-push the Senior
+  FE's branch. I am executing the dispatch, keeping a safety ref at the
+  original tip, and I will not push anything that moves AGENTS-TEAM.md
+  backwards.
 ** TODO E1 — client schema intake (apiUrl+token settings UX)     :FE:
 ** TODO prod-CSP follow-through after csp-1 lands                :BE:
 * OWN — owner decisions                                         :OWN:
