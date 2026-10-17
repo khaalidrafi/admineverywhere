@@ -66,7 +66,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (75 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (114 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (58 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
@@ -94,7 +94,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
 cd app && npm test                          # 58 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 75 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 114 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -156,7 +156,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
 ## CI — build-all, live
 
 `.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
-(vitest 51 + pytest 86, plus a CSP-hygiene check on the shipped
+(vitest 58 + pytest 114, plus a CSP-hygiene check on the shipped
 tauri.conf.json) runs FIRST and every build leg `needs:` it, so a
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
 (.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
@@ -228,7 +228,9 @@ once (one-time signature change from the stable key).
   `connect-src`/`img-src` now allow any http/https origin and
   `style-src`/`font-src` allow Google Fonts for branded fonts;
   `script-src 'self'` unchanged. Documented tradeoff: script execution
-  stays locked down, network egress does not.
+  stays locked down, network egress does not. (Superseded on `ai/csp-1`: the
+  shipped conf now carries the *production* policy — see the csp-1 bullet —
+  so the any-origin egress survives only in web/dev mode.)
 - **`skills/` shipped**: `admincraft-onboard` + `admincraft-craft`
   (duplicated stdlib engine scripts by design — `inspect_project.py`,
   `derive_brand.py` — ask/auto modes, references, evals). Verified live
@@ -264,17 +266,31 @@ once (one-time signature change from the stable key).
   boots the real `core.settings` in a subprocess, runs Django's system checks,
   and resolves `api/auth/token/`, the `shop.urls` router routes and
   `/api/schema/`. Needs no database.
-- Fixed & pushed to `ai/csp-1` (not yet merged), later the same day: the
+- Fixed & pushed to `ai/csp-1` (rebased on `ai/main`, not yet merged): the
   **production CSP policy** item is closed. `tauri.conf.json` ships
-  self-only script/img/font/media/worker + style-src 'unsafe-inline'
-  (Tailwind) + connect-src 'self' https://API_HOST — a placeholder, no
-  localhost, no wildcards. `build_admin --api-host <origin>` substitutes
-  the deployed origin at deploy build time via
-  `branding.normalize_api_host` (https only, dotted DNS, optional port;
-  localhost/loopback, wildcards, paths, userinfo fail loudly; CSP drift
-  fails loudly; same-origin re-runs are idempotent no-ops). 33 new pytest
-  cases (53 → 86), all green. CI test-gate gained a CSP-hygiene step that
-  fails if localhost/http/ws/wildcards ever reappear in the shipped conf.
+  self-only script/media/worker + connect-src 'self' https://API_HOST — a
+  placeholder, no localhost, no wildcards. After BRE Finding 2 it also
+  carries `img-src 'self' data: https:`, `font-src 'self'
+  https://fonts.googleapis.com https://fonts.gstatic.com` and
+  `https://fonts.googleapis.com` under `style-src`: a brand.json webfont
+  (@import is gated by style-src, the .woff2 files by font-src) and a
+  hosted logo URL are product promises a self-only policy breaks silently,
+  with no error. `build_admin --api-host <origin>` substitutes the deployed
+  origin at deploy build time via `branding.normalize_api_host` (https only,
+  dotted DNS, optional port; localhost/loopback, wildcards, paths, userinfo
+  fail loudly; CSP drift fails loudly; same-origin re-runs are idempotent
+  no-ops). pytest 114 / vitest 58, green; the CSP + API_HOST tests moved to
+  `plugin/tests/test_branding_api.py`. CI test-gate gained a CSP-hygiene
+  step that fails if localhost/http/ws/wildcards ever reappear in the shipped
+  conf.
+- **BLOCKED-ON-FOLLOW-UP on csp-1** (queued as `prod-CSP follow-through` in
+  AGENT-TEAM-TODOS.org): a placeholder CSP also breaks the flow this file
+  and the README advertise — a downloaded CI artifact (.exe/.AppImage/.apk)
+  pointed at the user's own DRF API on the login screen cannot connect,
+  because `connect-src` is 'self' + `https://API_HOST` until a build passes
+  `--api-host`. Web mode is unaffected (no Tauri CSP). Needs either a
+  runtime-set connect-src (same mechanism as live branding) or the artifact
+  story changed, before this merges.
 - v0.1.0 released 2026-10-17: tag on `f1678cd`, assets from green run
   39000890302 (wheel + sdist, NSIS exe, AppImage, aarch64 debug apk, web
   bundle, nix/guix store tarballs, SHA256SUMS). All six build legs are
