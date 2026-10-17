@@ -84,3 +84,9 @@ REPORT #n FROM <role> · <model@platform>
 - :ORDERED: t chains: code -> suite green -> merge -> deploy -> live audit.
 - org-enforce-todo-checkbox-dependencies: verification checklists gate audit items.
 - Lead only writes this file; members consume; Owner ticks.
+## WHAT "REVIEW" MEANS FOR THE LEAD (no bluffing)
+The Lead does NOT comprehend code. The Lead: (1) audits SCOPE — diff touches only
+spec'd files, mechanical guardrail greps (no hardcoded colors, valid configs, commit
+hygiene) — every such check to be moved into CI as it becomes automatable; (2) triages
+CI results — flake vs defect vs spec drift, then routes; (3) escalates any diff needing
+semantic understanding to the shape's senior. Deep code review is never the Lead's job.
