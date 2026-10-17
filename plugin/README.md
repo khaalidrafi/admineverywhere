@@ -12,7 +12,10 @@ Framework backends. Install into your Django project:
 - `python manage.py build_admin --brand <brand.json> --app <app-dir>` —
   inject one `brand.json` (colors, radius, font, logo, app name) into the
   Tauri/Svelte client: bundled static assets + `tauri.conf.json`
-  productName/window title (the launcher identity for builds).
+  productName/window title (the launcher identity for builds). On deploy
+  builds, pass `--api-host https://admin.example.com` to substitute the
+  production CSP's `https://API_HOST` placeholder with the real origin
+  (validated: https, dotted DNS — localhost/wildcards rejected).
 
 ## Runtime branding API (brand the app from inside the app)
 
