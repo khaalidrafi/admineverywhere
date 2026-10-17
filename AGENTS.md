@@ -61,6 +61,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/brands/` | two example brands: `freshorama` (dark SaaS), `minimal-light` |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
+`app/src-tauri/signing/` | committed stable debug keystore for the android apk — why it exists + rotation notes in its README |
 | `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, date, bool, readonly datetime) |
 | `flake.nix`, `guix.scm`, `frontend-dist/` | Nix + Guix packaging — rationale in the file headers |
 | `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
@@ -127,7 +128,10 @@ cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/
 `.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
 (vitest 51 + pytest 53) runs FIRST and every build leg `needs:` it, so a
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
-(.AppImage) / android (.apk) / nix / guix, each uploading test-only
+(.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
+with `--target aarch64,armv7`, signed by the committed
+`app/src-tauri/signing/debug.keystore` so every run's apk signature is
+identical and new builds install over old ones) / nix / guix, each uploading test-only
 artifacts a user launches and registers their own DRF API against on the
 login screen — nothing bundled, nothing calls home. Triggers: push +
 pull_request on `ai/main`, `workflow_dispatch` from any branch, and `v*`
@@ -143,9 +147,11 @@ on it).
 
 ## Releases
 
-Push an annotated `vX.Y.Z` tag on `ai/main` (bump the version in BOTH
-`plugin/pyproject.toml` and `app/package.json` first — the tag should
-match them). The pipeline runs on the tag and the `release` job cuts the
+Push an annotated `vX.Y.Z` tag on `ai/main` (bump the version in ALL FOUR
+carriers first — `plugin/pyproject.toml`, `app/package.json`,
+`app/src-tauri/tauri.conf.json` (drives the apk `versionCode`), and
+`app/src-tauri/Cargo.toml` + its lock entry in `Cargo.lock` — the tag
+should match them). The pipeline runs on the tag and the `release` job cuts the
 GitHub Release from that run's artifacts plus the plugin wheel/sdist,
 with a `SHA256SUMS.txt`. Asset names and assembly rules mirror v0.1.0
 exactly (reference implementation: `scripts/cut_v010_release.sh`, which
@@ -155,6 +161,18 @@ PATs in CI. If a tag push ever fails to trigger, the manual fallback:
 dispatch a run on the tag's commit, download its artifacts, and re-run
 the assembly steps from the release job. Release assets are permanent;
 run artifacts expire after 14 days.
+
+## Android apk — install rules (learned from v0.1.0)
+
+v0.1.0's apk failed to install on phones with "App not installed": it
+was `arm64-v8a`-only (32-bit phones reject it) and every CI run minted
+a fresh ephemeral debug keystore (Android refuses to update an app
+whose signature changed). Since v0.1.1 the apk is universal
+(`aarch64,armv7` targets) and signed with the committed stable debug
+key. Sideload rules: Android 7.0+ (minSdk 24), 64- or 32-bit, install
+from the **release** asset (run-page artifacts download as a zip —
+extract first), and devices that had the v0.1.0 apk must uninstall it
+once (one-time signature change from the stable key).
 
 ## State as of 2026-10-17
 
@@ -191,6 +209,11 @@ run artifacts expire after 14 days.
   bundle, nix/guix store tarballs, SHA256SUMS). All six build legs are
   proven green in CI — the old "android/nix/guix unverified" caveat is
   closed.
+- v0.1.1 released 2026-10-17, same day: the apk became universal
+  (aarch64 + armv7) and stable-signed (committed debug keystore) after
+  v0.1.0's apk hit "app not installed" on phones (aarch64-only ABI +
+  ephemeral per-run signing key). First live fire of the automated
+  `release` job (v0.1.0 was cut by hand).
 - Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still in
   localStorage (accepted P2 — warned, not eliminated); production CSP policy;
   placeholder icons; the boot gate now also runs in CI via

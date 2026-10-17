@@ -71,24 +71,25 @@ cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 53 pytest
 
 `.github/workflows/build-all.yml` runs on every push and PR to `ai/main`:
 a test gate (51 vitest + 53 pytest) first, then six build legs — web
-bundle, Windows NSIS `.exe`, Linux `.AppImage`, Android `.apk` (aarch64,
-debug-signed) and the Nix + Guix packages. Every run uploads its
+bundle, Windows NSIS `.exe`, Linux `.AppImage`, Android `.apk` (universal:
+`arm64-v8a` + `armeabi-v7a`, Android 7.0+, signed with the committed stable
+debug key) and the Nix + Guix packages. Every run uploads its
 artifacts (14-day retention) so you can grab a client, point it at your
 own DRF API on the login screen, and start managing your models —
 nothing bundled, nothing calls home.
 
 Push a `v*` tag and the same pipeline also cuts a GitHub Release with all
 assets attached. Current set (see
-[v0.1.0](https://github.com/khaalidrafi/admincraft/releases/tag/v0.1.0)):
+[v0.1.1](https://github.com/khaalidrafi/admincraft/releases/tag/v0.1.1)):
 
 | asset | platform | how to use |
 | --- | --- | --- |
-| `admincraft-0.1.0-py3-none-any.whl` (+ sdist) | any Python ≥ 3.10 | `pip install` — the Django plugin |
-| `admincraft_0.1.0_x64-setup.exe` | Windows | run the NSIS installer |
-| `admincraft_0.1.0_amd64.AppImage` | most distros | `chmod +x` and run |
-| `admincraft-0.1.0-android-aarch64-debug.apk` | Android (aarch64) | `adb install` — debug-signed for testing |
-| `admincraft-0.1.0-web.tar.gz` | any (browser) | serve the contents statically, open, log in |
-| `admincraft-0.1.0-nix.tar.gz` / `-guix.tar.gz` | Nix / Guix | verified store-path builds (absolute `/nix/store` / `/gnu/store` paths) |
+| `admincraft-0.1.1-py3-none-any.whl` (+ sdist) | any Python ≥ 3.10 | `pip install` — the Django plugin |
+| `admincraft_0.1.1_x64-setup.exe` | Windows | run the NSIS installer |
+| `admincraft_0.1.1_amd64.AppImage` | most distros | `chmod +x` and run |
+| `admincraft-0.1.1-android-universal-debug.apk` | Android 7.0+ (64- & 32-bit) | enable *install unknown apps*, then sideload; debug-signed (stable key). Upgrading from the v0.1.0 apk? Uninstall that first — the signing key changed once, deliberately |
+| `admincraft-0.1.1-web.tar.gz` | any (browser) | serve the contents statically, open, log in |
+| `admincraft-0.1.1-nix.tar.gz` / `-guix.tar.gz` | Nix / Guix | verified store-path builds (absolute `/nix/store` / `/gnu/store` paths) |
 | `SHA256SUMS.txt` | — | checksums for everything above |
 
 ## Nix
