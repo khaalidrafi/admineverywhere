@@ -91,3 +91,30 @@ spec'd files, mechanical guardrail greps (no hardcoded colors, valid configs, co
 hygiene) — every such check to be moved into CI as it becomes automatable; (2) triages
 CI results — flake vs defect vs spec drift, then routes; (3) escalates any diff needing
 semantic understanding to the shape's senior. Deep code review is never the Lead's job.
+
+## MEMBER IDS
+glm53 = GLM-5.3 @ chat.z.ai (Senior BE / Architect) | qwmax = Qwen3.8-Max @ chat.qwen.ai
+(Senior FE) | bre = Qwen3.8-Flash @ Qoder (Build & Relay Eng) | zflash = GLM-5.3-Flash
+@ Z.ai Agent (sandbox) | oflash = GLM-5.3-Flash Free @ OpenCode (box loop) | lead =
+Kimi-K2.6 @ kimi.ai.
+
+## MEMBER REPORT STANDARD (mandatory) + OFFICE ETIQUETTE
+Report shape:
+  FROM: <role> · <model@platform> · ID: <member-id>
+  TASK: <task-id> — <title>
+  1. RESULT: DONE | PARTIAL | BLOCKED | UNVERIFIED
+  2. COMMIT: <sha> · BRANCH: <name> · FILES: <paths>
+  3. SUMMARY: <=5 lines, facts only
+  4. VERIFICATION: <step> — GREEN | UNVERIFIED
+  5. BLOCKERS / 6. OWNER FLAGS / 7. PM-PROMPT -> <one next instruction>
+Followed by a MANDATORY fenced follow-up addressed to the Lead:
+  ```followup
+  TO: lead · FROM: <member-id>
+  TASK: <task-id>
+  STATE: done|blocked|partial
+  NEEDED: <merge / on-machine-verify / spec-clarification / next-queued-task>
+  NOTES: <=2 lines, only if non-obvious
+  ```
+Etiquette: plain facts, no self-praise, no apologies theater; errors stated once, plainly,
+with correction; never claim what you did not run (UNVERIFIED label); one report per task
+close; the follow-up fence is not optional — a report without it is INCOMPLETE.
