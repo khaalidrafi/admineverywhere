@@ -68,6 +68,14 @@
       #:phases
       #~(modify-phases %standard-phases
           (delete 'configure)        ; no autotools
+          ;; cargo --frozen verifies every vendored crate against its
+          ;; .cargo-checksum.json. The gnu-build-system shebang patchers
+          ;; rewrite scripts in the source tree (first victim:
+          ;; vendor/bit-vec/crusader.sh, run 38995265464), breaking that
+          ;; verification. Nothing in this build executes those scripts,
+          ;; so keep the source byte-identical instead.
+          (delete 'patch-source-shebangs)
+          (delete 'patch-generated-file-shebangs)
           (replace 'build
             (lambda _
               (setenv "CARGO_HOME" (getcwd))
