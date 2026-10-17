@@ -3,13 +3,47 @@
 We configure Django in-memory here (no DB needed — branding is pure I/O),
 plus the runtime-branding API surface: DRF authtoken (auth fixture) and
 ROOT_URLCONF pointing at the real shipped admincraft.urlconf.
+
+FR-R001 merge note: the demo rig (shop + DRF extras) is mounted in the same
+configure() block so test_order_lifecycle.py can exercise the live order API
+contract in-process; demo-backend is prepended to sys.path because CI runs
+pytest from the repo root. The rig's URLconf/DRF policy is scoped to that
+module only (see _demo_rig) so every other module keeps exactly the
+configuration it shipped with. Still no pytest-django — Django's own test
+utilities create/teardown the per-module test database.
 """
+import sys
+from pathlib import Path
+
 import django
 import pytest
 from django.conf import settings
 
+DEMO_ROOT = Path(__file__).resolve().parents[2] / "demo-backend"
+
+# Module (basename) that runs against the demo rig.
+DEMO_RIG_MODULE = "test_order_lifecycle"
+
+# Demo-rig DRF policy (lives here so the override stays in one place).
+DEMO_REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+DEMO_SPECTACULAR_SETTINGS = {
+    "TITLE": "Demo Shop API (test)",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
 
 def pytest_configure():
+    if str(DEMO_ROOT) not in sys.path:
+        sys.path.insert(0, str(DEMO_ROOT))
     if not settings.configured:
         settings.configure(
             DEBUG=True,
@@ -20,6 +54,10 @@ def pytest_configure():
                 "rest_framework",
                 "rest_framework.authtoken",
                 "admincraft",
+                # FR-R001 demo rig: shop app + DRF schema/docs stack
+                "drf_spectacular",
+                "corsheaders",
+                "shop",
             ],
             DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},
             ROOT_URLCONF="admincraft.urls",
@@ -33,3 +71,26 @@ def _migrate_db():
     """Create auth/token tables in the in-memory sqlite (no pytest-django)."""
     from django.core.management import call_command
     call_command("migrate", verbosity=0, interactive=False)
+
+
+@pytest.fixture(autouse=True)
+def _demo_rig(request):
+    """Scope the demo rig's URLconf + DRF policy to the FR-R001 module.
+
+    Every other module (upstream branding/API tests included) runs under the
+    exact configuration it shipped with; test_order_lifecycle additionally
+    gets ROOT_URLCONF=core.urls and the demo REST_FRAMEWORK/SPECTACULAR
+    policy for the duration of each test (including the spectacular schema
+    generation call).
+    """
+    if request.module.__name__.split(".")[-1] != DEMO_RIG_MODULE:
+        yield
+        return
+    from django.test.utils import override_settings
+
+    with override_settings(
+        ROOT_URLCONF="core.urls",
+        REST_FRAMEWORK=DEMO_REST_FRAMEWORK,
+        SPECTACULAR_SETTINGS=DEMO_SPECTACULAR_SETTINGS,
+    ):
+        yield

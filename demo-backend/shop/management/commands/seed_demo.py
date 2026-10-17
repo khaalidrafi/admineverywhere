@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from shop.models import Category, Customer, Order, Product
+from shop.models import Category, Customer, Order, OrderHistory, Product
 
 CATEGORIES = ["Fresh Produce", "Bakery", "Dairy", "Beverages", "Pantry"]
 PRODUCTS = {
@@ -74,13 +74,20 @@ class Command(BaseCommand):
 
         statuses = ["pending", "paid", "shipped", "refunded"]
         for i in range(60):
-            Order.objects.create(
+            status = random.choice(statuses)
+            order = Order.objects.create(
                 customer=random.choice(customers),
                 product=random.choice(products),
-                status=random.choice(statuses),
+                status=status,
                 total=Decimal(random.randint(5, 90)) + Decimal("0.50"),
                 notes="" if i % 3 else "Leave at front door.",
                 created_at=now - timedelta(days=random.randint(0, 13), hours=random.randint(0, 23)),
+            )
+            # FR-R001: seeded orders get their creation history entry too
+            # (actor=None — system move), so GET /api/orders/<id>/history/
+            # never 404s into an empty trail for demo data.
+            OrderHistory.objects.create(
+                order=order, from_status="", to_status=status, actor=None
             )
 
         self.stdout.write(self.style.SUCCESS(
