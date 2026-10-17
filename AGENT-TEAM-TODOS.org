@@ -19,8 +19,38 @@
 :ORDERED: t
 :END:
 ** DONE brand-1 — neutral branding + in-app rebrand + skills (v0.1.2) :FE:BE:
-** ONGOING csp-1 — production CSP                                 :BE:
-CLOCK: [2026-10-18 Sun 01:10]
+** PENDING csp-1 — production CSP                                 :BE:
+CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
+:LOGBOOK:
+- Note taken on [2026-10-18 Sun 01:12] :: CSP-1-FINISH complete. ai/csp-1 at
+  c3b5aa9, 8 ahead / 0 behind origin/ai/main, force-pushed with lease, never
+  merged. Commits: f37c24b 47e3083 890713d (oflash's, rebased) + 8b9a7dd test
+  move, 31175d6 prod CSP brand origins, 765836b ci comment, 5e32953 + c3b5aa9
+  docs.
+- Note taken on [2026-10-18 Sun 01:12] :: Items 1-4 done. 1) API_HOST/CSP
+  tests moved to plugin/tests/test_branding_api.py:280-497, deleted from
+  test_branding.py (428 -> 307 lines), test_commands.py:13 re-pointed.
+  2) img-src 'self' data: https: + font-src/style-src Google Fonts in
+  app/src-tauri/tauri.conf.json:24; WHY at plugin/src/admincraft/branding.py
+  :218-237 (JSON takes no comments). 3) TestProdCspBrandOrigins
+  (test_branding_api.py:454) — written red first, incl. shipped-conf
+  equality and generated-CSP-after-substitution. 4) build-all.yml:4 counts,
+  own commit.
+- Note taken on [2026-10-18 Sun 01:12] :: Suites on-machine, capped: pytest
+  114 passed in 46.58s (75 mainline + 33 csp-1 + 6 new); vitest 58 passed
+  (8 files). CI hygiene gate replayed locally: ok. YAML parses.
+- Note taken on [2026-10-18 Sun 01:12] :: UNVERIFIED: the CSP enforced
+  inside a real Tauri window (needs a build; forbidden on this box). Expected
+  regressions, documented AGENTS.md:269 + :286 — CI artifacts pointed at a
+  user's own DRF API cannot connect until a build passes --api-host, and
+  tauri dev HMR loses the 4a89fba localhost allowances.
+- Note taken on [2026-10-18 Sun 01:12] :: OWNERS OPEN: owner ruling A
+  (ad23c30, ai/main) asks for brand-substituted img/font origins like
+  API_HOST; this branch ships static widening instead, because CSP-1-FINISH
+  item 2 ordered exactly that. Deviation inside item 2: fonts.googleapis.com
+  also added to style-src (the @import is gated there, not by font-src).
+  Lead: re-spec or accept-then-replace before merge.
+:END:
 ** TODO prune merged branches + release evidence pack            :BE:
 ** TODO E1 — client schema intake (apiUrl+token settings UX)     :FE:
 ** TODO prod-CSP follow-through after csp-1 lands                :BE:
