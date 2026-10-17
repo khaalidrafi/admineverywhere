@@ -46,3 +46,14 @@ STATE.org is the single source of truth — every cycle starts and ends with it.
 - HANDOFF.org: committed at session close.
 - MODEL-RANKING: cached herd table (re-run on "herd" or a model failure).
 - TEAM-CHARTER.org: this file. Amendments: EM proposes, Owner approves.
+
+## REPORTING CONTRACT v2 (adopted 2026-10-17, from team-template review)
+REPORT #n · <role>
+FROM: <role> · <model@platform>
+1. RESULT: DONE | PARTIAL | BLOCKED | UNVERIFIED  (PARTIAL beats heroic DONE; a claimed-but-false green is the one unforgivable sin)
+2. COMMIT: <sha|none> · FILES: <paths>
+3. SUMMARY: ≤5 lines, facts only
+4. VERIFICATION: <step> — GREEN or UNVERIFIED (label every unrun check explicitly)
+5. BLOCKERS / 6. OWNER FLAGS (options, never resolved by members)
+7. PM-PROMPT → <the one instruction wanted next; EM answers it verbatim>
+DISPATCH RULE: reference AGENTS.md (branch, commit identity, test runner) — never repeat it in prompts.
