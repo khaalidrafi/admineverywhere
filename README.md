@@ -36,7 +36,7 @@ identity, one second.
 
 | dir | what |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `build_admin` (brand injection), `dump_schema`, branding engine (29 pytest cases) |
+| `plugin/` | pip package `admincraft` — `build_admin` (brand injection), `dump_schema`, branding engine (53 pytest cases) |
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat (51 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | two example brands: `freshorama` (dark SaaS) + `minimal-light` (light) |
@@ -62,7 +62,7 @@ identity, one second.
 
 ```bash
 cd app && npm test                    # 51 vitest (schema normalizer, SSE parser)
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 29 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 53 pytest
 ```
 
 ## Demo builds (CI — currently parked)
