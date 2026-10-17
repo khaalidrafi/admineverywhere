@@ -21,16 +21,18 @@
 #     pull before the build.
 #   - deb bundle dropped from the linux leg (spec wants .AppImage only).
 #
-# Triggers: push + pull_request on ai/main ONLY. Pushing ai/* feature
-# branches costs zero minutes -- the pipeline first runs when a PR is
-# opened against ai/main or the branch lands there. No new secrets: the
-# nix leg uses the built-in GITHUB_TOKEN for tarball fetches, nothing else
-# needs credentials. build-demo.yml.disabled stays inert (Actions ignores
+# Triggers: push + pull_request on ai/main, plus workflow_dispatch for
+# manual runs from any branch (Actions tab -> Run workflow; paid minutes
+# on this private repo -- use sparingly). Pushing ai/* feature branches
+# otherwise costs zero minutes. No new secrets: the nix leg uses the
+# built-in GITHUB_TOKEN for tarball fetches, nothing else needs
+# credentials. build-demo.yml.disabled stays inert (Actions ignores
 # non-*.yml files in .github/workflows/).
 
 name: build-all
 
 on:
+  workflow_dispatch:
   push:
     branches: [ai/main]
   pull_request:
