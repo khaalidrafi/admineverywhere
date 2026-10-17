@@ -23,7 +23,8 @@
              (gnu packages gtk)
              (gnu packages webkit)
              (gnu packages pkg-config)
-             (gnu packages rust))
+             (gnu packages rust)
+             (ice-9 regex))
 
 (define %source
   ;; Repo checkout including the prebuilt web bundle (app/dist) and the
@@ -35,13 +36,24 @@
                           (not (or (string-contains file "node_modules")
                                    (string-contains file "src-tauri/target")
                                    (string-contains file "src-tauri/gen")
-                                   (string-contains file ".git")
+                                   ;; Match a whole ".git" path component only
+                                   ;; (never ".github", ".gitignore", …).
+                                   ;; Vendored crates ship those files and
+                                   ;; cargo's .cargo-checksum.json lists them,
+                                   ;; so a loose substring match silently
+                                   ;; breaks the --frozen checksum check
+                                   ;; (first seen 2026-10-17: anyhow's
+                                   ;; .github/FUNDING.yml, run 38992031791).
+                                   (string-match "(^|/)\\.git(/|$)" file)
                                    (string-contains file ".venv")
                                    (string-contains file "frontend-dist")
                                    (string-contains file "guix-install")
                                    (string-contains file "__pycache__")
                                    (string-contains file ".pytest_cache")
-                                   (string-contains file "/result")
+                                   ;; Root "result" symlink (nix) — again an
+                                   ;; exact component, not a prefix that
+                                   ;; would also eat "results/…" paths.
+                                   (string-match "(^|/)result(/|$)" file)
                                    (string-contains file ".tar.gz"))))))
 
 (define-public admincraft
