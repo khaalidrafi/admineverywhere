@@ -1,33 +1,31 @@
-# HANDOFF.org — admincraft — 2026-10-17 00:59 (+06)
+# HANDOFF.org — admincraft — 2026-10-17 06:15 (+06)
 
-## SHIPPED TONIGHT (all on ai/main)
-- P0 branding.py: closed brand.json schema + realpath/commonpath jail on ALL writes (blocks ../ chains, absolute-path injection, symlink escape, Windows backslash) — tested
-- P0 demo-backend: loud dev-only startup warning for DEBUG/allow-all CORS (values unchanged, DEMO_DEV=1 ack)
-- P0 api.ts: secret redaction in errors/logs, credentials stripped from URLs
-- P0 chat.ts: SSE oversized-line cap (1MB, skip+warn)
+## STATUS: MVP FUNCTIONALLY CLOSED (pending Owner's visual PM audit only)
+
+## SHIPPED (verified on ai/main @ 7ebbe20)
+- P0 branding.py: closed brand.json schema + realpath/commonpath jail on ALL writes — pytest-covered
+- P0 demo-backend: dev-only startup warning (values unchanged, DEMO_DEV=1 ack)
+- P0 api.ts: secret redaction in errors/logs; credentials stripped from URLs
+- P0 chat.ts: SSE oversized-line cap; clean close on missing [DONE]
 - P0 secrets.ts: loud once-only SECURITY warning on web localStorage fallback
-- P0 openapi.ts: normalizer verified against fixture (FK name-match, decimal->number, enum $ref hoisting, COMPONENT_SPLIT_REQUEST)
-- P1 widgets: glob auto-import contract (meta{title,size}, grid sm=1/lg=2)
-- P1 RecordForm.svelte: buildPayload omits empty non-nullable fields (was sending "" / null -> DRF 400)
-- P1 DataTable.svelte: nested each keyed (col.name) — fixes silent each_key_duplicate render abort
-- P1 tauri.conf.json: CSP null -> working dev CSP (localhost connect/ws, Tailwind inline styles, no wildcards)
-- Housekeeping: egg-info untracked + gitignored; AGENTS.md gained "## Product spec (from MVP brief)"
+- P0 openapi.ts: normalizer verified against fixture
+- P1 widgets glob contract + relaxed test (drop-in widget proven: 4th widget probe passes)
+- P1 RecordForm omit-vs-null; DataTable keyed-each; tauri.conf dev CSP
+- P1 build_admin: tauri.conf patching (productName/title from appName, jailed)
+- Fix: demo-backend/shop/urls.py restored (deleted by 381bed3 rename refactor)
+- Docs: TEAM-CHARTER.org, AGENTS.md MVP-spec section, AI-REVIEW.org appended (381bed3 review item, unticked)
 
-## TEST STATUS
-- pytest: 48/48 green (29 original + 19 new security tests) — VERIFIED by GLM-5.3 (BE-1) run
-- vitest: tests written for all FE fixes (16 core + DataTable/RecordForm/widgets suites) — COUNT verified statically only; Qwen sandbox could not execute npm test. >> NEXT SESSION: run `cd app && npm test` — must be green before any release talk.
+## TESTS — ALL VERIFIED ON-MACHINE (BRE)
+- vitest 51/51 (7 files), ×3 identical runs under 1GB heap cap
+- pytest 48/48
+- Smoke: Django boots, POST api/auth/token/ admin/admin123 → 200+token; /api/schema/ 200; mock_openai SSE on :11435; Vite :5173 serves SPA
 
-## DEFERRED (reason)
-- Demo-flow E2E (login admin/admin123 -> widgets -> Product table -> New Order -> Ctrl+K :11435 -> rebrand): needs live backend + mock_openai running; time expired
-- AGENTS.md stale "Open" list prune (says egg-info open, 29 pytest — now 48)
-- Polish budget untouched beyond shipped items (per mission scope)
+## REMAINING (not defects)
+- Owner visual PM audit: login → widgets → Product table → New Order → Ctrl+K → rebrand (needs human eyes; browser supervision setup ready)
+- BE-6 (specced): Django boot-check gate so a rename can't delete a URLConf green — nothing in repo boots Django today
 
-## P3 NOTE (out of scope, unchanged)
-- build-demo.yml re-enable parked (web/windows/linux were green; android/nix/guix never verified); placeholder icons; command palette v2
-
-## ROSTER NOTES (MODEL-RANKING v3.1 in STATE)
-- GLM-5.3: PROVEN (P0 quality + 48/48 gate)
-- GLM-5.3-Flash Free @ OpenCode: proven tier for tweak loops
-- Qwen3.8-Flash @ Qoder: PROVEN (honest already-done audit, convention-clean)
-- Qwen3.8-Max: code quality strong; on watch for push/commit discipline (failed twice, recovered both)
-- DeepSeek V4.1-Flash: benchmaxxing flag — polish one-shots only, verify free promo label
+## TEAM NOTES
+- BRE (Qwen3.8-Flash @ Qoder): PROVEN ×9 — control-experiment rigor, honest blockers, blame-accurate
+- Qwen3.8-Max: code quality strong; cannot execute tests (sandbox) — always pair with BRE verification
+- GLM-5.3: PROVEN P0; GLM-5.3-Flash Free @ OpenCode: loop tier
+- 381bed3 author: flagged in AI-REVIEW.org for human review
