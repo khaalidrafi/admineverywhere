@@ -56,7 +56,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `build_admin`, `dump_schema` (48 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `build_admin`, `dump_schema` (53 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (27 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/brands/` | two example brands: `freshorama` (dark SaaS), `minimal-light` |
@@ -81,7 +81,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
 cd app && npm test                          # 27 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 48 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 53 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -100,6 +100,11 @@ cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/
   - Decimals arrive as `type: string, format: decimal` — coerced to number.
   - Enum choices are hoisted to `$ref` components;
     `COMPONENT_SPLIT_REQUEST` yields `<Model>Request` schemas for forms.
+- Demo-rig token route is `POST /api/auth/token/` (`core/urls.py:10`), **not**
+  Django's default `/api-token-auth/` — that 404s here. `plugin/tests/test_demo_boot.py`
+  boots the real `core.settings` in a subprocess, runs Django's system checks and
+  resolves that path plus the `include("shop.urls")` routes, so a deleted or
+  broken URLConf fails the suite instead of surfacing on the first live request.
 - Dual web/Tauri mode: feature-detect `window.__TAURI_INTERNALS__`. Web
   mode falls back to localStorage for token + AI key (accepted P2 — see
   AI-REVIEW.org).
