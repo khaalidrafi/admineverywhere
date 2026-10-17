@@ -131,12 +131,11 @@ Members are identified by full role + model@platform, never abbreviations.
 All fenced blocks are BARE fences: ``` on its own line, NEVER a language/block name
 (no ```followup, no ```bash, no ```text). Applies to follow-up blocks, code, reports.
 
-## INBOX PROTOCOL (2026-10-18)
-INBOX.org at repo root = the completion channel. Members write ON TASK COMPLETION:
-TO/FROM full role - model@platform, TASK id, RESULT, COMMIT/BRANCH, facts with
-UNVERIFIED labels, NEEDED. Direct-push members (Build & Relay Engineer, sandbox and
-box loop Flashes) commit INBOX entries straight to ai/main (INBOX-only; code never).
-Branch-workers (Senior Frontend Engineer, Senior Backend Engineer, GLM-5.3) include
-the entry in their task branch; Lead resolves at merge. Lead polls INBOX via PAT every
-cycle and acts (merge/verify/spec) without Owner relay. Newest entries at top; never
-edit others' entries.
+
+## CLOCK + LOGBOOK WORKFLOW (2026-10-18, owner design — replaces INBOX and report relay)
+Single source: AGENT-TEAM-TODOS.org. Members flip their item TODO->ONGOING at start
+(with a CLOCK start line), append progress facts to the item's :LOGBOOK: drawer,
+flip WAIT when they need input from anyone, and flip PENDING when finished (clock
+closed). Only the Lead flips DONE after evidence review. Direct-push members commit
+todos edits to ai/main; branch-workers carry the edit in their task branch. The Lead
+polls the file via PAT each cycle — Owner relay retired for routine traffic.
