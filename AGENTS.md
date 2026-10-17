@@ -129,7 +129,8 @@ cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/
 (vitest 51 + pytest 53) runs FIRST and every build leg `needs:` it, so a
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
 (.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
-with `--target aarch64,armv7`, signed by the committed
+with `--target aarch64 --target armv7` (repeated flags, NOT a comma
+list), signed by the committed
 `app/src-tauri/signing/debug.keystore` so every run's apk signature is
 identical and new builds install over old ones) / nix / guix, each uploading test-only
 artifacts a user launches and registers their own DRF API against on the
