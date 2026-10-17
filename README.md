@@ -37,6 +37,9 @@ cd ../app && npm install && npm run dev            # -> http://localhost:5173
 #       applied live — name, colors, font, logo)
 #    b) build-time: apply a brand.json to the shipped bundle + launcher identity
 cd ../demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/minimal-light/brand.json --app ../app
+#    For a deploy build, also pass --api-host https://your-admin.example.com —
+#    it substitutes the production CSP's https://API_HOST placeholder with
+#    the real origin (https only; localhost/wildcards are rejected).
 
 # 4. Or let the agent skills do all of it (guided OR fully automatic):
 python ../skills/admincraft-craft/scripts/derive_brand.py --root <your-repo> --out <your-repo>/brand
@@ -52,7 +55,7 @@ Save — whole app, new identity, one second, no rebuild.
 
 | dir | what |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `build_admin` (brand injection), `dump_schema`, branding engine + runtime branding API (75 pytest cases) |
+| `plugin/` | pip package `admincraft` — `build_admin` (brand injection + CSP API_HOST substitution), `dump_schema`, branding engine + runtime branding API (114 pytest cases) |
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat, in-app brand editor (58 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | `default/` (the neutral shipped identity) + two examples: `freshorama` (dark SaaS) + `minimal-light` (light) |
@@ -79,13 +82,13 @@ Save — whole app, new identity, one second, no rebuild.
 
 ```bash
 cd app && npm test                    # 58 vitest (schema normalizer, SSE parser, branding)
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 75 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 114 pytest
 ```
 
 ## Builds & releases (CI — live)
 
 `.github/workflows/build-all.yml` runs on every push and PR to `ai/main`:
-a test gate (51 vitest + 53 pytest) first, then six build legs — web
+a test gate (58 vitest + 114 pytest) first, then six build legs — web
 bundle, Windows NSIS `.exe`, Linux `.AppImage`, Android `.apk` (universal:
 `arm64-v8a` + `armeabi-v7a`, Android 7.0+, signed with the committed stable
 debug key) and the Nix + Guix packages. Every run uploads its

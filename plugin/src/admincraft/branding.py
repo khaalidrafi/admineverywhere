@@ -9,7 +9,9 @@ Public API (imported by the management commands):
     load_brand(path) -> dict
     validate_brand(brand) -> list[str]      # empty list = valid
     render_css(brand) -> str
-    inject_brand(app_dir, brand_path) -> dict   # summary of written files
+    inject_brand(app_dir, brand_path, api_host=None) -> dict
+    normalize_api_host(api_host) -> str         # canonical https origin
+    substitute_api_host(conf, api_host) -> str | None   # origin or no-op
 
 Security posture (P0): brand.json is UNTRUSTED input. validate_brand
 enforces a closed schema (unknown keys/types/values rejected with clear
@@ -37,6 +39,22 @@ REQUIRED_COLORS = ["primary", "accent", "bg", "surface", "text"]
 # Font names are interpolated into a URL + CSS string: strip anything
 # that could break out of the quotes/url.
 SAFE_FONT_RE = re.compile(r"^[A-Za-z0-9 ]{1,60}$")
+
+# The shipped tauri.conf.json carries this placeholder in connect-src;
+# build_admin --api-host replaces it with the deployed origin at build
+# time. Substitution is build-scoped: the committed conf never names a
+# real host, and nothing else may edit the CSP.
+API_HOST_PLACEHOLDER = "https://API_HOST"
+
+# Canonical shape of an allowed API origin: https + dotted DNS name
+# (labels of letters/digits/hyphens) + optional port. Enforced on top of
+# explicit localhost/loopback rejection below — defense in depth, since
+# this string goes straight into the production CSP.
+API_HOST_RE = re.compile(
+    r"^https://[a-z0-9]([a-z0-9-]*[a-z0-9])?"
+    r"(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+"
+    r"(:\d{1,5})?$"
+)
 
 # P0: brand.json is untrusted input (shared/downloaded/dropped in) — the
 # schema is CLOSED. Every key must be known and correctly typed; anything
@@ -197,21 +215,113 @@ def render_css(brand: dict) -> str:
 """
 
 
-def inject_brand(app_dir: str | Path, brand_path: str | Path) -> dict:
+# ---------------------------------------------------------------------------
+# Production CSP: the shipped tauri.conf.json carries connect-src
+# 'self' https://API_HOST. build_admin --api-host replaces the placeholder
+# with the deployed origin at build time — the ONLY sanctioned way a real
+# host enters the CSP (validated below: https only, dotted DNS, no
+# localhost/loopback, no wildcards, no paths/userinfo).
+#
+# WHY img-src/font-src/style-src are not 'self'-only (BRE Finding 2): two
+# product promises need third-party origins, and a self-only policy would
+# break both silently — the app just falls back to no logo / system font:
+#   - brand.json names a webfont; render_css() (and the client's
+#     brandToCss()) emit @import url('https://fonts.googleapis.com/css2?..'),
+#     which is gated by STYLE-src (the @import fetch), then the .woff2 files
+#     load from fonts.gstatic.com under FONT-src. Both origins are required.
+#   - a brand logo may be a hosted URL (not only a data: upload), so IMG-src
+#     needs https: — and data: stays for the runtime branding API.
+# script-src 'self' is untouched: execution stays locked, only egress for
+# these two known brand origins widens. Pinned by TestProdCspBrandOrigins.
+# ---------------------------------------------------------------------------
+
+def normalize_api_host(api_host: str) -> str:
+    """Validate + normalize the deployed API origin for the production CSP.
+
+    Accepts 'admin.example.com' or 'https://admin.example.com[:port]';
+    returns the canonical origin (https scheme, lowercased, no trailing
+    slash). Anything that must never ship in a production CSP fails
+    loudly: plain http, localhost/loopback, wildcards, paths, userinfo,
+    bare single-label hosts.
+    """
+    if not isinstance(api_host, str) or not api_host.strip():
+        raise ValueError(
+            "api-host: must be a non-empty origin like 'https://admin.example.com'"
+        )
+    origin = api_host.strip().rstrip("/")
+    if "://" not in origin:
+        origin = "https://" + origin
+    scheme, _, rest = origin.partition("://")
+    if scheme.lower() != "https":
+        raise ValueError(f"api-host: only https origins are allowed (got {api_host!r})")
+    if "*" in rest:
+        raise ValueError(
+            f"api-host: wildcard origins can never ship in the CSP (got {api_host!r})"
+        )
+    origin = (scheme.lower() + "://" + rest).lower()
+    if not API_HOST_RE.match(origin):
+        raise ValueError(
+            "api-host: must be a dotted DNS origin like 'https://admin.example.com' "
+            f"(got {api_host!r})"
+        )
+    host = origin[len("https://"):].split(":", 1)[0]
+    if host == "localhost" or host.endswith(".localhost") or host in {"127.0.0.1", "0.0.0.0"}:
+        raise ValueError(
+            f"api-host: localhost/loopback can never ship in the CSP (got {api_host!r})"
+        )
+    return origin
+
+
+def substitute_api_host(conf: dict, api_host: str) -> str | None:
+    """Substitute the CSP API_HOST placeholder in a parsed tauri.conf dict.
+
+    Mutates conf["app"]["security"]["csp"] in place. Returns the origin
+    that was substituted in, or None when the CSP already carries it
+    (idempotent re-runs of build_admin). Any drift fails loudly instead of
+    shipping a config the client cannot reach its API through: a missing
+    CSP, or a CSP with neither the placeholder nor the requested origin.
+    """
+    origin = normalize_api_host(api_host)
+    security = conf.get("app", {}).get("security", {})
+    csp = security.get("csp") if isinstance(security, dict) else None
+    if not isinstance(csp, str) or not csp:
+        raise ValueError(
+            "tauri.conf.json: app.security.csp missing — cannot substitute api-host"
+        )
+    if API_HOST_PLACEHOLDER in csp:
+        security["csp"] = csp.replace(API_HOST_PLACEHOLDER, origin)
+        return origin
+    if origin in csp:
+        return None  # same origin already substituted — nothing to do
+    raise ValueError(
+        "tauri.conf.json: csp has neither the API_HOST placeholder nor "
+        f"{origin!r} — refusing to guess (config drift)"
+    )
+
+
+def inject_brand(app_dir: str | Path, brand_path: str | Path,
+                 api_host: str | None = None) -> dict:
     """Apply a brand to the thin-client app directory.
 
     Writes:  public/brand.css, public/brand.json (normalized asset paths)
     Copies:  logo + favicon -> public/
     Patches: src-tauri/tauri.conf.json (productName, window title) if present
+    CSP:     with api_host, substitutes the API_HOST placeholder in
+             app.security.csp (see substitute_api_host; validated + loud)
 
     P0: brand.json is untrusted — every source and destination below goes
     through _jailed() (realpath + commonpath), so neither hostile asset
     references nor symlinks planted inside the app can read or write
     outside the intended directories.
 
-    Returns a summary {"written": [...], "copied": [...], "patched": [...]}
-    that the build_admin command prints.
+    Returns a summary {"written": [...], "copied": [...], "patched": [...],
+    "csp_api_host": <origin or None>} that the build_admin command prints.
     """
+    # Fail fast on a bad --api-host BEFORE any file is touched (the
+    # substitution itself happens at the tauri.conf patching step below).
+    if api_host is not None:
+        normalize_api_host(api_host)
+
     app = Path(app_dir)
     brand_file = Path(brand_path)
     brand = load_brand(brand_file)
@@ -258,7 +368,15 @@ def inject_brand(app_dir: str | Path, brand_path: str | Path) -> dict:
     # 4. Patch Tauri config (window title, product name) — best effort.
     #    Jailed like every other write: a symlinked tauri.conf.json that
     #    resolves outside src-tauri/ is refused instead of patched.
+    #
+    #    CSP substitution point: the shipped app.security.csp carries
+    #    connect-src 'self' https://API_HOST. When --api-host is given,
+    #    substitute_api_host replaces the placeholder with the deployed
+    #    origin here (validated: https, dotted DNS, no localhost, no
+    #    wildcards; drift raises). Without --api-host the placeholder
+    #    stays — dev/CI builds keep a host-free CSP.
     patched: list[str] = []
+    substituted: str | None = None
     tauri_conf = app / "src-tauri" / "tauri.conf.json"
     if tauri_conf.is_file():
         conf_target = _jailed(app / "src-tauri", "tauri.conf.json", "tauri.conf.json")
@@ -267,7 +385,10 @@ def inject_brand(app_dir: str | Path, brand_path: str | Path) -> dict:
         windows = conf.get("app", {}).get("windows", [])
         if windows:
             windows[0]["title"] = brand["appName"]
+        if api_host is not None:
+            substituted = substitute_api_host(conf, api_host)
         conf_target.write_text(json.dumps(conf, indent=2) + "\n")
         patched.append(str(tauri_conf.relative_to(app)))
 
-    return {"written": written, "copied": copied, "patched": patched}
+    return {"written": written, "copied": copied, "patched": patched,
+            "csp_api_host": substituted}
