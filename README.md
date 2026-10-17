@@ -5,8 +5,9 @@ Framework backend — pip-installable plugin (branding + schema tooling) plus a
 Tauri 2 / Svelte 5 thin client that renders your entire CRUD UI from your
 drf-spectacular OpenAPI schema. Includes an OpenAI-compatible streaming AI
 assistant (Ctrl+K) that knows your models. One `brand.json` rebrands the whole
-app in under a second. Ships as Android .apk, Windows .exe and Linux
-.AppImage.
+app in under a second. Tauri 2 targets Android .apk, Windows .exe and Linux
+.AppImage — the demo-CI that built those is currently parked (see *Demo
+builds*), so today you build locally or from source via Nix/Guix.
 
 **Repo:** `khaalidrafi/admincraft` · stack: Django plugin (pip) +
 Tauri 2 + Svelte 5 + Tailwind 4 + DRF/drf-spectacular backend.
