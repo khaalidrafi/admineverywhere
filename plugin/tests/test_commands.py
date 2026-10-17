@@ -9,7 +9,8 @@ from django.core.management import CommandError, call_command
 
 from admincraft import branding
 
-from test_branding import VALID_BRAND, TINY_PNG, TINY_SVG, PROD_CSP  # noqa: F401
+from test_branding import VALID_BRAND, TINY_PNG, TINY_SVG  # noqa: F401
+from test_branding_api import PROD_CSP  # noqa: F401 (CSP tests moved there)
 
 
 def _make_brand(tmp_path):
