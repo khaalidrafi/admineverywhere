@@ -3,7 +3,7 @@
  *
  *  No provider SDK: raw fetch + SSE. Keeps the bundle tiny and universal.
  */
-import type { AppConfig } from "./types";
+import type { AdminSchema, AppConfig } from "./types";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -44,12 +44,20 @@ export function chatEndpoint(baseUrl: string): string {
   return `${base}/chat/completions`;
 }
 
+/** Build schema-aware system prompt from live AdminSchema. */
+export function buildSchemaPrompt(schema: AdminSchema): string {
+  const lines = schema.models.map((m) => {
+    const fieldCount = m.fields.length;
+    return `${m.name} (${fieldCount} fields)`;
+  });
+  return `Models: ${lines.join(", ")}`;
+}
+
 /** Build the schema-aware system prompt. */
 export function systemPrompt(appName: string, modelLines: string): string {
   return [
     `You are the assistant inside the ${appName} admin dashboard.`,
     "You help the operator understand and manage their data.",
-    "Available models (fields in parentheses; fk = foreign key to that model):",
     modelLines,
     "",
     "Answer concisely. When asked about data structure, refer to the models above.",
