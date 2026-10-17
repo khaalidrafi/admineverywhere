@@ -1,7 +1,7 @@
 # build-all -- the E2 CI pipeline (E2/CI-1, 2026-10-17).
 #
 # One pipeline, two phases:
-#   1. test-gate runs FIRST: vitest (app/, 51 tests) + pytest (plugin/, 53
+#   1. test-gate runs FIRST: vitest (app/, 51 tests) + pytest (plugin/, 86
 #      tests, fixture = demo-backend). Every build leg `needs:` it, so a red
 #      tree never spends build minutes.
 #   2. build legs: web / windows / linux / android / nix / guix, each
@@ -65,6 +65,20 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: CSP hygiene -- shipped tauri.conf.json stays dev-origin-free
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          csp = json.load(open("app/src-tauri/tauri.conf.json"))["app"]["security"]["csp"]
+          # The committed CSP must never carry dev origins (the API_HOST
+          # placeholder is substituted at deploy time by build_admin
+          # --api-host). "http://" is checked literally: it is NOT a
+          # substring of "https://", so https origins pass.
+          bad = [t for t in ("localhost", "http://", "ws://", "wss://", "*") if t in csp]
+          if bad:
+              sys.exit(f"dev-shaped CSP leaked into app/src-tauri/tauri.conf.json: {bad}")
+          print("csp hygiene ok:", csp)
+          PY
       - uses: actions/setup-node@v4
         with:
           node-version: 22
