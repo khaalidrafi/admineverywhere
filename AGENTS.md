@@ -290,7 +290,11 @@ once (one-time signature change from the stable key).
   because `connect-src` is 'self' + `https://API_HOST` until a build passes
   `--api-host`. Web mode is unaffected (no Tauri CSP). Needs either a
   runtime-set connect-src (same mechanism as live branding) or the artifact
-  story changed, before this merges.
+  story changed, before this merges. SAME ROOT CAUSE, SECOND VICTIM: the
+  committed CSP no longer carries the `http://localhost:*` + `ws://localhost:*`
+  allowances `4a89fba` added, so `tauri dev` HMR is expected to break again
+  (browser `npm run dev` is fine) — UNVERIFIED, proving it needs a Tauri
+  build, which this box must not run. A dev-override config is the likely fix.
 - v0.1.0 released 2026-10-17: tag on `f1678cd`, assets from green run
   39000890302 (wheel + sdist, NSIS exe, AppImage, aarch64 debug apk, web
   bundle, nix/guix store tarballs, SHA256SUMS). All six build legs are
