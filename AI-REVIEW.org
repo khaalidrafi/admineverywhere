@@ -9,9 +9,14 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   - [ ] app/src/lib/secrets.ts    — keyring vs localStorage fallback (web mode warning)
   - [ ] plugin/src/admincraft/branding.py — brand.json validation; file writes (path traversal?)
   - [ ] demo-backend settings     — DEBUG, CORS allow-all is DEV ONLY; token auth scheme
-  - [ ] app/src-tauri/tauri.conf.json — csp: null is GONE (dev policy shipped:
-    localhost/ws + inline styles, no wildcards). Review that it is dev-scoped and
-    set the production CSP
+  - [ ] app/src-tauri/tauri.conf.json — production CSP shipped on ai/csp-1:
+    self-only script/img/font/media/worker + style-src 'unsafe-inline'
+    (Tailwind) + connect-src 'self' https://API_HOST placeholder. The
+    placeholder is substituted at deploy build time by `build_admin
+    --api-host` (validator: plugin/src/admincraft/branding.py
+    normalize_api_host — https only, dotted DNS, no localhost/loopback,
+    no wildcards/paths/userinfo; drift fails loudly). Review the
+    placeholder policy and the validator's closed shape
 * TODO P1 — correctness core
   - [ ] app/src/lib/openapi.ts    — normalizer heuristics (FK/enum/decimal) vs real schemas
     - FK = integer prop whose name matches a model singular/id (drf-spectacular emits FKs bare)
