@@ -144,3 +144,14 @@ polls the file via PAT each cycle — Owner relay retired for routine traffic.
 Local agents (Qoder, OMP, OpenCode, Goose) ALWAYS push at the end of every work
 segment — even mid-task, even partial: push the branch AND the todos-file edit.
 The Lead verifies via PAT; unpushed local work does not exist.
+
+## DIVERGENCE HANDLING (2026-10-18, owner ruling)
+Before ANY work segment: git fetch origin, compare your base with origin/ai/main.
+- Behind, no conflicts: rebase your task branch on origin/ai/main; force-push YOUR
+  task branch only (--force-with-lease), never anything else.
+- Merge conflicts, or you are unsure: STOP. Flip your todos item to WAIT with a
+  LOGBOOK line naming the conflicted files. Do NOT resolve silently, do NOT merge
+  ai/main into your branch with mess, do NOT force-push anything but your own task
+  branch. Lead or Owner resolves.
+- ai/main itself diverges (never force-push, never rebase ai/main — if origin refuses
+  a push, STOP and WAIT).
