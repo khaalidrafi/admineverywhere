@@ -7,6 +7,34 @@
 
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
 ** TODO FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
+*** ONGOING FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
+:LOGBOOK:
+CLOCK: [2026-10-18 Sun 01:58]
+- State "ONGOING" from "TODO" [2026-10-18 Sun 01:58]
+- Note taken on [2026-10-18 Sun 01:58] :: Item created by me on dispatch — the
+  queue had only the combined R-001 parent above (:BE:FE), and the workflow
+  needs an item to clock; Lead may reword or move it.
+  Implementation exists locally: branch ai/fr-r001-be @ a816b81 (10 files,
+  +797/-11): ordered Status enum + STATUS_ORDER + TRANSITIONS (refunded
+  terminal), apply_transition + IllegalTransition(reason), reserve/release
+  stock as # TODO(client) no-ops inside _apply_side_effects, OrderHistory
+  (actor, auto timestamp), POST /api/orders/<id>/transition/ (409+reason
+  guards, 400 unknown/missing), GET /api/orders/<id>/history/ (oldest-first,
+  pagination_class=None), creation entry via perform_create + seed_demo,
+  migration 0002, docs/order-lifecycle.md. pytest 90/90 in-sandbox at that
+  commit (53 base + 37 new; zero new deps — no pytest-django).
+  Spec letter now VERIFIED (fetched origin/ai/main): AGENTS-TEAM.md new
+  sections read; ROADLOG.org R-001 read. No implementation drift vs the
+  dispatch; one deliberate refinement to record: R-001 sketches "@action
+  transition endpoints (confirm/cancel)" while the dispatch orders a single
+  POST /transition/ {transition: <target>} — the target-parameterized form
+  subsumes confirm/cancel; shipped the dispatch, flagged for Lead.
+  Divergence measured at segment start: ai/fr-r001-be 1 ahead / 65 behind
+  origin/ai/main (csp-1 merged upstream as 26ea4a9). Both sides touched
+  AGENTS.md, AI-REVIEW.org and plugin/tests/conftest.py from the same base
+  ef1e8a4 — conflict surface identified, trial rebase next per DIVERGENCE
+  HANDLING; STOP + WAIT if it conflicts, Lead/Owner resolves.
+:END:
 ** TODO FR R-003 custom actions + audit                                       :BE:FE:
 ** TODO FR R-002 document independent-enum pattern                            :DOC:
 ** TODO FR R-004 kanban view                                                  :FE:
