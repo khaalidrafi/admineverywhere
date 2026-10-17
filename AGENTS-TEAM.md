@@ -102,7 +102,7 @@ Report shape:
   4. VERIFICATION: <step> — GREEN | UNVERIFIED
   5. BLOCKERS / 6. OWNER FLAGS / 7. PM-PROMPT -> <one next instruction>
 Followed by a MANDATORY fenced follow-up addressed to the Lead:
-  ```followup
+  ```
   TO: lead · FROM: <full role> · <model@platform>
   TASK: <task-id>
   STATE: done|blocked|partial
@@ -126,3 +126,7 @@ prompts need only "git pull first". Web chats (Qwen3.8-Max, GLM-5.3, Z.ai Agent)
 nothing — every web-chat dispatch MUST open with: "Clone/pull the repo first, then read
 AGENTS.md + AGENTS-TEAM.md + STATE.org before touching anything. You are ID: <id>."
 Members are identified by full role + model@platform, never abbreviations.
+
+## FENCE FORMAT (2026-10-18, owner ruling)
+All fenced blocks are BARE fences: ``` on its own line, NEVER a language/block name
+(no ```followup, no ```bash, no ```text). Applies to follow-up blocks, code, reports.
