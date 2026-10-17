@@ -65,7 +65,14 @@ Members own their task item; Lead is the only one who flips DONE.
 - Start: TODO -> ONGOING; add CLOCK start line under the item (CLOCK: [YYYY-MM-DD Ddd HH:MM]).
 - Progress: append notes into the item's :LOGBOOK: drawer: "- Note taken on [date] :: <fact, evidence pointer, UNVERIFIED labels>".
 - Need input from Lead or any member: flip to WAIT (keep clock running).
-- Finished: close the CLOCK line ([end] => HH:MM), flip to PENDING. Lead reviews evidence, flips DONE.
+- Finished: close the CLOCK line ([end] => HH:MM), append a completion note to the
+  :LOGBOOK: drawer (facts, evidence pointers, UNVERIFIED labels, and any message for
+  the Lead), then flip to PENDING. PENDING WITHOUT a completion note is invalid —
+  Lead returns it. Lead reviews, flips DONE.
+- Owner decisions: if the blocker needs the Owner's ruling, flip WAIT and add the
+  tag :OWN: + a LOGBOOK line naming the decision needed. The Owner's personal queue
+  lives in his TODOs.org; Lead mirrors nothing — Owner reads the WAIT :OWN: items
+  here directly.
 - Direct-push members (Build & Relay Engineer, sandbox/box Flashes) commit todos edits
   straight to ai/main. Branch-workers include the edit in their task branch; Lead
   resolves at merge. Never touch others' items. Bare fences only in notes.
