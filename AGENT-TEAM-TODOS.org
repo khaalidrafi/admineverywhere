@@ -19,9 +19,64 @@
 :ORDERED: t
 :END:
 ** DONE brand-1 — neutral branding + in-app rebrand + skills (v0.1.2) :FE:BE:
-** ONGOING csp-1 — production CSP                                 :BE:
+** PENDING csp-1 — production CSP                                  :BE:
 :LOGBOOK:
-CLOCK: [2026-10-18 Sun 01:33]
+- State "PENDING" from "ONGOING" [2026-10-18 Sun 01:40]
+CLOCK: [2026-10-18 Sun 01:33]--[2026-10-18 Sun 01:40] =>  0:07
+- Note taken on [2026-10-18 Sun 01:40] :: Cycle three closed — the only work
+  the addendum asked for on this ticket was the divergence rebase, and it is
+  done. ai/csp-1 rebased clean on origin/ai/main (was 8 ahead / 2 behind; both
+  behind-commits were my own todos pushes 2804f26 + 7623f33) and force-pushed
+  with lease ecacdc2...b9b7f65 — task branch only, ai/main never rebased, never
+  force-pushed. Zero conflicts, and not by luck: the branch's file set
+  (git diff --name-only origin/ai/main...ai/csp-1) never contained this todos
+  file. Rebase fidelity proved after the fact — git diff --stat ecacdc2 HEAD
+  lists AGENT-TEAM-TODOS.org alone, so the tested tree is byte-identical to the
+  one measured at ecacdc2.
+  New hashes: 5d2874e 48ab762 f75fd79 b2c6f0f 953d725 c38cf08 8d410cf b9b7f65
+  (8 ahead / 0 behind), spec items 1-4 still satisfied exactly as evidenced in
+  the 01:27 note — that note's file:line pointers all still resolve, only the
+  commit ids changed.
+  Re-measured at this tip rather than inherited: pytest 114 passed in 46.56s
+  (NODE_OPTIONS=--max-old-space-size=1024, nice+ionice; load was 3.27 with
+  1250 MB free, so the suite ran under contention and still went green). CI
+  CSP-hygiene step replayed verbatim from build-all.yml:70-81: ok. vitest
+  deliberately NOT re-run — git diff --stat ecacdc2 HEAD -- app/ plugin/
+  .github/ demo-backend/ is empty.
+  PUSH ALWAYS followed in order: todos ONGOING flip pushed at segment start
+  (7623f33), branch pushed at segment end (b9b7f65), this PENDING edit pushed
+  right after. Nothing on this branch is unpushed at any point.
+  Still UNVERIFIED, unchanged from 01:27: the CSP as enforced inside a real
+  Tauri window (a build is forbidden on this box), and the two expected
+  regressions of the placeholder CSP (artifact clients need --api-host; tauri
+  dev HMR lost the 4a89fba localhost allowances) — AGENTS.md:269 and :286.
+  The three FOR LEAD decisions in the 01:27 note are untouched by this cycle:
+  ruling A vs the ordered static widening, the style-src deviation, and the
+  cheat sheet's :CLOCK: form.
+  Three slips disclosed. (a) A recurring editing hazard, not a one-off: my
+  drawer edits at 01:33 and again at 01:37 each dropped a State line and left a
+  duplicated note header, because the anchor line I ended old_string on was
+  itself part of the group I was rewriting. Both were caught by reading the
+  drawer back before committing and repaired in the same file, so nothing
+  invalid was ever committed — this drawer has all five State lines and
+  three closed CLOCK lines. If anyone else edits this file by patch, the
+  lesson is to anchor on the heading, never on a logbook line.
+  (b) Commit 7623f33 has committer identity Qwen3.8-Flash instead of the
+  Owner, because I passed -c user.name on the commit as well as --author; the
+  earlier todos commits use author=model, committer=Owner. Fixing it now would
+  mean rewriting pushed ai/main history, which the divergence rule forbids, so
+  it stands as-is. Next commit this session used --author only.
+  (c) This completion note was first committed onto ai/csp-1 by mistake — I
+  had checked the task branch out for the rebase and never switched back, so
+  git commit landed the todos edit there (51bbb4b) while git push origin
+  ai/main reported everything up-to-date. Caught by reading the commit's
+  branch line, not the push output. Repaired before any push: cherry-picked
+  onto ai/main as the commit you are reading, then reset the task branch hard
+  to b9b7f65 so it matches origin/ai/csp-1 again. The discarded copy never
+  reached origin, so ai/csp-1 needed no force-push for this — and the branch
+  carries no todos-file commit, which is what makes the rebase-conflict-free
+  property above hold. Standing lesson: check git branch --show-current before
+  any todos edit, since direct-push means the file belongs to ai/main only.
 - State "ONGOING" from "PENDING" [2026-10-18 Sun 01:33]
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 01:27]
 - State "ONGOING" from "PENDING" [2026-10-18 Sun 01:23]
