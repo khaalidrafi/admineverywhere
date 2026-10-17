@@ -277,7 +277,24 @@ jobs:
           du -sh vendor
       - name: Install Guix (prebuilt binary + build users)
         run: |
-          wget -q https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
+          set -e
+          # guix-install.sh normally lives on Savannah. On 2026-10-17 Savannah
+          # was unreachable from the runner AND everywhere else (wget exit 8),
+          # so: Savannah first, Codeberg mirror of the same file as fallback,
+          # and a shebang check so an HTML error page never reaches sh.
+          for url in \
+            https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh \
+            https://codeberg.org/guix/guix/raw/branch/master/etc/guix-install.sh; do
+            if curl -fsSL --retry 2 --retry-delay 3 --connect-timeout 10 \
+                 --max-time 60 -o guix-install.sh "$url" \
+                 && head -n 1 guix-install.sh | grep -q '^#!'; then
+              echo "installer source: $url"
+              break
+            fi
+            echo "source failed: $url" >&2
+            rm -f guix-install.sh
+          done
+          test -s guix-install.sh
           yes | sudo sh guix-install.sh
       - name: Ensure guix-daemon is running (runners lack usable systemd)
         run: |
@@ -286,13 +303,27 @@ jobs:
             sleep 15
           fi
           sudo /var/guix/profiles/per-user/root/current-guix/bin/guix build --version
-      - name: Guix pull (installer ships Guix 1.4 -- too old for the Rust MSRV)
+      - name: Guix pull (default channel; Codeberg mirror when Savannah is down)
         run: |
-          sudo /var/guix/profiles/per-user/root/current-guix/bin/guix pull
+          set +e
+          GUIX=/var/guix/profiles/per-user/root/current-guix/bin/guix
+          if sudo "$GUIX" pull; then
+            echo "guix pull: default (Savannah) channel OK"
+          else
+            echo "default channel pull failed (Savannah outage?) -- Codeberg mirror" >&2
+            set -e
+            # Same git history as Savannah, so the channel-intro
+            # authentication still applies.
+            sudo "$GUIX" pull --channels='((channel (inherit %default-guix-channel) (url "https://codeberg.org/guix/guix")))'
+          fi
       - name: Build the package
         run: |
           set -e
-          OUT=$(sudo /root/.config/guix/current/bin/guix build -f guix.scm)
+          # bordeaux first: ci.guix.gnu.org was 502ing during the same
+          # 2026-10-17 outage; listing both keeps the leg alive either way.
+          OUT=$(sudo /root/.config/guix/current/bin/guix build \
+                  --substitute-urls="https://bordeaux.guix.gnu.org https://ci.guix.gnu.org" \
+                  -f guix.scm)
           echo "guix build output: $OUT"
           sudo tar -czf admincraft-guix.tar.gz -C / "$OUT"
           sudo chown "$(id -un):$(id -gn)" admincraft-guix.tar.gz
