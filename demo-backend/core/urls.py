@@ -13,4 +13,7 @@ urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(permission_classes=[]), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema")),
     path("api/", include("shop.urls")),
+    # Runtime branding: GET/PUT /admincraft/branding/ (+ asset serving) —
+    # lets the thin client rebrand itself from inside the app.
+    path("admincraft/", include("admincraft.urls")),
 ]
