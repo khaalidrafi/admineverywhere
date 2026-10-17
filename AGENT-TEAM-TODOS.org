@@ -19,14 +19,25 @@
 :ORDERED: t
 :END:
 ** DONE brand-1 — neutral branding + in-app rebrand + skills (v0.1.2) :FE:BE:
-** PENDING csp-1 — production CSP                                  :BE:
+** ONGOING csp-1 — production CSP                                 :BE:
 :LOGBOOK:
+CLOCK: [2026-10-18 Sun 01:33]
+- State "ONGOING" from "PENDING" [2026-10-18 Sun 01:33]
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 01:27]
 - State "ONGOING" from "PENDING" [2026-10-18 Sun 01:23]
 CLOCK: [2026-10-18 Sun 01:23]--[2026-10-18 Sun 01:27] =>  0:04
 CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 01:12]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:10]
+- Note taken on [2026-10-18 Sun 01:33] :: Re-opened on Lead's addendum
+  (standing rules now in AGENTS-TEAM.md:143 LOCAL-AGENT PUSH RULE and :148
+  DIVERGENCE HANDLING). Work segment: rebase ai/csp-1 on origin/ai/main per
+  the divergence rule and push at every segment end. Spec items 1-4 are
+  unchanged and already satisfied at ecacdc2; measured divergence before
+  starting: ai/csp-1 8 ahead / 1 behind, and the one behind-commit is my own
+  todos push, touching only this file — the branch's diff
+  (git diff --name-only origin/ai/main...ai/csp-1) contains no todos file, so
+  the rebase cannot conflict by construction.
 - Note taken on [2026-10-18 Sun 01:27] :: DONE — CSP-1-FINISH, second cycle.
   Branch ai/csp-1 at ecacdc2: 8 ahead / 0 behind origin/ai/main, force-pushed
   with lease (c3b5aa9...ecacdc2), NEVER merged; ai/main never force-pushed.
