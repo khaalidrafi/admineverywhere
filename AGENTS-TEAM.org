@@ -73,7 +73,7 @@ REPORT #n FROM <role> · <model@platform>
   sequential services, free -m checks, no heavy builds.
 
 * ORG TODO MACHINERY (queue file: AGENT-TEAM-TODOS.org — Lead maintains, members read-only)
-#+TODO: TODO(t) DOING(g) WAIT(w@) | DONE(d!) CANCELLED(c@) DEFERLED(f@)
+#+TODO: TODO(t) DOING(g) WAIT(w@) | DONE(d!) CANCELLED(c@) DEFERRED(f@)
 - Assignee types: BE FE QA DES DOC PM OWN — assign by cycling to a type; next C-c C-t jumps
   straight to DONE.
 - OWN = owner-decision queue (sparse-tree it anytime: C-c / with tag OWN).
