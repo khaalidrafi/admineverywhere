@@ -9,7 +9,7 @@ from django.core.management import CommandError, call_command
 
 from admincraft import branding
 
-from test_branding import VALID_BRAND, TINY_PNG, TINY_SVG  # noqa: F401
+from test_branding import VALID_BRAND, TINY_PNG, TINY_SVG, PROD_CSP  # noqa: F401
 
 
 def _make_brand(tmp_path):
@@ -26,7 +26,8 @@ def _make_app(tmp_path):
     (app / "src-tauri").mkdir()
     (app / "src-tauri" / "tauri.conf.json").write_text(json.dumps({
         "productName": "Old",
-        "app": {"windows": [{"title": "Old"}]},
+        "app": {"windows": [{"title": "Old"}],
+                "security": {"csp": PROD_CSP}},
     }))
     return app
 
@@ -91,3 +92,47 @@ class TestDumpSchemaCommand:
         with pytest.raises(Exception):
             call_command("dump_schema", url="http://x/api/schema/",
                          out=str(tmp_path / "schema.json"), stdout=io.StringIO())
+
+
+class TestBuildAdminApiHost:
+    """--api-host: CSP placeholder substitution at the CLI boundary."""
+
+    def test_substitutes_and_reports_origin(self, tmp_path):
+        brand_path = _make_brand(tmp_path)
+        app = _make_app(tmp_path)
+        out = io.StringIO()
+        call_command("build_admin", brand=str(brand_path), app=str(app),
+                     api_host="admin.example.com", stdout=out)
+        conf = json.loads((app / "src-tauri" / "tauri.conf.json").read_text())
+        csp = conf["app"]["security"]["csp"]
+        assert "https://admin.example.com" in csp
+        assert "API_HOST" not in csp
+        assert "csp connect-src -> https://admin.example.com" in out.getvalue()
+
+    def test_rejects_localhost_loudly(self, tmp_path):
+        brand_path = _make_brand(tmp_path)
+        app = _make_app(tmp_path)
+        with pytest.raises(CommandError, match="localhost"):
+            call_command("build_admin", brand=str(brand_path), app=str(app),
+                         api_host="https://localhost", stdout=io.StringIO())
+
+    def test_rejects_wildcard_loudly(self, tmp_path):
+        brand_path = _make_brand(tmp_path)
+        app = _make_app(tmp_path)
+        with pytest.raises(CommandError, match="wildcard"):
+            call_command("build_admin", brand=str(brand_path), app=str(app),
+                         api_host="https://*.example.com", stdout=io.StringIO())
+
+    def test_drift_csp_without_placeholder_fails(self, tmp_path):
+        # CSP already carries another origin: a new --api-host must fail
+        # loudly instead of silently keeping the stale host
+        brand_path = _make_brand(tmp_path)
+        app = _make_app(tmp_path)
+        conf_path = app / "src-tauri" / "tauri.conf.json"
+        conf = json.loads(conf_path.read_text())
+        conf["app"]["security"]["csp"] = PROD_CSP.replace(
+            "https://API_HOST", "https://old.example.com")
+        conf_path.write_text(json.dumps(conf))
+        with pytest.raises(CommandError, match="drift"):
+            call_command("build_admin", brand=str(brand_path), app=str(app),
+                         api_host="https://admin.example.com", stdout=io.StringIO())
