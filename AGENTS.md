@@ -140,18 +140,36 @@ is committed — regenerate it whenever `Cargo.toml` changes (the nix
 
 ## State as of 2026-10-17
 
-- Shipped on `ai/main` (default branch): plugin, thin client, demo
-  backend, Nix + Guix packaging, README, AI-REVIEW. `ai/mvp-build`
-  (demo-CI fixes + pinned Cargo.lock) is merged in and can be pruned.
-- Fixed & merged on `ai/main` (P0→P1; `pytest` 48/48): `brand.json` closed
-  schema + realpath/commonpath jail on all writes; demo-backend dev-only
-  DEBUG/CORS startup warning (`DEMO_DEV=1` ack); `api.ts` secret redaction +
-  credentials stripped from URLs; `chat.ts` SSE oversized-line cap (1 MB,
-  skip+warn); `secrets.ts` one-time web-localStorage SECURITY warning;
-  `tauri.conf.json` CSP `null` → working dev policy (localhost/ws + inline
-  styles, no wildcards); `RecordForm.buildPayload` omits empty non-nullable
-  fields; `DataTable` nested `{#each}` keyed on `col.name`; widgets
-  auto-imported via `import.meta.glob` (`meta{title,size}`).
-- Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still
-  in localStorage (accepted P2 — now warned, not eliminated); placeholder
-  icons; demo-CI android/nix/guix jobs never went green.
+- Shipped on `ai/main` (default branch): plugin, thin client, demo backend,
+  Nix + Guix packaging, README, AI-REVIEW. Every topic branch — `be-1`, `be-2`,
+  `be-3`, `be-6`, `fe-1`…`fe-5`, `mvp-build` — is merged in and safe to prune;
+  checked with `git merge-base --is-ancestor <tip> ai/main`, not assumed.
+- Suites, both green at this HEAD: `pytest` 53/53, `vitest` 51/51. On this
+  4 GB box run vitest capped:
+  `NODE_OPTIONS=--max-old-space-size=1024 npx vitest run --maxWorkers=1`.
+- Fixed & merged, P0→P1: `brand.json` closed schema + realpath/commonpath jail
+  on all writes; demo-backend dev-only DEBUG/CORS startup warning (`DEMO_DEV=1`
+  ack); `api.ts` secret redaction + credentials stripped from URLs; `chat.ts`
+  SSE oversized-line cap (1 MB, skip+warn); `secrets.ts` one-time
+  web-localStorage SECURITY warning; `RecordForm.buildPayload` omits empty
+  non-nullable fields; `DataTable` nested `{#each}` keyed on `col.name`;
+  widgets auto-imported via `import.meta.glob` (`meta{title,size}`).
+- Fixed & merged, later the same day: `tauri.conf.json` CSP `null` → working
+  **dev** policy (localhost/ws + inline styles, no wildcards; production policy
+  still open). The widget registry lives at `app/src/widgets/index.ts` — the
+  old `app/src/lib/widgets.ts` is gone. Vitest runs in `happy-dom` so
+  `localStorage`/`location` exist in tests. The widgets test asserts the
+  drop-in *contract* (valid meta, `widgetUnits`, built-ins by contains) instead
+  of a pinned count or id list, so dropping in a 4th widget cannot break it.
+- Demo-backend regression, fixed & merged: `demo-backend/shop/urls.py` was
+  silently deleted by the `381bed3` package rename (rig died on the first
+  request; 48/48 stayed green because nothing booted Django). Restored
+  byte-identical, and `plugin/tests/test_demo_boot.py` is now the gate — it
+  boots the real `core.settings` in a subprocess, runs Django's system checks,
+  and resolves `api/auth/token/`, the `shop.urls` router routes and
+  `/api/schema/`. Needs no database.
+- Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still in
+  localStorage (accepted P2 — warned, not eliminated); production CSP policy;
+  placeholder icons; demo-CI android/nix/guix jobs never went green (workflow
+  parked); and — because nothing in CI or packaging runs the suites — the boot
+  gate above only fires when a human runs pytest locally.
