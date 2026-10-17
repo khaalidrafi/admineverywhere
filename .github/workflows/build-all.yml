@@ -7,6 +7,10 @@
 #   2. build legs: web / windows / linux / android / nix / guix, each
 #      uploading an artifact users can play against their own DRF API (see
 #      demo-backend/ for a 60-second local backend, admin/admin123).
+#   3. on v* tag pushes: the `release` job attaches this run's artifacts
+#      plus the plugin wheel/sdist to a GitHub Release (assets always match
+#      the tagged source). v0.1.0 was cut by hand from run 39000890302 with
+#      the exact same rules -- scripts/cut_v010_release.sh is the reference.
 #
 # Reused from the parked .github/workflows/build-demo.yml.disabled:
 #   - web/windows/linux/android/nix/guix steps carried over nearly verbatim
@@ -23,11 +27,16 @@
 #
 # Triggers: push + pull_request on ai/main, plus workflow_dispatch for
 # manual runs from any branch (Actions tab -> Run workflow; paid minutes
-# on this private repo -- use sparingly). Pushing ai/* feature branches
+# on this private repo -- use sparingly). Pushing a v* tag runs the same
+# pipeline and the release job below cuts the GitHub Release from that
+# run's artifacts. Per the GitHub docs, defining both branches and tags
+# filters under `push:` means the workflow fires when EITHER matches, so
+# plain pushes to ai/main are unaffected. Pushing ai/* feature branches
 # otherwise costs zero minutes. No new secrets: the nix leg uses the
-# built-in GITHUB_TOKEN for tarball fetches, nothing else needs
-# credentials. build-demo.yml.disabled stays inert (Actions ignores
-# non-*.yml files in .github/workflows/).
+# built-in GITHUB_TOKEN for tarball fetches, and the release job elevates
+# only its own job-level permission to contents:write. The old
+# build-demo.yml.disabled stays inert (Actions ignores non-*.yml files in
+# .github/workflows/).
 
 name: build-all
 
@@ -35,6 +44,7 @@ on:
   workflow_dispatch:
   push:
     branches: [ai/main]
+    tags: ['v*']
   pull_request:
     branches: [ai/main]
 
@@ -333,3 +343,59 @@ jobs:
           path: admincraft-guix.tar.gz
           retention-days: 14
           if-no-files-found: error
+
+  # -------------------------------------------------------------- release ---
+  # GitHub Release, cut automatically from a vX.Y.Z tag push. Needs all six
+  # build legs (test-gate is transitive), so a release never ships from a
+  # red or partial tree. Assets = this run's artifacts + the plugin
+  # wheel/sdist built from the tagged source -- byte-for-byte the rules
+  # that produced v0.1.0 manually (scripts/cut_v010_release.sh).
+  # Job-level permissions: only this job gets contents:write, and only for
+  # `gh release create` with the built-in GITHUB_TOKEN -- no PATs.
+  # Manual fallback (if a tag ever fails to fire): dispatch a run on the
+  # tag's commit, then re-assemble per AGENTS.md "Releases".
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [web, windows, linux, android, nix, guix]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build plugin wheel + sdist
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build plugin
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Assemble release assets (mirror of scripts/cut_v010_release.sh)
+        run: |
+          set -euo pipefail
+          VERSION=${GITHUB_REF_NAME#v}
+          mkdir -p release
+          mv plugin/dist/admincraft-*.whl plugin/dist/admincraft-*.tar.gz release/
+          mv artifacts/nix-out/admincraft-nix.tar.gz "release/admincraft-$VERSION-nix.tar.gz"
+          mv artifacts/guix-out/admincraft-guix.tar.gz "release/admincraft-$VERSION-guix.tar.gz"
+          mv "$(find artifacts/windows-setup -name '*-setup.exe')" "release/admincraft_${VERSION}_x64-setup.exe"
+          mv "$(find artifacts/linux-appimage -name '*.AppImage')" "release/admincraft_${VERSION}_amd64.AppImage"
+          # apk: tauri android build --target aarch64 -> a single apk, ABI arm64-v8a
+          mv "$(find artifacts/android-apk -name '*.apk')" "release/admincraft-$VERSION-android-aarch64-debug.apk"
+          webroot=artifacts/web-dist
+          if [ -d "$webroot/dist" ]; then webroot="$webroot/dist"; fi
+          test -f "$webroot/index.html"
+          tar -czf "release/admincraft-$VERSION-web.tar.gz" -C "$webroot" .
+          ( cd release && sha256sum * > SHA256SUMS.txt )
+          ls -la release/
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --title "admincraft $GITHUB_REF_NAME" \
+            --generate-notes

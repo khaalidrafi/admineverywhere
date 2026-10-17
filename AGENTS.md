@@ -63,7 +63,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
 | `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, date, bool, readonly datetime) |
 | `flake.nix`, `guix.scm`, `frontend-dist/` | Nix + Guix packaging — rationale in the file headers |
-| `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix (see *CI*) |
+| `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
 | `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
 | `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
 | `docs/` | E2E screenshots |
@@ -129,14 +129,32 @@ cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
 (.AppImage) / android (.apk) / nix / guix, each uploading test-only
 artifacts a user launches and registers their own DRF API against on the
-login screen — no releases, nothing bundled, nothing calls home.
-Triggers: push + pull_request on `ai/main`, plus `workflow_dispatch` for
-manual runs from any branch. Paid minutes on this private repo — use
-sparing, and put `[skip ci]` on doc-only pushes to ai/main that don't
-need artifacts. The old `build-demo.yml.disabled` stays parked (its legs
-were reused for build-all). `app/src-tauri/Cargo.lock` is committed —
-regenerate it whenever `Cargo.toml` changes (the nix `cargoLock` and
-guix vendor builds depend on it).
+login screen — nothing bundled, nothing calls home. Triggers: push +
+pull_request on `ai/main`, `workflow_dispatch` from any branch, and `v*`
+tag pushes (which additionally run the `release` job — see *Releases*).
+Per the GitHub docs, `branches:` + `tags:` under one `push:` filter is
+OR semantics, so plain ai/main pushes are unaffected. Paid minutes on
+this private repo — use sparing, and put `[skip ci]` on doc-only pushes
+to ai/main that don't need artifacts. The old `build-demo.yml.disabled`
+stays parked (its legs were reused for build-all).
+`app/src-tauri/Cargo.lock` is committed — regenerate it whenever
+`Cargo.toml` changes (the nix `cargoLock` and guix vendor builds depend
+on it).
+
+## Releases
+
+Push an annotated `vX.Y.Z` tag on `ai/main` (bump the version in BOTH
+`plugin/pyproject.toml` and `app/package.json` first — the tag should
+match them). The pipeline runs on the tag and the `release` job cuts the
+GitHub Release from that run's artifacts plus the plugin wheel/sdist,
+with a `SHA256SUMS.txt`. Asset names and assembly rules mirror v0.1.0
+exactly (reference implementation: `scripts/cut_v010_release.sh`, which
+cut v0.1.0 by hand from green run 39000890302). Only the `release` job
+holds `contents:write`, and it uses the built-in `GITHUB_TOKEN` — no
+PATs in CI. If a tag push ever fails to trigger, the manual fallback:
+dispatch a run on the tag's commit, download its artifacts, and re-run
+the assembly steps from the release job. Release assets are permanent;
+run artifacts expire after 14 days.
 
 ## State as of 2026-10-17
 
@@ -168,8 +186,12 @@ guix vendor builds depend on it).
   boots the real `core.settings` in a subprocess, runs Django's system checks,
   and resolves `api/auth/token/`, the `shop.urls` router routes and
   `/api/schema/`. Needs no database.
+- v0.1.0 released 2026-10-17: tag on `f1678cd`, assets from green run
+  39000890302 (wheel + sdist, NSIS exe, AppImage, aarch64 debug apk, web
+  bundle, nix/guix store tarballs, SHA256SUMS). All six build legs are
+  proven green in CI — the old "android/nix/guix unverified" caveat is
+  closed.
 - Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still in
   localStorage (accepted P2 — warned, not eliminated); production CSP policy;
-  placeholder icons; android/nix/guix legs of build-all not yet proven green
-  (first live run pending); the boot gate now also runs in CI via
+  placeholder icons; the boot gate now also runs in CI via
   test-gate, not only when a human runs pytest locally.
