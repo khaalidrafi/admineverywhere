@@ -92,12 +92,6 @@ hygiene) — every such check to be moved into CI as it becomes automatable; (2)
 CI results — flake vs defect vs spec drift, then routes; (3) escalates any diff needing
 semantic understanding to the shape's senior. Deep code review is never the Lead's job.
 
-## MEMBER IDS
-glm53 = GLM-5.3 @ chat.z.ai (Senior BE / Architect) | qwmax = Qwen3.8-Max @ chat.qwen.ai
-(Senior FE) | bre = Qwen3.8-Flash @ Qoder (Build & Relay Eng) | zflash = GLM-5.3-Flash
-@ Z.ai Agent (sandbox) | oflash = GLM-5.3-Flash Free @ OpenCode (box loop) | lead =
-Kimi-K2.6 @ kimi.ai.
-
 ## MEMBER REPORT STANDARD (mandatory) + OFFICE ETIQUETTE
 Report shape:
   FROM: <role> · <model@platform> · ID: <member-id>
@@ -109,7 +103,7 @@ Report shape:
   5. BLOCKERS / 6. OWNER FLAGS / 7. PM-PROMPT -> <one next instruction>
 Followed by a MANDATORY fenced follow-up addressed to the Lead:
   ```followup
-  TO: lead · FROM: <member-id>
+  TO: lead · FROM: <full role> · <model@platform>
   TASK: <task-id>
   STATE: done|blocked|partial
   NEEDED: <merge / on-machine-verify / spec-clarification / next-queued-task>
@@ -131,4 +125,4 @@ Local agents (BRE @ Qoder, OpenCode, Goose) auto-load AGENTS.md from the repo �
 prompts need only "git pull first". Web chats (Qwen3.8-Max, GLM-5.3, Z.ai Agent) load
 nothing — every web-chat dispatch MUST open with: "Clone/pull the repo first, then read
 AGENTS.md + AGENTS-TEAM.md + STATE.org before touching anything. You are ID: <id>."
-IDs are assigned by the dispatch, never assumed: glm53, qwmax, bre, zflash, oflash.
+Members are identified by full role + model@platform, never abbreviations.
