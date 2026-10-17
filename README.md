@@ -1,14 +1,22 @@
 # admincraft
 
 A branded, extensible, AI-powered admin app builder for any Django REST
-Framework backend — pip-installable plugin (branding + schema tooling) plus a
-Tauri 2 / Svelte 5 thin client that renders your entire CRUD UI from your
-drf-spectacular OpenAPI schema. Includes an OpenAI-compatible streaming AI
-assistant (Ctrl+K) that knows your models. One `brand.json` rebrands the whole
-app in under a second. Tauri 2 targets Android .apk, Windows .exe and Linux
-.AppImage — prebuilt for every release (see
+Framework backend — pip-installable plugin (branding + schema tooling + a
+runtime branding API) plus a Tauri 2 / Svelte 5 thin client that renders
+your entire CRUD UI from your drf-spectacular OpenAPI schema. Includes an
+OpenAI-compatible streaming AI assistant (Ctrl+K) that knows your models.
+**Brand it however you like:** one `brand.json` rebrands the whole app in
+under a second, and once your backend runs the plugin you can rebrand from
+*inside the app* (Settings → Branding: name, colors, font, logo — applied
+live, no rebuild). Release builds ship a neutral default identity
+("Admincraft") that every user replaces with their own. Tauri 2 targets
+Android .apk, Windows .exe and Linux .AppImage — prebuilt for every
+release (see
 [Releases](https://github.com/khaalidrafi/admincraft/releases)), or build
-locally / from source via Nix/Guix.
+locally / from source via Nix/Guix. Two agent skills
+([`skills/`](skills/)) can onboard an existing repo onto admincraft and
+craft the branding for you — guided, or fully automatic from your
+project's own source.
 
 **Repo:** `khaalidrafi/admincraft` · stack: Django plugin (pip) +
 Tauri 2 + Svelte 5 + Tailwind 4 + DRF/drf-spectacular backend.
@@ -24,24 +32,31 @@ cd demo-backend && python -m venv .venv && .venv/bin/pip install -r requirements
 # 2. Run the thin client (vite dev; works identically inside Tauri)
 cd ../app && npm install && npm run dev            # -> http://localhost:5173
 
-# 3. Rebrand it — edit app/brands/freshorama/brand.json (or use minimal-light), then:
+# 3. Rebrand it — two ways:
+#    a) from inside the app: login, Settings → Branding (saved to the backend,
+#       applied live — name, colors, font, logo)
+#    b) build-time: apply a brand.json to the shipped bundle + launcher identity
 cd ../demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/minimal-light/brand.json --app ../app
+
+# 4. Or let the agent skills do all of it (guided OR fully automatic):
+python ../skills/admincraft-craft/scripts/derive_brand.py --root <your-repo> --out <your-repo>/brand
 ```
 
 Screenshot flow worth demoing: login → dashboard widgets (record counts,
 14-day activity chart, daily quote) → Product table → New Order (FK
 dropdowns + enum) → **Ctrl+K** → ask "what models do I have?" and watch it
-stream. Then run the rebrand command above and reload — whole app, new
-identity, one second.
+stream. Then open Settings → Branding, change the name and colors and hit
+Save — whole app, new identity, one second, no rebuild.
 
 ## Layout
 
 | dir | what |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `build_admin` (brand injection), `dump_schema`, branding engine (53 pytest cases) |
-| `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat (51 vitest cases) |
+| `plugin/` | pip package `admincraft` — `build_admin` (brand injection), `dump_schema`, branding engine + runtime branding API (75 pytest cases) |
+| `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat, in-app brand editor (58 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
-| `app/brands/` | two example brands: `freshorama` (dark SaaS) + `minimal-light` (light) |
+| `app/brands/` | `default/` (the neutral shipped identity) + two examples: `freshorama` (dark SaaS) + `minimal-light` (light) |
+| `skills/` | agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding; ask/auto modes) |
 | `frontend-dist/` | stub for the Nix flake input — the repo ships no prebuilt web assets |
 | `docs/` | E2E screenshots |
 | `.github/workflows/` | `build-all.yml` — live CI: test gate + six build legs + tag-triggered releases (`build-demo.yml.disabled` — the old parked demo-CI) |
@@ -63,8 +78,8 @@ identity, one second.
 ## Tests
 
 ```bash
-cd app && npm test                    # 51 vitest (schema normalizer, SSE parser)
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 53 pytest
+cd app && npm test                    # 58 vitest (schema normalizer, SSE parser, branding)
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 75 pytest
 ```
 
 ## Builds & releases (CI — live)
@@ -80,16 +95,17 @@ nothing bundled, nothing calls home.
 
 Push a `v*` tag and the same pipeline also cuts a GitHub Release with all
 assets attached. Current set (see
-[v0.1.1](https://github.com/khaalidrafi/admincraft/releases/tag/v0.1.1)):
+[v0.1.2](https://github.com/khaalidrafi/admincraft/releases/tag/v0.1.2) —
+the first release carrying the neutral "Admincraft" identity):
 
 | asset | platform | how to use |
 | --- | --- | --- |
-| `admincraft-0.1.1-py3-none-any.whl` (+ sdist) | any Python ≥ 3.10 | `pip install` — the Django plugin |
-| `admincraft_0.1.1_x64-setup.exe` | Windows | run the NSIS installer |
-| `admincraft_0.1.1_amd64.AppImage` | most distros | `chmod +x` and run |
-| `admincraft-0.1.1-android-universal-debug.apk` | Android 7.0+ (64- & 32-bit) | enable *install unknown apps*, then sideload; debug-signed (stable key). Upgrading from the v0.1.0 apk? Uninstall that first — the signing key changed once, deliberately |
-| `admincraft-0.1.1-web.tar.gz` | any (browser) | serve the contents statically, open, log in |
-| `admincraft-0.1.1-nix.tar.gz` / `-guix.tar.gz` | Nix / Guix | verified store-path builds (absolute `/nix/store` / `/gnu/store` paths) |
+| `admincraft-0.1.2-py3-none-any.whl` (+ sdist) | any Python ≥ 3.10 | `pip install` — the Django plugin |
+| `admincraft_0.1.2_x64-setup.exe` | Windows | run the NSIS installer |
+| `admincraft_0.1.2_amd64.AppImage` | most distros | `chmod +x` and run |
+| `admincraft-0.1.2-android-universal-debug.apk` | Android 7.0+ (64- & 32-bit) | enable *install unknown apps*, then sideload; stable debug-signed. Installing over v0.1.1 works (same key); devices still on the v0.1.0 apk must uninstall once (one-time key change) |
+| `admincraft-0.1.2-web.tar.gz` | any (browser) | serve the contents statically, open, log in |
+| `admincraft-0.1.2-nix.tar.gz` / `-guix.tar.gz` | Nix / Guix | verified store-path builds (absolute `/nix/store` / `/gnu/store` paths) |
 | `SHA256SUMS.txt` | — | checksums for everything above |
 
 ## Nix
@@ -127,8 +143,10 @@ The binary lands in `$(guix build -f guix.scm)/bin/admincraft`.
 - AI chat: streaming, no tool calling / history persistence (v2 material).
 - Dev-only values in `demo-backend/` (CORS allow-all, DEBUG) — see
   `AI-REVIEW.org` before reusing anywhere.
-- Placeholder icons are generated with `npx tauri icon`; replace for client releases.
+- Launcher icons: generated neutral grid marks (regenerate per client with
+  `npx tauri icon <1024px png>`); the in-app logo/favicon are runtime-
+  brandable without a rebuild.
 - Prebuilt clients ship on the
   [Releases](https://github.com/khaalidrafi/admincraft/releases) page
-  (tag-triggered CI). They are demo/test-only builds — nothing bundled,
-  nothing calls home.
+  (tag-triggered CI). They carry the neutral identity — nothing bundled,
+  nothing calls home; users register their own API and brand.
