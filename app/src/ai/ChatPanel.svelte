@@ -6,8 +6,8 @@
   import { onMount } from "svelte";
   import { get } from "svelte/store";
   import { ai, app, loadAiSettings, saveAiSettings, toast } from "../lib/stores";
-  import { ChatError, streamChatCompletion, systemPrompt, type ChatMessage } from "../lib/chat";
-  import { schemaSummary } from "../lib/openapi";
+  import { buildSchemaPrompt, ChatError, streamChatCompletion, systemPrompt, type ChatMessage } from "../lib/chat";
+
   import { isWebStorage } from "../lib/secrets";
   import Icon from "../components/Icon.svelte";
 
@@ -66,7 +66,7 @@
     const outgoing: ChatMessage[] = [
       {
         role: "system",
-        content: systemPrompt(a.brand.appName, a.schema ? schemaSummary(a.schema) : "no schema loaded"),
+        content: systemPrompt(a.brand.appName, a.schema ? buildSchemaPrompt(a.schema) : "no schema loaded"),
       },
       ...messages.slice(-8), // short memory, no persistence by design
       { role: "user", content: text },
@@ -136,7 +136,7 @@
         </span>
         <span class="text-sm font-semibold">AI Assistant</span>
         {#if configured}
-          <span class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-500">
+          <span class="rounded-full bg-[color-mix(in_srgb,var(--brand-accent)_15%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--brand-accent)]">
             {$ai.model}
           </span>
         {/if}
@@ -221,7 +221,7 @@
           </div>
         {/each}
         {#if streamError}
-          <div class="rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-2 text-xs text-red-200">
+          <div class="rounded-lg border border-[color-mix(in_srgb,var(--brand-text)_40%,transparent)] bg-[color-mix(in_srgb,var(--brand-surface)_40%,transparent)] px-3 py-2 text-xs text-[var(--brand-text)]">
             {streamError}
           </div>
         {/if}
