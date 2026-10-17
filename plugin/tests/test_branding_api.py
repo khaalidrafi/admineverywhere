@@ -277,6 +277,7 @@ def test_method_not_allowed(brand_dir):
                           content_type="application/json")
     assert r.status_code == 405
 
+
 # ---------------------------------------------------------------------------
 # Production CSP + --api-host substitution. Moved here from test_branding.py
 # on the csp-1 rebase (EM order: branding tests live in this file now). The
@@ -290,9 +291,29 @@ def test_method_not_allowed(brand_dir):
 
 PROD_CSP = (
     "default-src 'self'; connect-src 'self' https://API_HOST; "
-    "script-src 'self'; img-src 'self'; font-src 'self'; "
-    "media-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'"
+    "script-src 'self'; img-src 'self' data: https:; "
+    "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; "
+    "media-src 'self'; worker-src 'self'; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
 )
+
+# The app dir that actually ships (parents[2] = repo root). CI's CSP-hygiene
+# grep only rejects dev origins; the tests here pin the positive side.
+SHIPPED_TAURI_CONF = (
+    Path(__file__).resolve().parents[2] / "app" / "src-tauri" / "tauri.conf.json"
+)
+
+GOOGLE_FONTS_CSS = "https://fonts.googleapis.com"    # serves the @import
+GOOGLE_FONTS_FILES = "https://fonts.gstatic.com"    # serves the .woff2 files
+
+
+def directive(csp: str, name: str) -> str:
+    """One directive's full text out of a CSP string (fails if absent)."""
+    for part in csp.split(";"):
+        stripped = part.strip()
+        if stripped.startswith(name + " "):
+            return stripped
+    raise AssertionError(f"{name} missing from CSP: {csp}")
 
 # inject_brand reads logo/favicon paths out of brand.json, so a shipped
 # (build-time) brand needs real asset files — unlike VALID_BRAND above, which
@@ -428,3 +449,47 @@ class TestInjectBrandCsp:
     def test_summary_reports_no_substitution_without_api_host(self, ship_brand_dir, app_dir_csp):
         summary = branding.inject_brand(app_dir_csp, ship_brand_dir / "brand.json")
         assert summary["csp_api_host"] is None
+
+
+class TestProdCspBrandOrigins:
+    """BRE Finding 2: self-only img-src/font-src silently breaks two product
+    promises — a brand.json webfont (render_css / brandToCss emit a Google
+    Fonts @import) and a hosted logo URL. Pinned here because CI's hygiene
+    grep only rejects dev origins, never asserts these.
+    """
+
+    def test_img_src_allows_hosted_logos(self):
+        # data: stays for the runtime branding API's data-URL uploads
+        assert directive(PROD_CSP, "img-src") == "img-src 'self' data: https:"
+
+    def test_font_src_allows_google_fonts(self):
+        font_src = directive(PROD_CSP, "font-src")
+        assert GOOGLE_FONTS_CSS in font_src
+        assert GOOGLE_FONTS_FILES in font_src
+
+    def test_style_src_allows_the_fonts_import(self):
+        # An @import inside a <style> block is gated by style-src, not
+        # font-src: font-src alone covers only the font FILES, so without
+        # this the app still falls back to the system font.
+        assert GOOGLE_FONTS_CSS in directive(PROD_CSP, "style-src")
+
+    def test_shipped_conf_carries_exactly_the_prod_csp(self):
+        csp = json.loads(SHIPPED_TAURI_CONF.read_text())["app"]["security"]["csp"]
+        assert csp == PROD_CSP
+
+    def test_no_dev_origins_anywhere_in_the_prod_csp(self):
+        # mirrors the CI hygiene gate, so a local run catches a leak first
+        for token in ("localhost", "http://", "ws://", "wss://", "*"):
+            assert token not in PROD_CSP, token
+
+    def test_substitution_keeps_the_brand_origins(self):
+        """The generated (deployed) CSP is the one that ships — substituting
+        the API_HOST placeholder must not drop the brand directives."""
+        conf = {"app": {"security": {"csp": PROD_CSP}}}
+        branding.substitute_api_host(conf, "https://admin.example.com")
+        csp = conf["app"]["security"]["csp"]
+        assert directive(csp, "img-src") == "img-src 'self' data: https:"
+        assert directive(csp, "font-src") == (
+            f"font-src 'self' {GOOGLE_FONTS_CSS} {GOOGLE_FONTS_FILES}")
+        assert directive(csp, "connect-src") == (
+            "connect-src 'self' https://admin.example.com")
