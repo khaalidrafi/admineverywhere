@@ -19,9 +19,20 @@
 :ORDERED: t
 :END:
 ** DONE brand-1 — neutral branding + in-app rebrand + skills (v0.1.2) :FE:BE:
-** PENDING csp-1 — production CSP                                 :BE:
-CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
+** ONGOING csp-1 — production CSP                                  :BE:
 :LOGBOOK:
+- State "ONGOING" from "PENDING" [2026-10-18 Sun 01:23]
+CLOCK: [2026-10-18 Sun 01:23]
+- State "PENDING" from "ONGOING" [2026-10-18 Sun 01:12]
+- State "ONGOING" from "TODO" [2026-10-18 Sun 01:10]
+CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
+- Note taken on [2026-10-18 Sun 01:23] :: Re-dispatched by Lead, spec
+  unchanged. Clock lines now live inside the :LOGBOOK: drawer in the exact
+  form org-clock-in/org-clock-out emit (probed on org 9.7.11 / emacs 30.2:
+  "CLOCK: ..." parses as a clock line inside the drawer and in the body;
+  ":CLOCK: ..." from the cheat sheet yields 0 clock lines, so
+  CLOCKSUM_EFFORT could never compute). State lines for the 01:10 and 01:12
+  transitions written retroactively, by hand, per the cheat sheet.
 - Note taken on [2026-10-18 Sun 01:12] :: CSP-1-FINISH complete. ai/csp-1 at
   c3b5aa9, 8 ahead / 0 behind origin/ai/main, force-pushed with lease, never
   merged. Commits: f37c24b 47e3083 890713d (oflash's, rebased) + 8b9a7dd test
