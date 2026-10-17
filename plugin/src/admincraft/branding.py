@@ -258,6 +258,13 @@ def inject_brand(app_dir: str | Path, brand_path: str | Path) -> dict:
     # 4. Patch Tauri config (window title, product name) — best effort.
     #    Jailed like every other write: a symlinked tauri.conf.json that
     #    resolves outside src-tauri/ is refused instead of patched.
+    #
+    #    CSP substitution point: the shipped tauri.conf.json sets
+    #    app.security.csp connect-src to 'self' https://API_HOST, where
+    #    API_HOST is a placeholder for the deployed admin API origin
+    #    (never localhost, never a wildcard). build_admin — this
+    #    build-time patching path — is where the real API origin gets
+    #    substituted for API_HOST before `tauri build` packages the app.
     patched: list[str] = []
     tauri_conf = app / "src-tauri" / "tauri.conf.json"
     if tauri_conf.is_file():
