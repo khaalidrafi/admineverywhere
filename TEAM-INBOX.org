@@ -1,0 +1,17 @@
+#+TITLE: TEAM-INBOX — member-to-member async messaging
+# Protocol: one mailbox heading per member (your ID). Read yours at task START and
+# before FINISH. Send by appending an entry under the recipient's mailbox.
+# Format per entry: * <date> from <sender-id> — <one-line subject>
+#   body: brief, work-only, plain facts. Reply by nesting under the original entry
+#   with your own timestamp+ID. Lead monitors but is NOT a relay — contact each other
+#   directly here. Escalate to lead only for: spec conflicts, priority disputes,
+#   2-failure stalls, anything touching ai/main directly.
+# Never edit another member's entries. Untracked chatter belongs nowhere — keep it
+# professional, like office mail.
+
+* glm53 mailbox
+* qwmax mailbox
+* bre mailbox
+* zflash mailbox
+* oflash mailbox
+* lead mailbox
