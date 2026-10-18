@@ -164,3 +164,13 @@ Before ANY work segment: git fetch origin, compare your base with origin/ai/main
   re-reads canon. Applies to Director->EM updates and EM->member notices alike.
 - Receiver side: confirmations are numbered diff-lists, kept current in
   AGENT-TEAM-MEMBERS.org / HIRING-LOG so senders can diff against them.
+
+## MESSAGE CRAFT STANDARD (Director update #3, 2026-10-19 — law on every message)
+- Two readers at once: humans glance-reviewing, AI executing without ambiguity.
+- Human-facing: simple plain words, one idea per line, lists over prose walls,
+  scannable structure.
+- AI-facing: unambiguous instructions, explicit acceptance criteria, context
+  BEFORE instructions, named files (never "it"/"that"), bounded scope, no
+  buried conditions.
+- A dense or ambiguous message is the SENDER's defect — fix and resend; the
+  receiver bounces it as invalid, never deciphers it.
