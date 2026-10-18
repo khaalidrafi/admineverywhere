@@ -144,18 +144,7 @@ describe("buildSchemaPrompt", () => {
       byId: {},
     };
     const prompt = buildSchemaPrompt(schema);
-    expect(prompt).toBe("Available models (fields in parentheses; fk = foreign key to that model):\n"
-");
-  });
-});
-
-  it("handles empty schema", () => {
-    const schema: AdminSchema = {
-      models: [],
-      byId: {},
-    };
-    const prompt = buildSchemaPrompt(schema);
-    expect(prompt).toBe("Models: ");
+    expect(prompt).toBe("Available models (fields in parentheses; fk = foreign key to that model):\n");
   });
 });
 
