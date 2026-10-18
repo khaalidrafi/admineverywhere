@@ -144,7 +144,7 @@ describe("buildSchemaPrompt", () => {
       byId: {},
     };
     const prompt = buildSchemaPrompt(schema);
-    expect(prompt).toBe("Available models (fields in parentheses; fk = foreign key to that model):
+    expect(prompt).toBe("Available models (fields in parentheses; fk = foreign key to that model):\n"
 ");
   });
 });
