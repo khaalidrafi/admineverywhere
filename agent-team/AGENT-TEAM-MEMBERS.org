@@ -481,6 +481,10 @@ pair — never a family grouping.
 * ROLE REORG (2026-10-19 — new pairs absorbed, crew proven skills retained)
 ** Senior BE gains backup: Gemini-3.8-Flash @ WorkBuddy (fast-tier relieves GLM-5.3 slowness for quick BE tasks).
 ** Loops: GLM-5.3-Flash @ Z.ai Agent stays lead; north-mini-code:free @ OpenCode named understudy (removes single-point-of-failure in the only loops seat).
-** BRE gains gateway-offload: llama-3.3-70b + gemini-3.8-flash @ gateway via OpenCode — verification compute moves off the 4GB box when it strains.
+** BRE gains gateway-offload: llama-3.3-70b + gemini-3.8-flash @ OpenCode(via gateway) via OpenCode — verification compute moves off the 4GB box when it strains.
 ** Box-loop seat (oflash benched): DeepSeek V4.1-Flash @ OpenCode, guardrailed, takes the vacancy.
 ** Crew seats unchanged: proven skills outrank all newcomers — Qwen3.8-Max FE, GLM-5.3 BE, Qwen3.8-Flash BRE keep their roles; newcomers slot UNDER them as backups/understudies, never over them.
+
+# NOTE: the gateway (ai.khalidrafi.tech) is a relay, never a body. Every API
+# model's dispatchable pair names the agent that speaks to it: OpenCode (default),
+# Goose, Pi, Qoder, or OMP.
