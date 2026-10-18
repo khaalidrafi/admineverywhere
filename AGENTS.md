@@ -66,7 +66,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (114 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (151 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (58 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
@@ -78,7 +78,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
 | `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
 | `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
-| `docs/` | E2E screenshots |
+| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) |
 
 ## Commands
 
@@ -94,7 +94,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
 cd app && npm test                          # 58 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 114 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 151 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -156,7 +156,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
 ## CI — build-all, live
 
 `.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
-(vitest 58 + pytest 114, plus a CSP-hygiene check on the shipped
+(vitest 58 + pytest 151, plus a CSP-hygiene check on the shipped
 tauri.conf.json) runs FIRST and every build leg `needs:` it, so a
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
 (.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
@@ -305,6 +305,25 @@ once (one-time signature change from the stable key).
   v0.1.0's apk hit "app not installed" on phones (aarch64-only ABI +
   ephemeral per-run signing key). First live fire of the automated
   `release` job (v0.1.0 was cut by hand).
+- FR-R001 (ROADLOG R-001), on `ai/fr-r001-be`: demo-backend Order gained the
+  reference lifecycle state machine — ordered Status enum + STATUS_ORDER +
+  TRANSITIONS table (pending→paid→shipped, refunds from paid/shipped,
+  refunded terminal), apply_transition() with typed IllegalTransition(reason),
+  reserve/release stock shipped as # TODO(client) no-ops inside the
+  transactional side-effect seam (_apply_side_effects), append-only
+  OrderHistory (actor FK, creation entry via perform_create, seed_demo rows),
+  and two router @actions: POST /api/orders/<id>/transition/ (guard failures
+  = 409 + {reason}; unknown/missing target = 400 + {reason}) and
+  GET /api/orders/<id>/history/ (oldest-first, deliberately not paginated —
+  pagination_class=None so the OpenAPI schema matches the runtime shape).
+  Additive only: status stays PATCH-writable (pre-existing MVP behavior).
+  Client projects copy the pattern — contract + checklist in
+  docs/order-lifecycle.md. +37 pytest (114 → 151) in
+  plugin/tests/test_order_lifecycle.py: machine matrix, 409/400 shapes,
+  trail order/actor, creation entry, seam invocation + rollback-on-failure,
+  schema exposure. conftest now mounts the demo rig apps in-memory so the
+  contract tests run in-process — still zero new deps (no pytest-django; the
+  test DB comes from Django's own DiscoverRunner utilities).
 - Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still in
   localStorage (accepted P2 — warned, not eliminated); icons are neutral
   generated grid marks — real product art still welcome; full skill eval
