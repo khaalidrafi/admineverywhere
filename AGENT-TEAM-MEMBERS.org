@@ -1,0 +1,77 @@
+#+TITLE: AGENT-TEAM-MEMBERS — admincraft ranked roster (2026-10-19)
+# Every entry = brain@body pair. Evidence: PROVEN field record (outranks research)
+# + independent benchmarks/reviews/sentiment (HIRING PROTOCOL). Limits recorded.
+# ROSTER DIFF vs previous table: live /v1/models = 163 ids; added 156, removed 52.
+# Research pass: 2026-10-18 herd + 2026-10-19 live diff (LMArena, WebDev Arena,
+# GDPval-AA, Artificial Analysis, hands-on reviews quoted in MODEL-RANKING.org).
+
+* ROLE 1 — LEAD / EM
+** Kimi-K2.6 @ kimi.ai [ACTIVE]
+   PROVEN: 2 sessions, ~40 dispatches, 0 false greens; LMArena 1466 (quality-92).
+   Limits: 128K cap/session; stateless; free. Rank: #1 orchestration (context, not capability).
+* ROLE 2 — SENIOR FRONTEND
+** Qwen3.8-Max @ chat.qwen.ai (Qwen Studio workspace) [ACTIVE]
+   PROVEN: FE-1..5, cool-chat wow, cool-preview. Benchmark: LMArena ~1491, #18 —
+   best frontend evidence (VentureBeat: "broadest balanced profile"). Limits: sandbox
+   cannot run heavy suites (npm test timeout — witnessed twice); no shell; free.
+** Qwen3.7-Max @ chat.qwen.ai [BACKUP]
+   1488 Elo; unstaffed unless 3.8 down.
+* ROLE 3 — SENIOR BACKEND / ARCHITECT
+** GLM-5.3 @ chat.z.ai [ACTIVE]
+   PROVEN: branding jail P0, v0.1.2 (brand+skills+release) solo. Benchmark: quality-96
+   tier; sentiment "budget Claude" (HN). Limits: thinking always-on = slow; free.
+** GLM-5.3 @ Z.ai Agent (cloud shell) [ACTIVE-same brain, best body]
+   Same brain + real shell = strongest combined config (highest non-A/O TB 4.0, 41.8%).
+   Limits: ephemeral sessions.
+** Gemini-3.8-Flash @ WorkBuddy.ai [BACKUP-BE]
+   Benchmark: 345 t/s, quality-93, TB 2.1 level (DataCmp). Limits: daily credits.
+* ROLE 4 — JUNIOR SANDBOX EXECUTOR (loops, tweaks)
+** GLM-5.3-Flash @ Z.ai Agent [ACTIVE]
+   PROVEN: csp-1, fr-r001-be rebase (151/151). Fast tier (117 t/s, quality-93).
+   Limits: ephemeral; PAT per task; free.
+** north-mini-code:free @ OpenCode (via gateway) [ACCEPTED-junior]
+   Evidence: agentic coding specialist, 0.7s, 7/7 uptime (klymentiev daily checks).
+   Limits: OpenRouter 20 RPM / 50 day.
+** llama-3.3-70b @ OpenCode (gateway cloudflare/ or groq/) [ACCEPTED-junior]
+   Evidence: proven workhorse, no flags (field consensus). Limits: CF 10k Neurons/day
+   shared pool; groq unknown.
+* ROLE 5 — BUILD & RELAY / VERIFICATION
+** Qwen3.8-Flash @ Qoder (local) [ACTIVE — the BRE]
+   PROVEN x12: control-experiment rigor, governance-rewrite trap, CSP regression catch.
+   Brain weak (Flash tier, no independent data) — hands+discipline carry the rank.
+   Limits: Owner's 4GB box (1GB heap caps); free.
+** Qwen3.8-Flash @ OMP (local) [SPARE-BODY, same brain]
+** CI test-leg + Jev-1.13.0 first-pass @ gateway [OBJECTIVE GATES]
+   Jev verified live 2026-10-19; 90s timeout; not a hire.
+* ROLE 6 — DESIGN / EMERGENCY (on demand)
+** Grok-4.7 @ WorkBuddy.ai [EMERGENCY ONLY]
+   ★ Owner first-hand available; no independent data; credit cost. Warn before routing.
+** DeepSeek V4.1-Flash @ CodeBuddy [GUARDRAILED ONE-SHOTS]
+   Benchmaxxing flag (HN/hands-on split); verify daily free promo label.
+* ROLE 7 — LOCAL SPARES
+** Cursor Agent @ Cursor (free X tier) [PROBATION]
+   Weekly pool Grok 4.7/4.6/4.5 + Composer 2.5; caps unpublished; heavy IDE.
+** GitHub Copilot @ IDE [LOW]
+   Auto-model only (GPT-5-mini/Haiku class); 2k completions free; no choice.
+** Goose / OMP / Pi @ local [SPARES]
+   No chat-shaped evidence; Goose=orchestration niche, Pi=minimal niche.
+* PROBATION QUEUE (one guardrailed task each before live lanes)
+** laguna-s-2.1:free @ OpenCode — agentic specialist, no independent benches; 50/day
+** nemotron-3-ultra:free @ OpenCode — 1M ctx, most-used OR free; quality unverified
+** gpt-oss-120b @ OpenCode — no independent chat data
+** qwen2.5-coder-32b @ OpenCode — older coder lineage
+** glm-4.7-flash @ OpenCode/Z.ai — unverified
+** gemini-3.6/3.7-flash, 3.1-lite, 2.5-flash @ gateway — no fresh chat evidence
+** kimi-k2-instruct/-thinking @ kilo/ — K2 lineage, mid brain, cheap
+** llama-4-scout / qwen3-32b / qwen3.1-8b / mistral-small-3.1 @ gateway — known family, no fresh evidence
+** deepseek-v4-flash @ tokenharbor — lineage evidence only
+** allam @ groq/ — Arabic LLM, non-EN niche
+* BENCHED (Hiring-Log)
+** GLM-5.3-Flash Free @ OpenCode — strike 2 (stalled csp-1 twice); return on owner word
+** MiniMax M3 / M3.1 @ MiniMax Agent/Code — daily credits burned (10k/3h documented); owner benched
+* REJECTED (no verifiable public data / stealth / deprecated / anti-fit) — full id list in MODEL-RANKING.org
+   gemini-3.5 family, antigravity previews, mimo/step-5/xing4, space-bunny/muse-spark/
+   big-pickle, clef family, safety classifiers, harness ids, aliases, all no-data ids.
+* HIRING-LOG
+- 2026-10-18: herd pass v1 (bench+sentiment); Qwen3.8-Flash PROVEN x8->x12 over session.
+- 2026-10-19: full re-rank after churn (156+/52-); this file supersedes chat rankings.
