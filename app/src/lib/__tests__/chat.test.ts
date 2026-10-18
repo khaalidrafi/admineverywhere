@@ -148,6 +148,7 @@ describe("buildSchemaPrompt", () => {
   });
 });
 
+
 describe("systemPrompt", () => {
   it("is schema-aware", () => {
     const p = systemPrompt("Freshorama Admin", "Models: Product (3 fields)");
