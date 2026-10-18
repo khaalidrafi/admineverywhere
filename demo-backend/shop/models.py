@@ -7,6 +7,10 @@ FR-R001 (ROADLOG R-001): Order carries the reference lifecycle state
 machine — an ordered Status enum, an explicit transition table, and an
 append-only OrderHistory trail. Client projects copy this pattern; see
 docs/order-lifecycle.md for the convention and the API contract.
+
+FR-R003 (ROADLOG R-003): AuditEntry is the append-only custom-actions
+audit log — one loose-coupled table any model's actions write into;
+see docs/custom-actions.md for the convention and the API contract.
 """
 from django.conf import settings
 from django.db import models, transaction
@@ -177,3 +181,61 @@ class OrderHistory(models.Model):
 
     def __str__(self):
         return f"Order #{self.order_id}: {self.from_status or 'created'} -> {self.to_status}"
+
+
+class AuditEntry(models.Model):
+    """Append-only audit log for custom actions (FR-R003 / ROADLOG R-003).
+
+    One row per performed custom action — record scope (one target) or
+    bulk scope (one row per target). Rows are created only through the
+    audit API or server-side action code; the API surface exposes
+    list + create and nothing else, so PUT/PATCH/DELETE answer 405 by
+    construction and the log can only grow. ``actor`` is always derived
+    from the authenticated request — never client-supplied (null for
+    system/seed entries). ``object_type``/``object_id`` name the target
+    loosely (no FK) so any model's actions audit into this one table;
+    the record sub-view and the R-007 activity-log screen read it back
+    through the object_type/object_id filters.
+
+    Ordering ruling (the R-003 "audit ordering" risk, decided here once):
+    audit reads NEWEST-first — triage wants the latest event on top.
+    Lifecycle history (OrderHistory) stays oldest-first: replay vs triage.
+    """
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="audit_entries",
+    )
+    action = models.CharField(
+        max_length=100, help_text="Slug of the performed action, e.g. 'order.flag'."
+    )
+    object_type = models.CharField(
+        max_length=120,
+        help_text="Loose target type, e.g. 'order' — no FK, any model audits here.",
+    )
+    object_id = models.CharField(
+        max_length=64, help_text="Primary key of the target, as a string."
+    )
+    summary = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="Human-readable one-liner surfaced in audit screens.",
+    )
+    data = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Structured payload (reason, bulk provenance, diff — action-defined).",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name_plural = "audit entries"
+        indexes = [models.Index(fields=["object_type", "object_id"])]
+
+    def __str__(self):
+        return f"{self.action} on {self.object_type}#{self.object_id}"

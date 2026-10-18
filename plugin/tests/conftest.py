@@ -21,8 +21,8 @@ from django.conf import settings
 
 DEMO_ROOT = Path(__file__).resolve().parents[2] / "demo-backend"
 
-# Module (basename) that runs against the demo rig.
-DEMO_RIG_MODULE = "test_order_lifecycle"
+# Modules (basenames) that run against the demo rig.
+DEMO_RIG_MODULES = {"test_order_lifecycle", "test_audit_actions"}
 
 # Demo-rig DRF policy (lives here so the override stays in one place).
 DEMO_REST_FRAMEWORK = {
@@ -75,15 +75,16 @@ def _migrate_db():
 
 @pytest.fixture(autouse=True)
 def _demo_rig(request):
-    """Scope the demo rig's URLconf + DRF policy to the FR-R001 module.
+    """Scope the demo rig's URLconf + DRF policy to the rig modules.
 
     Every other module (upstream branding/API tests included) runs under the
-    exact configuration it shipped with; test_order_lifecycle additionally
-    gets ROOT_URLCONF=core.urls and the demo REST_FRAMEWORK/SPECTACULAR
+    exact configuration it shipped with; the FR-R001/FR-R003 modules
+    (test_order_lifecycle, test_audit_actions) additionally get
+    ROOT_URLCONF=core.urls and the demo REST_FRAMEWORK/SPECTACULAR
     policy for the duration of each test (including the spectacular schema
     generation call).
     """
-    if request.module.__name__.split(".")[-1] != DEMO_RIG_MODULE:
+    if request.module.__name__.split(".")[-1] not in DEMO_RIG_MODULES:
         yield
         return
     from django.test.utils import override_settings

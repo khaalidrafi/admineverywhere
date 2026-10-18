@@ -8,23 +8,45 @@ FR-R001: OrderViewSet adds the lifecycle contract — POST transition
 (guard errors are 409 + {reason}), GET history (append-only trail), and
 an initial history entry written on create. IllegalTransition from the
 model is the only guard error path; never hand-roll state rules here.
+
+FR-R003: OrderViewSet adds the custom-actions reference — record-scope
+flag and bulk-scope bulk_flag, both appending to the audit log — and
+AuditEntryViewSet serves the append-only audit endpoint: list + create
+only (PUT/PATCH/DELETE 405 by construction), newest first, actor always
+derived from the request. See docs/custom-actions.md.
 """
 from django.db.models import Q
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.response import Response
-from rest_framework import viewsets
 
-from .models import Category, Customer, IllegalTransition, Order, OrderHistory, Product
+from .models import (
+    AuditEntry,
+    Category,
+    Customer,
+    IllegalTransition,
+    Order,
+    OrderHistory,
+    Product,
+)
 from .serializers import (
+    AuditEntrySerializer,
+    BulkFlagRequestSerializer,
     CategorySerializer,
     CustomerSerializer,
+    FlagRequestSerializer,
     OrderHistorySerializer,
     OrderSerializer,
     ProductSerializer,
     TransitionRequestSerializer,
 )
+
+
+def _request_actor(request):
+    """The authenticated request user, or None for anonymous callers."""
+    return request.user if request.user.is_authenticated else None
 
 
 class SearchableModelViewSet(viewsets.ModelViewSet):
@@ -117,3 +139,110 @@ class OrderViewSet(SearchableModelViewSet):
         order = self.get_object()
         entries = order.history.select_related("actor").order_by("created_at", "id")
         return Response(OrderHistorySerializer(entries, many=True).data)
+
+    # ------------------------------------------------------------------
+    # FR-R003 custom actions reference (docs/custom-actions.md): one
+    # record-scope and one bulk-scope action, both audit-wired. Guard
+    # errors keep the R-001 shape: 400 + {"reason": "..."}.
+    # ------------------------------------------------------------------
+    @extend_schema(
+        request=FlagRequestSerializer,
+        responses=AuditEntrySerializer,
+        description="Record-scope custom action (FR-R003 reference): flag this order for review. "
+        "Changes no order fields; appends one append-only audit entry (actor = requesting user).",
+    )
+    @action(detail=True, methods=["post"])
+    def flag(self, request, pk=None):
+        order = self.get_object()
+        reason = (request.data.get("reason") or "").strip()
+        if not reason:
+            return Response(
+                {"reason": "missing required field 'reason' (body: {\"reason\": <text>})"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        entry = AuditEntry.objects.create(
+            actor=_request_actor(request),
+            action="order.flag",
+            object_type="order",
+            object_id=str(order.pk),
+            summary=f"Order flagged: {reason}",
+            data={"reason": reason},
+        )
+        return Response(AuditEntrySerializer(entry).data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        request=BulkFlagRequestSerializer,
+        responses=AuditEntrySerializer(many=True),
+        description="Bulk-scope custom action (FR-R003 reference): flag many orders with one reason. "
+        "Appends one audit entry per order; unknown ids answer 400 with {reason} listing them. "
+        "Duplicate ids collapse to one entry per order.",
+    )
+    @action(detail=False, methods=["post"])
+    def bulk_flag(self, request, pk=None):
+        ids = request.data.get("ids")
+        reason = (request.data.get("reason") or "").strip()
+        if not isinstance(ids, list) or not ids:
+            return Response(
+                {"reason": "missing or empty required field 'ids' (body: {\"ids\": [<order id>, ...], \"reason\": <text>})"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not reason:
+            return Response(
+                {"reason": "missing required field 'reason' (body: {\"ids\": [<order id>, ...], \"reason\": <text>})"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            wanted = {int(value) for value in ids}
+        except (TypeError, ValueError):
+            return Response(
+                {"reason": "field 'ids' must be a list of order ids"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        found = Order.objects.filter(pk__in=wanted).order_by("pk")
+        missing = sorted(wanted - {order.pk for order in found})
+        if missing:
+            return Response(
+                {"reason": f"unknown order id(s): {', '.join(str(m) for m in missing)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        entries = [
+            AuditEntry.objects.create(
+                actor=_request_actor(request),
+                action="order.flag",
+                object_type="order",
+                object_id=str(flagged.pk),
+                summary=f"Order flagged (bulk): {reason}",
+                data={"reason": reason, "bulk": True, "batch": len(wanted)},
+            )
+            for flagged in found
+        ]
+        return Response(AuditEntrySerializer(entries, many=True).data, status=status.HTTP_201_CREATED)
+
+
+class AuditEntryViewSet(ListModelMixin, CreateModelMixin, viewsets.GenericViewSet):
+    """Append-only audit log (FR-R003): GET list + POST append, nothing else.
+
+    No update/delete mixins exist, so PUT/PATCH/DELETE answer 405 by
+    construction — the log can only grow. Entries read newest-first
+    (triage order — the R-003 ordering ruling; R-001's history replays
+    oldest-first). Optional ``?object_type=`` / ``?object_id=`` filters
+    back the record sub-view and the R-007 activity-log screen. POST
+    never trusts the client with ``actor``: perform_create derives it
+    from the authenticated request.
+    """
+
+    queryset = AuditEntry.objects.select_related("actor")
+    serializer_class = AuditEntrySerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        object_type = self.request.query_params.get("object_type")
+        object_id = self.request.query_params.get("object_id")
+        if object_type:
+            qs = qs.filter(object_type=object_type)
+        if object_id:
+            qs = qs.filter(object_id=object_id)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(actor=_request_actor(self.request))
