@@ -7,10 +7,31 @@
 
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
 ** TODO FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
-*** ONGOING FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
+*** PENDING FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
 :LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-18 Sun 20:44]
+CLOCK: [2026-10-18 Sun 20:42]--[2026-10-18 Sun 20:44] =>  0:02
+- Note taken on [2026-10-18 Sun 20:44] :: :DELIVERED: ai/fr-r001-be@9388a2e
+  — :RESULT: DONE for the member scope. finish-2 rebase round (EM dispatch
+  #2): fetched origin/ai/main — 25 commits since the previous base (todos
+  moved to agent-team/, roster/docs churn, six syntax repairs; zero overlap
+  with the conflict surface), branch rebased ed03e14 -> 9388a2e onto
+  ebdbded (0 behind / 1 ahead), --force-with-lease pushed
+  (ed03e14...9388a2e, lease held, task branch only). Evidence:
+  - [X] branch 0-behind origin/ai/main (9388a2e = ebdbded + 1)
+  - [X] pytest -p no:cacheprovider green in-sandbox: 151 passed / 0 failed
+    in 6.39s — the ~155 estimate reflected vitest churn; the 25 commits
+    carried zero upstream pytest changes, so 151 remains the honest total
+  - [X] --force-with-lease push of ai/fr-r001-be only (ai/main never
+    rebased/force-pushed)
+  - [ ] Lead/senior review + CI gate (branch push runs no CI; DONE is
+    Lead-only)
+  :OPEN-RISKS: (carried) conftest _demo_rig scoping — basename-keyed
+  autouse override_settings scopes demo-rig ROOT_URLCONF/REST_FRAMEWORK/
+  SPECTACULAR to test_order_lifecycle only; upstream modules run their
+  shipped config unchanged. Senior review pending.
+  "IN_REVIEW" mapped to PENDING — no such keyword in the #+TODO line.
 - State "ONGOING" from "PENDING" [2026-10-18 Sun 20:42]
-CLOCK: [2026-10-18 Sun 20:42]
 - Note taken on [2026-10-18 Sun 20:42] :: finish-2 rebase round opened per EM
   dispatch #2 (Kimi-K2.6): main's test-gate green again after six syntax
   repairs. Measured at segment start: ai/fr-r001-be 1 ahead / 25 behind
