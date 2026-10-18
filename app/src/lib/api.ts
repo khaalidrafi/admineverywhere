@@ -214,3 +214,75 @@ export function fieldErrors(detail: any): Record<string, string> {
   }
   return out;
 }
+
+
+/** POST /api/<model>/<id>/transition/ — perform a lifecycle transition.
+ *  Returns updated record on 200; throws ApiError with detail.reason on 409. */
+export async function transitionRecord(
+  cfg: AppConfig,
+  token: string | null,
+  modelId: string,
+  recordId: string | number,
+  targetStatus: string,
+): Promise<RecordRow> {
+  const url = cfg.apiUrl.replace(/\/+$/, "") + modelId + "/" + recordId + "/transition/";
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Token ${token}`;
+  
+  let resp: Response;
+  try {
+    resp = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ transition: targetStatus }),
+    });
+  } catch (err: any) {
+    throw new ApiError(`Cannot reach ${url}`, { network: true, detail: redactSecrets(err) });
+  }
+  
+  const text = await resp.text();
+  let data: any = text;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {}
+  
+  if (!resp.ok) {
+    // 409 Conflict: { reason: "..." }
+    // 400/401/404: standard DRF errors
+    throw new ApiError(`Transition failed (${resp.status})`, {
+      status: resp.status,
+      detail: redactSecrets(data),
+    });
+  }
+  
+  return data as RecordRow;
+}
+
+/** GET /api/<model>/<id>/history/ — fetch lifecycle history (append-only, oldest first). */
+export async function fetchHistory(
+  cfg: AppConfig,
+  token: string | null,
+  modelId: string,
+  recordId: string | number,
+): Promise<Array<{id: number; from_status: string; to_status: string; actor: string | null; created_at: string}>> {
+  const url = cfg.apiUrl.replace(/\/+$/, "") + modelId + "/" + recordId + "/history/";
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Token ${token}`;
+  
+  let resp: Response;
+  try {
+    resp = await fetch(url, { headers });
+  } catch (err: any) {
+    throw new ApiError(`Cannot reach ${url}`, { network: true, detail: redactSecrets(err) });
+  }
+  
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new ApiError(`History fetch failed (${resp.status})`, {
+      status: resp.status,
+      detail: text,
+    });
+  }
+  
+  return await resp.json();
+}
