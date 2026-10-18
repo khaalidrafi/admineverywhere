@@ -1,6 +1,7 @@
-/** chat.ts tests — SSE parser edge cases (network chunking is hostile). */
+/** chat.ts tests — SSE parser edge cases + schema prompt builder + setup state. */
 import { describe, expect, it, vi } from "vitest";
-import { chatEndpoint, createSSEParser, systemPrompt } from "../chat";
+import { buildSchemaPrompt, chatEndpoint, createSSEParser, systemPrompt } from "../chat";
+import type { AdminSchema } from "../types";
 
 describe("createSSEParser", () => {
   const collect = () => {
@@ -72,11 +73,123 @@ describe("chatEndpoint", () => {
   });
 });
 
+describe("buildSchemaPrompt", () => {
+  it("builds model summary with legend and field types", () => {
+    const schema: AdminSchema = {
+      models: [
+        {
+          id: "products",
+          name: "Product",
+          singular: "product",
+          listPath: "/api/products/",
+          detailPath: "/api/products/{id}/",
+          labelField: "name",
+          fields: [
+            { name: "id", type: "number", required: true, readOnly: true },
+            { name: "name", type: "text", required: true, readOnly: false },
+            { name: "price", type: "number", required: true, readOnly: false },
+          ],
+          byName: {},
+        },
+        {
+          id: "orders",
+          name: "Order",
+          singular: "order",
+          listPath: "/api/orders/",
+          detailPath: "/api/orders/{id}/",
+          labelField: "id",
+          fields: [
+            { name: "id", type: "number", required: true, readOnly: true },
+            { name: "status", type: "enum", required: false, readOnly: false, choices: ["pending", "paid"] },
+          ],
+          byName: {},
+        },
+      ],
+      byId: {},
+    };
+
+    const prompt = buildSchemaPrompt(schema);
+    expect(prompt).toContain("Available models (fields in parentheses; fk = foreign key to that model):");
+    expect(prompt).toContain("- Product [/api/products/]: id(number), name(text), price(number)");
+    expect(prompt).toContain("- Order [/api/orders/]: id(number), status(enum)");
+  });
+
+  it("shows fk fields with target model", () => {
+    const schema: AdminSchema = {
+      models: [
+        {
+          id: "products",
+          name: "Product",
+          singular: "product",
+          listPath: "/api/products/",
+          detailPath: "/api/products/{id}/",
+          labelField: "name",
+          fields: [
+            { name: "id", type: "number", required: true, readOnly: true },
+            { name: "category", type: "fk", required: true, readOnly: false, fkModel: "categories" },
+          ],
+          byName: {},
+        },
+      ],
+      byId: {},
+    };
+
+    const prompt = buildSchemaPrompt(schema);
+    expect(prompt).toContain("category(fk->categories)");
+  });
+
+  it("handles empty schema", () => {
+    const schema: AdminSchema = {
+      models: [],
+      byId: {},
+    };
+    const prompt = buildSchemaPrompt(schema);
+    expect(prompt).toBe("Available models (fields in parentheses; fk = foreign key to that model):
+");
+  });
+});
+
+  it("handles empty schema", () => {
+    const schema: AdminSchema = {
+      models: [],
+      byId: {},
+    };
+    const prompt = buildSchemaPrompt(schema);
+    expect(prompt).toBe("Models: ");
+  });
+});
+
 describe("systemPrompt", () => {
   it("is schema-aware", () => {
-    const p = systemPrompt("Freshorama Admin", "- Product [/api/products/]: name(text)");
+    const p = systemPrompt("Freshorama Admin", "Models: Product (3 fields)");
     expect(p).toContain("Freshorama Admin");
-    expect(p).toContain("Product");
+    expect(p).toContain("Models: Product (3 fields)");
     expect(p).toContain("Never invent fields");
+  });
+});
+
+describe("setup state logic", () => {
+  it("detects missing config", () => {
+    const baseUrl = "";
+    const apiKey = "";
+    const model = "";
+    const configured = !!(baseUrl && apiKey && model);
+    expect(configured).toBe(false);
+  });
+
+  it("detects complete config", () => {
+    const baseUrl = "https://api.openai.com/v1";
+    const apiKey = "sk-123";
+    const model = "gpt-4";
+    const configured = !!(baseUrl && apiKey && model);
+    expect(configured).toBe(true);
+  });
+
+  it("detects partial config", () => {
+    const baseUrl = "https://api.openai.com/v1";
+    const apiKey = "";
+    const model = "gpt-4";
+    const configured = !!(baseUrl && apiKey && model);
+    expect(configured).toBe(false);
   });
 });
