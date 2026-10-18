@@ -17,7 +17,7 @@
   import { ApiError } from "../lib/api";
   import { app, saveBrand, toast } from "../lib/stores";
   import type { Brand } from "../lib/types";
-  import { BRAND_DEFAULTS, injectBrandCss } from "../lib/branding";
+  import { BRAND_DEFAULTS, applyBrand, revertBrand } from "../lib/branding";
 
   const COLOR_KEYS: { key: keyof Brand["colors"]; label: string; hint: string }[] = [
     { key: "primary", label: "Primary", hint: "buttons, links, active nav" },
@@ -39,8 +39,6 @@
   let faviconUpload: string | null = $state(null);
   let saving = $state(false);
   let errors: string[] = $state([]);
-  let previewing = $state(false);
-
   function blobToDataUrl(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -120,12 +118,11 @@
     }
   }
 
-  /** Live-preview the draft on the whole app without touching the server. */
-  function togglePreview(): void {
-    previewing = !previewing;
-    if (previewing) injectBrandCss(draft);
-    else injectBrandCss(orig);
-  }
+  /** Live-preview: apply draft on every change, revert on unmount. */
+  $effect(() => {
+    applyBrand(draft);
+    return () => revertBrand(orig);
+  });
 
   const previewLogo = $derived(logoUpload ?? draft.logo ?? "");
   const logoIsImage = $derived(previewLogo.startsWith("data:") || previewLogo.includes("/admincraft/branding/asset/") || !!previewLogo);
@@ -140,9 +137,6 @@
       </p>
     </div>
     <div class="flex gap-2">
-      <button class="btn btn-ghost" onclick={togglePreview}>
-        {previewing ? "Stop preview" : "Preview live"}
-      </button>
       <button class="btn btn-primary" onclick={save} disabled={saving}>
         {saving ? "Saving…" : "Save brand"}
       </button>
