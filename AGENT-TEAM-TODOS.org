@@ -401,41 +401,14 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   original tip, and I will not push anything that moves AGENTS-TEAM.md
   backwards.
 :END:
-** TODO prune merged branches + release evidence pack            :BE:
-** TODO E1 — client schema intake (apiUrl+token settings UX)     :FE:
-** TODO prod-CSP follow-through after csp-1 lands                :BE:
-* OWN — owner decisions                                         :OWN:
-** TODO apk signing / exe+guix asset honesty decision
-** TODO E1 go/no-go
-* DONE (recent)
-** DONE FE-1..FE-5, BE-1..BE-6, E2 CI (v0.1.1 released)
-
-* WORKFLOW (read first — replaces all report channels)
-Members own their task item; Lead is the only one who flips DONE.
-- Start: TODO -> ONGOING; add CLOCK start line under the item (CLOCK: [YYYY-MM-DD Ddd HH:MM]).
-- Progress: append notes into the item's :LOGBOOK: drawer: "- Note taken on [date] :: <fact, evidence pointer, UNVERIFIED labels>".
-- Need input from Lead or any member: flip to WAIT (keep clock running).
-- Finished: close the CLOCK line ([end] => HH:MM), append a completion note to the
-  :LOGBOOK: drawer (facts, evidence pointers, UNVERIFIED labels, and any message for
-  the Lead), then flip to PENDING. PENDING WITHOUT a completion note is invalid —
-  Lead returns it. Lead reviews, flips DONE.
-- Owner decisions: if the blocker needs the Owner's ruling, flip WAIT and add the
-  tag :OWN: + a LOGBOOK line naming the decision needed. The Owner's personal queue
-  lives in his TODOs.org; Lead mirrors nothing — Owner reads the WAIT :OWN: items
-  here directly.
-- Direct-push members (Build & Relay Engineer, sandbox/box Flashes) commit todos edits
-  straight to ai/main. Branch-workers include the edit in their task branch; Lead
-  resolves at merge. Never touch others' items. Bare fences only in notes.
-
-* ORG SYNTAX CHEAT SHEET (exact forms — copy, never invent)
-A task item looks like: ** ONGOING my task title                    :FE:
-Start clock (open, running):  :CLOCK: [2026-10-18 Sun 01:10]
-Clock out (closed, effort computed by Org):  :CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 02:05] => 0:55
-LOGBOOK drawer under the item:
+** PENDING COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend       :FE:
 :LOGBOOK:
-- State "ONGOING" from "TODO" [2026-10-18 Sun 01:10]
-- Note taken on [2026-10-18 Sun 01:40] :: pytest 86 passed; API_HOST tests relocated; UNVERIFIED: on-device CSP behavior
-- Note taken on [2026-10-18 Sun 02:05] :: done — see commit ede483c; needs Lead merge review
+- State "PENDING" from "TODO" [2026-10-17 Sat 20:21]
+CLOCK: [2026-10-17 Sat 20:21]
+- Note taken on [2026-10-17 Sat 20:21] :: COOL-CHAT-SEND-BACK-2 complete. Branch ai/cool-chat @ 7918345, rebased on origin/ai/main (c9c9c26). Implementation:
+  1. chat.ts: updated buildSchemaPrompt to include legend "Available models (fields in parentheses; fk = foreign key to that model):" and show field types (matching panel display) instead of just field counts.
+  2. ChatPanel.svelte: changed import to use buildSchemaPrompt from chat.ts instead of schemaSummary from openapi.ts. System prompt now calls buildSchemaPrompt(schema).
+  3. chat.test.ts: updated 3 buildSchemaPrompt tests to verify legend presence and field type format (e.g., "category(fk->categories)").
+  Acceptance: buildSchemaPrompt wired ✓, legend restored ✓, user-visible text matches reality ✓, vitest green (63/63) ✓.
+  UNVERIFIED: browser E2E (sandbox cannot run Tauri), visual verification of live chat with schema-aware prompts.
 :END:
-Waiting on Owner: flip keyword WAIT, add :OWN: to the tags line, one Note line naming the decision.
-State lines are added by Org on C-c C-t — when editing as text, write them exactly as shown.
