@@ -54,7 +54,7 @@ export function buildSchemaPrompt(schema: AdminSchema): string {
     return `- ${m.name} [${m.listPath}]: ${fields}`;
   });
   return `${legend}
-${lines.join("
+${lines.join("\n")}`;
 ")}`;
 }
 
