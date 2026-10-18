@@ -45,11 +45,11 @@ pair — never a family grouping.
    Evidence: proven workhorse, no flags (field consensus). Limits: CF 10k Neurons/day
    shared pool; groq unknown.
 * ROLE 5 — BUILD & RELAY / VERIFICATION
-** Qwen3.8-Flash @ Qoder (local) [ACTIVE — the BRE]
+** Qwen3.8-Flash @ Qoder (local) [ACTIVE — QA Engineer]
    PROVEN x12: control-experiment rigor, governance-rewrite trap, CSP regression catch.
    Brain weak (Flash tier, no independent data) — hands+discipline carry the rank.
    Limits: Owner's 4GB box (1GB heap caps); free.
-** Qwen3.8-Flash @ OMP (local) [SPARE-BODY, same brain]
+** Qwen3.8-Flash @ OMP (local) [SPARE QA BODY, same brain]
 ** CI test-leg + Jev-1.13.0 first-pass @ gateway [OBJECTIVE GATES]
    Jev verified live 2026-10-19; 90s timeout; not a hire.
 * ROLE 6 — DESIGN / EMERGENCY (on demand)
