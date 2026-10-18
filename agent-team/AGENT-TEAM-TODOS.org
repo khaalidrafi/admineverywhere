@@ -7,8 +7,16 @@
 
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
 ** TODO FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
-*** PENDING FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
+*** ONGOING FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
 :LOGBOOK:
+- State "ONGOING" from "PENDING" [2026-10-18 Sun 20:42]
+CLOCK: [2026-10-18 Sun 20:42]
+- Note taken on [2026-10-18 Sun 20:42] :: finish-2 rebase round opened per EM
+  dispatch #2 (Kimi-K2.6): main's test-gate green again after six syntax
+  repairs. Measured at segment start: ai/fr-r001-be 1 ahead / 25 behind
+  origin/ai/main (240d2ef). Round plan: rebase onto the stable base, pytest
+  -p no:cacheprovider, --force-with-lease push, close back to PENDING with
+  fresh :DELIVERED: evidence.
 - State "PENDING" from "WAIT" [2026-10-18 Sun 18:00]
 CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
 - Note taken on [2026-10-18 Sun 18:00] :: :DELIVERED: ai/fr-r001-be@ed03e14
