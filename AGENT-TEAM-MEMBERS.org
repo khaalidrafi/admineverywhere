@@ -75,3 +75,17 @@
 * HIRING-LOG
 - 2026-10-18: herd pass v1 (bench+sentiment); Qwen3.8-Flash PROVEN x8->x12 over session.
 - 2026-10-19: full re-rank after churn (156+/52-); this file supersedes chat rankings.
+
+* RESEARCH STATUS (2026-10-19, ROSTER DUTY round 2)
+- Cited from successful rounds (2026-10-18 herd + 2026-10-19 diff pass): laguna-s/xs
+  (buldrr), north-mini-code (klymentiev), nemotron-3-ultra (teamday catalog),
+  gemini-3.8-flash (DataCmp/LMArena), deepseek-v4.1-flash (HN benchmaxxing thread),
+  llama-3.3-70b (field consensus), GLM-5.3 family (quality-96, HN "budget Claude"),
+  Qwen3.8-Max (LMArena ~1491, VentureBeat), Kimi-K2.6 (LMArena 1466).
+- UNABLE TO CITE (search infra timeout x3 attempts, 00:33-00:35 local): glm-4.7-flash,
+  gpt-oss-120b/20b, qwen2.5-coder-32b, qwen3.8-27b, qwq-32b, r1-distill-qwen-32b,
+  mistral-small-3.1, gemini-3.6/3.7/3.1/2.5-flash, kimi-k2-thinking, llama-4-scout,
+  qwen3-32b, qwen3.1-8b, allam, deepseek-v4-flash, xing4.0, longcat-2.5, mimo-v2.6,
+  clef family. All remain PROBATION (or REJECTED where law already applies:
+  stealth/training/deprecated/no-data) with this search history recorded; research
+  round to re-run when search infra recovers — flagged in BLOCKED for the EM cycle.
