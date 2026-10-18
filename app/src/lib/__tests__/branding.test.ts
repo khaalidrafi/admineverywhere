@@ -1,5 +1,5 @@
 /** branding.ts — the runtime CSS-variable injector (in-app rebranding). */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { BRAND_DEFAULTS, brandToCss, injectBrandCss, sanitizeFont } from "../branding";
 import type { Brand } from "../types";
 
