@@ -72,6 +72,20 @@ CLOCK: [2026-10-18 Sun 01:58]
 ** TODO FR R-008 widget data sources + new charts                             :FE:
 ** TODO FR R-007 RBAC phased (client-side first)                              :FE:BE:
 * OPEN ITEMS
+
+** PENDING COOL-PREVIEW — live rebrand preview (apply/revert pure module) :FE:
+:LOGBOOK:
+CLOCK: [2026-10-18 Sun 02:30]
+- State "ONGOING" from "TODO" [2026-10-18 Sun 02:30]
+- Note taken on [2026-10-17 Sat 20:09] :: COOL-PREVIEW complete. Branch ai/cool-preview @ 2a7746d, 1 commit ahead of origin/ai/main (7c58651). Implementation:
+  1. branding.ts: added pure applyBrand(brand) and revertBrand(original) functions. applyBrand injects CSS vars + updates document.title; revertBrand restores original brand.
+  2. Branding.svelte: removed previewing state + togglePreview button; added $effect(() => { applyBrand(draft); return () => revertBrand(orig); }) for live preview on every draft change. Reverts on unmount.
+  3. Empty radius guard: brandToCss uses brand.radius || DEFAULTS.radius (truthiness, not ??) — empty string "" is falsy, so || picks the default. Verified: brandToCss({radius:""}) contains "--brand-radius: 0.75rem" not "--brand-radius: ;".
+  4. vitest: 17 tests covering apply/revert (DOM side effects, idempotency), brandToCss (defaults, partial colors, empty radius), sanitizeFont (invalid chars, fallback), edge cases (undefined colors). All pass.
+  Acceptance: apply/revert pure module ✓, live preview via $effect ✓, empty radius guard ✓, vitest green ✓.
+  UNVERIFIED: browser E2E (sandbox cannot run Tauri), visual verification of live preview during typing.
+- State "PENDING" from "ONGOING" [2026-10-17 Sat 20:09]
+:END:
 :PROPERTIES:
 :ORDERED: t
 :END:
