@@ -65,3 +65,17 @@ export function injectBrandCss(brand: Brand): void {
   }
   el.textContent = brandToCss(brand);
 }
+
+/** Apply a brand live — inject CSS vars + update document title if appName changed.
+ *  Pure function: takes a Brand, side-effects are DOM only. */
+export function applyBrand(brand: Brand): void {
+  injectBrandCss(brand);
+  if (typeof document !== "undefined") {
+    document.title = brand.appName || "Admin";
+  }
+}
+
+/** Revert to original brand — called on cancel. */
+export function revertBrand(original: Brand): void {
+  applyBrand(original);
+}
