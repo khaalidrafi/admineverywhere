@@ -66,7 +66,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (151 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (175 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (58 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
@@ -78,7 +78,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
 | `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
 | `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
-| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) |
+| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) |
 
 ## Commands
 
@@ -94,7 +94,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
 cd app && npm test                          # 58 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 151 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 175 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -156,7 +156,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
 ## CI — build-all, live
 
 `.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
-(vitest 58 + pytest 151, plus a CSP-hygiene check on the shipped
+(vitest 58 + pytest 175, plus a CSP-hygiene check on the shipped
 tauri.conf.json) runs FIRST and every build leg `needs:` it, so a
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
 (.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
@@ -324,6 +324,21 @@ once (one-time signature change from the stable key).
   schema exposure. conftest now mounts the demo rig apps in-memory so the
   contract tests run in-process — still zero new deps (no pytest-django; the
   test DB comes from Django's own DiscoverRunner utilities).
+- FR-R003 (ROADLOG R-003), on `ai/fr-r003-be` (stacked on `ai/fr-r001-be`):
+  the custom-actions + audit reference — append-only `AuditEntry` (loose
+  object_type/object_id targeting, no GFK; actor always server-derived,
+  client-supplied actor ignored) whose append-only guarantee is structural:
+  the ViewSet has List+Create mixins only, so list mutations answer 405 and
+  the router never generates a detail route. Audit reads newest-first
+  (triage) while R-001 history stays oldest-first (replay) — the ordering
+  ruling recorded in the model and docs. Optional `?object_type=` /
+  `?object_id=` filters back the record sub-view and the R-007 activity
+  screen. Two audit-wired reference actions on Order: record-scope POST
+  `/api/orders/<id>/flag/` and bulk-scope POST `/api/orders/bulk_flag/`
+  (guard errors keep the R-001 400+{reason} shape; bulk writes one entry per
+  order with provenance in data). Registry contract (FE meta + handler
+  pairing) + copy-this-pattern checklist in docs/custom-actions.md.
+  +24 pytest (151 → 175) in plugin/tests/test_audit_actions.py.
 - Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still in
   localStorage (accepted P2 — warned, not eliminated); icons are neutral
   generated grid marks — real product art still welcome; full skill eval
