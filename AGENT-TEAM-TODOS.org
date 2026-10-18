@@ -39,6 +39,18 @@ CLOCK: [2026-10-18 Sun 01:58]
   conftest designs (keep upstream's authtoken/SECRET_KEY/_migrate_db AND add
   the demo-rig apps + core.urls + sys.path insert; autouse migrate already
   covers my needs), take 151 as the count, keep both AI-REVIEW appends.
+- Note taken on [2026-10-18 Sun 02:10] :: Spec-drift check complete — NO DRIFT vs ROADLOG R-001.
+  Verified on ai/fr-r001-be @ a816b81:
+  1) docs/order-lifecycle.md — exact contract match (state machine, TRANSITIONS matrix, apply_transition + IllegalTransition, side-effect seam _apply_side_effects with reserve/release stock no-ops, OrderHistory actor/timestamp, POST /transition/ {transition} 409/400 shapes, GET /history/ oldest-first no pagination, creation entry via perform_create + seed_demo, OpenAPI exposure via drf-spectacular).
+  2) plugin/tests/test_order_lifecycle.py — 37 new tests covering all 7 required areas: machine matrix (8 transitions), 409+reason/400 guards, trail order/actor, creation entry, seam invocation + rollback, schema exposure, client convention.
+  3) pytest 90/90 passed (53 base + 37 new; zero new deps, no pytest-django).
+  4) demo-backend boot 5/5 passed (system checks, URL resolves, schema reachable).
+  5) Deliberate refinement recorded: R-001 sketches "@action transition endpoints (confirm/cancel)" while dispatch orders single POST /transition/ {transition: <target>} — target-parameterized form subsumes confirm/cancel; shipped dispatch, flagged for Lead.
+  Rebase remains blocked on 3 semantic conflicts requiring Lead arbitration:
+  - plugin/tests/conftest.py design collision (two mutually exclusive Django test configurations in one configure block)
+  - AGENTS.md test count ownership (151 total after merge)
+  - AI-REVIEW.org dual EOF appends
+  Clock kept RUNNING (WAIT state) per workflow. No conflicts resolved — awaiting Lead/senior decision.
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:58]
 - Note taken on [2026-10-18 Sun 01:58] :: Item created by me on dispatch — the
   queue had only the combined R-001 parent above (:BE:FE), and the workflow
