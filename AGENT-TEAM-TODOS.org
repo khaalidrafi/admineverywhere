@@ -7,9 +7,40 @@
 
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
 ** TODO FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
-*** WAIT FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
+*** PENDING FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
 :LOGBOOK:
-CLOCK: [2026-10-18 Sun 01:58]
+- State "PENDING" from "WAIT" [2026-10-18 Sun 18:00]
+CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
+- Note taken on [2026-10-18 Sun 18:00] :: :DELIVERED: ai/fr-r001-be@ed03e14
+  — :RESULT: DONE for the member scope (keyword flip to DONE stays
+  Lead-only). Divergence law executed with the restored PAT: fetched
+  origin/ai/main (1 ahead / 85 behind at segment start; +17 commits since
+  7c58651, none touching the conflict surface — the "second rebase attempt"
+  note confirmed the same 3 semantic conflicts), author-owned resolution
+  replayed from the verified trial, branch rebased a816b81 -> ed03e14 on
+  068d40b, --force-with-lease pushed (a816b81...ed03e14, lease held; task
+  branch only, ai/main never rebased/force-pushed). Trial sha ecd1f3f was
+  superseded by ed03e14 when the rebase moved onto true main. Evidence:
+  - [X] branch 0-behind origin/ai/main (ed03e14 = 068d40b + 1)
+  - [X] pytest green in-sandbox: 151 passed / 0 failed in 6.30s (114
+    upstream + 37 FR-R001; zero new deps — no pytest-django)
+  - [X] --force-with-lease push of ai/fr-r001-be only
+  - [X] 3-file conflict resolved as designed: conftest MERGED (upstream
+    block verbatim: SECRET_KEY, ROOT_URLCONF=admincraft.urls, session-
+    autouse _migrate_db; demo rig added inside the same configure();
+    _demo_rig fixture scopes core.urls + REST_FRAMEWORK + SPECTACULAR to
+    test_order_lifecycle only), AGENTS.md current totals 114 -> 151, both
+    AI-REVIEW.org appends kept
+  - [ ] Lead/senior review + CI gate (branch push runs no CI; DONE is
+    Lead-only)
+  :OPEN-RISKS: conftest _demo_rig scoping — demo-rig ROOT_URLCONF/
+  REST_FRAMEWORK/SPECTACULAR overrides are scoped to module
+  test_order_lifecycle via a basename-keyed autouse override_settings
+  fixture; upstream modules run their shipped config unchanged by
+  construction. Senior review to confirm the basename coupling is
+  acceptable (alternative: per-test marks).
+  Dispatch word "IN_REVIEW" mapped to PENDING — no such keyword in the
+  #+TODO line; PENDING = member-finished per CLOCK+LOGBOOK WORKFLOW.
 - State "WAIT" from "ONGOING" [2026-10-18 Sun 02:00]
 - Note taken on [2026-10-18 Sun 02:00] :: Rebase STOP per DIVERGENCE HANDLING.
   Trial rebase of ai/fr-r001-be (a816b81, 1 ahead / 65 behind) onto
