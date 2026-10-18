@@ -51,6 +51,12 @@ CLOCK: [2026-10-18 Sun 01:58]
   - AGENTS.md test count ownership (151 total after merge)
   - AI-REVIEW.org dual EOF appends
   Clock kept RUNNING (WAIT state) per workflow. No conflicts resolved — awaiting Lead/senior decision.
+- Note taken on [2026-10-18 Sun 02:25] :: Second rebase attempt per FR-R001-RESCUE-3 dispatch.
+  ai/fr-r001-be @ a816b81 (1 ahead / 83 behind origin/ai/main @ 11892b7). Rebase CONFLICTS on same three files (semantic, not mechanical):
+  1. plugin/tests/conftest.py — design collision: upstream (csp-1) mounts plugin API surface (authtoken, SECRET_KEY, ROOT_URLCONF=admincraft.urls, _migrate_db autouse); branch mounts demo rig (shop, corsheaders, drf_spectacular, ROOT_URLCONF=core.urls, REST_FRAMEWORK+SPECTACULAR_SETTINGS, sys.path insert). Both mutate same configure() block — merge is a design call.
+  2. AGENTS.md — test counts: upstream 58 vitest + 114 pytest; branch 51 vitest + 90 pytest. After merge honest total 149 — ownership decision needed.
+  3. AI-REVIEW.org — both sides appended at EOF (upstream: ruling-A follow-up + P0 CSP item; branch: FR-R001 review item).
+  Aborted clean per DIVERGENCE HANDLING. Branch left unrebased @ a816b81 on origin (pushed as-is, first push, no force). pytest 90/90 GREEN on-machine (NODE_OPTIONS=--max-old-space-size=1024, pytest -p no:cacheprovider). demo-backend boot 5/5 GREEN. Spec-drift check re-confirmed: NO DRIFT vs ROADLOG R-001 / docs/order-lifecycle.md. Branch implementation fully matches contract: ordered Status enum + STATUS_ORDER + TRANSITIONS (refunded terminal), apply_transition + IllegalTransition(reason), side-effect seam _apply_side_effects (reserve/release no-ops), OrderHistory (actor, timestamp), POST /transition/ {transition} 409+reason/400 guards, GET /history/ oldest-first no pagination, creation entry via perform_create, OpenAPI exposure. Clock remains RUNNING (WAIT state). Awaiting Lead/senior arbitration on the 3 semantic conflicts.
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:58]
 - Note taken on [2026-10-18 Sun 01:58] :: Item created by me on dispatch — the
   queue had only the combined R-001 parent above (:BE:FE), and the workflow
