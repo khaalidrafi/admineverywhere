@@ -155,3 +155,12 @@ Before ANY work segment: git fetch origin, compare your base with origin/ai/main
   branch. Lead or Owner resolves.
 - ai/main itself diverges (never force-push, never rebase ai/main — if origin refuses
   a push, STOP and WAIT).
+
+## TEAM UPDATE DISCIPLINE (sending side, owner ruling 2026-10-19)
+- Updates are INCREMENTAL: check the receiving team's last confirmation list
+  first; never re-send a block they already confirmed adopting.
+- Carry only what changed since that team's last confirmed baseline.
+- A repeated block is wasted tokens and noise; the receiver confirms diffs, not
+  re-reads canon. Applies to Director->EM updates and EM->member notices alike.
+- Receiver side: confirmations are numbered diff-lists, kept current in
+  AGENT-TEAM-MEMBERS.org / HIRING-LOG so senders can diff against them.
