@@ -68,3 +68,9 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
 - [ ] P0 REVIEW: prod-CSP strictness vs branding features — csp-1 sets font-src/img-src 'self' only; brand.json promises webfont (fonts.googleapis/gstatic) + logo hosting; loosen (img-src 'self' data: https:, font-src + Google Fonts) or make origins substituted like API_HOST. BRE Finding 2, 2026-10-17.
 
 - [ ] FOLLOW-UP (owner ruling A, 2026-10-18): make img-src/font-src origins brand-substituted like API_HOST in build_admin — tighten prod CSP without breaking brand.json webfonts/hosted logos.
+
+- [ ] REVIEW: FR-R001 (ai/fr-r001-be) order lifecycle reference — machine
+  semantics (refunded terminal, no refund path from pending), the 409+reason
+  guard shape, and the additive-only call to keep Order.status PATCH-writable
+  during client migration. Contract: docs/order-lifecycle.md; tests:
+  plugin/tests/test_order_lifecycle.py.
