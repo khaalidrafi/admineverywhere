@@ -7,7 +7,7 @@
 
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
 ** TODO FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
-*** PENDING FR-R001-BE — order lifecycle BE contract (reference implementation) :BE:
+*** DONE FR-R001-BE — order lifecycle BE contract (merged 16c5a4fd; strike redeemed) :BE:
 :LOGBOOK:
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 20:44]
 CLOCK: [2026-10-18 Sun 20:42]--[2026-10-18 Sun 20:44] =>  0:02
