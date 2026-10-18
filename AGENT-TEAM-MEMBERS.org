@@ -1,6 +1,10 @@
 #+TITLE: AGENT-TEAM-MEMBERS — admincraft ranked roster (2026-10-19)
 # Every entry = brain@body pair. Evidence: PROVEN field record (outranks research)
 # + independent benchmarks/reviews/sentiment (HIRING PROTOCOL). Limits recorded.
+# BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on
+different bodies produces different work. model@Goose and model@OpenCode are
+DIFFERENT members with DIFFERENT ranks. Every entry below is one dispatchable
+pair — never a family grouping.
 # ROSTER DIFF vs previous table: live /v1/models = 163 ids; added 156, removed 52.
 # Research pass: 2026-10-18 herd + 2026-10-19 live diff (LMArena, WebDev Arena,
 # GDPval-AA, Artificial Analysis, hands-on reviews quoted in MODEL-RANKING.org).
@@ -58,13 +62,20 @@
 * PROBATION QUEUE (one guardrailed task each before live lanes)
 ** laguna-s-2.1:free @ OpenCode — agentic specialist, no independent benches; 50/day
 ** nemotron-3-ultra:free @ OpenCode — 1M ctx, most-used OR free; quality unverified
-** gpt-oss-120b @ OpenCode — no independent chat data
+** gpt-oss-120b @ OpenCode — no independent chat data (timeout)
+** gpt-oss-20b @ OpenCode — no independent chat data (timeout)
 ** qwen2.5-coder-32b @ OpenCode — older coder lineage
 ** glm-4.7-flash @ OpenCode/Z.ai — unverified
-** gemini-3.6/3.7-flash, 3.1-lite, 2.5-flash @ gateway — no fresh chat evidence
+** gemini-3.6-flash @ gateway — no fresh chat evidence (timeout)
+** gemini-3.7-flash @ gateway — no fresh chat evidence (timeout)
+** gemini-3.1-lite @ gateway — no fresh chat evidence (timeout)
+** gemini-2.5-flash @ gateway — no fresh chat evidence (timeout)
 ** kimi-k2-instruct/-thinking @ kilo/ — K2 lineage, mid brain, cheap
-** llama-4-scout / qwen3-32b / qwen3.1-8b / mistral-small-3.1 @ gateway — known family, no fresh evidence
-** deepseek-v4-flash @ tokenharbor — lineage evidence only
+** llama-4-scout @ gateway — known family, no fresh evidence (timeout)
+** qwen3-32b @ gateway — known family, no fresh evidence (timeout)
+** qwen3.1-8b @ gateway — known family, no fresh evidence (timeout)
+** deepseek-v4-flash @ tokenharbor — lineage evidence only (timeout)
+** deepseek-v4-flash @ OpenCode — different body, same probation (timeout)
 ** allam @ groq/ — Arabic LLM, non-EN niche
 * BENCHED (Hiring-Log)
 ** GLM-5.3-Flash Free @ OpenCode — strike 2 (stalled csp-1 twice); return on owner word
