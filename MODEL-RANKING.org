@@ -1,13 +1,38 @@
 #+TITLE: MODEL-RANKING — admincraft (full, dated 2026-10-19)
-# Source: live GET /v1/models @ ai.khalidrafi.tech (163 ids) + herd evidence.
+# Tiers 1-3: chat/cloud/local apps with field evidence. Tier 4 source: live GET /v1/models @ ai.khalidrafi.tech (163 ids) + herd evidence.
 # Law: no unranked model is ever staffed. Bodies: OpenCode (primary), Goose, Pi, Qoder, Z.ai Agent.
+* TIER 1 — WEB CHAT (the day-one crew, first-hand field evidence)
+** Kimi-K2.6 @ kimi.ai — PROVEN orchestration/judgment (2 sessions, ~40 dispatches, 0 false greens shipped); LMArena 1466; 128K cap. ROLE: Lead/EM. The crew's memory.
+** Qwen3.8-Max @ chat.qwen.ai — PROVEN frontend (FE-1..FE-5, cool-chat wow, cool-preview; ~1491 LMArena, best frontend evidence). Watch: push/commit discipline (recovered twice). ROLE: Senior FE.
+** GLM-5.3 @ chat.z.ai — PROVEN backend P0 (branding jail, v0.1.2 brand+skills+release solo; quality-96, "budget Claude" sentiment). ROLE: Senior BE/Architect. Slow — reserve for judgment.
+** GLM-5.3-Flash @ chat.z.ai (Z.ai Agent shell) — PROVEN loops (csp-1 delivery, fr-r001-be rebase 151/151). ROLE: junior sandbox executor.
+** Qwen3.8-Flash @ Qoder — PROVEN ×12 verification (control-experiment rigor, caught governance-rewrite trap + CSP regression unprompted); weak brain, best hands. ROLE: Build & Relay.
+** Qwen3.7-Max @ chat.qwen.ai — BACKUP to Qwen3.8-Max (1488). Unstaffed unless 3.8 down.
+** GLM-5.2 @ chat.z.ai — BACKUP (superseded by 5.3, same platform).
+** Qwen3.8-Omni-Flash @ chat.qwen.ai — PROBATION (no independent data).
+* TIER 2 — CLOUD AGENT BUILT-INS
+** Z.ai Agent (platform) — PROVEN shell (GLM roster above runs here; csp-1/fr-r001-be executed). Cloud body of choice for GLM brains.
+** WorkBuddy.ai roster — daily-credit metered:
+*** Gemini-3.8-Flash — ACCEPTED-junior (fast 345t/s, quality-93); backup-BE slot.
+*** Grok-4.7 — ★ emergency-only (owner first-hand; no independent data; credit cost).
+*** GLM-5.3 / GLM-5.3-Flash / GLM-5.2 — same brains as Tier 1; prefer Z.ai shell (same models, no credit burn).
+*** Kimi-K3 — ★ do-not-route (credit-expensive).
+*** Kimi-K2.6 / Kimi-K2.8-Preview / GPT-6-Sol / GPT-6-Luna / GPT-5.6-Terra / GPT-5.6-Luna / GPT-5.5 / GPT-5.4 / Step-5-Preview / Gemini-3.5-Flash / DeepSeek V4.1-Flash — PROBATION at best (no chat-shaped independent evidence; daily credits); Gemini-3.5-Flash ★ deprecated.
+** MiniMax Agent / MiniMax Code — M3.1-Flash-Preview, M3: ★ benched (daily credits burned 10k/3h documented); return only on owner word.
+* TIER 3 — LOCAL AGENT BUILT-INS (Owner's 4GB box)
+** Qoder / Qwen3.8-Flash — the BRE seat (see Tier 1, proven hands).
+** OpenCode / zen free roster — see Tier 4 (opencode/ ids overlap); body: PROVEN lightest.
+** Cursor / Cursor Agent + Tab — PROBATION (free X-tier weekly pool: Grok 4.7/4.6/4.5, Composer 2.5; caps unpublished).
+** GitHub Copilot — PROBATION-low (auto-model only: GPT-5-mini/Haiku class; no choice).
+** Goose / OMP / Pi — SPARES (no chat-shaped evidence; Goose orchestration niche, Pi minimal niche, OMP owner first-hand only).
+** CodeBuddy — hybrid; same roster as WorkBuddy (Tier 2, listed once).
 * STAFFING TABLE (dispatch-valid)
 ** Frontend code: Qwen3.8-Max @ chat.qwen.ai > Qwen3.7-Max
 ** Backend/judgment: GLM-5.3 @ chat.z.ai / Z.ai shell > GLM-5.2
 ** Loops: GLM-5.3-Flash @ Z.ai Agent; backups north-mini-code:free, llama-3.3-70b, gemini-3.8-flash (accepted-junior)
 ** Verification: Qwen3.8-Flash @ Qoder + CI leg + Jev first-pass
 ** Orchestration: Lead (context, not capability)
-* FULL RANK (163 ids)
+* TIER 4 — API MODELS, FULL RANK (163 ids)
 ** ACCEPTED
 
 *** cloudflare/@cf/meta/llama-3.3-70b-instruct-fp8-fast
