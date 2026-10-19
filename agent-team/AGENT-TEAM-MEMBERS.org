@@ -35,7 +35,7 @@ pair — never a family grouping.
 ** Gemini-3.8-Flash @ WorkBuddy.ai [BACKUP-BE]
    Benchmark: 345 t/s, quality-93, TB 2.1 level (DataCmp). Limits: daily credits.
 * ROLE 4 — JUNIOR SANDBOX EXECUTOR (loops, tweaks)
-** GLM-5.3-Flash @ Z.ai Agent [BENCHED 2026-10-19: overnight watch no-show — silent mandate breach; FR-R003, watch merges, morning report all absent]
+** GLM-5.3-Flash @ Z.ai Agent [SUSPENDED 2026-10-19: night work staged but undeliverable — EM dispatch omitted PAT from Dispatch #4; corrections filed with local evidence; awaiting Owner verification PAT window]
    PROVEN: csp-1, fr-r001-be rebase (151/151). Fast tier (117 t/s, quality-93).
    Limits: ephemeral; PAT per task; free.
 ** north-mini-code:free @ OpenCode (via gateway) [ACCEPTED-junior]
@@ -83,7 +83,7 @@ pair — never a family grouping.
    gemini-3.5 family, antigravity previews, mimo/step-5/xing4, space-bunny/muse-spark/
    big-pickle, clef family, safety classifiers, harness ids, aliases, all no-data ids.
 * HIRING-LOG
-- 2026-10-19 dawn: zflash benched (silent overnight mandate breach). Senior FE overnight fr-r001-fe merged = clean delivery record continues. Loops cover: north-mini-code:free.
+- 2026-10-19 dawn: JBE (GLM-5.3-Flash) initially benched on incomplete facts; its corrections verified the night work existed (staged, blocked by missing PAT in EM dispatch). Status: SUSPENDED pending Owner PAT-window verification. EM defect logged: dispatch must attach tokens it references. Loops cover: north-mini-code:free.
 - 2026-10-18: herd pass v1 (bench+sentiment); Qwen3.8-Flash PROVEN x8->x12 over session.
 - 2026-10-19: full re-rank after churn (156+/52-); this file supersedes chat rankings.
 
@@ -472,7 +472,7 @@ pair — never a family grouping.
 *** zai
     ALIAS — provider root, not staffable
 * HIRING-LOG
-- 2026-10-19 dawn: zflash benched (silent overnight mandate breach). Senior FE overnight fr-r001-fe merged = clean delivery record continues. Loops cover: north-mini-code:free.
+- 2026-10-19 dawn: JBE (GLM-5.3-Flash) initially benched on incomplete facts; its corrections verified the night work existed (staged, blocked by missing PAT in EM dispatch). Status: SUSPENDED pending Owner PAT-window verification. EM defect logged: dispatch must attach tokens it references. Loops cover: north-mini-code:free.
 - 2026-10-19: full re-rank after roster churn (156 added/52 removed). 4 accepted-junior, 46 probation, 47 rejected, rest classified.
 
 * RESEARCH ROUNDS LOG (2026-10-19, per corrective — every query recorded)
