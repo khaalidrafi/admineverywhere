@@ -74,3 +74,13 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   guard shape, and the additive-only call to keep Order.status PATCH-writable
   during client migration. Contract: docs/order-lifecycle.md; tests:
   plugin/tests/test_order_lifecycle.py.
+
+- [ ] REVIEW: FR-R003 (ai/fr-r003-be, stacked on ai/fr-r001-be) custom
+  actions + audit reference — append-only enforcement is structural
+  (List+Create mixins only: 405 on list mutations, and the router never
+  generates a detail route, so rows have no mutable URL surface), actor
+  server-derived (client-supplied actor ignored, test-pinned), audit
+  newest-first vs R-001 history oldest-first (ordering ruling recorded in
+  the model + docs), loose object_type/object_id targeting (no GFK) as the
+  deliberate simplicity tradeoff. Registry FE contract:
+  docs/custom-actions.md; tests: plugin/tests/test_audit_actions.py (+24).
