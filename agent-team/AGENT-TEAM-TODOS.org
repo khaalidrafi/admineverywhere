@@ -149,6 +149,37 @@ CLOCK: [2026-10-18 Sun 21:19]
 :END:
 
 ** TODO FR R-003 custom actions + audit                                       :BE:FE:
+*** PENDING FR-R003-BE — custom actions + append-only audit reference (BE) :BE:
+:LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-19 Mon 03:41]
+CLOCK: [2026-10-19 Mon 03:34]--[2026-10-19 Mon 03:41] =>  0:07
+- Note taken on [2026-10-19 Mon 03:41] :: :DELIVERED: ai/fr-r003-be@44b4bff
+  — :RESULT: DONE for the member scope. Scope: ROADLOG R-003 server half —
+  append-only AuditEntry (structural guarantee: List+Create mixins only, 405
+  on list mutations, router never generates a detail route; actor always
+  server-derived, spoof test-pinned; loose object_type/object_id targeting +
+  filters backing the record sub-view and R-007), record-scope flag +
+  bulk-scope bulk_flag reference actions (guard errors keep the R-001
+  400+{reason} shape; bulk writes one entry per order with provenance in
+  data), audit newest-first ordering ruling vs R-001 oldest-first,
+  docs/custom-actions.md registry contract + checklist, AGENTS.md counts
+  151 -> 175, AI-REVIEW.org REVIEW item appended. pytest 175/175 in-sandbox
+  (-p no:cacheprovider; 151 + 24 new).
+  - [x] branch stacked per board order (ai/fr-r003-be = 9388a2e + 1)
+  - [x] pytest 175/175 in-sandbox
+  - [x] append-only structural proof test-pinned (405 + no detail route)
+  - [x] docs + counts + review item shipped
+  - [ ] push + CI gate (blocked: PAT)
+  - [ ] Lead/senior review — ordering ruling + no-GFK tradeoff
+- State "ONGOING" from "TODO" [2026-10-19 Mon 03:34]
+- Note taken on [2026-10-19 Mon 03:34] :: Night-watch round opened (DISPATCH
+  #4 Task A). Dispatch #3 never reached this session (session break) — scope
+  reconstructed from the DISPATCH #4 one-liner + ROADLOG R-003 + the board
+  order; any spec delta gets reconciled at dawn. Branch ai/fr-r003-be stacked
+  on ai/fr-r001-be @ 9388a2e (demo-rig conftest scoping lives there; board
+  order is R-001 -> R-003). Clock-in staged post-hoc: no PAT in session, so
+  ai/main writes are staged on night/stage-main until a PAT lands.
+:END:
 ** TODO FR R-002 document independent-enum pattern                            :DOC:
 ** TODO FR R-004 kanban view                                                  :FE:
 ** TODO FR R-005 canonical CSV export                                         :FE:BE:
