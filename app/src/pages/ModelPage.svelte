@@ -2,7 +2,8 @@
   /** Schema-driven model CRUD: search + paginated table + create/edit modal. */
   import { get } from "svelte/store";
   import { app, effectiveConfig, handleApiError, toast } from "../lib/stores";
-  import { deleteRecord, listRecords, retrieveRecord } from "../lib/api";
+  import { deleteRecord, fetchHistory, listRecords, retrieveRecord, transitionRecord } from "../lib/api";
+  import { getLegalTransitions, getStatusField, hasLifecycle } from "../lib/statusTransitions";
   import { navigate } from "../lib/router";
   import { debounce } from "../lib/utils";
   import DataTable from "../components/DataTable.svelte";
@@ -26,6 +27,8 @@
   let formOpen = $state(false);
   let editing = $state<RecordRow | null>(null);
   let reqId = 0; // drop stale responses
+  let historyView = $state<RecordRow | null>(null);
+  let history = $state<Array<{id: number; from_status: string; to_status: string; actor: string | null; created_at: string}>>([]);
 
   const pages = $derived(count ? Math.ceil(count / (rows.length || 10)) : 1);
 
@@ -108,6 +111,54 @@
     searchInput = "";
     onSearch("");
   }
+
+  async function onTransition(row: RecordRow, targetStatus: string) {
+    if (!model || row.id === undefined) return;
+    const statusField = getStatusField(model.id);
+    if (!statusField) return;
+    
+    try {
+      const updated = await transitionRecord(
+        effectiveConfig(),
+        get(app).token || null,
+        model.id,
+        row.id as any,
+        targetStatus,
+      );
+      toast("success", `Transitioned to ${targetStatus}`);
+      // Update the row in place
+      rows = rows.map((r) => (r.id === row.id ? updated : r));
+    } catch (err: any) {
+      // 409 Conflict: surface the reason
+      if (err.status === 409 && err.detail?.reason) {
+        toast("error", err.detail.reason);
+      } else {
+        handleApiError(err);
+      }
+    }
+  }
+
+  async function showHistory(row: RecordRow) {
+    if (!model || row.id === undefined) return;
+    historyView = row;
+    history = [];
+    try {
+      history = await fetchHistory(
+        effectiveConfig(),
+        get(app).token || null,
+        model.id,
+        row.id as any,
+      );
+    } catch (err) {
+      handleApiError(err);
+      historyView = null;
+    }
+  }
+
+  function closeHistory() {
+    historyView = null;
+    history = [];
+  }
 </script>
 
 {#if !model}
@@ -154,7 +205,7 @@
       </span>
     </div>
 
-    <DataTable {model} {rows} {loading} onedit={openEdit} ondelete={onDelete} />
+    <DataTable {model} {rows} {loading} onedit={openEdit} ondelete={onDelete} ontransition={onTransition} onshowhistory={showHistory} />
 
     <!-- pagination -->
     <div class="mt-4 flex items-center justify-between text-sm">
@@ -171,6 +222,47 @@
       </div>
     </div>
   </div>
+
+  {#if historyView && model}
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick={closeHistory}>
+      <div class="card max-h-[80vh] w-full max-w-2xl overflow-y-auto" onclick={(e) => e.stopPropagation()}>
+        <div class="mb-4 flex items-center justify-between border-b border-text/10 pb-3">
+          <h2 class="text-lg font-semibold">
+            History for {model.name} #{historyView.id}
+          </h2>
+          <button class="btn btn-ghost" onclick={closeHistory}>
+            <Icon name="x" size={20} />
+          </button>
+        </div>
+        {#if history.length === 0}
+          <p class="text-text/50">No history entries.</p>
+        {:else}
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-text/10 text-left text-xs uppercase tracking-wider text-text/40">
+                <th class="px-3 py-2">Transition</th>
+                <th class="px-3 py-2">Actor</th>
+                <th class="px-3 py-2">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each history as entry}
+                <tr class="border-b border-text/5">
+                  <td class="px-3 py-2">
+                    {entry.from_status ? `${entry.from_status} → ${entry.to_status}` : `created as ${entry.to_status}`}
+                  </td>
+                  <td class="px-3 py-2">{entry.actor ?? "system"}</td>
+                  <td class="px-3 py-2 text-text/60">
+                    {new Date(entry.created_at).toLocaleString()}
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        {/if}
+      </div>
+    </div>
+  {/if}
 
   {#if formOpen}
     <RecordForm {model} record={editing} onclose={() => (formOpen = false)} onsaved={onSaved} />
