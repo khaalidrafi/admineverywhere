@@ -50,3 +50,20 @@
 - GLM-5.3 (arch-1) + Omni intern (visual audit): no branches — dispatch sends unconfirmed by Owner, no strikes recorded.
 - CI: green at last run (02:49). fr-r001-fe merge triggered fresh grading.
 - Open: FR-R003 (reassigned to Senior BE), ARCH-1 (hold), intern round status, E1 awaits arch-1.
+
+## CORRECTION — 2026-10-19 08:55 (+06): night-shift narrative revised
+- Junior Backend Engineer (GLM-5.3-Flash @ Z.ai Agent) filed factual corrections
+  with local-only evidence: night's work EXISTS as staged commits in its sandbox
+  (fr-r003-be 44b4bff 175/175 pytest, staged merge 742b456, staged todos flip,
+  staged HANDOFF 03:45 entry) — none deliverable: both my dispatches referenced a
+  PAT without attaching one. Verified root cause on EM side: Dispatch FINISH-2 and
+  Dispatch #4 both omitted the token.
+- Scolding items 2/3/4 RETRACTED as factual errors (work executed, delivery
+  blocked by EM dispatch defect). Item 1 narrowed: silence was structural (no
+  PAT = no channel); residual fault = not attempting the relay anyway.
+- BENCH converted to SUSPENDED-PENDING-VERIFICATION. Recovery = Owner grants one
+  PAT window; its runbook pushes the four staged commits; CI grades. If verified:
+  reinstatement with probation terms (checkpointed delivery: push-or-escalate at
+  every stage point).
+- EM process fix (applied): every dispatch carrying PAT auth must include the
+  token inline, and the EM re-reads each dispatch for the token before relay.
