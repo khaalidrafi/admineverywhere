@@ -3,6 +3,7 @@
   import Icon from "./Icon.svelte";
   import { formatCell } from "../lib/utils";
   import type { FieldSpec, ModelSpec, RecordRow } from "../lib/types";
+  import { getLegalTransitions, getStatusField, hasLifecycle } from "../lib/statusTransitions";
 
   let {
     model,
@@ -10,15 +11,21 @@
     loading = false,
     onedit,
     ondelete,
+    ontransition,
+    onshowhistory,
   }: {
     model: ModelSpec;
     rows: RecordRow[];
     loading?: boolean;
     onedit: (row: RecordRow) => void;
     ondelete: (row: RecordRow) => void;
+    ontransition?: (row: RecordRow, targetStatus: string) => void;
+    onshowhistory?: (row: RecordRow) => void;
   } = $props();
 
   const columns = $derived(model.fields.filter((f) => f.type !== "json").slice(0, 6));
+  const statusField = $derived(getStatusField(model.id));
+  const hasLifecycleGovernance = $derived(hasLifecycle(model.id));
 </script>
 
 <div class="card overflow-hidden">
@@ -58,6 +65,24 @@
               {/each}
               <td class="px-4 py-3">
                 <div class="flex justify-end gap-1">
+                  {#if hasLifecycleGovernance && statusField && row[statusField]}
+                    {#each getLegalTransitions(model.id, row[statusField]) as targetStatus}
+                      <button
+                        class="btn btn-primary p-2 text-xs"
+                        title="Transition to {targetStatus}"
+                        onclick={() => ontransition?.(row, targetStatus)}
+                      >
+                        → {targetStatus}
+                      </button>
+                    {/each}
+                    <button
+                      class="btn btn-ghost p-2"
+                      title="Show history"
+                      onclick={() => onshowhistory?.(row)}
+                    >
+                      <Icon name="history" size={15} />
+                    </button>
+                  {/if}
                   <button
                     class="btn btn-ghost p-2"
                     title="Edit"
@@ -91,7 +116,7 @@
       {value ? "Yes" : "No"}
     </span>
   {:else if col.type === "enum"}
-    <span class="inline-block rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-medium text-accent">
+    <span class="inline-block rounded-full {col.name === statusField ? 'bg-primary/15 text-primary' : 'bg-accent/15 text-accent'} px-2.5 py-0.5 text-xs font-medium">
       {formatCell(value)}
     </span>
   {:else if col.type === "fk"}
