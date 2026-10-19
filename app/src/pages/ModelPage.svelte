@@ -2,10 +2,12 @@
   /** Schema-driven model CRUD: search + paginated table + create/edit modal. */
   import { get } from "svelte/store";
   import { app, effectiveConfig, handleApiError, toast } from "../lib/stores";
-  import { deleteRecord, listRecords, retrieveRecord } from "../lib/api";
+  import { deleteRecord, fetchHistory, listRecords, retrieveRecord, transitionRecord } from "../lib/api";
+  import { getLegalTransitions, getStatusField, hasLifecycle } from "../lib/statusTransitions";
   import { navigate } from "../lib/router";
   import { debounce } from "../lib/utils";
   import DataTable from "../components/DataTable.svelte";
+  import KanbanBoard from "../components/KanbanBoard.svelte";
   import RecordForm from "../components/RecordForm.svelte";
   import Icon from "../components/Icon.svelte";
   import type { RecordRow } from "../lib/types";
@@ -26,6 +28,20 @@
   let formOpen = $state(false);
   let editing = $state<RecordRow | null>(null);
   let reqId = 0; // drop stale responses
+  let view = $state<"table" | "kanban">(
+    (typeof localStorage !== "undefined" 
+      ? localStorage.getItem(`dad.view.${id}`) 
+      : null) as "table" | "kanban" ?? "table"
+  );
+  
+  // Persist view preference
+  $effect(() => {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(`dad.view.${id}`, view);
+    }
+  });
+  let historyView = $state<RecordRow | null>(null);
+  let history = $state<Array<{id: number; from_status: string; to_status: string; actor: string | null; created_at: string}>>([]);
 
   const pages = $derived(count ? Math.ceil(count / (rows.length || 10)) : 1);
 
@@ -108,6 +124,54 @@
     searchInput = "";
     onSearch("");
   }
+
+  async function onTransition(row: RecordRow, targetStatus: string) {
+    if (!model || row.id === undefined) return;
+    const statusField = getStatusField(model.id);
+    if (!statusField) return;
+    
+    try {
+      const updated = await transitionRecord(
+        effectiveConfig(),
+        get(app).token || null,
+        model.id,
+        row.id as any,
+        targetStatus,
+      );
+      toast("success", `Transitioned to ${targetStatus}`);
+      // Update the row in place
+      rows = rows.map((r) => (r.id === row.id ? updated : r));
+    } catch (err: any) {
+      // 409 Conflict: surface the reason
+      if (err.status === 409 && err.detail?.reason) {
+        toast("error", err.detail.reason);
+      } else {
+        handleApiError(err);
+      }
+    }
+  }
+
+  async function showHistory(row: RecordRow) {
+    if (!model || row.id === undefined) return;
+    historyView = row;
+    history = [];
+    try {
+      history = await fetchHistory(
+        effectiveConfig(),
+        get(app).token || null,
+        model.id,
+        row.id as any,
+      );
+    } catch (err) {
+      handleApiError(err);
+      historyView = null;
+    }
+  }
+
+  function closeHistory() {
+    historyView = null;
+    history = [];
+  }
 </script>
 
 {#if !model}
@@ -130,7 +194,7 @@
       </button>
     </div>
 
-    <!-- search + count -->
+    <!-- search + count + view toggle -->
     <div class="mb-4 flex items-center gap-3">
       <div class="relative max-w-xs flex-1">
         <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text/40">
@@ -152,9 +216,33 @@
       <span class="text-sm text-text/50">
         {loading ? "…" : `${count} record${count === 1 ? "" : "s"}`}
       </span>
+      {#if hasLifecycle(model.id)}
+        <div class="flex gap-1 rounded-lg border border-text/10 p-1">
+          <button
+            class="btn btn-ghost btn-sm px-3 py-1.5 {view === 'table' ? 'bg-text/10' : ''}"
+            onclick={() => (view = "table")}
+            aria-label="Table view"
+            title="Table view"
+          >
+            <Icon name="table" size={16} />
+          </button>
+          <button
+            class="btn btn-ghost btn-sm px-3 py-1.5 {view === 'kanban' ? 'bg-text/10' : ''}"
+            onclick={() => (view = "kanban")}
+            aria-label="Kanban view"
+            title="Kanban view"
+          >
+            <Icon name="kanban" size={16} />
+          </button>
+        </div>
+      {/if}
     </div>
 
-    <DataTable {model} {rows} {loading} onedit={openEdit} ondelete={onDelete} />
+    {#if view === "table"}
+      <DataTable {model} {rows} {loading} onedit={openEdit} ondelete={onDelete} ontransition={onTransition} onshowhistory={showHistory} />
+    {:else}
+      <KanbanBoard {model} {rows} ontransition={onTransition} />
+    {/if}
 
     <!-- pagination -->
     <div class="mt-4 flex items-center justify-between text-sm">
@@ -171,6 +259,47 @@
       </div>
     </div>
   </div>
+
+  {#if historyView && model}
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onclick={closeHistory}>
+      <div class="card max-h-[80vh] w-full max-w-2xl overflow-y-auto" onclick={(e) => e.stopPropagation()}>
+        <div class="mb-4 flex items-center justify-between border-b border-text/10 pb-3">
+          <h2 class="text-lg font-semibold">
+            History for {model.name} #{historyView.id}
+          </h2>
+          <button class="btn btn-ghost" onclick={closeHistory}>
+            <Icon name="x" size={20} />
+          </button>
+        </div>
+        {#if history.length === 0}
+          <p class="text-text/50">No history entries.</p>
+        {:else}
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-text/10 text-left text-xs uppercase tracking-wider text-text/40">
+                <th class="px-3 py-2">Transition</th>
+                <th class="px-3 py-2">Actor</th>
+                <th class="px-3 py-2">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each history as entry}
+                <tr class="border-b border-text/5">
+                  <td class="px-3 py-2">
+                    {entry.from_status ? `${entry.from_status} → ${entry.to_status}` : `created as ${entry.to_status}`}
+                  </td>
+                  <td class="px-3 py-2">{entry.actor ?? "system"}</td>
+                  <td class="px-3 py-2 text-text/60">
+                    {new Date(entry.created_at).toLocaleString()}
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        {/if}
+      </div>
+    </div>
+  {/if}
 
   {#if formOpen}
     <RecordForm {model} record={editing} onclose={() => (formOpen = false)} onsaved={onSaved} />
