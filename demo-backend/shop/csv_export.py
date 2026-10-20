@@ -15,6 +15,7 @@ mirrors ``branding.render_css()``.
 """
 import csv
 import io
+import re
 
 # Parent columns, then child columns. Repeating the parent id on every child
 # row is what makes a flattened export re-groupable downstream — a reader
@@ -38,6 +39,19 @@ ORDER_EXPORT_HEADER = [
 
 FORMULA_LEAD = ("=", "+", "-", "@", "\t", "\r")
 
+# DRF serialises a DecimalField as a STRING ("−5.00"), so the writer cannot tell
+# a negative decimal from the payload `-2+3` by type alone. Only a string that is
+# nothing but a number is exempt from the guard: `-2+3` and `-IF(…)` keep their
+# apostrophe, `-5.00` does not. app/src/lib/csv.ts applies the identical rule,
+# which is what lets the two layers byte-diff; exempting one side only would
+# re-open the divergence this closes.
+NUMERIC_SHAPED = re.compile(r"^[+-]?(\d+(\.\d*)?|\.\d+)$")
+
+
+def is_formula_text(text):
+    """True when a TEXT cell must be neutralised (numbers never are)."""
+    return bool(text) and text[0] in FORMULA_LEAD and not NUMERIC_SHAPED.match(text)
+
 
 def csv_cell(value):
     """One model value -> the text written to the file (never a display string)."""
@@ -52,8 +66,10 @@ def csv_cell(value):
         text = value.isoformat()
     else:
         text = str(value)
-    # Guard applies to *text* only: a negative Decimal is data, not a formula.
-    if is_text and text and text[0] in FORMULA_LEAD:
+    # Guard applies to *text* only: a negative Decimal is data, not a formula,
+    # and a numeric-shaped STRING is the same data arriving from DRF's
+    # DecimalField (see NUMERIC_SHAPED above).
+    if is_formula_text(text):
         text = f"'{text}"
     return text
 
