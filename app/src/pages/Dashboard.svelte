@@ -1,3 +1,7 @@
+<script module lang="ts">
+  export const meta = { title: "Dashboard", path: "/", nav: "main", icon: "grid", order: 10 };
+</script>
+
 <script lang="ts">
   import { widgets } from "../widgets";
   import { app } from "../lib/stores";
