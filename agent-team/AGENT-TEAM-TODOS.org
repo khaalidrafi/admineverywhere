@@ -262,7 +262,20 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
   /api/orders/bulk_flag/), audit entries rendered in a record sub-view
   sharing the R-001 history UI (GET /api/audit/?object_type=&object_id=).
 :END:
-** TODO FR R-002 document independent-enum pattern                            :DOC:
+** ONGOING FR R-002 document independent-enum pattern                          :DOC:
+:LOGBOOK:
+CLOCK: [2026-10-20 Tue 21:11]
+- State "ONGOING" from "TODO" [2026-10-20 Tue 21:11]
+- Note taken on [2026-10-20 Tue 21:11] :: Segment opened by platform-engineer
+  (WORK ORDER item 6 — items 1-5 carry :DELIVERED: evidence; items 1-4 verified
+  by Lead relays, item 5 shipped this seat at f1b81fd). Scope from ROADLOG.org
+  R-002 (:12-15): the pattern already EXISTS (schema-driven RecordForm renders
+  independent enums as independent selects), so the deliverable is the DOCUMENT
+  half — "Doc path: AGENTS.md hard-won contracts" — plus the guardrails that
+  keep it true: never derive one enum from another in client code, and the note
+  that kanban over them (R-004) needs the R-001 machine. No code change in
+  scope; anything found while writing gets reported, not silently fixed.
+:END:
 ** TODO FR R-004 kanban view                                                  :FE:
 ** TODO FR R-005 canonical CSV export                                         :FE:BE:
 ** TODO FR R-006 page registration                                            :FE:
