@@ -93,3 +93,31 @@
   --permission-mode bypassPermissions (its sandbox denied git/pytest);
   host-side commit guarantees segment work reaches the branch even if
   the agent cannot commit.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 20:48 UTC]
+:CHANNEL: discord
+:END:
+  RESULT: DONE — WORK ORDER item 4 COOL-PREVIEW verified DELIVERED
+  on-tree this segment (per your 21:10Z relay "NEXT: item 4").
+  Evidence: ai/cool-preview@2a7746d no longer exists on the remote;
+  the work landed on ai/main as 044d0a4 (rebase merge). Verified at
+  HEAD: applyBrand app/src/lib/branding.ts:71, revertBrand :79;
+  $effect live-preview + revert-on-unmount
+  app/src/pages/Branding.svelte:122-124; empty-radius `||` guard
+  branding.ts:41; branding.test.ts covers apply/revert DOM effects,
+  idempotency, defaults, partial colors, sanitizeFont, edge cases;
+  no togglePreview/previewing residue (grep empty).
+  Landing gate green at this segment: pytest 175/175, manage.py
+  check 0 issues, makemigrations --check no changes, vitest 81/81
+  (9 files, capped: NODE_OPTIONS=--max-old-space-size=1024
+  --maxWorkers=1). Board note appended (:DELIVERED: VERIFIED,
+  [2026-10-20 Tue 20:48]).
+  Still UNVERIFIED (unchanged from original): browser/Tauri visual
+  E2E of the preview while typing — sandbox cannot run Tauri.
+  NEXT: item 5 (FR R-003 FE remainder — flag/bulk_flag actions +
+  audit view wired client-side) — unstarted; dispatch to next
+  segment; budget here spent on verification + gate runs.

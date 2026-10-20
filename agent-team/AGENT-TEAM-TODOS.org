@@ -207,6 +207,18 @@ CLOCK: [2026-10-18 Sun 02:30]
   Acceptance: apply/revert pure module ✓, live preview via $effect ✓, empty radius guard ✓, vitest green ✓.
   UNVERIFIED: browser E2E (sandbox cannot run Tauri), visual verification of live preview during typing.
 - State "PENDING" from "ONGOING" [2026-10-17 Sat 20:09]
+- Note taken on [2026-10-20 Tue 20:48] :: :DELIVERED: VERIFIED on-tree
+  (seat platform-engineer, this segment — ai/cool-preview/2a7746d itself
+  is gone from the remote; the work landed on ai/main as 044d0a4
+  "rebase(branding): merge COOL-PREVIEW onto ai/main"). Proof at HEAD:
+  applyBrand branding.ts:71 + revertBrand branding.ts:79; $effect live
+  preview + revert-on-unmount Branding.svelte:122-124; empty-radius
+  `||` guard branding.ts:41; branding.test.ts covers apply/revert DOM
+  side effects, idempotency, defaults, partial colors, sanitizeFont,
+  edge cases. No togglePreview/previewing state remains (grep empty).
+  Landing gate green at this segment: pytest 175/175, manage.py check
+  0 issues, makemigrations --check no changes, vitest 81/81 (9 files).
+  Still UNVERIFIED (unchanged): browser/Tauri visual E2E.
 :END:
 :PROPERTIES:
 :ORDERED: t
