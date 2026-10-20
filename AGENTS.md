@@ -69,6 +69,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (175 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (58 vitest) |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
+| `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
 | `skills/` | the two agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
@@ -136,6 +137,13 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   there earns a DRF 400.
 - Widgets render from a schema-reactive `$effect`, not `onMount` (the
   schema arrives after mount).
+- Custom actions (FR-R003) follow the widget drop-in contract: one `.ts` in
+  `app/src/actions/` exporting `meta{label,scope,model?,confirm?,input?,handler}`
+  — the registry globs it, nothing to edit. Endpoint URLs come from
+  `actionPath(model, slug, recordId?)`, i.e. the schema-discovered
+  `model.listPath`, NEVER from `apiUrl + model.id` (`apiUrl` is only the base
+  origin; concatenating a bare segment produced `http://hostapi…` and silently
+  broke the R-001 transition/history calls).
 - Vite: `optimizeDeps.include` covers all svelte entrypoints (prevents two
   svelte-internals instances); the dev server sends
   `Cache-Control: no-store`.

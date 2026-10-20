@@ -121,3 +121,70 @@
   NEXT: item 5 (FR R-003 FE remainder — flag/bulk_flag actions +
   audit view wired client-side) — unstarted; dispatch to next
   segment; budget here spent on verification + gate runs.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 21:05 UTC]
+:CHANNEL: discord
+:END:
+  RESULT: DONE — WORK ORDER item 5 (FR R-003 FE remainder) shipped on
+  ai/turn-20261020-2052; board child FR-R003-FE flipped ONGOING->PENDING
+  with :DELIVERED: evidence.
+  What landed (client half of the R-003 registry contract):
+  - app/src/lib/actions/index.ts — drop-in registry on the widget pattern
+    (import.meta.glob over app/src/actions/*.ts at :47, map :52,
+    actionsFor(modelId, scope) :60, actionFailureReason :72).
+    meta{label,scope,model?,confirm?,input?,handler}; `input` is the one
+    field added to the doc's sketch — a flag needs a reason, and a
+    yes/no confirm cannot collect one.
+  - Reference registrations app/src/actions/flag.ts (record) and
+    app/src/actions/bulk_flag.ts (bulk, ids from the table selection).
+  - app/src/lib/api.ts: actionPath :224 (DRF router rules built from the
+    schema-discovered model.listPath), callRecordAction :261,
+    callBulkAction :279, fetchAudit :303 (object_type/object_id filters).
+  - DataTable: checkbox column + selection bar appear only when a bulk
+    action is registered; record actions render per row; the trail button
+    now shows for EVERY model. ModelPage: confirm/input dialog, toast with
+    the number of audit entries written, list reload + open sub-view
+    refresh; the sub-view pairs R-001 history (oldest-first) with this
+    record's audit entries (newest-first) and degrades to history alone
+    when a backend has no /api/audit/ (404).
+  DEFECT FOUND AND FIXED EN ROUTE — please read, it qualifies the item-3
+  verdict: transitionRecord/fetchHistory (the merged FR-R001-FE renderer)
+  built URLs as apiUrl + model.id — no slash, no /api/ prefix, so a live
+  call would hit http://hostapio… The 21:10Z relay verified that renderer
+  by reading files; nothing exercised the endpoints, so it stayed
+  invisible. Both now share actionPath and the new tests pin exact URLs
+  (/api/orders/7/transition/, /api/orders/7/history/).
+  Evidence:
+  - Landing gate green at this tip: pytest 175/175 (-p no:cacheprovider),
+    manage.py check 0 issues, makemigrations --check "No changes
+    detected", vitest 101/101 (10 files, +20 new in
+    app/src/lib/__tests__/actions.test.ts), vite build green (136 modules).
+  - LIVE against the demo rig (runserver :8000, admin/admin123 token):
+    POST /api/orders/1/flag/ -> 201 order.flag actor=admin; empty body ->
+    400 {"reason": "missing required field 'reason'…"}; POST
+    /api/orders/bulk_flag/ {ids:[1,2,3]} -> 201 with three entries
+    (data {bulk: true, batch: 3}); GET
+    /api/audit/?object_type=order&object_id=1 -> count 2 newest-first;
+    PATCH /api/audit/1/ -> 404 (no detail route), PUT /api/audit/ -> 405;
+    transition {"paid"} -> 200, history replays oldest-first.
+  UNVERIFIED, stated plainly: no browser/Tauri session here (no
+  playwright in app/devDependencies), so no human clicked the buttons.
+  DOM-level component tests are blocked by a harness limitation, not the
+  code: vitest resolves svelte to its server build, so mount() throws
+  lifecycle_function_unavailable — three attempts (resolve.conditions
+  ["browser"], server.deps.inline [/svelte/], svelte/server render) all
+  hit mixed client/server internals. I left vite.config.ts byte-identical
+  to HEAD and recorded the finding for the FE seat.
+  TWO FOLLOW-UPS FOR THE QUEUE (not started, out of item 5's scope):
+  (1) recapture app/src/lib/__tests__/fixtures/openapi.json — it still
+  predates R-001/R-003 endpoints (9 paths, no /api/audit/); recapture adds
+  an Audit model and moves the schemaSummary 4-model assertion in
+  openapi.test.ts, so it is its own change; (2) the mount() harness fix
+  above, which would let R-001/R-003 affordances be tested for real.
+  NEXT: item 6 (FR R-002 independent-enum pattern, docs) — unstarted,
+  dispatch to the next segment. Objective completion is yours to claim,
+  not mine: items 6-11 remain on the board.
