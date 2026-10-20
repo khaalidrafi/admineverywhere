@@ -34,6 +34,10 @@ export interface PageMeta {
   icon?: string;
   order?: number;
   standalone?: boolean;
+  /** FR-R007: role names that may see this entry in the nav. Absent or
+   *  empty = visible to everyone; the sidebar hides it only when the
+   *  server actually emitted claims that lack every listed role. */
+  roles?: string[];
 }
 
 export type NavSection = false | "main" | "settings";
@@ -49,6 +53,7 @@ export interface RegisteredPage {
   order: number;
   standalone: boolean;
   component: Component;
+  roles?: string[];
 }
 
 export interface RefusedPage {
@@ -105,6 +110,13 @@ export function collectPages(
       continue;
     }
 
+    if (meta.roles !== undefined) {
+      if (!Array.isArray(meta.roles) || meta.roles.some((r) => typeof r !== "string" || r === "")) {
+        refused.push({ id, path: meta.path, reason: `roles must be a list of non-empty strings, got ${JSON.stringify(meta.roles)}` });
+        continue;
+      }
+    }
+
     const clash = accepted.find((p) => overlaps(p.segments, segments));
     if (clash) {
       refused.push({
@@ -125,6 +137,7 @@ export function collectPages(
       icon: typeof meta.icon === "string" && meta.icon ? meta.icon : "table",
       order: typeof meta.order === "number" ? meta.order : 100,
       standalone: meta.standalone === true,
+      ...(Array.isArray(meta.roles) && meta.roles.length ? { roles: meta.roles } : {}),
       component: mod.default,
     });
   }
