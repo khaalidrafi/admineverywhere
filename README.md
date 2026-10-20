@@ -28,6 +28,8 @@ Tauri 2 + Svelte 5 + Tailwind 4 + DRF/drf-spectacular backend.
 cd demo-backend && python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 .venv/bin/python manage.py migrate && .venv/bin/python manage.py seed_demo && .venv/bin/python manage.py runserver
 #    (login: admin / admin123 · schema: http://localhost:8000/api/schema/)
+#    (role demo: auditor / audit123 — non-superuser holding only the
+#     `auditors` group, so the managers-only actions are visibly hidden)
 
 # 2. Run the thin client (vite dev; works identically inside Tauri)
 cd ../app && npm install && npm run dev            # -> http://localhost:5173

@@ -13,7 +13,8 @@ is a pip package (branding engine + schema tooling) installed in the
 client that talks to any DRF + drf-spectacular API with token auth. The
 whole CRUD UI, dashboard widgets and the Ctrl+K streaming chat are derived
 from the OpenAPI schema. `demo-backend/` is a throwaway rig: fixture source
-for tests plus a live backend for browser E2E (login `admin` / `admin123`).
+for tests plus a live backend for browser E2E (login `admin` / `admin123`,
+or `auditor` / `audit123` to see FR-R007 role gating actually hide something).
 
 Product constraints — do not relax:
 
@@ -53,7 +54,10 @@ Product constraints — do not relax:
   entry / buttons via `roleAllows()` (`app/src/lib/rbac.ts`, pure); a bad
   roles declaration is refused like any other page problem. Hiding is UX,
   never security — the server re-validates everything, and the demo
-  `/api/me/` (`core/views.py`) emits Django Group names as roles. The
+  `/api/me/` (`core/views.py`) emits Django Group names as roles. Because a
+  superuser short-circuits `roleAllows()`, `seed_demo` also creates a
+  non-superuser holding exactly one Group (`auditor` / `audit123`) — a rig
+  of superusers can prove acceptance but never a hidden button. The
   activity screen (`app/src/pages/Activity.svelte`) is just an R-006
   drop-in reading the R-003 audit model through its schema-discovered
   `listPath` (`findAuditModel`), never a hand-written `/api/audit/`.
@@ -92,8 +96,8 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (210 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (233 vitest) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (212 pytest, written first) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (235 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -121,8 +125,8 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 233 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 210 pytest
+cd app && npm test                          # 235 vitest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 212 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -483,7 +487,7 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
    impossible.
 7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
-   (210 green baseline as of FR-R007; vitest 233 as of FR-R007) + `demo-backend manage.py check` +
+   (212 green baseline as of FR-R007-LIVE; vitest 235) + `demo-backend manage.py check` +
    `makemigrations --check`. Red work never lands.
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
