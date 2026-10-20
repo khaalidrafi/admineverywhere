@@ -1,3 +1,14 @@
+<script module lang="ts">
+  /** The CRUD page is ONE parameterised declaration: every schema model reuses
+   *  it, and the sidebar's model links come from the schema, not from nav. */
+  export const meta = {
+    title: "Model",
+    path: "/m/:modelId/:recordId?",
+    nav: false,
+    order: 200,
+  };
+</script>
+
 <script lang="ts">
   /** Schema-driven model CRUD: search + paginated table + create/edit modal. */
   import { get } from "svelte/store";
@@ -15,9 +26,9 @@
   import Icon from "../components/Icon.svelte";
   import type { AuditEntry, FieldSpec, RecordRow } from "../lib/types";
 
-  let { id, recordId }: { id: string; recordId?: string } = $props();
+  let { modelId, recordId }: { modelId: string; recordId?: string } = $props();
 
-  const model = $derived($app.schema?.byId[id]);
+  const model = $derived($app.schema?.byId[modelId]);
   const listPath = $derived(model?.listPath ?? "");
   /** FR-R004: a board exists only for a model with a DECLARED kanban axis
    *  (lib/kanban.ts) — the axis is never guessed from the field name, so a
@@ -84,11 +95,15 @@
     if (model) void load();
   });
 
-  // an axis declared for one model says nothing about the next, so switching
-  // models always lands back on the table view
+  // an axis declared for one model says nothing about the next, and the shell
+  // renders pages without remounting them (FR R-006), so a model switch resets
+  // the query state here rather than relying on a component recreate
   $effect(() => {
-    void id;
+    void modelId;
     view = "table";
+    page = 1;
+    searchInput = "";
+    searchTerm = "";
   });
 
   // deep-link #/m/<model>/<recordId> -> open that record for editing
@@ -102,7 +117,7 @@
           formOpen = true;
         })
         .catch((err) => handleApiError(err));
-      navigate(`#/m/${id}`);
+      navigate(`#/m/${modelId}`);
     }
   });
 
@@ -318,7 +333,7 @@
 {#if !model}
   <div class="flex h-64 flex-col items-center justify-center gap-2 text-text/50">
     <Icon name="alert" />
-    <p>Unknown model "{id}".</p>
+    <p>Unknown model "{modelId}".</p>
     <button class="btn btn-ghost" onclick={() => navigate("#/")}>Back to dashboard</button>
   </div>
 {:else}
