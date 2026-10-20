@@ -12,10 +12,11 @@
 <script lang="ts">
   /** Schema-driven model CRUD: search + paginated table + create/edit modal. */
   import { get } from "svelte/store";
-  import { app, effectiveConfig, handleApiError, toast } from "../lib/stores";
+  import { app, claims, effectiveConfig, handleApiError, toast } from "../lib/stores";
   import { deleteRecord, fetchAudit, fetchCsv, fetchHistory, listRecords, patchRecord, retrieveRecord, transitionRecord } from "../lib/api";
   import { downloadCsv, exportFileName, tableToCsv } from "../lib/csv";
-  import { actionFailureReason, actionsFor, type RegisteredAction } from "../lib/actions/index";
+  import { actionFailureReason, actions, actionsFor, type RegisteredAction } from "../lib/actions/index";
+  import { findAuditModel } from "../lib/rbac";
   import { getStatusField, hasLifecycle } from "../lib/statusTransitions";
   import { cardLabel, planMove, resolveAxis } from "../lib/kanban";
   import { navigate } from "../lib/router";
@@ -56,8 +57,8 @@
   let pendingAction = $state<{ action: RegisteredAction; rows: RecordRow[] } | null>(null);
   let actionInput = $state("");
 
-  const recordActions = $derived(model ? actionsFor(model.id, "record") : []);
-  const bulkActions = $derived(model ? actionsFor(model.id, "bulk") : []);
+  const recordActions = $derived(model ? actionsFor(model.id, "record", actions, $claims) : []);
+  const bulkActions = $derived(model ? actionsFor(model.id, "bulk", actions, $claims) : []);
 
   const pages = $derived(count ? Math.ceil(count / (rows.length || 10)) : 1);
 
@@ -278,6 +279,7 @@
       audit = (await fetchAudit(effectiveConfig(), get(app).token || null, {
         objectType: model.singular,
         objectId: row.id,
+        path: findAuditModel(get(app).schema)?.listPath,
       })).results;
     } catch (err: any) {
       // A backend that has not shipped the R-003 audit endpoint has no log to
