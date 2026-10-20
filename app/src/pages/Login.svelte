@@ -1,3 +1,13 @@
+<script module lang="ts">
+  export const meta = {
+    title: "Sign in",
+    path: "/login",
+    nav: false,
+    standalone: true,
+    order: 1,
+  };
+</script>
+
 <script lang="ts">
   import { app, handleApiError, loadSchema, login, toast } from "../lib/stores";
   import { navigate } from "../lib/router";

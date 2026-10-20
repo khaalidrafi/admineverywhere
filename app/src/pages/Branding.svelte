@@ -1,3 +1,7 @@
+<script module lang="ts">
+  export const meta = { title: "Branding", path: "/branding", nav: "settings", icon: "gear", order: 90 };
+</script>
+
 <script lang="ts">
   /** In-app brand editor — "brand the app from inside the app".
    *
