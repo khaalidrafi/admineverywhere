@@ -32,7 +32,8 @@
   </div>
 {:else if !$app.token}
   {#if authPage}
-    <svelte:component this={authPage.component} />
+    {@const AuthPage = authPage.component}
+    <AuthPage />
   {:else}
     <div class="flex min-h-screen items-center justify-center text-text/60">
       No page declares <code>standalone: true</code> — a sign-in module is required.

@@ -50,7 +50,8 @@
 
   <main class="flex-1 px-4 pb-24 pt-20 md:px-8 md:pb-10 md:pt-6">
     {#if current}
-      <svelte:component this={current.component} {...$route.params} />
+      {@const Page = current.component}
+      <Page {...$route.params} />
     {:else if $route.kind === "page"}
       <div class="p-8 text-text/60">This module lives outside the app shell.</div>
     {:else}

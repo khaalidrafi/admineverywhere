@@ -37,6 +37,11 @@ Product constraints — do not relax:
 - New dashboard widget = drop one `.svelte` file in `app/src/widgets/`
   exporting `const meta = { title, size }` — auto-discovered via
   `import.meta.glob`. No registry to edit.
+- New page (non-CRUD module) = drop one `.svelte` file in `app/src/pages/`
+  exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`
+  — the same glob contract, applied to routes: `app/src/lib/pages/index.ts`
+  validates it, injects the router's route table and the sidebar entry. Router,
+  shell and sidebar carry no page-specific line.
 - Deliberately out of scope: virtual scrolling, command palette, alerts.
 
 ## Product spec (from MVP brief)
@@ -66,8 +71,9 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (175 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (58 vitest) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (205 pytest, written first) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (198 vitest) |
+| `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
@@ -79,7 +85,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
 | `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
 | `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
-| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) + `independent-enums.md` (FR-R002 separated-status-fields convention, schema enum-component naming, guardrails) + `csv-export.md` (FR-R005 two export layers + the shared byte-format contract) |
+| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) + `independent-enums.md` (FR-R002 separated-status-fields convention, schema enum-component naming, guardrails) + `csv-export.md` (FR-R005 two export layers + the shared byte-format contract) + `page-registration.md` (FR-R006 page glob contract + the component-test enabler) |
 
 ## Commands
 
@@ -94,8 +100,8 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 58 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 175 pytest
+cd app && npm test                          # 198 vitest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 205 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -186,9 +192,33 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   before the view runs; `csv_export.py` stays DRF-free because `@extend_schema`
   captures `DEFAULT_SCHEMA_CLASS` at decoration time. Contract in
   `docs/csv-export.md`.
+- Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
+  `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
+  `<script module>` (runes are unavailable there — the export must be static).
+  `app/src/lib/pages/index.ts` globs eagerly, validates, and hands
+  `lib/router.ts` its route table via `setPages()` — the router owns NO table,
+  the shell imports NO page, the sidebar types NO entry, so adding a module
+  touches one file. A declaration that cannot be honoured is **refused** into
+  `refusedPages` with a nameable reason (bad pattern, nav entry on a
+  param-carrying path, overlapping path, no default export) and the Modules
+  page renders the refusal list, so a broken drop-in is visible rather than
+  silent; a file with no `meta` at all is merely ignored. Matching prefers
+  **fewest captures** (a static `/legacy` beats a sibling `/:id`) and an
+  unanswered hash resolves to `kind: "none"` — the router never guesses a page
+  from a prefix, same law as `actionPath()` and `resolveAxis()`. Captured
+  segments arrive as **props**, so pattern parameter names are the component's
+  prop names (`ModelPage` takes `modelId`/`recordId`, not `id`). Contract +
+  the copy checklist in `docs/page-registration.md`.
 - Vite: `optimizeDeps.include` covers all svelte entrypoints (prevents two
   svelte-internals instances); the dev server sends
-  `Cache-Control: no-store`.
+  `Cache-Control: no-store`. Vitest additionally needs `resolve.conditions:
+  ["browser"]` + `test.server.deps.inline: [/svelte/]`: without the browser
+  condition Vitest resolves svelte's SSR build, where `mount()` throws
+  `lifecycle_function_unavailable` — that one condition, not a Svelte 5 limit,
+  was the "component tests are impossible" finding, and `shell.test.ts` is the
+  proof. Under happy-dom a test must dispatch `hashchange` itself inside
+  `flushSync()` (it assigns `location.hash` but never fires the event) and
+  tear down with `unmount(instance)`, or a stale `<main>` reads as a routing bug.
 - Runtime branding flow: the client boots with the bundled static brand
   (`public/brand.{css,json}` — first paint, no FOUC), then `initApp()`
   tries `GET <api>/admincraft/branding/`; a server brand replaces the
@@ -432,7 +462,7 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
    impossible.
 7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
-   (175 green baseline) + `demo-backend manage.py check` +
+   (205 green baseline as of FR-R006; vitest 198) + `demo-backend manage.py check` +
    `makemigrations --check`. Red work never lands.
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
