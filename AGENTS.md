@@ -155,6 +155,19 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `model.listPath`, NEVER from `apiUrl + model.id` (`apiUrl` is only the base
   origin; concatenating a bare segment produced `http://hostapi…` and silently
   broke the R-001 transition/history calls).
+- Kanban (FR-R004) groups a model by a **declared** axis in
+  `app/src/lib/kanban.ts` (`kanbanAxes`, keyed by model id like
+  `statusTransitions`), never by "the field named status" or "the first enum
+  field" — `docs/independent-enums.md` §6 forbids the guess, so a model with no
+  entry shows no toggle. An axis that contradicts the machine (a `transition`
+  axis with no R-001 entry, or a `patch` axis on a lifecycle field, or a
+  non-enum field) is **refused** — no board, with `axisProblem()` naming the
+  reason — rather than rendered optimistically. A drop on a lifecycle axis
+  fires `POST <listPath><id>/transition/` only for a state the registry allows;
+  a drop on a free enum is `patchRecord` with a **one-key body** (never a
+  whole-row PUT). Drag-and-drop is mouse-only by nature, so every column a drop
+  would accept is also offered by a per-card "Move to" `<select>` — keyboard and
+  screen-reader users get the identical move set, illegal targets are disabled.
 - Vite: `optimizeDeps.include` covers all svelte entrypoints (prevents two
   svelte-internals instances); the dev server sends
   `Cache-Control: no-store`.

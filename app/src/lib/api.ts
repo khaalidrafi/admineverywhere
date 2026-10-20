@@ -192,6 +192,19 @@ export async function updateRecord(
   });
 }
 
+/** Partial update — sends exactly the keys given (a kanban drop on a free enum
+ *  must touch one field and nothing else, which a PUT of the whole row cannot
+ *  promise). DRF answers with the full updated record. */
+export async function patchRecord(
+  cfg: AppConfig, token: string | null, model: ModelSpec, id: string | number,
+  data: Record<string, any>,
+): Promise<RecordRow> {
+  return request<RecordRow>(cfg, token, model.detailPath.replace("{id}", encodeURIComponent(String(id))), {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteRecord(
   cfg: AppConfig, token: string | null, model: ModelSpec, id: string | number,
 ): Promise<void> {
