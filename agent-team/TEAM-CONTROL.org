@@ -1,0 +1,26 @@
+#+TITLE: TEAM-CONTROL.org — admincraft chain control (Lead-owned; seats read, never edit)
+# The CI chain (/.github/workflows/agent-team.yml) reads these lines
+# VERBATIM every run. The Lead is the only writer (seats: file:line
+# evidence in chat instead).
+
+#+KILL-SWITCH: OFF
+#+OBJECTIVE-STATE: OPEN
+#+OBJECTIVE: Burn ALL open items on agent-team/AGENT-TEAM-TODOS.org to PENDING-with-delivered-evidence by 2026-10-21 02:00 UTC (Owner's morning, Asia/Dhaka) — order: verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE finish -> COOL-PREVIEW -> R-003 FE remainder -> R-002 docs -> R-004 kanban -> R-005 CSV export -> R-006 page registration -> R-008 widgets/charts -> R-007 RBAC; every item lands only with the landing gate green (python -m pytest plugin/tests -p no:cacheprovider -q + demo-backend manage.py check + makemigrations --check)
+#+TURN: qwen3.8-flash@qoder (Acting Platform Engineer)
+#+STALL-COUNT: 0
+
+* Notes
+
+- Seat selection BY FIT (Owner law 2026-10-21 17:47Z): the rotation parks
+  on qwen3.8-flash@qoder — the ONE body PROVEN on this team's CI (proof
+  run 39477554903: real qoder JSON result, 72s agentic work; budget fixed
+  --max-turns 100). More bodies join the moment the Owner adds provider
+  keys to THIS repo's secrets (secret values are write-only — they cannot
+  be copied from agent-team.el; the zai@goose fallback self-heals when
+  ZAI_API_KEY lands here).
+- Chain mechanics: turn -> finalize(auto-merge behind the landing gate ->
+  stall accounting -> self-dispatch). Backoff after 4 no-progress
+  segments. Tests red = chain halts + Lead paged.
+- Deadline rationale: Owner order 2026-10-20 19:21Z — "teamify
+  khaalidrafi/admincraft in parallel. I wanna see ALL its TODOs done by
+  the morning."

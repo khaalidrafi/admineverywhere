@@ -1,11 +1,18 @@
-#+TITLE: AGENT-TEAM-MEMBERS — admincraft ranked roster (2026-10-19)
-# Every entry = brain@body pair. Evidence: PROVEN field record (outranks research)
-# + independent benchmarks/reviews/sentiment (HIRING PROTOCOL). Limits recorded.
-# INTERN PROGRAM (standing, owner ruling 2026-10-19): no-evidence models
-# are NOT ranked on research — they enter the INTERN POOL, FIVE PER ROUND.
-# Each intern runs REAL task rounds across task types, tracked in HIRING-LOG.
-# Outcome: HIRED (real rank from its own record) or REJECTED (benched) — never
-# vibes, never one task. Unranked non-interns = REJECTED until ranked.
+#+TITLE: AGENT-TEAM-MEMBERS — admincraft ranked roster
+# 2026-10-21 Lead update: the repo now runs the agent-team CI CHAIN
+# (.github/workflows/agent-team.yml). CI CHAIN SEATS (dispatchable
+# model@body pairs; bodies preinstalled in docker/harness):
+#
+#   * qwen3.8-flash@qoder  [ACTIVE — the rotation parks here]
+#     Body PROVEN on this team's CI (proof run 3977554903 agent-team.el;
+#     PAT auth, no browser). Selected BY FIT per Owner law 17:47Z.
+#   * zai/glm-4.7-flash@goose [DORMANT — self-heals when ZAI_API_KEY is
+#     set in THIS repo's secrets; secret values are write-only and cannot
+#     be copied from agent-team.el]
+#   * every other pair below stays ranked for the EM's manual dispatches;
+#     CI chain seats are added as keys land.
+#
+
 # BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on
 different bodies produces different work. model@Goose and model@OpenCode are
 DIFFERENT members with DIFFERENT ranks. Every entry below is one dispatchable
