@@ -443,8 +443,59 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   gate clean: the demo rig's parent/child pair is Order -> OrderHistory, so
   (b) needs no new model and no migration.
 :END:
-** ONGOING FR R-006 page registration                                            :FE:
+** PENDING FR R-006 page registration                                            :FE:
 :LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-20 Tue 22:49 UTC]
+- Note taken on [2026-10-20 Tue 22:49 UTC] :: :DELIVERED: WORK ORDER item 9.
+  The feature landed in the BLOCKED segment 15c8073 (branch
+  ai/turn-20261020-2243 lineage: lib/pages/index.ts registry + router.ts
+  pattern matcher + Shell/Sidebar/App rendered from declarations +
+  Modules.svelte + pages.test.ts 27 + shell.test.ts 8 +
+  docs/page-registration.md); this segment verified it, closed the
+  documentation gap it left and removed the deprecated construct it
+  introduced. Evidence:
+  1. Contract holds: one .svelte in app/src/pages exporting
+     meta{title,path,nav,icon,order,standalone} registers route + sidebar;
+     router owns no table (setPages injection), shell imports no page,
+     sidebar types no entry. Bad declarations are REFUSED into
+     refusedPages with a nameable reason, never half-registered.
+  2. LIVE drop-in proof (no browser needed): dropped a scratch
+     ScratchProbe.svelte into src/pages, touched nothing else — the
+     production build bundled it (dist/assets/index-DAEJ2oCJ.js contains
+     "scratch-probe") and pages/shell suites stayed green (35/35) while
+     "no shipped page is refused" still passed. Scratch file removed after.
+  3. Landing gate green at this tip: pytest 205/205 (-p no:cacheprovider,
+     9.98s), manage.py check "no issues (0 silenced)", makemigrations
+     --check "No changes detected", vitest 198/198 (was 163 + pages 27 +
+     shell 8), vite build green (142 modules), tsc --noEmit error count
+     7 — all 7 pre-existing (DataTable/RecordForm/branding tests +
+     api.ts:152), none in a file this item touched.
+  4. Dev-server module-graph smoke: vite :5173 answered 200 with no
+     transform error for main.ts, lib/pages/index.ts, lib/router.ts,
+     Shell.svelte, Modules.svelte, Login.svelte.
+  5. This close-out: AGENTS.md gained the R-006 hard-won bullet, the
+     product-constraint drop-in line, the app/src/pages layout row, the
+     docs/ row for page-registration.md, and the stale suite counts
+     (58/175 -> 198/205) in Commands + LANDING GATE law #7; the doc's
+     invented `pageProblem()` name corrected to the real
+     collectPages()/patternProblem(); the two `<svelte:component>` tags
+     15c8073 added (App.svelte:35, Shell.svelte:53) replaced with the
+     runes-mode `{@const Page}` form — the build warned on both, and the
+     deprecation warning is now gone repo-wide except Dashboard.svelte:27
+     (widget rendering, pre-existing, untouched: no component test covers
+     it).
+  6. ENABLER worth the Lead's attention: 15c8073 also fixed the mount()
+     harness (resolve.conditions ["browser"] + test.server.deps.inline
+     [/svelte/]) — the "component tests impossible" limitation filed at
+     21:05 was an SSR-build condition, not a Svelte 5 limit. shell.test.ts
+     is the repo's first real rendered-DOM test, so the two prior reports'
+     "[ ] nobody clicked it in a browser" caveat is now partially closed
+     for the shell/nav/routing surface.
+  STILL UNVERIFIED, stated plainly: no browser/Tauri session — nobody
+  clicked a sidebar entry in a real window; a11y warnings on
+  ModelPage.svelte:419/420/483/485 + RecordForm.svelte:159 predate this
+  item and were not touched.
+  NEXT: item 10 (FR R-008 widget data sources + new charts, FE).
 - State "ONGOING" from "TODO" [2026-10-20 Tue 22:2x]
 :END:
 ** TODO FR R-008 widget data sources + new charts                             :FE:

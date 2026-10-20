@@ -47,10 +47,12 @@ edited — that is the promise, and `pages.test.ts` + `shell.test.ts` enforce it
 | `/m/:modelId` | `#/m/order` | capture → prop `modelId` |
 | `/m/:modelId/:recordId?` | `#/m/order`, `#/m/order/7` | optional tail, last segment only |
 
-Captured segments are spread as **props** (`<svelte:component this={page.component}
-{...$route.params} />`), so a pattern's parameter names are the component's prop
-names. `ModelPage` therefore takes `modelId` + `recordId` — R-006 renamed its
-`id` prop to `modelId` so the declaration and the signature say the same thing.
+Captured segments are spread as **props** — the shell renders the discovered
+component with `<Page {...$route.params} />` (`{@const Page = current.component}`;
+`<svelte:component>` is deprecated in runes mode), so a pattern's parameter names
+are the component's prop names. `ModelPage` therefore takes `modelId` + `recordId`
+— R-006 renamed its `id` prop to `modelId` so the declaration and the signature
+say the same thing.
 
 Matching prefers **fewest captures**, which is why a static `/legacy` still
 wins over a sibling `/:id`. A hash no pattern answers resolves to
@@ -128,5 +130,5 @@ pins down:
   this file.
 - The page `title` is declared but not yet applied to `document.title` per
   route; `applyBrand()` owns the title today.
-- `pageProblem()` refuses overlapping declarations; it does not warn about an
+- `collectPages()` refuses overlapping declarations; it does not warn about an
   unreachable nav entry hidden behind an identical `order` value.
