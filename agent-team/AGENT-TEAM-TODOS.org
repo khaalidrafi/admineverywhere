@@ -827,6 +827,26 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
 :END:
 ** PENDING verify-cool-chat-2 — Senior FE send-back on ai/cool-chat            :BE:
 :LOGBOOK:
+- Note taken on [2026-10-20 Tue 23:45] :: :DELIVERED: (re-derived
+  independently on the CURRENT tree at 91bd99e, per the Lead's 01:55Z
+  dispatch — not inherited from the 21:05 Lead relay.) All four specced
+  checks green: (1) governance intact — zero "MEMBER IDS" hits in
+  agent-team/AGENT-TEAM.md, and both deleted-by-branch sections are still
+  there (DISPATCH PREAMBLE RULE :123, FENCE FORMAT :130); the one
+  ```followup hit is :132, mainline's own prohibition naming the thing it
+  forbids — the same documented false positive as the 21:05 note.
+  (2) color sweep clean on all three formerly-touched files: zero
+  hex/rgb/hsl, zero Tailwind palette utilities, brand vars present.
+  (3) exactly one ChatPanel.svelte, one importer (Shell.svelte:13), one
+  mount (Shell.svelte:66). (4) both merge-blocking findings are CLOSED and
+  MERGED, not merely claimed: buildSchemaPrompt is on the live path
+  (ChatPanel.svelte:9/:69 -> chat.ts:48) and the legend is chat.ts:49.
+  Gate measured here: pytest 212/212, manage.py check clean,
+  makemigrations --check "No changes detected".
+  RESIDUAL GAP found and closed in the same segment (see
+  COOL-CHAT-SEND-BACK-2 below): nothing yet proved the prompt the panel
+  actually POSTs is the wired one — the send-back's own words were "the
+  suite feeds systemPrompt a hand-written string". Fixed at a5c45f7.
 - State "PENDING" from "WAIT" [2026-10-18 Sun 02:05]
 - Note taken on [2026-10-20 Tue 21:05] :: :DELIVERED: (Lead relay of the
   seat's verdict, run 39488529938 — all four specced checks re-derived
@@ -999,6 +1019,26 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
 :END:
 ** PENDING COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend       :FE:
 :LOGBOOK:
+- Note taken on [2026-10-20 Tue 23:45] :: :DELIVERED: (ai/turn-20261020-2338
+  @ a5c45f7 — the WIRING and the LEGEND were already merged and verified at
+  ChatPanel.svelte:9/:69 + chat.ts:48-49; what this segment added is the
+  proof class the item never had, which is the reason both findings slipped
+  past a green suite in the first place.)
+  New app/src/lib/__tests__/chatMount.test.ts (3 tests) mounts the REAL
+  ChatPanel and asserts the captured fetch request body:
+  - the system message the panel actually sends carries the legend, the
+    app-name framing line, and model lines derived from
+    normalizeOpenAPI(real fixture) — "- Product [/api/products/]:" +
+    "category(fk->categories)" — so a rewired panel or a dropped legend now
+    fails the suite instead of shipping green; streamed deltas land in DOM.
+  - schema null -> the prompt says "no schema loaded" and no legend.
+  - unconfigured provider -> the three-input setup surface, zero fetch.
+  Evidence at a5c45f7: vitest 238/238 (18 files, capped NODE_OPTIONS=1024
+  --maxWorkers=1), vite build 2.97s zero warnings, tsc --noEmit = the same
+  7 known pre-existing errors (new file adds none), pytest 212/212 +
+  manage.py check + makemigrations --check all green (backend untouched).
+  AGENTS.md: chat bullet now pins the live prompt path + the mount-test
+  law; vitest counts 235 -> 238 (layout row, Commands, landing-gate law 7).
 - State "PENDING" from "TODO" [2026-10-17 Sat 20:21]
 - Note taken on [2026-10-20 Tue 21:05] :: :DELIVERED: (Lead relay of the
   seat's verdict, run 39488529938 — independent re-verification on the
