@@ -7,8 +7,19 @@
  */
 import { describe, expect, it } from "vitest";
 import { widgets, widgetUnits, type Widget } from "../widgets/index";
+import { validateWidgetData } from "../widgets/feed";
 
-const BUILT_INS = ["ActivityChart", "QuoteCard", "StatsCards"];
+const BUILT_INS = [
+  "ActivityChart",
+  "QuoteCard",
+  "StatsCards",
+  // FR-R008 chart drop-ins riding the meta.data feed contract
+  "TrendArea",
+  "StatusDonut",
+  "LeaderBars",
+  "HeatStrip",
+  "DeltaChip",
+];
 
 function label(widget: Widget): string {
   return `${widget.id}: ${JSON.stringify(widget.meta)}`;
@@ -45,6 +56,18 @@ describe("widgets auto-import", () => {
     for (const widget of Object.values(widgets)) {
       expect(widget.component, label(widget)).toBeDefined();
       expect(typeof widget.component, label(widget)).toBe("function");
+    }
+  });
+
+  it("a declared meta.data feed always validates", () => {
+    // FR-R008: any widget that carries a data declaration must be usable by
+    // the feed engine — a broken declaration is a build-time mistake the
+    // suite catches, not something the user's dashboard silently degrades on.
+    const declared = Object.values(widgets).filter((w) => w.meta.data != null);
+    expect(declared.length, "at least one built-in must demonstrate the feed contract").toBeGreaterThan(0);
+    for (const widget of declared) {
+      const r = validateWidgetData(widget.meta.data);
+      expect("spec" in r, label(widget)).toBe(true);
     }
   });
 });
