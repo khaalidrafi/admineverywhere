@@ -79,7 +79,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
 | `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
 | `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
-| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) + `independent-enums.md` (FR-R002 separated-status-fields convention, schema enum-component naming, guardrails) |
+| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) + `independent-enums.md` (FR-R002 separated-status-fields convention, schema enum-component naming, guardrails) + `csv-export.md` (FR-R005 two export layers + the shared byte-format contract) |
 
 ## Commands
 
@@ -168,6 +168,24 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whole-row PUT). Drag-and-drop is mouse-only by nature, so every column a drop
   would accept is also offered by a per-card "Move to" `<select>` — keyboard and
   screen-reader users get the identical move set, illegal targets are disabled.
+- CSV export (FR-R005) keeps its two layers uncollapsed: DataTable "Export
+  table" = visible columns of the CURRENT page, client-side, no server call;
+  "Full export" = `GET <listPath>export/` line-level (child rows repeat parent
+  ids, pk order, search honoured, `pagination_class=None`) and its button is
+  bound **only when the schema documents it** — `normalizeOpenAPI` sets
+  `model.exportPath` on `get && !post` at that path, and `fetchCsv` calls
+  base + the discovered path, never `apiUrl + "export"`. The writer twins
+  (`app/src/lib/csv.ts` ↔ `demo-backend/shop/csv_export.py`) are
+  byte-identical for the same rows — RFC 4180/CRLF/QUOTE_MINIMAL, null→empty,
+  lowercase booleans, decimals never re-flowed, formula guard on text keyed by
+  NUMERIC *shape* (DRF sends decimals as strings), BOM added once
+  (`csvBlobParts` is BOM-idempotent) — keep them in sync like
+  `brandToCss`/`render_css`; same commit, both sides, on pain of the two
+  layers disagreeing on every negative price. Server: the `@action` needs a
+  `text/csv` renderer in `renderer_classes` or the client's own Accept 406s
+  before the view runs; `csv_export.py` stays DRF-free because `@extend_schema`
+  captures `DEFAULT_SCHEMA_CLASS` at decoration time. Contract in
+  `docs/csv-export.md`.
 - Vite: `optimizeDeps.include` covers all svelte entrypoints (prevents two
   svelte-internals instances); the dev server sends
   `Cache-Control: no-store`.
