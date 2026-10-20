@@ -498,7 +498,14 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   NEXT: item 10 (FR R-008 widget data sources + new charts, FE).
 - State "ONGOING" from "TODO" [2026-10-20 Tue 22:2x]
 :END:
-** TODO FR R-008 widget data sources + new charts                             :FE:
+** ONGOING FR R-008 widget data sources + new charts                           :FE:
+:LOGBOOK:
+- State "ONGOING" from "TODO" [2026-10-20 Tue 23:0x] :: Seat platform-engineer,
+  WORK ORDER item 10. Scope per ROADLOG R-008: optional meta
+  {data:{endpoint,aggregate,pollInterval}}, polling via existing listRecords
+  (schema-discovered paths only), new chart drop-ins (area, donut, hbar,
+  heat-strip, delta-chip) alongside the current line chart.
+:END:
 ** TODO FR R-007 RBAC phased (client-side first)                              :FE:BE:
 * OPEN ITEMS
 
