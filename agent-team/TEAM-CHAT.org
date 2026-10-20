@@ -246,3 +246,80 @@
         status") — worth endorsing before the R-004 seat starts.
   NEXT: item 7 (FR R-004 kanban view, FE) — unstarted; items 8-11 behind it.
   Objective completion is yours to claim, not mine: 7-11 remain on the board.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 21:33 UTC]
+:END:
+  RESULT: DONE — WORK ORDER item 7 (FR R-004 kanban view) shipped on
+  ai/turn-20261020-2122; board item flipped ONGOING->PENDING with :DELIVERED:
+  evidence. Commits 9a9bdb9 (board flip) + a3c2150 (feature, 781 insertions).
+  Your 21:19Z ask ("endorse §6's forward claim before the R-004 seat starts")
+  is answered by the implementation rather than by me: the axis IS declared —
+  app/src/lib/kanban.ts keys kanbanAxes by model id exactly like
+  statusTransitions, and no line of the module looks for a field called
+  "status" or for "the first enum field". Nothing in §3's five guardrails had
+  to be relaxed to build this.
+  What landed (client only — the R-001 API already carries the whole move, so
+  zero server change and zero new migrations):
+  - lib/kanban.ts: resolveAxis / axisProblem / boardColumns / reachableColumns
+    / planMove / cardLabel. Column order for a lifecycle axis comes from the
+    machine's states, never from the schema enum list (§2's "value order is not
+    a contract"). A contradictory declaration is REFUSED with a nameable reason
+    — transition axis without the R-001 machine (guardrail 5), patch axis on a
+    lifecycle field (it would bypass the machine), non-enum field, zero columns.
+  - components/KanbanBoard.svelte: ROADLOG names drag a11y as the risk, so
+    every move has a keyboard twin — the per-card "Move to" select offers the
+    identical reachable set and disables the illegal rest (disabled, not
+    hidden: the refusal is visible). Records whose value is empty or outside
+    the declared set land in a read-only Unassigned column; a board can never
+    silently drop one of the records it was given.
+  - ModelPage.svelte: table|kanban toggle (aria-pressed group), shown only when
+    an axis resolves; kanban asks for a 100-row page because a 10-row board
+    says nothing; view resets on model switch. The drop calls planMove, the
+    single place the request shape is decided: {transition: target} via
+    transitionRecord, or a ONE-KEY body via the new api.patchRecord — never a
+    whole-row PUT (guardrail 1).
+  Evidence:
+  - [X] Landing gate green at this tip: pytest 175/175 (-p no:cacheprovider,
+        16.78s), manage.py check "no issues (0 silenced)", makemigrations
+        --check "No changes detected".
+  - [X] vitest 129/129 (101 baseline + 28 new in kanban.test.ts), including
+        three tests that drive the REAL captured openapi.json fixture: orders
+        resolves to the lifecycle board, and no other fixture model gets a
+        board. vite build green (138 modules); npx tsc --noEmit error count
+        unchanged vs baseline (10 -> 10, none in the new files).
+  - [X] LIVE on the demo rig (runserver 127.0.0.1:8000, admin token): POST
+        /api/orders/60/transition/ {"paid"} -> 200 (status=paid); {"shipped"}
+        from pending -> 409 {"reason":"illegal transition: 'pending' ->
+        'shipped' (allowed from 'pending': paid)"} — the client pre-refuses the
+        same move with the same allowed-set wording, and the server remains the
+        authority; PATCH /api/orders/60/ {"notes":…} -> 200 with
+        status/total/customer untouched, which is the one-key-body guarantee
+        patchRecord depends on.
+  - [ ] UNVERIFIED, stated plainly: no browser/Tauri session, so nobody
+        actually dragged a card. The mount() harness limitation filed at 21:05
+        still blocks DOM-level component tests; the board's wiring is proven by
+        the pure module + build + live API, not by a rendered component. That
+        harness fix remains the highest-leverage queued FE task.
+  DESIGN CALL WORTH YOUR REVIEW (recorded on the board too): an axis whose
+  MODEL is absent from the loaded schema resolves to no board silently, on the
+  same principle as "plain DRF backends degrade silently to the static brand".
+  The strict alternative — refuse on any mis-declaration — would blank the
+  board for every customer API that legitimately has no such model and would
+  break existing shape assertions. axisProblem() returns null for "nothing
+  declared", so a missing declaration stays distinguishable from a broken one.
+  FOLLOW-UPS, NOT STARTED (out of item 7's scope):
+  (1) your 21:19Z oneOf/BlankEnum defect in openapi.ts is still open and still
+      un-fixed by me — it is FE-seat code, it pairs with the fixture recapture
+      filed at 21:05, and a kanban free-enum axis on a blank-allowing field is
+      its next victim (no choices -> no columns). It needs a demo field that
+      carries the shape, so it is a BE+FE change, not a one-liner.
+  (2) the demo rig has exactly one choices field, so a free-enum (PATCH) board
+      is unit-tested but live-untestable. A second demo model with a free enum
+      would let items 8-11 exercise that path for real; it needs a migration.
+  NEXT: item 8 (FR R-005 canonical CSV export, FE:BE) — unstarted, dispatch to
+  the next segment. Objective completion is yours to claim, not mine: 8-11
+  remain on the board.
