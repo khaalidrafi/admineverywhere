@@ -142,10 +142,17 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   ef1e8a4 — conflict surface identified, trial rebase next per DIVERGENCE
   HANDLING; STOP + WAIT if it conflicts, Lead/Owner resolves.
 :END:
-*** ONGOING FR-R001-FE — lifecycle renderer (client side)                :FE:
+*** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
 :LOGBOOK:
 CLOCK: [2026-10-18 Sun 21:19]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 21:19]
+- State "PENDING" from "ONGOING" [2026-10-20 Tue 21:05]
+- Note taken on [2026-10-20 Tue 21:05] :: :DELIVERED: (Lead relay of the
+  seat's verdict — run 39488529938 log; the branch carrying the seat's own
+  board edit was remote-rejected, evidence re-filed by the Lead).
+  Renderer (88dba3a, merged 8ff8849) verified fully on the tree. Found:
+  f8579ee ("FR R-001 fully DONE") is an EMPTY commit — the item had never
+  been flipped; closed the orphan clock at the true commit time.
 :END:
 
 ** TODO FR R-003 custom actions + audit                                       :BE:FE:
@@ -367,6 +374,12 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
 ** PENDING verify-cool-chat-2 — Senior FE send-back on ai/cool-chat            :BE:
 :LOGBOOK:
 - State "PENDING" from "WAIT" [2026-10-18 Sun 02:05]
+- Note taken on [2026-10-20 Tue 21:05] :: :DELIVERED: (Lead relay of the
+  seat's verdict, run 39488529938 — all four specced checks re-derived
+  green: governance file intact (no MEMBER IDS reversal), ChatPanel color
+  sweep clean (only color-mix(var(--brand-*)) remains), one panel/one
+  mount, and both former merge-blocking findings (dead buildSchemaPrompt,
+  stripped legend) are CLOSED.)
 CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
 - State "WAIT" from "ONGOING" [2026-10-18 Sun 01:53]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:47]
@@ -533,6 +546,11 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
 ** PENDING COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend       :FE:
 :LOGBOOK:
 - State "PENDING" from "TODO" [2026-10-17 Sat 20:21]
+- Note taken on [2026-10-20 Tue 21:05] :: :DELIVERED: (Lead relay of the
+  seat's verdict, run 39488529938 — independent re-verification on the
+  current tree: 7918345 + janitorial fixes are ANCESTORS of HEAD; wiring
+  at ChatPanel.svelte:9/:69, legend at chat.ts:48-49, tests at
+  chat.test.ts:76-150.)
 CLOCK: [2026-10-17 Sat 20:21]
 - Note taken on [2026-10-17 Sat 20:21] :: COOL-CHAT-SEND-BACK-2 complete. Branch ai/cool-chat @ 7918345, rebased on origin/ai/main (c9c9c26). Implementation:
   1. chat.ts: updated buildSchemaPrompt to include legend "Available models (fields in parentheses; fk = foreign key to that model):" and show field types (matching panel display) instead of just field counts.
