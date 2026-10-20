@@ -642,3 +642,62 @@
   NEXT: nothing queued for this seat. Either you gate items 1-11 and claim
   OBJECTIVE-STATE, or dispatch new work. Per chain law I am not touching
   OBJECTIVE-STATE or any Lead-owned file.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 23:46 UTC]
+:END:
+  RESULT: DONE — your 01:55Z dispatch (WORK ORDER items 1 and 2) is executed
+  in one segment. Item 1 re-derived independently on the current tree, item
+  2's wiring verified as merged AND its residual proof gap closed at
+  a5c45f7 on ai/turn-20261020-2338. Both board items carry fresh :DELIVERED:
+  LOGBOOK notes; neither is DONE (your gate).
+  ITEM 1 — verify-cool-chat-2, re-measured at 91bd99e rather than inheriting
+  the 21:05 Lead relay, all four specced checks green:
+  - governance: zero "MEMBER IDS" hits; the two sections the branch tried to
+    delete are present (agent-team/AGENT-TEAM.md:123 DISPATCH PREAMBLE RULE,
+    :130 FENCE FORMAT). The single ```followup hit is :132 — mainline's own
+    prohibition naming the thing it forbids, the documented false positive.
+  - color sweep: zero hex/rgb/hsl and zero Tailwind palette utilities across
+    ChatPanel.svelte / chat.ts / chat.test.ts; brand vars present.
+  - one panel (app/src/ai/ChatPanel.svelte), one importer
+    (components/Shell.svelte:13), one mount (components/Shell.svelte:66).
+  - both former merge-blocking findings are CLOSED and MERGED, not merely
+    claimed: buildSchemaPrompt sits on the live path (ChatPanel.svelte:9/:69
+    -> chat.ts:48) and the legend is chat.ts:49.
+  ITEM 2 — COOL-CHAT-SEND-BACK-2. The code was already in the tree, so I did
+  not re-deliver a no-op; I closed the one thing the item never had and the
+  send-back named verbatim ("the suite feeds systemPrompt a hand-written
+  string"): proof about the bytes that actually go over the wire.
+  - NEW app/src/lib/__tests__/chatMount.test.ts, 3 tests, mounted REAL panel
+    (same harness as widgetMount/shell/rbac: browser resolve condition +
+    flushSync + stubbed fetch), driving it as a user does (open -> type ->
+    submit) and asserting the captured request body:
+    1. system message carries the legend + "You are the assistant inside the
+       Admincraft admin dashboard." + "- Product [/api/products/]:" +
+       "category(fk->categories)", all from normalizeOpenAPI(the real
+       fixture) — a rewired panel or a stripped legend now fails the suite;
+       streamed deltas also proven to land in DOM.
+    2. schema null -> prompt says "no schema loaded", no legend.
+    3. unconfigured provider -> the three-input setup surface, zero fetch.
+  - AGENTS.md: chat bullet now pins the live prompt path and this test law;
+    vitest counts 235 -> 238 (layout row, Commands, landing-gate law 7).
+  Evidence (measured at a5c45f7):
+  - [X] Landing gate green: pytest 212/212 (-p no:cacheprovider, 17.1s),
+        manage.py check "no issues (0 silenced)", makemigrations --check "No
+        changes detected" (ran at 91bd99e; this segment touched no backend
+        file), vitest 238/238 (18 files, capped NODE_OPTIONS=1024
+        --maxWorkers=1), vite build 2.97s zero warnings, tsc --noEmit = the
+        same 7 known pre-existing errors — the new file adds none.
+  - [ ] UNVERIFIED, stated plainly: still no browser/Tauri window watched a
+        live chat round-trip; the panel is exercised in happy-dom with a
+        stubbed SSE stream against scripts/mock_openai.js-shaped payloads,
+        not against a running provider. That is the one row the whole
+        cool-chat line has never cleared, and it needs a human or a real
+        E2E runner, not another unit test.
+  NEXT: nothing queued for this seat — items 1-11 plus both cool-chat items
+  carry PENDING-with-delivered-evidence. Either gate them and claim
+  OBJECTIVE-STATE, or dispatch new work. Per chain law I have not touched
+  OBJECTIVE-STATE or any Lead-owned file.
