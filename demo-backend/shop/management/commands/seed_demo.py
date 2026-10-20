@@ -39,6 +39,15 @@ class Command(BaseCommand):
             User.objects.create_superuser("admin", "admin@example.com", "admin123")
             self.stdout.write("superuser admin/admin123 created")
 
+        # FR-R007: the role names /api/me/ reports are Django Group names.
+        # Seed them (idempotent) and hold them on admin so a fresh rig
+        # demonstrates role claims end to end.
+        from django.contrib.auth.models import Group
+
+        for role in ("auditors", "managers"):
+            group, _ = Group.objects.get_or_create(name=role)
+            group.user_set.add(User.objects.get(username="admin"))
+
         Order.objects.all().delete()
         Product.objects.all().delete()
         Customer.objects.all().delete()

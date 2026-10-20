@@ -47,6 +47,9 @@ export interface ModelSpec {
 export interface AdminSchema {
   models: ModelSpec[];
   byId: Record<string, ModelSpec>;
+  /** schema-discovered role-claims endpoint (FR-R007): the document's
+   *  GET …/me/ path, when present. No mePath = no client-side filtering. */
+  mePath?: string;
 }
 
 export interface Brand {

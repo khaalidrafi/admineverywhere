@@ -5,9 +5,14 @@ from drf_spectacular.views import (
 )
 from rest_framework.authtoken.views import obtain_auth_token
 
+from .views import MeView
+
 urlpatterns = [
     # Auth: POST {username, password} -> {"token": "..."} (DRF authtoken)
     path("api/auth/token/", obtain_auth_token),
+    # FR-R007 role claims source: GET -> {username, is_staff, is_superuser, roles}
+    # (read-only; the client discovers this path in the OpenAPI schema)
+    path("api/me/", MeView.as_view(), name="me"),
     # OpenAPI schema served by drf-spectacular (public so the thin client
     # can introspect; protected per-model endpoints sit behind token auth)
     path("api/schema/", SpectacularAPIView.as_view(permission_classes=[]), name="schema"),

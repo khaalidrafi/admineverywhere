@@ -6,15 +6,19 @@
    *  only the Models group is generated from the OpenAPI schema, because that
    *  is data, not a module.
    */
-  import { app, logout } from "../lib/stores";
+  import { app, claims, logout } from "../lib/stores";
   import { navigate, route, isActive } from "../lib/router";
   import { navPages, pageHref } from "../lib/pages";
+  import { roleAllows } from "../lib/rbac";
   import Icon from "./Icon.svelte";
 
   let { onnavigate }: { onnavigate?: () => void } = $props();
 
-  const mainNav = $derived(navPages("main"));
-  const settingsNav = $derived(navPages("settings"));
+  // FR-R007: a page that declares meta.roles only shows for a caller whose
+  // claims carry one of them — unless the server emitted no claims at all,
+  // in which case nothing is filtered (plain DRF keeps the full menu).
+  const mainNav = $derived(navPages("main").filter((p) => roleAllows(p.roles, $claims)));
+  const settingsNav = $derived(navPages("settings").filter((p) => roleAllows(p.roles, $claims)));
 
   function go(hash: string) {
     navigate(hash);
