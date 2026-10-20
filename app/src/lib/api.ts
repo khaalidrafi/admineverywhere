@@ -6,6 +6,7 @@ Every failure is normalized to ApiError so the UI can react:
 - status:400     -> validation errors (field-level display)
 */
 import { normalizeOpenAPI } from "./openapi";
+import { exportFileName } from "./csv";
 import type { AdminSchema, AppConfig, AuditEntry, Brand, ModelSpec, Page, RecordRow } from "./types";
 
 export class ApiError extends Error {
@@ -35,15 +36,9 @@ function redactSecrets(obj: any): any {
   return out;
 }
 
-async function request<T>(cfg: AppConfig, token: string | null, path: string,
-                          init: RequestInit = {}): Promise<T> {
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    ...(init.body ? { "Content-Type": "application/json" } : {}),
-    ...(token ? { Authorization: `Token ${token}` } : {}),
-  };
-  
-  // Strip credentials from URL if present (secrets never in URLs)
+/** The API origin used for every call: no trailing slash, credentials gone
+ *  (a token never travels inside a URL where proxies and logs can see it). */
+function baseUrl(cfg: AppConfig): string {
   let url = cfg.apiUrl.replace(/\/+$/, "");
   try {
     const u = new URL(url);
@@ -53,6 +48,18 @@ async function request<T>(cfg: AppConfig, token: string | null, path: string,
       url = u.toString().replace(/\/$/, "");
     }
   } catch {}
+  return url;
+}
+
+async function request<T>(cfg: AppConfig, token: string | null, path: string,
+                          init: RequestInit = {}): Promise<T> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    ...(init.body ? { "Content-Type": "application/json" } : {}),
+    ...(token ? { Authorization: `Token ${token}` } : {}),
+  };
+
+  const url = baseUrl(cfg);
   let resp: Response;
   try {
     resp = await fetch(url + path, { ...init, headers });
@@ -326,4 +333,40 @@ export async function fetchAudit(
   if (opts.page) params.set("page", String(opts.page));
   const qs = params.toString();
   return toPage<AuditEntry>(await request<any>(cfg, token, `/api/audit/${qs ? `?${qs}` : ""}`));
+}
+
+/** GET a schema-discovered line-level CSV export (FR-R005 layer 2 — the
+ *  `exportPath` the normalizer found, never a guessed path). The body is text
+ *  not JSON so it cannot share request(), but auth, error shape and base-URL
+ *  rules are identical: a 401 still logs the user out, a 500 still surfaces. */
+export async function fetchCsv(
+  cfg: AppConfig,
+  token: string | null,
+  path: string,
+  fallbackFilename: string,
+): Promise<{ text: string; filename: string }> {
+  const url = baseUrl(cfg);
+  let resp: Response;
+  try {
+    resp = await fetch(url + path, {
+      headers: { Accept: "text/csv", ...(token ? { Authorization: `Token ${token}` } : {}) },
+    });
+  } catch (err: any) {
+    throw new ApiError(`Cannot reach backend at ${url}`, { network: true, detail: redactSecrets(err) });
+  }
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    let detail: any = text;
+    try { detail = text ? JSON.parse(text) : null; } catch { /* proxy html error page */ }
+    throw new ApiError(`API ${resp.status} on ${path}`, { status: resp.status, detail: redactSecrets(detail) });
+  }
+  const disposition = resp.headers.get("Content-Disposition") ?? "";
+  const quoted = /filename=\s*"([^"]+)"/i.exec(disposition)?.[1];
+  const bare = /filename=\s*([^;"\s]+)/i.exec(disposition)?.[1];
+  // Whatever the server named it goes through the same slugifier as a
+  // client-generated name: a header is data, not a save path.
+  return {
+    text: await resp.text(),
+    filename: exportFileName((quoted ?? bare ?? "").trim() || fallbackFilename),
+  };
 }
