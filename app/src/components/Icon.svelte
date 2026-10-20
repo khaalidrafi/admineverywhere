@@ -19,6 +19,7 @@
     send: ["M22 2L11 13", "M22 2l-7 20-4-9-9-4z"],
     refresh: ["M23 4v6h-6", "M1 20v-6h6", "M3.5 9a9 9 0 0 1 14.9-3.4L23 10", "M1 14l4.6 4.4A9 9 0 0 0 20.5 15"],
     download: ["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", "M7 10l5 5 5-5", "M12 15V3"],
+    info: ["M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z", "M12 16v-4", "M12 8h.01"],
   };
 
   let { name, size = 18, class: cls = "" }: { name: string; size?: number; class?: string } = $props();

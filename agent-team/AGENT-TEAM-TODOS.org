@@ -443,7 +443,10 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   gate clean: the demo rig's parent/child pair is Order -> OrderHistory, so
   (b) needs no new model and no migration.
 :END:
-** TODO FR R-006 page registration                                            :FE:
+** ONGOING FR R-006 page registration                                            :FE:
+:LOGBOOK:
+- State "ONGOING" from "TODO" [2026-10-20 Tue 22:2x]
+:END:
 ** TODO FR R-008 widget data sources + new charts                             :FE:
 ** TODO FR R-007 RBAC phased (client-side first)                              :FE:BE:
 * OPEN ITEMS
