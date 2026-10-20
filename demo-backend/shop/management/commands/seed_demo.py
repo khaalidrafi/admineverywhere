@@ -1,6 +1,8 @@
-"""Seed demo data: superuser + shop data with 14 days of order history.
+"""Seed demo data: demo users + shop data with 14 days of order history.
 
 Superuser: admin / admin123 (DEV ONLY — obviously never do this in prod).
+Role-holder: auditor / audit123 — non-superuser, Django Group `auditors`
+only, so FR-R007 role gating is demonstrable live, not just in tests.
 Historical `created_at` values give ActivityChart something to draw.
 """
 import random
@@ -44,9 +46,28 @@ class Command(BaseCommand):
         # demonstrates role claims end to end.
         from django.contrib.auth.models import Group
 
+        groups = {}
         for role in ("auditors", "managers"):
-            group, _ = Group.objects.get_or_create(name=role)
-            group.user_set.add(User.objects.get(username="admin"))
+            groups[role] = Group.objects.get_or_create(name=role)[0]
+            groups[role].user_set.add(User.objects.get(username="admin"))
+
+        # A superuser sees EVERY gated surface by design (rbac.ts:
+        # isSuperuser -> allow), so a rig holding only `admin` can never
+        # demonstrate a hidden nav entry or button. Seed a second caller
+        # that holds exactly one role: `auditor` sees the auditors-gated
+        # screens and is denied the managers-only ones, live. DEV ONLY.
+        auditor, created = User.objects.get_or_create(
+            username="auditor", defaults={"email": "auditor@example.com"}
+        )
+        if created:
+            auditor.set_password("audit123")
+            auditor.save()
+        auditor.groups.set([groups["auditors"]])
+        self.stdout.write(
+            "demo logins: admin/admin123 (superuser, auditors+managers — sees "
+            "everything) · auditor/audit123 (non-superuser, auditors only — "
+            "managers-gated surfaces stay hidden)"
+        )
 
         Order.objects.all().delete()
         Product.objects.all().delete()
