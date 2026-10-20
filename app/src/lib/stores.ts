@@ -9,6 +9,7 @@ import { get, writable } from "svelte/store";
 import {
   ApiError,
   fetchBranding as apiFetchBranding,
+  fetchMe as apiFetchMe,
   fetchSchema as apiFetchSchema,
   login as apiLogin,
   resolveApiUrl,
@@ -16,6 +17,7 @@ import {
 } from "./api";
 import { injectBrandCss } from "./branding";
 import { loadSecret, saveSecret } from "./secrets";
+import type { RoleClaims } from "./rbac";
 import type { AdminSchema, AppConfig, Brand } from "./types";
 
 export interface AppState {
@@ -140,9 +142,16 @@ export async function login(username: string, password: string): Promise<void> {
 
 export function logout(): void {
   app.update((a) => ({ ...a, token: "", username: "", schema: null }));
+  claims.set(null);
   localStorage.removeItem("dad.token");
   localStorage.removeItem("dad.username");
 }
+
+/** FR-R007 role claims of the signed-in user. null = the backend gave no
+ *  role source (no mePath in the schema, or the read failed) — in that
+ *  case the client applies NO filtering and every menu/action stays
+ *  visible. This mirrors server truth only; the server is the real gate. */
+export const claims = writable<RoleClaims | null>(null);
 
 export async function loadSchema(): Promise<void> {
   const a0 = get(app);
@@ -151,6 +160,15 @@ export async function loadSchema(): Promise<void> {
   try {
     const schema = await apiFetchSchema(effectiveConfig(), get(app).token || null);
     app.update((a) => ({ ...a, schema, backendDown: false }));
+    // FR-R007: refresh role claims with the schema that documents them.
+    // No mePath = the backend emits no roles = claims stay null = nothing
+    // is filtered. A failed read is the same no-claims answer, never an
+    // error screen — menu filtering is UX, the server stays the gate.
+    if (schema.mePath) {
+      claims.set(await apiFetchMe(effectiveConfig(), get(app).token || null, schema.mePath));
+    } else {
+      claims.set(null);
+    }
   } finally {
     app.update((a) => ({ ...a, schemaLoading: false }));
   }

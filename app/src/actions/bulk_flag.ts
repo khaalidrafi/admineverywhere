@@ -11,6 +11,10 @@ export const meta: ActionMeta = {
   model: "orders",
   confirm: "Flag the selected records? The server writes one audit entry per record.",
   input: "Reason",
+  // FR-R007 reference gating: batch flagging is a managers-only button.
+  // Presentation only — the endpoint stays open to any authenticated
+  // caller; a real deployment mirrors the role in server permission.
+  roles: ["managers"],
   handler: ({ cfg, token, model, rows, input }) =>
     callBulkAction(cfg, token, model, "bulk_flag", {
       ids: rows.map((row) => row.id),
