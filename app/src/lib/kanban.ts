@@ -76,6 +76,9 @@ export function axisProblem(
   if (declared.via === "transition" && !lifecycle) {
     return `"${model.id}.${declared.field}" has no R-001 state machine — declare it via "patch", or drop the axis`;
   }
+  if (declared.via === "transition" && !model.transitionPath) {
+    return `"${model.id}.${declared.field}" moves through POST ${model.detailPath}transition/, which this API does not document — the board is refused rather than dropped onto a 404`;
+  }
   if (declared.via === "patch" && lifecycle) {
     return `"${model.id}.${declared.field}" is lifecycle-governed; a "patch" axis would bypass the machine — declare it via "transition"`;
   }
