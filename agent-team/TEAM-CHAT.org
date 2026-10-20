@@ -465,3 +465,55 @@
   for widgets for the same reason: no component test covers that path).
   NEXT: item 10 (FR R-008 widget data sources + new charts, FE) — unstarted.
   Objective completion is yours to claim, not mine: 10-11 remain.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 23:07 UTC]
+:END:
+  RESULT: DONE — WORK ORDER item 10 (FR R-008 widget data sources + new
+  charts) delivered on ai/turn-20261020-2254 at efc9aa2; board item flipped
+  ONGOING->PENDING with :DELIVERED: evidence.
+  What landed:
+  - app/src/lib/widgets/feed.ts — the meta.data engine. Declaration
+    {endpoint, field, aggregate(count|sum|avg|bucket|group|delta),
+    pollInterval, days, rowCap} is validated (validateWidgetData, never
+    throws), resolved against the LIVE schema (resolveTarget) and fetched
+    ONLY through schema-discovered listPaths via listRecords/
+    fetchAllRecords — the actionPath/exportPath law applied to widget data:
+    endpoint is a model id, never a hand-concatenated URL. Auto-pick when
+    endpoint/field are omitted encodes the repo's learned preferences
+    (readOnly created_at over manual datetimes; enum "status" first).
+    Unresolvable -> friendly empty with a nameable reason, same refusal law
+    as the page registry.
+  - Polling: floor-clamped to 5s; next tick scheduled only after the
+    previous fetch settles (no overlap on a slow API); startWidgetFeed
+    returns a stop fn wired into the $effect cleanup, and a late response
+    after stop cannot resurrect the widget (tested).
+  - Five chart drop-ins alongside the existing line chart: TrendArea (30d
+    area), StatusDonut (enum share, choices-ordered, overflow folded),
+    LeaderBars (top 6), HeatStrip (35d cells), DeltaChip (7d vs previous 7d,
+    polls at 60s — "new" not ÷0 when the old window is empty). All colors
+    from --brand-* only; both widget registries now carry meta.data.
+  - docs/widget-data.md (contract + copy checklist); AGENTS.md: contract
+    bullet extended, layout + docs rows, stale vitest counts corrected
+    198 -> 219 in Commands AND landing-gate law 7.
+  Evidence:
+  - [X] Landing gate green at efc9aa2: pytest 205/205 (9.89s),
+        manage.py check "no issues (0 silenced)", makemigrations --check
+        "No changes detected", vitest 219/219 (16 files, capped
+        NODE_OPTIONS=1024 --maxWorkers=1), vite build 148 modules no
+        warnings, tsc --noEmit = only the 7 known pre-existing errors.
+  - [X] +21 tests: widgetFeed.test.ts (18: validation clamps, schema
+        resolution + refusal reasons, pure aggregation incl. decimal-as-
+        string coercion and choices-ordered groups, polling lifecycle with
+        fake timers) + widgetMount.test.ts (2 REAL rendered-DOM proofs —
+        HeatStrip paints 35 fed day cells, DeltaChip polls at 60s and
+        unmount kills the timer). widgets.test.ts now asserts every
+        discovered meta.data validates and at least one built-in rides the
+        feed contract.
+  - [ ] UNVERIFIED, stated plainly: no browser/Tauri session viewed the
+        dashboard; happy-dom + stubbed fetch is the proof surface.
+  NEXT: item 11 (FR R-007 RBAC phased, FE:BE) — the last open board item.
+  Objective completion is yours to claim, not mine.

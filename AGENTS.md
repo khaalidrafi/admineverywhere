@@ -35,8 +35,15 @@ Product constraints — do not relax:
   Android launcher label is build-time; the desktop window title is
   runtime (Tauri setTitle follows the live brand).
 - New dashboard widget = drop one `.svelte` file in `app/src/widgets/`
-  exporting `const meta = { title, size }` — auto-discovered via
-  `import.meta.glob`. No registry to edit.
+  exporting `const meta = { title, size, data? }` — auto-discovered via
+  `import.meta.glob`. No registry to edit. The optional FR-R008 `data` block
+  (`{endpoint, field, aggregate, pollInterval, days, rowCap}`) is a
+  schema-resolved feed contract, not a URL: `endpoint` is a model id looked
+  up in `schema.byId` and fetched through its discovered `listPath` — never
+  concatenated onto `apiUrl`; an unresolvable source renders a friendly
+  empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
+  the `$effect` cleanup kills the timer. Contract + checklist:
+  `docs/widget-data.md`.
 - New page (non-CRUD module) = drop one `.svelte` file in `app/src/pages/`
   exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`
   — the same glob contract, applied to routes: `app/src/lib/pages/index.ts`
@@ -72,9 +79,9 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (205 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (198 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (219 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
-| `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") |
+| `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
 | `skills/` | the two agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
@@ -85,7 +92,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
 | `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
 | `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
-| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) + `independent-enums.md` (FR-R002 separated-status-fields convention, schema enum-component naming, guardrails) + `csv-export.md` (FR-R005 two export layers + the shared byte-format contract) + `page-registration.md` (FR-R006 page glob contract + the component-test enabler) |
+| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) + `independent-enums.md` (FR-R002 separated-status-fields convention, schema enum-component naming, guardrails) + `csv-export.md` (FR-R005 two export layers + the shared byte-format contract) + `page-registration.md` (FR-R006 page glob contract + the component-test enabler) + `widget-data.md` (FR-R008 meta.data feed contract) |
 
 ## Commands
 
@@ -100,7 +107,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 198 vitest
+cd app && npm test                          # 219 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 205 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
@@ -462,7 +469,7 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
    impossible.
 7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
-   (205 green baseline as of FR-R006; vitest 198) + `demo-backend manage.py check` +
+   (205 green baseline as of FR-R006; vitest 219 as of FR-R008) + `demo-backend manage.py check` +
    `makemigrations --check`. Red work never lands.
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
