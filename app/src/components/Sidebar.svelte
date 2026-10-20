@@ -1,9 +1,20 @@
 <script lang="ts">
+  /** Sidebar — declared nav + schema models.
+   *
+   *  The top and bottom groups are rendered from the page registry (a page
+   *  with `meta.nav` appears here the moment it is dropped into src/pages);
+   *  only the Models group is generated from the OpenAPI schema, because that
+   *  is data, not a module.
+   */
   import { app, logout } from "../lib/stores";
-  import { navigate, route } from "../lib/router";
+  import { navigate, route, isActive } from "../lib/router";
+  import { navPages, pageHref } from "../lib/pages";
   import Icon from "./Icon.svelte";
 
   let { onnavigate }: { onnavigate?: () => void } = $props();
+
+  const mainNav = $derived(navPages("main"));
+  const settingsNav = $derived(navPages("settings"));
 
   function go(hash: string) {
     navigate(hash);
@@ -28,14 +39,16 @@
   </div>
 
   <nav class="flex-1 overflow-y-auto px-3 pb-4">
-    <button
-      class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-        {$route.name === 'dashboard' ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
-      onclick={() => go("#/")}
-    >
-      <Icon name="grid" size={16} />
-      Dashboard
-    </button>
+    {#each mainNav as page (page.id)}
+      <button
+        class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
+          {isActive($route.path, page.path) ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
+        onclick={() => go(pageHref(page))}
+      >
+        <Icon name={page.icon} size={16} />
+        {page.title}
+      </button>
+    {/each}
 
     <div class="mt-4 px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text/40">
       Models
@@ -49,7 +62,7 @@
       {#each $app.schema.models as model (model.id)}
         <button
           class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-            {$route.name === 'model' && $route.id === model.id ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
+            {isActive($route.path, `/m/${model.id}`) ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
           onclick={() => go(`#/m/${model.id}`)}
         >
           <Icon name="table" size={16} />
@@ -61,20 +74,24 @@
     {/if}
   </nav>
 
-  <!-- settings -->
-  <div class="border-t border-text/10 px-3 py-3">
-    <div class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text/40">
-      Settings
+  <!-- settings: every page that declared nav: "settings" -->
+  {#if settingsNav.length}
+    <div class="border-t border-text/10 px-3 py-3">
+      <div class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text/40">
+        Settings
+      </div>
+      {#each settingsNav as page (page.id)}
+        <button
+          class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
+            {isActive($route.path, page.path) ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
+          onclick={() => go(pageHref(page))}
+        >
+          <Icon name={page.icon} size={16} />
+          {page.title}
+        </button>
+      {/each}
     </div>
-    <button
-      class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-        {$route.name === 'branding' ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
-      onclick={() => go("#/branding")}
-    >
-      <Icon name="gear" size={16} />
-      Branding
-    </button>
-  </div>
+  {/if}
 
   <!-- footer -->
   <div class="px-3 py-3">
