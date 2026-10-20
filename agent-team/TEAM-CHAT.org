@@ -391,3 +391,77 @@
   the second free-enum demo model suggestion still stands.
   NEXT: item 9 (FR R-006 page registration, FE) — unstarted; items 10-11
   behind it. Objective completion is yours to claim, not mine: 9-11 remain.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 22:52 UTC]
+:END:
+  RESULT: DONE — WORK ORDER item 9 (FR R-006 page registration) delivered;
+  board item flipped ONGOING->PENDING with :DELIVERED: evidence at commit
+  87b730d (this seat's close-out) on top of 15c8073 (the BLOCKED segment that
+  wrote the feature). Same shape as item 8: the feature was already in the
+  tree, the BLOCKED run could not verify it, could not document it and left
+  one new build warning behind — this segment did all three.
+  What the feature is (verify before merging, then it is the last shared-file
+  fork in the client): one .svelte in app/src/pages exporting
+  meta{title,path,nav,icon,order,standalone} from <script module> registers
+  its own route AND its own sidebar entry. lib/router.ts now owns NO route
+  table (it is injected by lib/pages/index.ts via setPages()), Shell.svelte
+  imports NO page, Sidebar.svelte types NO entry — the three-file edit per
+  module is gone. A declaration that cannot be honoured is REFUSED into
+  refusedPages with a nameable reason and the Modules page renders that list,
+  so a broken drop-in is visible rather than silent (same law as axisProblem
+  and the schema-gated exportPath). Login became a registered standalone page,
+  so a client that ships its own sign-in screen drops in a file instead of
+  forking App.svelte.
+  Evidence:
+  - [X] Landing gate green at 87b730d: pytest 205/205 (-p no:cacheprovider,
+        9.98s), manage.py check "no issues (0 silenced)", makemigrations
+        --check "No changes detected", vitest 198/198 (163 baseline + pages
+        27 + shell 8), vite build green (142 modules), tsc --noEmit 7 errors
+        — all 7 pre-existing (DataTable/RecordForm/branding tests + api.ts:152),
+        none in a file this item touched.
+  - [X] LIVE drop-in proof, no browser needed: added a scratch
+        ScratchProbe.svelte to src/pages and touched NOTHING else. The
+        production build bundled it (dist/assets/index-DAEJ2oCJ.js carries
+        "scratch-probe"), pages+shell suites stayed green (35/35) and the
+        "no shipped page is refused" assertion still passed. Scratch file
+        deleted; tree is clean (git status shows only .turn-inside.sh, the
+        harness's own untracked script — left alone).
+  - [X] Dev-server module-graph smoke on :5173 — 200 with zero transform
+        errors for main.ts, lib/pages/index.ts, lib/router.ts, Shell.svelte,
+        Modules.svelte, Login.svelte.
+  - [X] My close-out delta: AGENTS.md had ZERO R-006 presence (no hard-won
+        bullet, no layout row, no docs/ row) — now it has all four, and the
+        stale suite counts that mislead every new seat (58 vitest / 175
+        pytest in Commands AND in LANDING GATE law 7) corrected to 198/205.
+        docs/page-registration.md cited a function that does not exist
+        ("pageProblem()") — corrected to the real collectPages()/
+        patternProblem(). The two <svelte:component> tags 15c8073 introduced
+        (App.svelte:35, Shell.svelte:53) warned on every build; replaced with
+        the runes-mode {@const Page} + <Page {...$route.params} /> form and
+        covered by the existing shell tests, which stayed green.
+  DESIGN CALL to review (not mine to overturn): the registry calls setPages()
+  as an import-time side effect, so "the route table exists" and "lib/pages
+  was imported" are the same fact. It buys the one-file promise and it is why
+  App.svelte can render the auth page without importing it. The cost is an
+  import-order dependency — any future module that resolves a route must
+  import lib/pages (directly or transitively), not just lib/router.
+  CLOSED AS A SIDE EFFECT, worth noting because it was filed twice as the
+  blocker for items 8-11: the segment's vite.config.ts change
+  (resolve.conditions ["browser"] + test.server.deps.inline [/svelte/]) is the
+  fix for "the mount() harness blocks component proof" (my 21:05 and 22:14
+  reports both left "[ ] nobody clicked it in a browser"). shell.test.ts is
+  the repo's first real rendered-DOM suite. So the browser caveat on items 7
+  and 8 is now partly retired for the shell/nav/routing surface: a real
+  component was mounted, a real hashchange was dispatched, the real DOM was
+  asserted.
+  STILL UNVERIFIED, stated plainly: no browser/Tauri session — nobody clicked
+  a sidebar entry in a real window. Pre-existing a11y warnings on
+  ModelPage.svelte:419/420/483/485 and RecordForm.svelte:159 were NOT touched
+  (out of item scope, and Dashboard.svelte:27 still uses <svelte:component>
+  for widgets for the same reason: no component test covers that path).
+  NEXT: item 10 (FR R-008 widget data sources + new charts, FE) — unstarted.
+  Objective completion is yours to claim, not mine: 10-11 remain.
