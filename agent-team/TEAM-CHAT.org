@@ -583,3 +583,62 @@
   NEXT: none — items 1-11 of the WORK ORDER all carry PENDING-with-
   :DELIVERED: evidence. Objective completion is yours to verify and claim,
   not mine; per chain law I am not touching OBJECTIVE-STATE.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 23:36 UTC]
+:END:
+  RESULT: DONE — the self-flagged follow-up from my 23:37 report is
+  delivered as FR-R007-LIVE on ai/turn-20261020-2327 at 83d51be; board item
+  opened ONGOING and flipped to PENDING with :DELIVERED: evidence.
+  QUEUE STATE FIRST, so you can decide the objective: WORK ORDER items 1-11
+  ALL carry PENDING-with-delivered-evidence. There was no first-unelected
+  item to take this segment, so instead of idling (which would only add a
+  no-progress segment to your stall accounting) I closed the single
+  UNVERIFIED row my last two reports left behind. If you consider that
+  out-of-band work, revert 83d51be — it is additive and gate-green.
+  THE GAP, stated precisely: rbac.ts roleAllows() short-circuits for
+  superusers (correct by design), and the demo rig's ONLY user was
+  `admin`, a superuser. So every gate case a human could click was an
+  ACCEPTANCE case — the rejection path existed only in unit + mount tests.
+  What landed:
+  - seed_demo now creates a second caller: `auditor` / `audit123`,
+    non-staff, non-superuser, Django Group `auditors` ONLY (idempotent
+    get_or_create + groups.set, so re-seeding cannot drift claims). Same
+    DEV-ONLY credential convention as admin123.
+  - +2 pytest contract tests (test_rbac_roles.py): the seeded caller's
+    GET /api/me/ is exactly {username:"auditor", is_staff:false,
+    is_superuser:false, roles:["auditors"]}; admin keeps both groups;
+    double-seed stable.
+  - +2 vitest tests (rbac.test.ts) that feed the two captured LIVE bodies
+    through the DISCOVERED registry (`actions`, not a hand-made source):
+    bulk_flag survives for admin, disappears for auditor, and the ungated
+    record action `flag` stays for both. ModelPage.svelte:60-61 is where
+    those two lists become buttons.
+  - docs: rbac.md gains a demo-user table + the click-it recipe + a new
+    copy-checklist rule (seed a NON-superuser per role or the rejection
+    path is undemonstrable); AGENTS.md seed rationale, demo-login line and
+    counts (210->212 pytest, 233->235 vitest, incl. landing-gate law 7);
+    README names the role-demo login.
+  Evidence (measured at 83d51be):
+  - [X] Landing gate green: pytest 212/212 (-p no:cacheprovider, 11.4s),
+        manage.py check "no issues (0 silenced)", makemigrations --check
+        "No changes detected", vitest 235/235 (17 files, capped
+        NODE_OPTIONS=1024 --maxWorkers=1), vite build 2.01s zero warnings,
+        tsc --noEmit = only the 7 known pre-existing errors.
+  - [X] LIVE rig, freshly migrated + seeded, runserver on 127.0.0.1:8013,
+        token per user via POST /api/auth/token/ (both 40 chars):
+        admin   -> {"is_staff":true,"is_superuser":true,"roles":["auditors","managers"]}
+        auditor -> {"username":"auditor","is_staff":false,"is_superuser":false,"roles":["auditors"]}
+        anon    -> 401. Rig stopped after the smoke; no listener left behind.
+  - [ ] STILL UNVERIFIED, and it is not a code gap: nobody watched the
+        "Flag batch" button vanish in a real browser/Tauri window. The
+        server body is now live-proven and the decision is registry-proven,
+        but the final human E2E pass is yours or the Owner's — I cannot
+        claim a screenshot I did not take.
+  No model/migration impact (auth Group/User rows + seed data only).
+  NEXT: nothing queued for this seat. Either you gate items 1-11 and claim
+  OBJECTIVE-STATE, or dispatch new work. Per chain law I am not touching
+  OBJECTIVE-STATE or any Lead-owned file.
