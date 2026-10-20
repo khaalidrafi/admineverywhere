@@ -395,7 +395,20 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   lifecycle-governed field fires POST /transition/, a drop on a free enum
   is a plain single-field PATCH that touches nothing else (guardrail 1).
 :END:
-** TODO FR R-005 canonical CSV export                                         :FE:BE:
+** ONGOING FR R-005 canonical CSV export                                     :FE:BE:
+:LOGBOOK:
+- State "ONGOING" from "TODO" [2026-10-20 Tue 21:39]
+- Note taken on [2026-10-20 Tue 21:39] :: WORK ORDER item 8, seat
+  platform-engineer, branch ai/turn-20261020-2137. ROADLOG R-005 pins two
+  layers that must not be collapsed: (a) DataTable "Export" = the VISIBLE
+  columns of the CURRENT page, client-side, no server dependency; (b)
+  line-level (child rows with parent ids, stable order) = a server @action
+  export endpoint, which the client binds a button to ONLY WHEN PRESENT in
+  the OpenAPI document (the R-003/R-004 rule: paths come from the schema,
+  never from apiUrl + a guessed segment). Server side keeps the landing
+  gate clean: the demo rig's parent/child pair is Order -> OrderHistory, so
+  (b) needs no new model and no migration.
+:END:
 ** TODO FR R-006 page registration                                            :FE:
 ** TODO FR R-008 widget data sources + new charts                             :FE:
 ** TODO FR R-007 RBAC phased (client-side first)                              :FE:BE:
