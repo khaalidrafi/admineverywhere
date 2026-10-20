@@ -6,7 +6,7 @@ Every failure is normalized to ApiError so the UI can react:
 - status:400     -> validation errors (field-level display)
 */
 import { normalizeOpenAPI } from "./openapi";
-import type { AdminSchema, AppConfig, Brand, ModelSpec, Page, RecordRow } from "./types";
+import type { AdminSchema, AppConfig, AuditEntry, Brand, ModelSpec, Page, RecordRow } from "./types";
 
 export class ApiError extends Error {
   status?: number;
@@ -216,73 +216,101 @@ export function fieldErrors(detail: any): Record<string, string> {
 }
 
 
+/** Build the URL of a DRF router `@action` from a schema-discovered list path.
+ *  detail=True  -> <listPath><id>/<slug>/
+ *  detail=False -> <listPath><slug>/
+ *  Paths come from the OpenAPI document (model.listPath), never from string
+ *  guesses at the url segment — apiUrl is only ever the base origin. */
+export function actionPath(model: ModelSpec, slug: string, recordId?: string | number): string {
+  const base = model.listPath.replace(/\/+$/, "") + "/";
+  if (recordId === undefined || recordId === null || recordId === "") return `${base}${slug}/`;
+  return `${base}${encodeURIComponent(String(recordId))}/${slug}/`;
+}
+
 /** POST /api/<model>/<id>/transition/ — perform a lifecycle transition.
- *  Returns updated record on 200; throws ApiError with detail.reason on 409. */
+ *  Returns the updated record on 200; on 409 throws ApiError whose
+ *  detail carries the guard `reason` (R-001 error shape). */
 export async function transitionRecord(
   cfg: AppConfig,
   token: string | null,
-  modelId: string,
+  model: ModelSpec,
   recordId: string | number,
   targetStatus: string,
 ): Promise<RecordRow> {
-  const url = cfg.apiUrl.replace(/\/+$/, "") + modelId + "/" + recordId + "/transition/";
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) headers.Authorization = `Token ${token}`;
-  
-  let resp: Response;
-  try {
-    resp = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ transition: targetStatus }),
-    });
-  } catch (err: any) {
-    throw new ApiError(`Cannot reach ${url}`, { network: true, detail: redactSecrets(err) });
-  }
-  
-  const text = await resp.text();
-  let data: any = text;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {}
-  
-  if (!resp.ok) {
-    // 409 Conflict: { reason: "..." }
-    // 400/401/404: standard DRF errors
-    throw new ApiError(`Transition failed (${resp.status})`, {
-      status: resp.status,
-      detail: redactSecrets(data),
-    });
-  }
-  
-  return data as RecordRow;
+  return request<RecordRow>(cfg, token, actionPath(model, "transition", recordId), {
+    method: "POST",
+    body: JSON.stringify({ transition: targetStatus }),
+  });
 }
 
-/** GET /api/<model>/<id>/history/ — fetch lifecycle history (append-only, oldest first). */
+/** GET /api/<model>/<id>/history/ — lifecycle history (append-only, oldest first). */
 export async function fetchHistory(
   cfg: AppConfig,
   token: string | null,
-  modelId: string,
+  model: ModelSpec,
   recordId: string | number,
-): Promise<Array<{id: number; from_status: string; to_status: string; actor: string | null; created_at: string}>> {
-  const url = cfg.apiUrl.replace(/\/+$/, "") + modelId + "/" + recordId + "/history/";
-  const headers: Record<string, string> = {};
-  if (token) headers.Authorization = `Token ${token}`;
-  
-  let resp: Response;
-  try {
-    resp = await fetch(url, { headers });
-  } catch (err: any) {
-    throw new ApiError(`Cannot reach ${url}`, { network: true, detail: redactSecrets(err) });
+): Promise<Array<{ id: number; from_status: string; to_status: string; actor: string | null; created_at: string }>> {
+  const data = await request<any>(cfg, token, actionPath(model, "history", recordId));
+  return Array.isArray(data) ? data : data?.results ?? [];
+}
+
+/** POST a record-scope custom action (FR-R003): <listPath><id>/<slug>/.
+ *  Reference shape — flag: body {reason} -> 201 with one audit entry;
+ *  guard failures -> 400 with {reason}. The response may be a single entry
+ *  or a list; both normalize to an array. */
+export async function callRecordAction(
+  cfg: AppConfig,
+  token: string | null,
+  model: ModelSpec,
+  recordId: string | number,
+  slug: string,
+  body: Record<string, any> = {},
+): Promise<AuditEntry[]> {
+  const data = await request<any>(cfg, token, actionPath(model, slug, recordId), {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return toEntries(data);
+}
+
+/** POST a bulk-scope custom action (FR-R003): <listPath><slug>/.
+ *  Reference shape — bulk_flag: body {ids, reason} -> 201 with one audit
+ *  entry per targeted record; unknown ids -> 400 {reason}, nothing written. */
+export async function callBulkAction(
+  cfg: AppConfig,
+  token: string | null,
+  model: ModelSpec,
+  slug: string,
+  body: Record<string, any> = {},
+): Promise<AuditEntry[]> {
+  const data = await request<any>(cfg, token, actionPath(model, slug), {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return toEntries(data);
+}
+
+function toEntries(data: any): AuditEntry[] {
+  if (Array.isArray(data)) return data as AuditEntry[];
+  if (data && typeof data === "object") return [data as AuditEntry];
+  return [];
+}
+
+/** GET /api/audit/ — the append-only log, newest first (the R-003 ordering
+ *  ruling: triage wants the latest event on top). Filters back the record
+ *  sub-view and the R-007 activity screen; object_type is the model's
+ *  singular name, object_id the record pk. */
+export async function fetchAudit(
+  cfg: AppConfig,
+  token: string | null,
+  opts: { objectType?: string; objectId?: string | number; page?: number } = {},
+): Promise<Page<AuditEntry>> {
+  const params = new URLSearchParams();
+  if (opts.objectType) params.set("object_type", opts.objectType);
+  if (opts.objectId !== undefined && opts.objectId !== null && opts.objectId !== "") {
+    params.set("object_id", String(opts.objectId));
   }
-  
-  if (!resp.ok) {
-    const text = await resp.text();
-    throw new ApiError(`History fetch failed (${resp.status})`, {
-      status: resp.status,
-      detail: text,
-    });
-  }
-  
-  return await resp.json();
+  if (opts.page) params.set("page", String(opts.page));
+  const qs = params.toString();
+  return toPage<AuditEntry>(await request<any>(cfg, token, `/api/audit/${qs ? `?${qs}` : ""}`));
 }

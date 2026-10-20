@@ -187,6 +187,81 @@ CLOCK: [2026-10-19 Mon 03:34]--[2026-10-19 Mon 03:41] =>  0:07
   order is R-001 -> R-003). Clock-in staged post-hoc: no PAT in session, so
   ai/main writes are staged on night/stage-main until a PAT lands.
 :END:
+*** PENDING FR-R003-FE — action registry + audit sub-view (client side)    :FE:
+:LOGBOOK:
+CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
+- State "PENDING" from "ONGOING" [2026-10-20 Tue 21:05]
+- Note taken on [2026-10-20 Tue 21:05] :: :DELIVERED: (seat
+  platform-engineer, WORK ORDER item 5) — :RESULT: DONE for the member scope;
+  the parent R-001/R-003 :BE:FE: headline stays TODO (R-002..R-008 children
+  too) because DONE is Lead-only.
+  Shipped (branch ai/turn-20261020-2052):
+  - Drop-in registry mirroring the widget contract:
+    app/src/lib/actions/index.ts (import.meta.glob over app/src/actions/*.ts
+    at :47, registry map :52), actionsFor(modelId, scope) filter (:60),
+    actionFailureReason (:72) surfacing the BE 400/409 {reason}. meta{label,scope,model?,
+    confirm?,input?,handler} — `input` is the one field added to the doc's
+    sketch (a confirm dialog that must collect the flag reason).
+  - Reference registrations: app/src/actions/flag.ts (record scope),
+    app/src/actions/bulk_flag.ts (bulk scope, ids from the selection).
+  - API surface (app/src/lib/api.ts): actionPath (:224, DRF router rules from
+    the schema-discovered model.listPath), callRecordAction (:261),
+    callBulkAction (:279), fetchAudit with object_type/object_id filters (:303).
+  - DEFECT FIXED EN ROUTE: transitionRecord/fetchHistory built their URLs as
+    apiUrl + model.id (no slash, no path prefix) — every R-001 FE call would
+    have hit http://hostapio… They now share actionPath, and the new tests pin
+    the exact URLs. The FR-R001-FE :DELIVERED: note above verified the
+    renderer by reading files; it did not exercise the endpoints, so this
+    stayed invisible.
+  - UI: DataTable gained a checkbox column (only when a bulk action exists),
+    a selection bar with the bulk buttons, and per-row record-action buttons;
+    the trail button (history icon) is now offered for EVERY model, and the
+    modal shows R-001 history oldest-first plus this record's audit entries
+    newest-first. ModelPage: confirm/input dialog, toast with the count of
+    entries written, list reload + sub-view refresh; a backend without
+    /api/audit/ (404) degrades to the history half instead of erroring.
+  - docs/custom-actions.md §1 "The client half" + fixture-staleness bullet;
+    AGENTS.md layout row + hard-won contract bullet on actionPath.
+  Evidence:
+  - [X] Landing gate: pytest 175/175 (-p no:cacheprovider), manage.py check
+    0 issues, makemigrations --check "No changes detected", vitest 101/101
+    (10 files; +20 new in src/lib/__tests__/actions.test.ts), vite build green
+    (136 modules).
+  - [X] LIVE against the demo rig (runserver :8000, token admin/admin123):
+    POST /api/orders/1/flag/ -> 201 {action order.flag, actor admin};
+    missing reason -> 400 {"reason": "missing required field 'reason'…"};
+    POST /api/orders/bulk_flag/ {ids:[1,2,3]} -> 201 three entries with
+    data {bulk: true, batch: 3}; GET /api/audit/?object_type=order&object_id=1
+    -> count 2, newest-first (id 2 then 1); PATCH /api/audit/1/ -> 404 (no
+    detail route), PUT /api/audit/ -> 405; POST /api/orders/1/transition/
+    {"transition":"paid"} -> 200 and GET …/history/ replays oldest-first.
+  - [ ] UNVERIFIED: no browser/Tauri session on this box (no playwright in
+    app/devDependencies), so the buttons/dialog were never clicked by a human.
+    DOM-level component tests are blocked by a harness limitation, not by the
+    code: vitest resolves svelte to its server build, so mount() throws
+    lifecycle_function_unavailable (three attempts: resolve.conditions
+    browser, server.deps.inline /svelte/, svelte/server render — all hit the
+    mixed client/server internals). Recorded for the FE seat as the follow-up;
+    vite.config.ts left untouched.
+  - [ ] Lead/senior review (branch push runs no CI; DONE is Lead-only).
+- State "ONGOING" from "TODO" [2026-10-20 Tue 20:52]
+- Note taken on [2026-10-20 Tue 20:52] :: Segment opened by platform-engineer
+  (WORK ORDER item 5 — items 1-4 carry :DELIVERED: evidence; child item created
+  here because the parent headline is the :BE:FE: rollup and R-003-BE is DONE).
+  Scope from ROADLOG R-003 + docs/custom-actions.md §1: the client half of the
+  action registry (drop-in .ts exporting meta{label,scope,confirm?,handler}),
+  wired to the shipped POST /api/orders/{id}/flag/ and POST
+  /api/orders/bulk_flag/, with audit entries rendered in the record sub-view
+  sharing the R-001 history UI (GET /api/audit/?object_type=&object_id=).
+:END:
+- Note taken on [2026-10-21 Wed 02:05] :: Segment opened by platform-engineer
+  (WORK ORDER item 5 — items 1-4 carry :DELIVERED: evidence). Scope from
+  ROADLOG R-003: drop-in action registry mirroring the widget contract
+  (one .ts exporting meta{label,scope:record|bulk,confirm?,handler}), wired
+  to the shipped BE @actions (POST /api/orders/{id}/flag/, POST
+  /api/orders/bulk_flag/), audit entries rendered in a record sub-view
+  sharing the R-001 history UI (GET /api/audit/?object_type=&object_id=).
+:END:
 ** TODO FR R-002 document independent-enum pattern                            :DOC:
 ** TODO FR R-004 kanban view                                                  :FE:
 ** TODO FR R-005 canonical CSV export                                         :FE:BE:

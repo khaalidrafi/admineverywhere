@@ -61,6 +61,19 @@ export interface AppConfig {
   schemaPath: string;
 }
 
+/** One append-only audit entry (FR-R003). Loose targeting: object_type is the
+ *  model's singular name, object_id the record pk as a string. */
+export interface AuditEntry {
+  id: number;
+  action: string;
+  object_type: string;
+  object_id: string;
+  actor: string | null;
+  summary: string;
+  data?: Record<string, any>;
+  created_at: string;
+}
+
 export type RecordRow = Record<string, any> & { id?: number | string };
 
 export interface Page<T> {
