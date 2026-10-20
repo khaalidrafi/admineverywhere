@@ -19,6 +19,35 @@ R-003 mirrors the widget contract: the FE registers one `.ts` file exporting
 | `confirm?`        | FE-only dialog; the BE always re-validates |
 | `handler`         | fires the endpoint, then refreshes the record + audit sub-view |
 
+### The client half (shipped on `ai/main`, FR-R003-FE)
+
+* `app/src/lib/actions/index.ts` — the drop-in registry: `import.meta.glob`
+  over `app/src/actions/*.ts`, same no-registry-to-edit promise as widgets.
+  `actionsFor(modelId, scope)` filters by `scope` and by the optional
+  `meta.model` (url segment); omit `model` to offer the action everywhere.
+* A handler receives `{cfg, token, model, rows, input}` and resolves to the
+  audit entries the server wrote (`AuditEntry[]`). Two meta fields extend the
+  original sketch, both FE-only: `meta.input` (a label, e.g. `"Reason"`) makes
+  the confirm dialog collect one text value and pass it as `input`;
+  `meta.confirm` stays the yes/no guard.
+* `app/src/actions/flag.ts` (record) and `app/src/actions/bulk_flag.ts` (bulk)
+  are the reference registrations, wired to the two BE endpoints below via
+  `callRecordAction` / `callBulkAction`.
+* URL building is centralized in `actionPath(model, slug, recordId?)`
+  (`app/src/lib/api.ts`) and is derived from the schema-discovered
+  `model.listPath` — never from a string guess at the url segment, and never by
+  concatenating `apiUrl + modelId` (that form silently produced
+  `http://hostapi…` for the R-001 transition/history calls; both now share this
+  helper and are pinned by tests).
+* `ModelPage` renders record actions as per-row buttons, bulk actions over the
+  `DataTable` selection (a checkbox column appears only when a bulk action is
+  registered), then reloads the list and refreshes the open record sub-view.
+  A rejected action surfaces the server `reason` (400/409 shape), never a bare
+  status code.
+* The record sub-view (history icon, now available for every model) shows the
+  R-001 lifecycle trail oldest-first and, below it, this record's audit entries
+  newest-first — `GET /api/audit/?object_type=<model singular>&object_id=<pk>`.
+
 ## 2. The audit log (append-only by construction)
 
 `AuditEntry` (`demo-backend/shop/models.py`) — one loose-coupled table any
@@ -133,7 +162,11 @@ and both action request bodies are documented automatically
   `OrderHistory` is the lifecycle trail; `AuditEntry` is for custom actions.
 - `seed_demo` does not fabricate audit entries; the log fills as actions run.
 - The OpenAPI fixture used by the client's normalizer tests
-  (`app/src/lib/__tests__/fixtures/openapi.json`) predates these endpoints
-  and should be recaptured when the frontend integrates them.
+  (`app/src/lib/__tests__/fixtures/openapi.json`) still predates these
+  endpoints (9 paths, no `/api/audit/`). The FE integration does not depend on
+  it — the action and audit URLs are built at runtime from `model.listPath` and
+  the fixed `/api/audit/` surface — but recapturing it adds an `Audit` model to
+  the normalized schema and moves the `schemaSummary` model-count assertion in
+  `openapi.test.ts`, so it is tracked as its own follow-up.
 - Test suite on this branch: `pytest` 175/175 (151 before FR-R003, +24) —
   run `cd demo-backend && python -m pytest ../plugin/tests`.
