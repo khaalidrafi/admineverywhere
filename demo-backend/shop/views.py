@@ -29,6 +29,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
+from rest_framework.renderers import BaseRenderer, BrowsableAPIRenderer, JSONRenderer
 from rest_framework.response import Response
 
 from .models import (
@@ -57,6 +58,35 @@ from .serializers import (
 def _request_actor(request):
     """The authenticated request user, or None for anonymous callers."""
     return request.user if request.user.is_authenticated else None
+
+
+class CSVTextRenderer(BaseRenderer):
+    """Makes ``Accept: text/csv`` negotiable, which is the whole job.
+
+    DRF performs content negotiation in ``initialize_request()`` — BEFORE the
+    view body runs — so an action that answers a plain ``HttpResponse`` still
+    406s when no renderer class matches the request header. The thin client asks
+    for ``text/csv`` (the shape the OpenAPI document promises), and the shipped
+    default pair (JSON + browsable API) does not satisfy it: measured as a hard
+    406 against the live rig, while every APIClient test stayed green because
+    APIClient sends ``Accept: */*``.
+
+    Nothing is ever rendered through this class — ``render()`` exists to satisfy
+    the interface. Keep it next to the JSON/browsable pair rather than replacing
+    them: dropping ``BrowsableAPIRenderer`` would 406 a browser address-bar
+    download, and dropping ``JSONRenderer`` would break OPTIONS/Meta.
+    """
+
+    media_type = "text/csv"
+    format = "csv"
+    charset = "utf-8"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if isinstance(data, (bytes, bytearray)):
+            return bytes(data)
+        if isinstance(data, str):
+            return data.encode(self.charset)
+        return b""
 
 
 class SearchableModelViewSet(viewsets.ModelViewSet):
@@ -239,7 +269,14 @@ class OrderViewSet(SearchableModelViewSet):
     # pagination_class=None for the same reason history is: the default
     # PageNumberPagination would document a paginated wrapper this endpoint
     # never emits — a CSV body has no page shape at all.
-    @action(detail=False, methods=["get"], pagination_class=None)
+    @action(
+        detail=False,
+        methods=["get"],
+        pagination_class=None,
+        # text/csv has to be negotiable or the client's own Accept header 406s
+        # before this body ever runs (see CSVTextRenderer).
+        renderer_classes=[JSONRenderer, BrowsableAPIRenderer, CSVTextRenderer],
+    )
     def export(self, request):
         orders = (
             self.get_queryset()
