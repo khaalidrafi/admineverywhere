@@ -17,6 +17,9 @@
     actions = [],
     bulkActions = [],
     onaction,
+    onexport,
+    onserverexport,
+    exporting = false,
   }: {
     model: ModelSpec;
     rows: RecordRow[];
@@ -29,6 +32,14 @@
     actions?: RegisteredAction[];
     bulkActions?: RegisteredAction[];
     onaction?: (action: RegisteredAction, rows: RecordRow[]) => void;
+    /** FR-R005 layer 1: CSV of the columns this table shows, of this page.
+     *  The visible set is decided here (the table is the truth), so the page
+     *  gets the columns and owns the download + toast. */
+    onexport?: (columns: FieldSpec[]) => void;
+    /** FR-R005 layer 2: only bound when the schema documents an export
+     *  endpoint (model.exportPath) — the whole collection, flattened. */
+    onserverexport?: () => void;
+    exporting?: boolean;
   } = $props();
 
   const columns = $derived(model.fields.filter((f) => f.type !== "json").slice(0, 6));
@@ -55,6 +66,24 @@
 </script>
 
 <div class="card overflow-hidden">
+  {#if onexport || onserverexport}
+    <div class="flex flex-wrap items-center justify-end gap-2 border-b border-text/10 px-4 py-2 text-xs">
+      {#if onexport}
+        <button class="btn btn-ghost px-3 py-1.5" disabled={exporting}
+                title="CSV of the {columns.length} columns shown, for this page's {rows.length} record(s)"
+                onclick={() => onexport(columns)}>
+          <Icon name="download" size={14} /> Export table
+        </button>
+      {/if}
+      {#if onserverexport}
+        <button class="btn btn-ghost px-3 py-1.5" disabled={exporting}
+                title="Full export from the server: every record, flattened line-level"
+                onclick={onserverexport}>
+          <Icon name="download" size={14} /> {exporting ? "Exporting…" : "Full export"}
+        </button>
+      {/if}
+    </div>
+  {/if}
   {#if bulkActions.length > 0 && selectedRows.length > 0}
     <div class="flex flex-wrap items-center gap-2 border-b border-text/10 bg-text/5 px-4 py-2 text-sm">
       <span class="text-text/60">{selectedRows.length} selected</span>
