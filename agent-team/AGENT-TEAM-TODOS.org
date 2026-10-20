@@ -262,9 +262,51 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
   /api/orders/bulk_flag/), audit entries rendered in a record sub-view
   sharing the R-001 history UI (GET /api/audit/?object_type=&object_id=).
 :END:
-** ONGOING FR R-002 document independent-enum pattern                          :DOC:
+** PENDING FR R-002 document independent-enum pattern                          :DOC:
 :LOGBOOK:
-CLOCK: [2026-10-20 Tue 21:11]
+CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
+- State "PENDING" from "ONGOING" [2026-10-20 Tue 21:18]
+- Note taken on [2026-10-20 Tue 21:18] :: :DELIVERED: (seat
+  platform-engineer, WORK ORDER item 6) — :RESULT: DONE for the member scope;
+  DONE stays Lead-only. Branch ai/turn-20261020-2110, commit 692f7ef
+  (board flip 126a976 separate).
+  Shipped: docs/independent-enums.md (new, 6 sections) + AGENTS.md hard-won
+  contract bullet + docs/ layout row. ROADLOG R-002 asked for the DOCUMENT
+  half of an existing pattern, so every claim was measured, not asserted:
+  - [X] drf-spectacular 0.30 enum hoisting keyed on the PROPERTY NAME, not the
+        model (hooks.py:67-95) — proven by driving the real
+        postprocess_schema_enums hook: same set under one name -> one shared
+        StatusEnum; different sets -> OrderStatusEnum + ShipmentStatusEnum
+        (independence preserved); unresolvable collision -> hash-suffixed name
+        + warning (hooks.py:96-103), also plumbing.py:795-803
+        "2 components with identical names … incorrect schema". Reproduce
+        snippet in the doc §5 runs verbatim.
+  - [X] client contract verified at HEAD: choices are per-field
+        (openapi.ts:39-40, :81-92), RecordForm renders one select per enum
+        field (:190-197), lifecycle governance keyed by MODEL id
+        (statusTransitions.ts:23-34, hasLifecycle :55-57), DataTable chip
+        compares col.name === statusField within that model (:35, :178-179).
+        Five reviewer-runnable guardrails written, incl. "enum value order is
+        never lifecycle order" (filter params get sorted(enum),
+        plumbing.py:400-407).
+  - [X] R-004 dependency recorded (doc §6): a kanban axis must be DECLARED,
+        never guessed from "the field named status"; drag fires the R-001
+        transition API only for a lifecycle field, free enums are a plain PATCH.
+  - [X] Landing gate green at this tip: pytest 175/175 (-p no:cacheprovider,
+        11.77s), manage.py check "no issues (0 silenced)", makemigrations
+        --check "No changes detected". Diff is docs-only (AGENTS.md, docs/),
+        so vitest not re-run — app/ untouched.
+  FOUND, REPORTED, NOT FIXED (out of a DOC item's scope; openapi.ts is FE-seat
+  code): blank/nullable choices fields arrive as
+  {oneOf:[{$ref PriorityEnum},{$ref BlankEnum}]} (hooks.py:145-164,
+  ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE defaults True, settings.py:120) and
+  deref() follows a top-level $ref only (openapi.ts:26-32), so such a field is
+  not detected as enum and falls through to type "text" (:70-72) — the select
+  silently degrades to free text, no error. grep confirms zero oneOf/anyOf
+  handling in app/src. The demo rig has no blank=True choices field, which is
+  why the shipped fixture never showed it. Filed as a follow-up in
+  TEAM-CHAT (item 6 report) for the FE seat: resolve oneOf in
+  fieldTypeOf/propToField + recapture a fixture containing the shape.
 - State "ONGOING" from "TODO" [2026-10-20 Tue 21:11]
 - Note taken on [2026-10-20 Tue 21:11] :: Segment opened by platform-engineer
   (WORK ORDER item 6 — items 1-5 carry :DELIVERED: evidence; items 1-4 verified
