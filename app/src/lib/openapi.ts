@@ -168,6 +168,13 @@ export function normalizeOpenAPI(doc: any): AdminSchema {
     const detailPath = `${path}{id}/`;
     const labelField = fields.find((f) => LABEL_CANDIDATES.includes(f.name))?.name ?? "id";
 
+    // FR-R005 layer 2: a server-side line-level export is bound ONLY when the
+    // document carries GET <listPath>export/. Require get && !post — a path
+    // with both is a model list, not an action, and guessing here is how a
+    // bare `apiUrl + "export"` concatenation once broke the R-001 calls.
+    const exportPathItem = paths[`${path}export/`];
+    const serverExport = exportPathItem?.get && !exportPathItem?.post ? `${path}export/` : undefined;
+
     models.push({
       id,
       name: titleCase(singular),
@@ -177,6 +184,7 @@ export function normalizeOpenAPI(doc: any): AdminSchema {
       fields,
       byName: Object.fromEntries(fields.map((f) => [f.name, f])),
       labelField,
+      ...(serverExport ? { exportPath: serverExport } : {}),
     });
   }
 

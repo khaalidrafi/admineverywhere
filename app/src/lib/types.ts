@@ -38,6 +38,10 @@ export interface ModelSpec {
   byName: Record<string, FieldSpec>;
   /** best guess for a human label field (FK dropdowns) */
   labelField: string;
+  /** schema-discovered line-level CSV export endpoint (FR-R005 layer 2), when
+   *  the backend documents GET <listPath>export/ — the client binds its
+   *  "Full export" button to this and never to a guessed path. */
+  exportPath?: string;
 }
 
 export interface AdminSchema {
