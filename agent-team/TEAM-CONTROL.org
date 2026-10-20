@@ -24,3 +24,9 @@
 - Deadline rationale: Owner order 2026-10-20 19:21Z — "teamify
   khaalidrafi/admincraft in parallel. I wanna see ALL its TODOs done by
   the morning."
+- DUAL-REPO LEAD + CHAT ROUTING (Owner #hq 19:56Z): the Lead
+  (glm-5.3-flash) serves BOTH repos (agent-team.el + admincraft); each
+  repo's GLM team chat mirrors to its RESPECTIVE Discord channel —
+  finalize posts the chain verdict + this segment's new TEAM-CHAT.org
+  entries to secret DISCORD_WEBHOOK_TEAM_ADMINCRAFT (silent until the
+  Owner creates the channel webhook and sets the secret).
