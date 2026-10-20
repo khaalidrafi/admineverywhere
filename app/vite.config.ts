@@ -23,5 +23,18 @@ export default defineConfig({
   },
   // happy-dom (not "node") because secrets/widgets tests touch localStorage
   // and location (via router.ts), which only exist under a DOM environment.
-  test: { environment: "happy-dom", include: ["src/**/*.test.ts"] },
+  //
+  // Svelte 5 + Vitest: which build of svelte a component is compiled against is
+  // chosen by the "browser" export condition. Vitest resolves through the SSR
+  // pipeline, whose default for svelte's "." export is index-server.js, where
+  // mount() throws "lifecycle_function_unavailable" — that single condition is
+  // why .svelte components were untestable for real until FR R-006. `inline`
+  // keeps every svelte import in one transformed graph (no second copy of
+  // svelte-internals, the failure mode optimizeDeps.include already guards).
+  resolve: { conditions: ["browser"] },
+  test: {
+    environment: "happy-dom",
+    include: ["src/**/*.test.ts"],
+    server: { deps: { inline: [/svelte/] } },
+  },
 });
