@@ -498,8 +498,33 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   NEXT: item 10 (FR R-008 widget data sources + new charts, FE).
 - State "ONGOING" from "TODO" [2026-10-20 Tue 22:2x]
 :END:
-** ONGOING FR R-008 widget data sources + new charts                           :FE:
+** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-20 Tue 23:05 UTC] :: :DELIVERED:
+  WORK ORDER item 10, seat platform-engineer, branch ai/turn-20261020-2254,
+  sha efc9aa2. What landed: meta.data feed contract
+  {endpoint, field, aggregate(count|sum|avg|bucket|group|delta), pollInterval,
+  days, rowCap} validated + schema-resolved by app/src/lib/widgets/feed.ts
+  (endpoint = model id via schema.byId, fetched ONLY through the discovered
+  listPath via listRecords/fetchAllRecords; pollInterval floor-clamped 5s,
+  non-overlapping ticks, $effect cleanup kills the timer; unresolvable
+  source -> friendly empty with nameable reason, never a crash — same refusal
+  law as pages/axes/exportPath). Five new drop-ins alongside the line chart:
+  TrendArea (30d area), StatusDonut (enum share), LeaderBars (top groups),
+  HeatStrip (35d strip), DeltaChip (7d momentum; the polling proof).
+  Both registries carry data through (app/src/widgets/index.ts +
+  app/src/lib/widgets/index.ts). docs/widget-data.md written; AGENTS.md
+  contract bullet + layout + docs rows + suite counts updated (198->219).
+  Evidence: landing gate green at efc9aa2 — pytest 205/205 (-p
+  no:cacheprovider, 9.89s), manage.py check "no issues (0 silenced)",
+  makemigrations --check "No changes detected", vitest 219/219 (16 files,
+  capped NODE_OPTIONS=1024 --maxWorkers=1), vite build green 148 modules no
+  warnings, tsc --noEmit only the 7 known pre-existing errors. NEW THIS
+  ITEM: real mounted-DOM widget proofs (widgetMount.test.ts) — HeatStrip
+  renders 35 day cells fed through stubbed fetch via listPath; DeltaChip
+  polls at 60s and unmount cancels the timer (3 min idle -> no 3rd fetch).
+  UNVERIFIED, stated plainly: no browser/Tauri session clicked the dashboard;
+  live-rig visual check pending.
 - State "ONGOING" from "TODO" [2026-10-20 Tue 23:0x] :: Seat platform-engineer,
   WORK ORDER item 10. Scope per ROADLOG R-008: optional meta
   {data:{endpoint,aggregate,pollInterval}}, polling via existing listRecords
