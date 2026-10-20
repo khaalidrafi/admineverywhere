@@ -34,7 +34,11 @@ concurrency:
 permissions:
   contents: write
   actions: write   # self-chain: finalize re-dispatches the next turn
-  workflows: write # turn branches may carry workflow deltas vs moved main (run 39488529938: push REJECTED — stale workflow content, no workflows scope)
+  # NO `workflows: write` — GitHub rejects the KEY at workflow-creation time:
+  # every run startup-FAILS with zero jobs (agent-team.el runs 39455051426 /
+  # 39455277702 evidence; admincraft run 39493198398 same signature). The
+  # stale-workflow-delta push rejection is cured by the rebase-before-push
+  # in the turn job's push step, NOT by a permissions scope.
 
 defaults:
   run:
@@ -271,6 +275,10 @@ jobs:
           Append only — never edit or delete existing entries. Any
           Telegram-bound message MUST open with FROM:/TO: lines.
           Handles: @platform-engineer @lead @owner @all.
+          LAW #10 (Lead-owned files): NEVER edit .github/workflows/*,
+          agent-team/TEAM-CONTROL.org, or .gitattributes — cite them in
+          chat instead (a workflow delta vs moved main gets the branch
+          push rejected by GitHub's App-token policy).
           TOP BOARD ITEMS (oldest-first in the WORK ORDER below):
           ${TOP}
           WORK ORDER (Owner: ALL open board items DONE by 2026-10-21 02:00
