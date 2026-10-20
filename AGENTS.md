@@ -80,7 +80,13 @@ Acceptance criteria the brief pins down beyond the constraints above.
   track the live API, and the key lives in the Tauri keyring. The panel
   stays fully functional when unconfigured: a friendly setup prompt, not
   an error. The v2 exclusions above (no tool calling / history / provider
-  abstraction) still apply.
+  abstraction) still apply. The prompt the panel ACTUALLY sends is
+  `systemPrompt(brand.appName, buildSchemaPrompt(schema))`
+  (`app/src/ai/ChatPanel.svelte:69`) and `app/src/lib/__tests__/chatMount.test.ts`
+  pins it by asserting the captured request body of a mounted panel —
+  unit tests over `buildSchemaPrompt`/`systemPrompt` alone once kept a
+  disconnected builder and a stripped legend green, so keep the wire-level
+  assertion wired to the real normalized fixture.
 - **CRUD spec** — `RecordForm` renders text, number, bool, date,
   enum-select and FK-dropdown fields; schema-driven, graceful when the
   schema omits constraints. `DataTable` = pagination + search + delete.
@@ -97,7 +103,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (212 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (235 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (238 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -125,7 +131,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 235 vitest
+cd app && npm test                          # 238 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 212 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
@@ -487,7 +493,7 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
    impossible.
 7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
-   (212 green baseline as of FR-R007-LIVE; vitest 235) + `demo-backend manage.py check` +
+   (212 green baseline as of FR-R007-LIVE; vitest 238) + `demo-backend manage.py check` +
    `makemigrations --check`. Red work never lands.
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
