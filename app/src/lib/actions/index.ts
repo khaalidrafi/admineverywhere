@@ -16,6 +16,7 @@
  *  the confirm dialog, the toast and the refresh of the record + audit
  *  sub-view. Handlers return the audit entries the server wrote.
  */
+import { roleAllows, type RoleClaims } from "../rbac";
 import type { AppConfig, AuditEntry, ModelSpec, RecordRow } from "../types";
 
 export type ActionScope = "record" | "bulk";
@@ -36,6 +37,10 @@ export interface ActionMeta {
   model?: string;
   confirm?: string;
   input?: string;
+  /** FR-R007: role names allowed to run this action. Same law as nav
+   *  gating — no claims from the server means no filtering; the server
+   *  re-validates everything, hiding is UX only. */
+  roles?: string[];
   handler: (ctx: ActionContext) => Promise<AuditEntry[]>;
 }
 
@@ -61,9 +66,15 @@ export function actionsFor(
   modelId: string,
   scope: ActionScope,
   source: Record<string, RegisteredAction> = actions,
+  claims: RoleClaims | null = null,
 ): RegisteredAction[] {
   return Object.values(source)
-    .filter((a) => a.meta.scope === scope && (!a.meta.model || a.meta.model === modelId))
+    .filter(
+      (a) =>
+        a.meta.scope === scope &&
+        (!a.meta.model || a.meta.model === modelId) &&
+        roleAllows(a.meta.roles, claims),
+    )
     .sort((a, b) => a.meta.label.localeCompare(b.meta.label));
 }
 
