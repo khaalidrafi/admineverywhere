@@ -189,7 +189,19 @@ export function normalizeOpenAPI(doc: any): AdminSchema {
   }
 
   models.sort((a, b) => a.name.localeCompare(b.name));
-  return { models, byId: Object.fromEntries(models.map((m) => [m.id, m])) };
+
+  // FR-R007 role-claims source: bound ONLY when the document carries a
+  // GET …/me/ with no POST — the same evidence law as exportPath. A plain
+  // DRF backend without it yields no mePath, and the client filters nothing.
+  let mePath: string | undefined;
+  for (const [p, item] of Object.entries<any>(paths)) {
+    if (p.endsWith("/me/") && item?.get && !item?.post) {
+      mePath = p;
+      break;
+    }
+  }
+
+  return { models, byId: Object.fromEntries(models.map((m) => [m.id, m])), ...(mePath ? { mePath } : {}) };
 }
 
 /** Short schema summary for the AI system prompt ("data-aware" answers). */

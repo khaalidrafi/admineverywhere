@@ -531,7 +531,59 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   (schema-discovered paths only), new chart drop-ins (area, donut, hbar,
   heat-strip, delta-chip) alongside the current line chart.
 :END:
-** TODO FR R-007 RBAC phased (client-side first)                              :FE:BE:
+** PENDING FR R-007 RBAC phased (client-side first)                            :FE:BE:
+Scope per ROADLOG R-007: (a) server emits role claims + client-side
+menu/action filtering from them; (b) activity-log screen reading the
+R-003 audit endpoint (list view). Graceful-degradation law: no role
+source in the schema = no filtering, everything visible.
+:LOGBOOK:
+- Note [2026-10-20 Tue 23:3x UTC] :: :DELIVERED: branch ai/turn-20261020-2308,
+  commit 7387a3a. Both ROADLOG phases in one segment.
+  (a) Role claims: demo-backend core/views.py MeView GET /api/me/ ->
+  {username, is_staff, is_superuser, roles=sorted Django Group names};
+  core/urls.py mounts it; seed_demo creates auditors + managers groups on
+  admin. Client: normalizeOpenAPI binds schema.mePath ONLY when the doc
+  carries GET …/me/ && no POST (exportPath evidence law); lib/rbac.ts pure
+  module (parseClaims/roleAllows/findAuditModel); claims writable in
+  stores.ts refreshed on loadSchema + cleared on logout; optional
+  meta.roles on pages (invalid list refused into refusedPages with a
+  reason) gates Sidebar nav, on actions gates actionsFor (bulk_flag now
+  managers-only). No mePath or failed read = claims null = NO filtering —
+  plain DRF keeps the full menu (branding degradation law).
+  (b) Activity screen: app/src/pages/Activity.svelte, a pure R-006 drop-in
+  (no registry/router/sidebar edit), reads the R-003 audit model through
+  findAuditModel's schema-discovered listPath (never hand-written
+  /api/audit/), newest-first pages + object_type/object_id filters,
+  friendly empty naming the missing ViewSet.
+  Evidence (all measured at 7387a3a):
+  - pytest 210/210 (-p no:cacheprovider, 14.8s) — +5 in
+    plugin/tests/test_rbac_roles.py (anon 401, claims shape, sorted group
+    roles, superuser flag, schema advertises GET-only /me/).
+  - vitest 233/233 (17 files, capped maxWorkers=1) — +14 in rbac.test.ts
+    incl. TWO mounted-DOM proofs: Activity feeds its table through the
+    discovered listPath (stubbed fetch asserted by URL + rendered rows),
+    and renders the nameable refusal when no audit model exists (no
+    fetch fired).
+  - manage.py check "no issues (0 silenced)"; makemigrations --check
+    "No changes detected"; vite build 150 modules zero warnings;
+    tsc --noEmit = only the 7 known pre-existing errors.
+  - LIVE rig on :8012 (seeded): POST auth/token -> 40-char token; anon
+    GET /api/me/ -> 401; admin GET -> {"username":"admin","is_staff":true,
+    "is_superuser":true,"roles":["auditors","managers"]}; YAML schema
+    advertises /api/me/ (line 402). Vite dev transform 200 for
+    Activity.svelte / rbac.ts / Sidebar.svelte, zero transform errors.
+  - docs/rbac.md contract + copy checklist; AGENTS.md hard-won bullet,
+    pages + docs layout rows, stale counts fixed (205->210 pytest,
+    219->233 vitest, incl. landing-gate law 7).
+  UNVERIFIED, stated plainly: nobody viewed the dashboard/sidebar in a
+  real browser/Tauri window; a NON-superuser role-rejection has only
+    unit+mount proof, not a live second user (admin is superuser, so the
+    live smoke cannot show a hidden button). Server-side permission
+    classes deliberately NOT added to reference actions (docs/rbac.md
+    pins why: hiding is UX, real deployments mirror roles server-side).
+- State "ONGOING" from "TODO" [2026-10-20 Tue 23:16 UTC] :: Seat
+  platform-engineer, WORK ORDER item 11 (last open board item).
+:END:
 * OPEN ITEMS
 
 ** PENDING COOL-PREVIEW — live rebrand preview (apply/revert pure module) :FE:
