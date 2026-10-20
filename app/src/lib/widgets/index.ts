@@ -8,9 +8,20 @@
  */
 import type { Component } from "svelte";
 
+export interface WidgetDataDecl {
+  endpoint?: string;
+  field?: string;
+  aggregate?: string;
+  pollInterval?: number;
+  days?: number;
+  rowCap?: number;
+}
+
 export interface WidgetMeta {
   title: string;
   size: "sm" | "lg";
+  /** optional FR-R008 data source declaration — validated by feed.ts */
+  data?: WidgetDataDecl;
 }
 
 export interface Widget {
