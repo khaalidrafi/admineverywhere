@@ -1,10 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { app, initApp, loadAiSettings, loadSchema } from "./lib/stores";
-  import Login from "./pages/Login.svelte";
+  import { standalonePages } from "./lib/pages";
   import Shell from "./components/Shell.svelte";
   import Toaster from "./components/Toaster.svelte";
   import ErrorBanner from "./components/ErrorBanner.svelte";
+
+  // The auth screen is a registered page too (meta.standalone) — no static
+  // import here, so a client that ships its own login drops in a file.
+  const authPage = standalonePages[0];
 
   onMount(async () => {
     await initApp();
@@ -27,7 +31,13 @@
     <div class="skeleton h-2 w-40"></div>
   </div>
 {:else if !$app.token}
-  <Login />
+  {#if authPage}
+    <svelte:component this={authPage.component} />
+  {:else}
+    <div class="flex min-h-screen items-center justify-center text-text/60">
+      No page declares <code>standalone: true</code> — a sign-in module is required.
+    </div>
+  {/if}
 {:else}
   <Shell />
 {/if}

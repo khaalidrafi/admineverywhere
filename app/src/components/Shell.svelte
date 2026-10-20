@@ -1,10 +1,15 @@
 <script lang="ts">
+  /** App shell — renders whatever the page registry declares.
+   *
+   *  FR R-006: this component used to import each page and switch on the
+   *  route name, which made every new module a fork of the shell. The route
+   *  table now comes from `lib/pages` (glob over src/pages), so the shell has
+   *  no page-specific line left. Params a pattern captured are spread as props.
+   */
   import { app } from "../lib/stores";
   import { route } from "../lib/router";
+  import { pageById } from "../lib/pages";
   import Sidebar from "./Sidebar.svelte";
-  import Dashboard from "../pages/Dashboard.svelte";
-  import ModelPage from "../pages/ModelPage.svelte";
-  import Branding from "../pages/Branding.svelte";
   import ChatPanel from "../ai/ChatPanel.svelte";
   import Icon from "./Icon.svelte";
 
@@ -13,6 +18,11 @@
   function toggleSidebar() {
     sidebarOpen = !sidebarOpen;
   }
+
+  // a standalone page (the auth gate) is never rendered inside the shell
+  const current = $derived(
+    $route.kind === "page" && !$route.standalone ? pageById($route.pageId!) : undefined,
+  );
 </script>
 
 <div class="flex min-h-screen">
@@ -39,16 +49,15 @@
   {/if}
 
   <main class="flex-1 px-4 pb-24 pt-20 md:px-8 md:pb-10 md:pt-6">
-    {#if $route.name === "dashboard"}
-      <Dashboard />
-    {:else if $route.name === "branding"}
-      <Branding />
-    {:else if $route.name === "model"}
-      {#key $route.id}
-        <ModelPage id={$route.id} recordId={$route.recordId} />
-      {/key}
+    {#if current}
+      <svelte:component this={current.component} {...$route.params} />
+    {:else if $route.kind === "page"}
+      <div class="p-8 text-text/60">This module lives outside the app shell.</div>
     {:else}
-      <div class="p-8 text-text/60">Unknown route — pick a model from the sidebar.</div>
+      <div class="p-8 text-text/60">
+        No page declares <code class="rounded bg-text/10 px-1">{$route.path}</code> — pick a
+        module from the sidebar.
+      </div>
     {/if}
   </main>
 </div>
