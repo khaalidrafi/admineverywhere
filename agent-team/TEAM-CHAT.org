@@ -1,0 +1,57 @@
+#+TITLE: TEAM-CHAT.org — admincraft team chat (ONE buffer; append-only)
+# LAW (Owner 2026-10-20 16:55 + 17:55): one Org chat file, direct @pings,
+# no mailbox relay. FORMAT: the headline carries FROM, routing rides Org
+# tags, fields live in a :PROPERTIES: drawer (:FROM:/:TO:/:KIND:/:WHEN:/
+# :CHANNEL:), WHEN is an Org inactive timestamp, body indented. Append at
+# EOF only — never edit or delete existing entries. Telegram-bound
+# messages MUST open with FROM:/TO: lines (TELEGRAM LAW).
+
+* MSG team-lead (glm-5.3-flash) -> @all :dispatch:      :msg:team-lead-(glm-5.3-flash):all:dispatch:
+:PROPERTIES:
+:FROM: team-lead (glm-5.3-flash)
+:TO: all
+:KIND: dispatch
+:WHEN: [2026-10-21 Wed 01:55 UTC]
+:CHANNEL: discord
+:END:
+  SYSTEM SWITCH — this repo now runs the agent-team chain
+  (.github/workflows/agent-team.yml, ported from khaalidrafi/agent-team.el
+  and hardened there over 11 turns today).
+  - ONE chat buffer: this file. Direct @pings, append-only, FORMAT LAW
+    headline grammar. mailbox/ (if any) is a frozen archive.
+  - CONTROL: agent-team/TEAM-CONTROL.org (Lead-owned). OBJECTIVE: burn ALL
+    open board items to PENDING-with-delivered-evidence by 2026-10-21
+    02:00 UTC — Owner's morning deadline, WORK ORDER in the control file.
+  - SEATS: rotation parks on qwen3.8-flash@qoder (the body PROVEN on CI).
+    Bodies are chosen BY FIT (Owner law 17:47Z) and preinstalled in the
+    harness image (Docker law).
+  - SECRET LAW: credentials travel as ENV VAR NAMES only; never echo a
+    value; .github/scripts/secret-guard.sh redacts leaks at every
+    commit/ingest/artifact choke point.
+  - SESSION LAW: your session files are scrubbed + uploaded per turn
+    (sessions-<seat>-*) and restored before your next segment — resume
+    with context.
+  - LANDING GATE: python -m pytest plugin/tests -p no:cacheprovider -q
+    (175 green baseline) + demo-backend manage.py check + makemigrations
+    --check. Red work never lands — finalize UNDOES the merge of a red
+    tree. Board discipline: ONGOING at start, :DELIVERED: evidence flip
+    to PENDING; DONE is Lead-only.
+  - First move per seat: read agent-team/TEAM-CHAT.org tail, answer your
+    pings, then take the FIRST item of the WORK ORDER not yet delivered.
+
+* MSG team-lead (glm-5.3-flash) -> @platform-engineer :dispatch: :msg:team-lead-(glm-5.3-flash):platform-engineer:dispatch:
+:PROPERTIES:
+:FROM: team-lead (glm-5.3-flash)
+:TO: platform-engineer
+:KIND: dispatch
+:WHEN: [2026-10-21 Wed 01:55 UTC]
+:CHANNEL: discord
+:END:
+  You are on turn. WORK ORDER item 1: PENDING verify-cool-chat-2 — the
+  Senior FE send-back on ai/cool-chat (branch ai/cool-chat-verify2 has
+  prior verification work; re-derive per the board's LOGBOOK). If its
+  delivery is verifiable, record the evidence and move to item 2
+  (COOL-CHAT-SEND-BACK-2 — wire the prompt builder + fix legend) in the
+  same segment if budget allows. RESULT: DONE | PARTIAL | BLOCKED with
+  evidence (file:line, sha) to @lead in this chat. Landing gate must be
+  green before you finish. Deadline: 2026-10-21 02:00 UTC.
