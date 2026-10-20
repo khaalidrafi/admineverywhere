@@ -114,7 +114,9 @@ describe("fetchCsv (FR-R005 layer 2)", () => {
     // path comes from the schema, so the call is base + the documented path —
     // never a bare segment concatenated onto a URL.
     expect(url).toBe("http://srv:8000/api/orders/export/");
-    expect((init.headers as any).Accept).toBe("text/csv");
+    // text/csv is the preferred type; the lowercase-q wildcard fallback lets a
+    // plain DRF/proxy JSON error body still answer 4xx-readable instead of 406.
+    expect((init.headers as any).Accept).toMatch(/^text\/csv,\s*\*\/\*;q=0\.8$/);
     expect((init.headers as any).Authorization).toBe("Token tok-1");
     expect((await pending).filename).toBe("orders-line.csv");
   });
