@@ -175,6 +175,16 @@ export function normalizeOpenAPI(doc: any): AdminSchema {
     const exportPathItem = paths[`${path}export/`];
     const serverExport = exportPathItem?.get && !exportPathItem?.post ? `${path}export/` : undefined;
 
+    // FR-R001 lifecycle: the governed endpoints are bound ONLY when the document
+    // carries them. transition is a POST-only detail action; history is GET-only
+    // with no POST (an action that also accepts POST is a collection, not a
+    // trail). A model whose machine is declared client-side but not documented
+    // server-side gets no buttons — see statusTransitions.lifecycleProblem().
+    const transitionPathItem = paths[`${detailPath}transition/`];
+    const serverTransition = transitionPathItem?.post ? `${detailPath}transition/` : undefined;
+    const historyPathItem = paths[`${detailPath}history/`];
+    const serverHistory = historyPathItem?.get && !historyPathItem?.post ? `${detailPath}history/` : undefined;
+
     models.push({
       id,
       name: titleCase(singular),
@@ -185,6 +195,8 @@ export function normalizeOpenAPI(doc: any): AdminSchema {
       byName: Object.fromEntries(fields.map((f) => [f.name, f])),
       labelField,
       ...(serverExport ? { exportPath: serverExport } : {}),
+      ...(serverTransition ? { transitionPath: serverTransition } : {}),
+      ...(serverHistory ? { historyPath: serverHistory } : {}),
     });
   }
 

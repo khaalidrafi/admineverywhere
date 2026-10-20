@@ -17,7 +17,7 @@
   import { downloadCsv, exportFileName, tableToCsv } from "../lib/csv";
   import { actionFailureReason, actions, actionsFor, type RegisteredAction } from "../lib/actions/index";
   import { findAuditModel } from "../lib/rbac";
-  import { getStatusField, hasLifecycle } from "../lib/statusTransitions";
+  import { getStatusField } from "../lib/statusTransitions";
   import { cardLabel, planMove, resolveAxis } from "../lib/kanban";
   import { navigate } from "../lib/router";
   import { debounce } from "../lib/utils";
@@ -259,15 +259,16 @@
 
   /** The record sub-view: R-001 lifecycle history (oldest-first) plus R-003
    *  audit entries (newest-first) for this record. History is only fetched for
-   *  lifecycle-governed models; the audit log is open to any model, so a plain
-   *  record still shows what custom actions did to it. */
+   *  a trail the API actually documents (model.historyPath); the audit log is
+   *  open to any model, so a plain record still shows what custom actions did
+   *  to it. */
   async function showHistory(row: RecordRow) {
     if (!model || row.id === undefined) return;
     historyView = row;
     history = [];
     audit = [];
     try {
-      if (hasLifecycle(model.id)) {
+      if (model.historyPath) {
         history = await fetchHistory(effectiveConfig(), get(app).token || null, model, row.id as any);
       }
     } catch (err) {
@@ -429,7 +430,11 @@
           </button>
         </div>
         {#if history.length === 0}
-          <p class="text-text/50">No lifecycle history.</p>
+          <p class="text-text/50">
+            {model.historyPath
+              ? "No lifecycle history."
+              : `This API does not document a lifecycle trail at ${model.detailPath}history/.`}
+          </p>
         {:else}
           <table class="w-full text-sm">
             <thead>

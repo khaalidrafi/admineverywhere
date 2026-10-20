@@ -42,6 +42,12 @@ export interface ModelSpec {
    *  the backend documents GET <listPath>export/ — the client binds its
    *  "Full export" button to this and never to a guessed path. */
   exportPath?: string;
+  /** schema-discovered R-001 lifecycle endpoints, bound ONLY when the document
+   *  carries them: POST <detailPath>transition/ and GET <detailPath>history/
+   *  (no POST). A client-side state machine with no server evidence renders no
+   *  buttons — the same evidence law as exportPath and mePath. */
+  transitionPath?: string;
+  historyPath?: string;
 }
 
 export interface AdminSchema {

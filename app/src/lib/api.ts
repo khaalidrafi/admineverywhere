@@ -248,9 +248,12 @@ export function actionPath(model: ModelSpec, slug: string, recordId?: string | n
   return `${base}${encodeURIComponent(String(recordId))}/${slug}/`;
 }
 
-/** POST /api/<model>/<id>/transition/ — perform a lifecycle transition.
+/** POST <transitionPath> — perform a lifecycle transition (FR-R001).
  *  Returns the updated record on 200; on 409 throws ApiError whose
- *  detail carries the guard `reason` (R-001 error shape). */
+ *  detail carries the guard `reason` (R-001 error shape). The URL is the
+ *  schema-discovered POST …/transition/, never a re-guess of it: a backend that
+ *  does not document the action must not be offered in the UI either
+ *  (statusTransitions.lifecycleProblem). */
 export async function transitionRecord(
   cfg: AppConfig,
   token: string | null,
@@ -258,20 +261,32 @@ export async function transitionRecord(
   recordId: string | number,
   targetStatus: string,
 ): Promise<RecordRow> {
-  return request<RecordRow>(cfg, token, actionPath(model, "transition", recordId), {
-    method: "POST",
-    body: JSON.stringify({ transition: targetStatus }),
-  });
+  if (!model.transitionPath) {
+    throw new ApiError(`"${model.id}" documents no lifecycle transition endpoint`);
+  }
+  return request<RecordRow>(
+    cfg,
+    token,
+    model.transitionPath.replace("{id}", encodeURIComponent(String(recordId))),
+    { method: "POST", body: JSON.stringify({ transition: targetStatus }) },
+  );
 }
 
-/** GET /api/<model>/<id>/history/ — lifecycle history (append-only, oldest first). */
+/** GET <historyPath> — lifecycle history (append-only, oldest first). */
 export async function fetchHistory(
   cfg: AppConfig,
   token: string | null,
   model: ModelSpec,
   recordId: string | number,
 ): Promise<Array<{ id: number; from_status: string; to_status: string; actor: string | null; created_at: string }>> {
-  const data = await request<any>(cfg, token, actionPath(model, "history", recordId));
+  if (!model.historyPath) {
+    throw new ApiError(`"${model.id}" documents no lifecycle history endpoint`);
+  }
+  const data = await request<any>(
+    cfg,
+    token,
+    model.historyPath.replace("{id}", encodeURIComponent(String(recordId))),
+  );
   return Array.isArray(data) ? data : data?.results ?? [];
 }
 

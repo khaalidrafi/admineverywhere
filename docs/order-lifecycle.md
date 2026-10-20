@@ -1,9 +1,11 @@
 # Order lifecycle — server contract & client-project convention (FR-R001 / ROADLOG R-001)
 
-Status: **reference implementation shipped on `ai/fr-r001-be`** (server side).
+Status: **reference implementation shipped — server side and client side**
+(`docs/order-lifecycle.md` §4A is what the thin client binds).
 Every client project that manages order lifecycles copies the pattern below instead
 of inventing its own state handling. The demo backend (`demo-backend/`) is the
-executable spec; `plugin/tests/test_order_lifecycle.py` is its test harness.
+executable spec; `plugin/tests/test_order_lifecycle.py` is its test harness and
+`app/src/lib/__tests__/lifecycleMount.test.ts` is the client's wire-level proof.
 
 ## 1. The state machine
 
@@ -125,6 +127,32 @@ guarantee that makes the stub safe to leave empty in the reference build.
    entry, seam-invoked + rollback-on-failure, schema exposure. See
    `plugin/tests/test_order_lifecycle.py` for all seven, ready to copy.
 
+## 4A. What the thin client binds (FR-R001-FE)
+
+The renderer offers a lifecycle only where **both** halves agree:
+
+- `app/src/lib/statusTransitions.ts` declares the machine, keyed by model id
+  (never by "the field named status").
+- `normalizeOpenAPI` binds `model.transitionPath` and `model.historyPath` from
+  the document itself — `POST <detail>transition/`, and GET-without-POST
+  `<detail>history/`. That is the same evidence law that binds `exportPath`
+  (FR-R005) and `mePath` (FR-R007): absence is silent degradation, never a guess.
+
+A machine declared client-side but not documented server-side is **refused**, not
+rendered optimistically. `lifecycleProblem()` names the reason; `DataTable` draws
+no `→ <state>` buttons; `resolveAxis()` refuses a `transition` kanban axis; the
+record sub-view states that the API documents no trail.
+`transitionRecord()` / `fetchHistory()` call the discovered templates (`{id}`
+substituted, pk percent-encoded) and raise before any network call when handed a
+model that carries neither — `apiUrl` is only ever the base origin.
+
+Wire-level proof: `app/src/lib/__tests__/lifecycleMount.test.ts` mounts the real
+`ModelPage` against the captured document and asserts what goes over the wire —
+the exact POST URL and `{transition: "<target>"}` body, a 409's `reason` surfaced
+verbatim in the toast (not a generic failure banner), the trail read through the
+discovered history path in oldest-first order, and zero buttons plus zero
+requests once the actions are stripped from the schema.
+
 ## 5. Notes & compatibility
 
 - **`status` stays writable on `PATCH /api/orders/{id}/`** — pre-existing
@@ -133,8 +161,12 @@ guarantee that makes the stub safe to leave empty in the reference build.
   may make the field read-only once all clients are migrated.
 - `seed_demo` gives every seeded order its creation trail row (actor null),
   so demo data reads coherently through the history endpoint.
-- The OpenAPI fixture used by the client's normalizer tests
-  (`app/src/lib/__tests__/fixtures/openapi.json`) predates these endpoints
-  and should be recaptured when the frontend integrates them.
-- Test suite on this branch: `pytest` 90/90 (53 before FR-R001, +37) —
-  run `cd demo-backend && python -m pytest ../plugin/tests`.
+- The client's proof fixture `app/src/lib/__tests__/fixtures/openapi.json` IS
+  the captured document of this rig (recaptured 2026-10-21 from a running
+  `manage.py runserver` + `GET /api/schema/?format=json`: 16 paths, 5 models,
+  the R-001 `transition`/`history`, the R-003 `flag`/`bulk_flag`/`audit`, the
+  R-005 `export` and the R-007 `me`). Recapture it whenever the rig gains an
+  endpoint — a client test that passes against a document the server no longer
+  answers is not proof.
+- Suites: `pytest` 212 (`python -m pytest plugin/tests -p no:cacheprovider -q`),
+  `vitest` 252 (`cd app && npm test`).
