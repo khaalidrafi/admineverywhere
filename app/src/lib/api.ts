@@ -7,6 +7,7 @@ Every failure is normalized to ApiError so the UI can react:
 */
 import { normalizeOpenAPI } from "./openapi";
 import { exportFileName } from "./csv";
+import { parseClaims, type RoleClaims } from "./rbac";
 import type { AdminSchema, AppConfig, AuditEntry, Brand, ModelSpec, Page, RecordRow } from "./types";
 
 export class ApiError extends Error {
@@ -319,11 +320,14 @@ function toEntries(data: any): AuditEntry[] {
 /** GET /api/audit/ — the append-only log, newest first (the R-003 ordering
  *  ruling: triage wants the latest event on top). Filters back the record
  *  sub-view and the R-007 activity screen; object_type is the model's
- *  singular name, object_id the record pk. */
+ *  singular name, object_id the record pk. `opts.path` overrides the
+ *  default with a schema-discovered listPath (FR-R007 law: bind to the
+ *  document, not to a hand-written URL) — the fallback only serves
+ *  backends whose schema the caller has not resolved. */
 export async function fetchAudit(
   cfg: AppConfig,
   token: string | null,
-  opts: { objectType?: string; objectId?: string | number; page?: number } = {},
+  opts: { objectType?: string; objectId?: string | number; page?: number; path?: string } = {},
 ): Promise<Page<AuditEntry>> {
   const params = new URLSearchParams();
   if (opts.objectType) params.set("object_type", opts.objectType);
@@ -332,7 +336,22 @@ export async function fetchAudit(
   }
   if (opts.page) params.set("page", String(opts.page));
   const qs = params.toString();
-  return toPage<AuditEntry>(await request<any>(cfg, token, `/api/audit/${qs ? `?${qs}` : ""}`));
+  const base = opts.path ?? "/api/audit/";
+  return toPage<AuditEntry>(await request<any>(cfg, token, `${base}${qs ? `?${qs}` : ""}`));
+}
+
+/** GET the schema-discovered role-claims path (FR-R007 phase a). Answers
+ *  the parsed claims or null — a backend without the endpoint, an
+ *  unauthenticated refusal, any failure is "no claims", which the client
+ *  reads as "apply no filtering". Never throws: claims are UX, the server
+ *  stays the gate, and a broken read must not break the shell. */
+export async function fetchMe(cfg: AppConfig, token: string | null, mePath: string): Promise<RoleClaims | null> {
+  if (!token) return null;
+  try {
+    return parseClaims(await request<any>(cfg, token, mePath));
+  } catch {
+    return null;
+  }
 }
 
 /** GET a schema-discovered line-level CSV export (FR-R005 layer 2 — the

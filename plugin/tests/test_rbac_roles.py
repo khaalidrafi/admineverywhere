@@ -1,0 +1,101 @@
+"""FR-R007 phase (a) — the server must EMIT role claims.
+
+Reference contract (docs/rbac.md): a plain authenticated GET on the API
+answers with the caller's identity + role names, so the thin client can
+filter its menu and actions without ever guessing a permission model:
+
+    GET /api/me/ -> {"username", "is_staff", "is_superuser", "roles": [...]}
+
+- roles are Django Group names of the authenticated user (sorted);
+- anonymous callers get 401 — the endpoint is auth'd like the rest;
+- the OpenAPI document advertises the path, which is how the client
+  discovers it (schema-driven law: paths come from the document, never
+  from string concatenation);
+- a backend WITHOUT the endpoint keeps working: the client sees no
+  claims and applies NO filtering (graceful degradation, branding law).
+
+Infrastructure note: same in-process rig as test_audit_actions —
+conftest mounts the demo apps, this module creates the test DB with
+Django's own DiscoverRunner (pytest-django deliberately absent).
+"""
+import json
+
+import pytest
+from django.contrib.auth.models import Group, User
+from django.core.management import call_command
+from django.db import transaction
+from django.test.runner import DiscoverRunner
+from django.test.utils import setup_test_environment, teardown_test_environment
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+
+
+@pytest.fixture(scope="module")
+def demo_db():
+    setup_test_environment()
+    runner = DiscoverRunner(interactive=False, verbosity=0)
+    old_config = runner.setup_databases()
+    yield
+    runner.teardown_databases(old_config)
+    teardown_test_environment()
+
+
+@pytest.fixture
+def db(demo_db):
+    with transaction.atomic():
+        yield
+        transaction.set_rollback(True)
+
+
+@pytest.fixture
+def api(db):
+    return APIClient()
+
+
+def _authed_client(user):
+    token, _ = Token.objects.get_or_create(user=user)
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    return client
+
+
+def test_anonymous_me_is_401(api):
+    r = api.get("/api/me/")
+    assert r.status_code == 401, r.content
+
+
+def test_me_returns_username_and_flags(api):
+    user = User.objects.create_user("rolex", password="x")
+    r = _authed_client(user).get("/api/me/")
+    assert r.status_code == 200, r.content
+    body = r.json()
+    assert body["username"] == "rolex"
+    assert body["is_staff"] is False
+    assert body["is_superuser"] is False
+    assert body["roles"] == []
+
+
+def test_me_roles_are_group_names_sorted(api):
+    user = User.objects.create_user("multi", password="x", is_staff=True)
+    user.groups.set([Group.objects.create(name="auditors"), Group.objects.create(name="managers")])
+    body = _authed_client(user).get("/api/me/").json()
+    assert body["roles"] == ["auditors", "managers"]
+    assert body["is_staff"] is True
+
+
+def test_superuser_reports_superuser(api):
+    user = User.objects.create_superuser("root", password="x")
+    body = _authed_client(user).get("/api/me/").json()
+    assert body["is_superuser"] is True
+
+
+def test_schema_advertises_me_path(tmp_path):
+    """The client binds the button from the document — generation must not
+    crash on the new view and the path must carry a GET."""
+    out = tmp_path / "schema.json"
+    call_command("spectacular", "--format", "openapi-json", file=str(out))
+    schema = json.loads(out.read_text())
+    me = [p for p in schema["paths"] if p.rstrip("/").endswith("/me")]
+    assert me, "no /me path in the schema"
+    assert "get" in schema["paths"][me[0]]
+    assert "post" not in schema["paths"][me[0]]
