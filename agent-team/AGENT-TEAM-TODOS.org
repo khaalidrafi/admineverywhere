@@ -584,6 +584,57 @@ source in the schema = no filtering, everything visible.
 - State "ONGOING" from "TODO" [2026-10-20 Tue 23:16 UTC] :: Seat
   platform-engineer, WORK ORDER item 11 (last open board item).
 :END:
+*** PENDING FR-R007-LIVE — seeded non-superuser demo user (live rejection path) :BE:
+Closes the one UNVERIFIED line left on the item above: the rig had only a
+superuser, so a live smoke could never show a gated surface hidden.
+:LOGBOOK:
+- Note [2026-10-20 Tue 23:34 UTC] :: :DELIVERED: branch
+  ai/turn-20261020-2327, commit 83d51be. The last UNVERIFIED row of the
+  FR-R007 evidence is now a clickable fact.
+  What landed:
+  - demo-backend/shop/management/commands/seed_demo.py: seeds `auditor` /
+    `audit123` — non-staff, non-superuser, Django Group `auditors` ONLY
+    (idempotent get_or_create + groups.set, so a re-seed cannot drift the
+    claims). The seed now prints both logins and what each demonstrates.
+    Why a second user is required: rbac.ts roleAllows() short-circuits for
+    superusers, so a rig of superusers has NO rejection case anywhere.
+  - plugin/tests/test_rbac_roles.py: +2 contract tests — the seeded
+    non-superuser's GET /api/me/ is exactly
+    {username:"auditor", is_staff:false, is_superuser:false,
+    roles:["auditors"]}, admin keeps both groups (acceptance row), and a
+    double seed stays stable.
+  - app/src/lib/__tests__/rbac.test.ts: +2 tests that parse the two
+    captured LIVE bodies and run them through the DISCOVERED registry
+    (actions, not a hand-made source): bulk_flag survives for admin and
+    disappears for auditor, while the ungated record action `flag` stays.
+  - docs/rbac.md: demo-user table + the click-it recipe + a new copy-
+    checklist rule ("seed at least one NON-superuser per role or the
+    rejection path is undemonstrable"); AGENTS.md seed-rationale bullet,
+    demo-login line and counts (210->212 pytest, 233->235 vitest, incl.
+    landing-gate law 7); README demo block now names the role-demo login.
+  Evidence (all measured at 83d51be):
+  - [X] Landing gate green: pytest 212/212 (-p no:cacheprovider, 11.4s),
+        manage.py check "no issues (0 silenced)", makemigrations --check
+        "No changes detected", vitest 235/235 (17 files, capped
+        NODE_OPTIONS=1024 --maxWorkers=1), vite build ✓ 2.01s zero
+        warnings, tsc --noEmit = only the 7 known pre-existing errors.
+  - [X] LIVE rig (migrate + seed_demo + runserver 127.0.0.1:8013, token
+        auth per user): admin -> {"is_superuser":true,
+        "roles":["auditors","managers"]}; auditor -> {"username":"auditor",
+        "is_staff":false,"is_superuser":false,"roles":["auditors"]}; anon
+        GET /api/me/ -> 401. Both tokens 40 chars from POST /api/auth/token/.
+  - [ ] UNVERIFIED, stated plainly: still no browser/Tauri window — nobody
+        literally watched the "Flag batch" button vanish. The proof is the
+        live server body fed through the real registry (unit-level), not a
+        screenshot. Closing that row needs a human E2E pass, not more code.
+  Model/migration impact: none (auth Group/User rows only, seed data).
+- State "PENDING" from "ONGOING" [2026-10-20 Tue 23:34 UTC] :: delivered
+  above; DONE stays Lead-only.
+- State "ONGOING" from "TODO" [2026-10-20 Tue 23:28 UTC] :: Seat
+  platform-engineer. WORK ORDER 1-11 all carry delivered evidence, so this
+  segment takes the self-flagged follow-up from the 23:37 report (the
+  rejection path needs a second seeded caller holding exactly one role).
+:END:
 * OPEN ITEMS
 
 ** PENDING COOL-PREVIEW — live rebrand preview (apply/revert pure module) :FE:
