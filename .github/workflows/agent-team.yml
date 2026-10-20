@@ -439,6 +439,10 @@ jobs:
           done < <(find /tmp/sess -type f 2>/dev/null)
           tar czf "/tmp/sessions-${SEAT}-${GITHUB_RUN_NUMBER}.tgz" -C /tmp/sess . 2>/dev/null || true
           if [ -s "/tmp/sessions-${SEAT}-${GITHUB_RUN_NUMBER}.tgz" ]; then
+            # v4 upload-artifact rejects absolute paths outside the
+            # workspace — copy in before upload (run 39485635406 failure)
+            mkdir -p "$PWD/.sessions-upload"
+            cp "/tmp/sessions-${SEAT}-${GITHUB_RUN_NUMBER}.tgz" "$PWD/.sessions-upload/"
             echo "found=yes" >> "$GITHUB_OUTPUT"
             echo "sessions: ${N} file(s) had secret hits — redacted before upload" >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -449,7 +453,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sessions-${{ steps.control.outputs.seat }}-${{ github.run_number }}
-          path: /tmp/sessions-*.tgz
+          path: .sessions-upload/sessions-*.tgz
           retention-days: 30
           if-no-files-found: ignore
 
@@ -472,7 +476,18 @@ jobs:
           git add "$CTL"
           git commit -m "ci-turn: ${TURN_SEAT:-unknown} done — next turn ${NEXT}" \
             -m "result: ${TURN_RESULT:-unknown}" || echo "::notice::nothing to commit"
-          git push origin "ai/main" || echo "::warning::control push failed"
+          # Push retry (run 39485635406: the control push died silently —
+          # the rotation pointer only survived by luck of the parked seat)
+          CPUSH=no
+          for i in 1 2 3; do
+            if git push origin "ai/main"; then CPUSH=yes; break; fi
+            git fetch origin ai/main && git reset --hard origin/ai/main
+            sed -i "s|^\#+TURN:.*|\#+TURN: ${NEXT}|" "$CTL"
+            git add "$CTL"
+            git commit -m "ci-turn: ${TURN_SEAT:-unknown} done — next turn ${NEXT}" \
+              -m "result: ${TURN_RESULT:-unknown}" || true
+          done
+          [ "$CPUSH" = "yes" ] || echo "::warning::control push failed after 3 attempts"
 
   finalize:
     if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
@@ -514,15 +529,44 @@ jobs:
         run: |
           pip install -r demo-backend/requirements.txt pytest
           pip install -e plugin
-          if bash .github/scripts/gate.sh; then
-            echo "gate=green" >> "$GITHUB_OUTPUT"
-            bash .github/scripts/secret-guard.sh staged
-            git push origin "ai/main"
-            git push origin --delete "${{ steps.merge.outputs.branch }}" || true
-          else
+          BRANCH="${{ steps.merge.outputs.branch }}"
+          # RACE PROOF (run 39485635406 evidence: the turn job's
+          # control-file push landed between this job's fetch and push;
+          # the gate push was rejected non-fast-forward AND the branch
+          # was deleted — the segment's 73-turn work was orphaned).
+          # Re-fetch + re-merge against moved main, push with retry;
+          # the branch is deleted ONLY after a verified landing.
+          RESULT=conflict
+          for i in 1 2 3; do
+            git fetch origin ai/main
             git reset --hard origin/ai/main
-            echo "gate=red-merge-undone" >> "$GITHUB_OUTPUT"
-          fi
+            if ! git merge --no-ff --no-edit "origin/$BRANCH"; then
+              git merge --abort || true
+              echo "attempt $i: merge conflict vs moved main — retrying"
+              sleep 15
+              continue
+            fi
+            if bash .github/scripts/gate.sh; then
+              bash .github/scripts/secret-guard.sh staged
+              if git push origin "ai/main"; then RESULT=green; break; fi
+              RESULT=push-retry
+              sleep 15
+            else
+              git reset --hard origin/ai/main
+              RESULT=red
+              echo "gate red on attempt $i — merge undone, branch kept for the Lead"
+              break
+            fi
+          done
+          case "$RESULT" in
+            green)
+              echo "gate=green" >> "$GITHUB_OUTPUT"
+              git push origin --delete "$BRANCH" || true ;;
+            red)
+              echo "gate=red-merge-undone" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "gate=conflict-branch-kept" >> "$GITHUB_OUTPUT" ;;
+          esac
 
       - name: Stall accounting + dispatch the next run (self-chain)
         run: |
