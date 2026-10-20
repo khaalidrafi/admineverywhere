@@ -318,7 +318,83 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   that kanban over them (R-004) needs the R-001 machine. No code change in
   scope; anything found while writing gets reported, not silently fixed.
 :END:
-** TODO FR R-004 kanban view                                                  :FE:
+** PENDING FR R-004 kanban view                                                  :FE:
+:LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-20 Tue 21:33]
+- Note taken on [2026-10-20 Tue 21:33] :: :DELIVERED: ai/turn-20261020-2122@a3c2150
+  — :RESULT: DONE for WORK ORDER item 7. What landed (client only, no server
+  change; the R-001 API already carries the whole move):
+  - NEW app/src/lib/kanban.ts — the DECLARED axis registry (kanbanAxes, keyed
+    by model id like statusTransitions), resolveAxis/axisProblem,
+    boardColumns, reachableColumns, planMove, cardLabel. docs/independent-enums.md
+    §6 is honoured literally: nothing in the module ever looks for a field named
+    "status" or for "the first enum field"; a model with no entry gets no toggle.
+    A contradictory declaration is REFUSED with a nameable reason (transition
+    axis with no machine — guardrail 5; patch axis on a lifecycle field — would
+    bypass the machine; non-enum field; zero columns), not rendered optimistically.
+  - NEW app/src/components/KanbanBoard.svelte — columns from the axis (every
+    declared column renders even when empty), HTML5 drag-and-drop with drop
+    feedback only on legal columns, and the ROADLOG's named risk (drag a11y)
+    answered by a per-card "Move to" select offering the identical reachable set
+    with illegal targets disabled, so no move exists that only a mouse can make.
+    A record whose value is empty/undeclared lands in a read-only Unassigned
+    column instead of disappearing from the board.
+  - ModelPage.svelte — table|kanban toggle (aria-pressed group), kanban asks for
+    a 100-row page (a 10-row board says nothing), view resets on model switch;
+    a drop goes through planMove, which is the only place the request shape is
+    decided: {transition: target} via transitionRecord, or a ONE-KEY body via
+    the new api.patchRecord (never a whole-row PUT — guardrail 1).
+  - AGENTS.md — hard-won-contract bullet for the declared-axis rule.
+  Evidence:
+  - [X] Landing gate green at this tip: pytest 175/175 (-p no:cacheprovider,
+        16.78s), manage.py check "no issues (0 silenced)", makemigrations
+        --check "No changes detected".
+  - [X] vitest 129/129 (11 files; 101 baseline + 28 new in
+        app/src/lib/__tests__/kanban.test.ts — declared-not-guessed, the three
+        refusal modes, the transition legality matrix, single-key patch bodies,
+        and axis resolution against the REAL captured openapi.json fixture).
+  - [X] vite build green (138 modules); npx tsc --noEmit error count unchanged
+        vs baseline (10 → 10, none in kanban.ts / KanbanBoard.svelte).
+  - [X] LIVE against the demo rig (runserver 127.0.0.1:8000, admin token) for
+        both move paths: POST /api/orders/60/transition/ {"paid"} -> 200
+        status=paid; {"shipped"} from pending -> 409 {"reason":"illegal
+        transition: 'pending' -> 'shipped' (allowed from 'pending': paid)"} —
+        the client pre-refuses the same move with the same allowed-set wording,
+        the server stays the authority; PATCH /api/orders/60/ {"notes":…} ->
+        200 with status/total/customer untouched, which is the one-key-body
+        guarantee patchRecord relies on.
+  - [ ] UNVERIFIED, stated plainly: no browser/Tauri session, so no human
+        dragged a card. The mount() harness limitation the item-5 report filed
+        still blocks DOM-level component tests, so the board's wiring is proven
+        by the pure module + build + live API, not by a rendered component.
+  TWO NOTES FOR THE LEAD / NEXT SEATS:
+  (1) design call — an axis whose MODEL is absent from the loaded schema
+      resolves to no board (silent), on the same "plain DRF backends degrade
+      silently to the static brand" principle; the strict alternative (refuse
+      on any mis-declaration) was rejected because it would blank the board for
+      every customer API that legitimately lacks a model, and it would break the
+      existing openapi.test.ts shape assertions. axisProblem() answers null for
+      "nothing declared" so a missing declaration stays distinguishable from a
+      broken one.
+  (2) The board is the first consumer of R-002 §6, and it confirms the doc's
+      claim: the demo rig's single enum field makes a free-enum axis live-
+      untestable (no blank=True/second choices field exists). A second demo
+      model with a free enum would let items 8-11 exercise that path for real —
+      queued as a suggestion, NOT started (out of this item's scope, and it
+      needs a migration).
+  NEXT: item 8 (FR R-005 canonical CSV export, FE:BE) — unstarted; items 9-11
+  behind it. Objective completion is yours to claim, not mine: 8-11 remain.
+- Note taken on [2026-10-20 Tue 21:25] :: Segment opened by platform-engineer
+  (WORK ORDER item 7 — items 1-6 carry :DELIVERED: evidence). Scope from
+  ROADLOG.org:23-26: ModelPage gains a view=toggle (table|kanban); kanban
+  groups records by an enum field; drag-drop fires the R-001 transition API.
+  Risk flagged there is drag a11y, so the board ships a keyboard path for
+  every move. Binding constraint from docs/independent-enums.md §6: the
+  board axis must be DECLARED (registry entry), never guessed from "the
+  field named status" or "the first enum field"; a drop on a
+  lifecycle-governed field fires POST /transition/, a drop on a free enum
+  is a plain single-field PATCH that touches nothing else (guardrail 1).
+:END:
 ** TODO FR R-005 canonical CSV export                                         :FE:BE:
 ** TODO FR R-006 page registration                                            :FE:
 ** TODO FR R-008 widget data sources + new charts                             :FE:

@@ -2,12 +2,14 @@
   /** Schema-driven model CRUD: search + paginated table + create/edit modal. */
   import { get } from "svelte/store";
   import { app, effectiveConfig, handleApiError, toast } from "../lib/stores";
-  import { deleteRecord, fetchAudit, fetchHistory, listRecords, retrieveRecord, transitionRecord } from "../lib/api";
+  import { deleteRecord, fetchAudit, fetchHistory, listRecords, patchRecord, retrieveRecord, transitionRecord } from "../lib/api";
   import { actionFailureReason, actionsFor, type RegisteredAction } from "../lib/actions/index";
   import { getStatusField, hasLifecycle } from "../lib/statusTransitions";
+  import { cardLabel, planMove, resolveAxis } from "../lib/kanban";
   import { navigate } from "../lib/router";
   import { debounce } from "../lib/utils";
   import DataTable from "../components/DataTable.svelte";
+  import KanbanBoard from "../components/KanbanBoard.svelte";
   import RecordForm from "../components/RecordForm.svelte";
   import Icon from "../components/Icon.svelte";
   import type { AuditEntry, RecordRow } from "../lib/types";
@@ -16,6 +18,11 @@
 
   const model = $derived($app.schema?.byId[id]);
   const listPath = $derived(model?.listPath ?? "");
+  /** FR-R004: a board exists only for a model with a DECLARED kanban axis
+   *  (lib/kanban.ts) — the axis is never guessed from the field name, so a
+   *  model without one simply never shows the toggle. */
+  const axis = $derived(resolveAxis(model));
+  const BOARD_PAGE_SIZE = 100;
 
   let rows = $state<RecordRow[]>([]);
   let count = $state(0);
@@ -23,6 +30,8 @@
   let hasNext = $state(false);
   let hasPrev = $state(false);
   let loading = $state(true);
+  let view = $state<"table" | "kanban">("table");
+  let busyId = $state<string | number | null>(null);
   let searchInput = $state("");
   let searchTerm = $state("");
   let formOpen = $state(false);
@@ -52,6 +61,9 @@
       const p = await listRecords(effectiveConfig(), get(app).token || null, model, {
         page,
         search: searchTerm,
+        // a board groups one page of records into columns; ten rows spread over
+        // four columns says nothing, so the board asks for a wider page
+        pageSize: view === "kanban" ? BOARD_PAGE_SIZE : undefined,
       });
       if (mine !== reqId) return; // a newer request superseded this one
       rows = p.results;
@@ -68,6 +80,13 @@
   // reload when model / page / search changes
   $effect(() => {
     if (model) void load();
+  });
+
+  // an axis declared for one model says nothing about the next, so switching
+  // models always lands back on the table view
+  $effect(() => {
+    void id;
+    view = "table";
   });
 
   // deep-link #/m/<model>/<recordId> -> open that record for editing
@@ -142,6 +161,37 @@
       } else {
         handleApiError(err);
       }
+    }
+  }
+
+  /** A kanban drop: `planMove` decides the call (and refuses an illegal or
+   *  no-op move before anything hits the network). A lifecycle axis fires the
+   *  R-001 transition endpoint; a free enum fires a PATCH of exactly the axis
+   *  field — never a whole-row PUT, which is how accidental derived writes
+   *  happen (docs/independent-enums.md §3 guardrail 1). */
+  async function onBoardMove(row: RecordRow, columnKey: string) {
+    if (!model || !axis || row.id === undefined) return;
+    const plan = planMove(axis, row, columnKey);
+    if (!plan.ok) {
+      toast("error", plan.reason);
+      void load(); // the board was showing a stale state
+      return;
+    }
+    busyId = row.id;
+    try {
+      const cfg = effectiveConfig();
+      const token = get(app).token || null;
+      const updated = plan.via === "transition"
+        ? await transitionRecord(cfg, token, model, row.id as any, plan.column)
+        : await patchRecord(cfg, token, model, row.id as any, plan.body);
+      rows = rows.map((r) => (r.id === updated.id ? updated : r));
+      toast("success", `${cardLabel(model, updated)} → ${plan.column}`);
+    } catch (err: any) {
+      if (err.status === 409 && err.detail?.reason) toast("error", err.detail.reason);
+      else handleApiError(err);
+      void load();
+    } finally {
+      busyId = null;
     }
   }
 
@@ -233,10 +283,25 @@
         <h1 class="text-2xl font-semibold">{model.name}</h1>
         <p class="text-sm text-text/50">{model.fields.length} fields · {listPath}</p>
       </div>
-      <button class="btn btn-primary" onclick={openCreate}>
-        <Icon name="plus" size={16} />
-        New {model.name}
-      </button>
+      <div class="flex items-center gap-2">
+        {#if axis}
+          <div class="flex items-center gap-1 rounded-brand border border-text/10 p-1" role="group"
+               aria-label="View for {model.name}">
+            <button class="btn {view === 'table' ? 'btn-primary' : 'btn-ghost'} px-3 py-1.5 text-xs"
+                    aria-pressed={view === "table"} onclick={() => (view = "table")}>
+              <Icon name="table" size={14} /> Table
+            </button>
+            <button class="btn {view === 'kanban' ? 'btn-primary' : 'btn-ghost'} px-3 py-1.5 text-xs"
+                    aria-pressed={view === "kanban"} onclick={() => (view = "kanban")}>
+              <Icon name="grid" size={14} /> Kanban
+            </button>
+          </div>
+        {/if}
+        <button class="btn btn-primary" onclick={openCreate}>
+          <Icon name="plus" size={16} />
+          New {model.name}
+        </button>
+      </div>
     </div>
 
     <!-- search + count -->
@@ -263,8 +328,13 @@
       </span>
     </div>
 
-    <DataTable {model} {rows} {loading} onedit={openEdit} ondelete={onDelete} ontransition={onTransition} onshowhistory={showHistory}
-               actions={recordActions} bulkActions={bulkActions} onaction={requestAction} />
+    {#if view === "kanban" && axis}
+      <KanbanBoard {model} {rows} {axis} {loading} busy={busyId}
+                   onmove={onBoardMove} onedit={openEdit} />
+    {:else}
+      <DataTable {model} {rows} {loading} onedit={openEdit} ondelete={onDelete} ontransition={onTransition} onshowhistory={showHistory}
+                 actions={recordActions} bulkActions={bulkActions} onaction={requestAction} />
+    {/if}
 
     <!-- pagination -->
     <div class="mt-4 flex items-center justify-between text-sm">
