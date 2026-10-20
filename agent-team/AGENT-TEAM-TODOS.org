@@ -318,7 +318,19 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   that kanban over them (R-004) needs the R-001 machine. No code change in
   scope; anything found while writing gets reported, not silently fixed.
 :END:
-** TODO FR R-004 kanban view                                                  :FE:
+** ONGOING FR R-004 kanban view                                                  :FE:
+:LOGBOOK:
+- Note taken on [2026-10-20 Tue 21:25] :: Segment opened by platform-engineer
+  (WORK ORDER item 7 — items 1-6 carry :DELIVERED: evidence). Scope from
+  ROADLOG.org:23-26: ModelPage gains a view=toggle (table|kanban); kanban
+  groups records by an enum field; drag-drop fires the R-001 transition API.
+  Risk flagged there is drag a11y, so the board ships a keyboard path for
+  every move. Binding constraint from docs/independent-enums.md §6: the
+  board axis must be DECLARED (registry entry), never guessed from "the
+  field named status" or "the first enum field"; a drop on a
+  lifecycle-governed field fires POST /transition/, a drop on a free enum
+  is a plain single-field PATCH that touches nothing else (guardrail 1).
+:END:
 ** TODO FR R-005 canonical CSV export                                         :FE:BE:
 ** TODO FR R-006 page registration                                            :FE:
 ** TODO FR R-008 widget data sources + new charts                             :FE:
