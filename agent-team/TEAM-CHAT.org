@@ -323,3 +323,71 @@
   NEXT: item 8 (FR R-005 canonical CSV export, FE:BE) — unstarted, dispatch to
   the next segment. Objective completion is yours to claim, not mine: 8-11
   remain on the board.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 22:14 UTC]
+:END:
+  RESULT: DONE — WORK ORDER item 8 (FR R-005 canonical CSV export) shipped on
+  ai/turn-20261020-2209; board item flipped ONGOING->PENDING with :DELIVERED:
+  evidence. Both layers were built by the two BLOCKED "host-committed"
+  segments (9e4b2a3 BE, 929cfd3 + 484f9e4 FE); this segment closed them out
+  and fixed the two red flags those runs left in the tree — which is exactly
+  what BLOCKED segments cannot do, since finalize merged them behind a gate
+  that only saw part of the damage.
+  What close-out commit 4508f6a does:
+  - docs/csv-export.md WRITTEN — both BE modules' headers reference it
+  (views.py:23, csv_export.py:1), it did not exist. The doc pins the two
+  layers that must not be collapsed (visible-columns/current-page client
+  export vs schema-gated line-level server export), the byte-identity rules
+  the csv.ts <-> csv_export.py twins share (RFC 4180/CRLF/QUOTE_MINIMAL,
+  null->empty, lowercase booleans, decimals never re-flowed, formula guard
+  keyed by NUMERIC SHAPE not type, BOM added exactly once), and the copy
+  checklist for client projects. AGENTS.md gained the matching hard-won
+  bullet + docs/ layout row.
+  - DEFECT 1 (would have turned CI red): zz_tmp_live.test.ts was committed
+  while its own header reads "TEMPORARY live-rig probe — NOT for commit";
+  it hits a live server on 127.0.0.1:8011, so the test-gate vitest leg was
+  doomed. Removed. Its ground truth is now re-proved against a real seeded
+  rig via curl: single BOM (ef bb bf, not doubled), Content-Disposition
+  "orders-line.csv", the documented 14-column header, 60 line rows for
+  60 orders x 60 history (one row per pair, parent ids repeated),
+  anonymous GET -> 401, /api/schema/ advertises orders/export/.
+  - DEFECT 2 (test-first contract drift): api.test.ts:117 asserted
+  Accept "text/csv"; a drive-by in 484f9e4 widened api.ts to
+  "text/csv, */*;q=0.8" and the suite was never re-run. Kept the
+  relaxation (a proxy/plain-DRF JSON error body stays readable instead of
+  406ing at negotiation — same rule as the R-001 calls breaking on bare
+  segment concatenation: paths and headers come from evidence, not hope),
+  and the test now asserts the widened header as the contract.
+  Evidence:
+  - [X] Landing gate green at 4508f6a: pytest 205/205
+        (-p no:cacheprovider, 11.88s), manage.py check "no issues
+        (0 silenced)", makemigrations --check "No changes detected",
+        vitest 163/163 (capped NODE_OPTIONS=1024 --maxWorkers=1, 8.79s).
+        205 = the 175 baseline + 30 from test_csv_export.py; 163 = vitest
+        with csv/api/openapi export tests included.
+  - [X] Cross-layer byte identity is proven WITHOUT a browser:
+        test_csv_export.py:170 test_the_shared_golden_document diffs the
+        server writer against the client twin on the same rows.
+  - [ ] UNVERIFIED, stated plainly: no browser/Tauri session — nobody
+        clicked "Export table" or "Full export" in a real window; the
+        download path (createObjectURL + a.click) is only as covered as
+        happy-dom allows. The 21:05 component-test harness fix remains
+        the highest-leverage queued FE task.
+  DESIGN NOTE for your review: layer-2 binding follows the R-003/R-004 law
+  to its conclusion — normalizeOpenAPI sets model.exportPath only when the
+  document carries GET <listPath>export/ AND no POST on that path
+  (openapi.ts:171-176); a plain DRF backend without the endpoint simply
+  never shows the button, no error, no guessed URL. The fetched body is
+  handed to downloadCsv untouched (the whole collection is the server's
+  answer; the client strips a duplicate BOM, nothing else), and the
+  server's Content-Disposition filename wins but goes through the same
+  slugifier as client names — a header is data, not a save path.
+  FOLLOW-UPS, NOT STARTED (out of item 8's scope): the 21:05 oneOf/
+  BlankEnum openapi.ts defect is still open (third seat now flagging it);
+  the second free-enum demo model suggestion still stands.
+  NEXT: item 9 (FR R-006 page registration, FE) — unstarted; items 10-11
+  behind it. Objective completion is yours to claim, not mine: 9-11 remain.
