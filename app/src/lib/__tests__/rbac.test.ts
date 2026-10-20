@@ -6,7 +6,7 @@ import { flushSync, mount, unmount } from "svelte";
 import { findAuditModel, parseClaims, roleAllows, type RoleClaims } from "../rbac";
 import { normalizeOpenAPI } from "../openapi";
 import { collectPages } from "../pages/index";
-import { actionsFor, type RegisteredAction } from "../actions/index";
+import { actions, actionsFor, type RegisteredAction } from "../actions/index";
 import { app } from "../stores";
 import Activity from "../../pages/Activity.svelte";
 import type { AdminSchema, FieldSpec, ModelSpec } from "../types";
@@ -130,10 +130,34 @@ describe("actionsFor + claims", () => {
   });
 });
 
+describe("the seeded demo rig's live claims", () => {
+  // Bodies captured verbatim from GET /api/me/ against a seeded, running
+  // demo backend (manage.py runserver :8013), i.e. the two logins the
+  // docs/rbac.md table advertises. The point is the REJECTION row: a rig
+  // whose only user is a superuser can never show a hidden button, so the
+  // single-role caller is what makes R-007's gate demonstrable end to end.
+  const ADMIN_LIVE = { username: "admin", is_staff: true, is_superuser: true, roles: ["auditors", "managers"] };
+  const AUDITOR_LIVE = { username: "auditor", is_staff: false, is_superuser: false, roles: ["auditors"] };
+
+  it("parses both, and the real registry gates bulk_flag for one of them", () => {
+    const admin = parseClaims(ADMIN_LIVE);
+    const auditor = parseClaims(AUDITOR_LIVE);
+    expect(admin?.isSuperuser).toBe(true);
+    expect(auditor).toEqual({ username: "auditor", isStaff: false, isSuperuser: false, roles: ["auditors"] });
+    // The DISCOVERED registry (app/src/actions/), not a hand-made source.
+    expect(actionsFor("orders", "bulk", actions, admin).map((a) => a.id)).toContain("bulk_flag");
+    expect(actionsFor("orders", "bulk", actions, auditor).map((a) => a.id)).not.toContain("bulk_flag");
+  });
+
+  it("leaves ungated actions visible to the single-role caller", () => {
+    const auditor = parseClaims(AUDITOR_LIVE)!;
+    expect(actionsFor("orders", "record", actions, auditor).map((a) => a.id)).toContain("flag");
+  });
+});
+
 // ---------------------------------------------------------------------------
 // the Activity screen, mounted for real
 // ---------------------------------------------------------------------------
-
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
