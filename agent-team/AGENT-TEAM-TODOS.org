@@ -395,8 +395,42 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   lifecycle-governed field fires POST /transition/, a drop on a free enum
   is a plain single-field PATCH that touches nothing else (guardrail 1).
 :END:
-** ONGOING FR R-005 canonical CSV export                                     :FE:BE:
+** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-20 Tue 22:14]
+- Note taken on [2026-10-20 Tue 22:14] :: :DELIVERED: both layers shipped
+  across three segments on this chain — BE 9e4b2a3 (line-level
+  GET /api/orders/export/ + DRF-free csv_export.py twin), FE 929cfd3
+  (csv.ts writer twin, openapi.ts exportPath discovery, api.ts fetchCsv,
+  DataTable Export-table/Full-export buttons, types.exportPath), FE+glue
+  484f9e4 (ModelPage handlers + download icon, api/csv/openapi test
+  extensions). Close-out 4508f6a (this seat, ai/turn-20261020-2209):
+  docs/csv-export.md written (both BE modules' headers referenced a doc
+  that did not exist), AGENTS.md hard-won bullet added, and the two red
+  flags the BLOCKED segments left behind fixed:
+  (1) zz_tmp_live.test.ts — a scratch probe whose own header says "NOT
+  for commit", hitting a live server at 127.0.0.1:8011, would have failed
+  the CI test-gate vitest leg; removed, its ground truth re-proved with
+  curl against a real seeded rig instead (single BOM ef bb bf,
+  Content-Disposition "orders-line.csv", header = the documented 14
+  columns, 60 line rows for 60 orders x 60 history, anonymous -> 401,
+  /api/schema/ advertises orders/export/).
+  (2) api.test.ts vs api.ts drift on the Accept header (test-first
+  contract said 'text/csv', a later drive-by widened it to
+  'text/csv, */*;q=0.8' without re-running) — the relaxation is the
+  right behavior (proxy/plain-DRF JSON error bodies stay readable
+  instead of 406ing at negotiation), so the test now asserts it.
+  Evidence: landing gate green at 4508f6a — pytest 205/205
+  (-p no:cacheprovider, 11.88s), manage.py check "no issues (0
+  silenced)", makemigrations --check "No changes detected", vitest
+  163/163 (NODE_OPTIONS=1024, --maxWorkers=1, 8.79s).
+  UNVERIFIED, stated plainly: no browser/Tauri session — nobody clicked
+  "Export table" or "Full export" in a real window; the download path
+  (URL.createObjectURL + a.click) is unit-covered only as far as
+  happy-dom allows, and the DOM-harness limitation filed at 21:05 still
+  blocks component-level proof. Layer-1 bytes ARE proven against the
+  shared golden document test (test_csv_export.py:170) — the two twins
+  diff clean on the same rows.
 - State "ONGOING" from "TODO" [2026-10-20 Tue 21:39]
 - Note taken on [2026-10-20 Tue 21:39] :: WORK ORDER item 8, seat
   platform-engineer, branch ai/turn-20261020-2137. ROADLOG R-005 pins two
