@@ -89,6 +89,42 @@ def test_superuser_reports_superuser(api):
     assert body["is_superuser"] is True
 
 
+def test_seed_demo_gives_a_nonsuperuser_single_role_holder(api):
+    """The rig must be able to demonstrate the REJECTION path live.
+
+    A superuser sees every gated surface by design, so `admin` alone can
+    never show a hidden button: seed_demo also creates `auditor`, a plain
+    non-staff/non-superuser user holding exactly one Group. That body is
+    what makes rbac.ts's `roleAllows(["managers"], claims) === false`
+    clickable in a browser.
+    """
+    call_command("seed_demo", verbosity=0)
+    auditor = User.objects.get(username="auditor")
+    assert auditor.is_superuser is False and auditor.is_staff is False
+    body = _authed_client(auditor).get("/api/me/").json()
+    assert body == {
+        "username": "auditor",
+        "is_staff": False,
+        "is_superuser": False,
+        "roles": ["auditors"],
+    }
+    # the seeded superuser keeps both groups: the acceptance case, live too.
+    admin_body = _authed_client(User.objects.get(username="admin")).get("/api/me/").json()
+    assert admin_body["is_superuser"] is True
+    assert admin_body["roles"] == ["auditors", "managers"]
+
+
+def test_seed_demo_role_assignment_is_idempotent(api):
+    """Rerunning the seed must not drift the claims (rigs get re-seeded)."""
+    call_command("seed_demo", verbosity=0)
+    call_command("seed_demo", verbosity=0)
+    auditor = User.objects.get(username="auditor")
+    assert list(auditor.groups.values_list("name", flat=True)) == ["auditors"]
+    body = _authed_client(auditor).get("/api/me/").json()
+    assert body["roles"] == ["auditors"]
+    assert body["is_superuser"] is False
+
+
 def test_schema_advertises_me_path(tmp_path):
     """The client binds the button from the document — generation must not
     crash on the new view and the path must carry a GET."""
