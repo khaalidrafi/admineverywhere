@@ -517,3 +517,69 @@
         dashboard; happy-dom + stubbed fetch is the proof surface.
   NEXT: item 11 (FR R-007 RBAC phased, FE:BE) — the last open board item.
   Objective completion is yours to claim, not mine.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-20 Tue 23:37 UTC]
+:END:
+  RESULT: DONE — WORK ORDER item 11 (FR R-007 RBAC phased) delivered on
+  ai/turn-20261020-2308 at 7387a3a; board item flipped ONGOING->PENDING with
+  :DELIVERED: evidence. That was the LAST open board item — the whole
+  WORK ORDER 1-11 now carries delivered evidence and waits on your gate.
+  What landed, both ROADLOG phases in one segment:
+  - Phase (a), the claims contract: demo-backend gained GET /api/me/
+    (core/views.py MeView) answering {username, is_staff, is_superuser,
+    roles} with roles = sorted Django Group names; seed_demo creates the
+    auditors + managers groups so a fresh rig demonstrates claims. Client:
+    normalizeOpenAPI binds schema.mePath ONLY when the document carries
+    GET …/me/ with no POST — the exportPath/actionPath evidence law, never
+    a guessed URL; lib/rbac.ts is the pure decision module (parseClaims /
+    roleAllows / findAuditModel); the claims writable lives in stores.ts,
+    refreshed with the schema in loadSchema and cleared on logout; page
+    meta.roles gates the Sidebar, action meta.roles gates DataTable/
+    ModelPage buttons (bulk_flag is the managers-only reference), and an
+    invalid roles list is REFUSED into refusedPages with a nameable reason.
+    Graceful degradation is the keystone: no mePath, or a failed read,
+    leaves claims null = NO filtering anywhere — a plain DRF backend keeps
+    the full menu, exactly like the static-brand fallback.
+  - Phase (b), the activity screen: app/src/pages/Activity.svelte is a
+    pure R-006 drop-in — one file, zero registry/router/sidebar edits —
+    reading the R-003 audit model through findAuditModel's schema-
+    discovered listPath, newest-first with the server's object_type/
+    object_id filters, and naming the missing ViewSet in its empty state
+    instead of 404ing a hand-written /api/audit/. ModelPage's audit
+    sub-view was moved onto the same discovered path while I was there.
+  Evidence (all measured at 7387a3a):
+  - [X] Landing gate green: pytest 210/210 (-p no:cacheprovider, 14.8s;
+        +5 in test_rbac_roles.py), manage.py check "no issues
+        (0 silenced)", makemigrations --check "No changes detected",
+        vitest 233/233 (17 files, capped NODE_OPTIONS=1024 --maxWorkers=1;
+        +14 in rbac.test.ts), vite build 150 modules zero warnings,
+        tsc --noEmit = only the 7 known pre-existing errors.
+  - [X] LIVE rig smoke (seeded, :8012): token login OK; anon GET
+        /api/me/ -> 401; admin GET -> roles ["auditors","managers"],
+        is_superuser true; the YAML schema advertises /api/me/ (line 402).
+        Vite dev transform 200 for Activity.svelte / rbac.ts /
+        Sidebar.svelte, zero transform errors.
+  - [X] Mounted-DOM proofs (rbac.test.ts): Activity feeds its table
+        through the DISCOVERED listPath (fetch URL asserted) and renders
+        the nameable refusal with NO fetch when the schema has no audit
+        model.
+  - [ ] UNVERIFIED, stated plainly: no browser/Tauri window viewed the
+        sidebar; the role-REJECTION path (non-superuser missing a role)
+        has unit + mount proof only — the live smoke used admin, who is
+        superuser and sees everything by design.
+  DESIGN NOTE for your review: client-side gating is presentation, never
+  security — docs/rbac.md pins this and deliberately leaves the reference
+  actions server-open (a real deployment mirrors each role in DRF
+  permission classes; the rig keeps exercising the audit trail for every
+  authenticated caller instead).
+  FOLLOW-UP, NOT STARTED (out of item scope): a second seeded NON-superuser
+  demo user carrying exactly one role would make the rejection path
+  live-demonstrable — one line in seed_demo + a fixture, worth folding into
+  the next FE item if one opens.
+  NEXT: none — items 1-11 of the WORK ORDER all carry PENDING-with-
+  :DELIVERED: evidence. Objective completion is yours to verify and claim,
+  not mine; per chain law I am not touching OBJECTIVE-STATE.
