@@ -79,7 +79,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
 | `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
 | `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
-| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) |
+| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) + `independent-enums.md` (FR-R002 separated-status-fields convention, schema enum-component naming, guardrails) |
 
 ## Commands
 
@@ -137,6 +137,17 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   there earns a DRF 400.
 - Widgets render from a schema-reactive `$effect`, not `onMount` (the
   schema arrives after mount).
+- Independent enums (FR-R002, "separated status fields") are per-field
+  contracts: drf-spectacular hoists a choices field into a component named
+  from the **property name**, not the model (`hooks.py:67-95`), so two
+  unrelated `status` fields sharing a value set collapse into one shared
+  `StatusEnum` and only genuinely different sets stay separate
+  (`OrderStatusEnum` + `ShipmentStatusEnum`). Convention: one nested
+  `Choices` class per semantic field, never shared across models; declare
+  `ENUM_NAME_OVERRIDES` instead of living with the collision warnings; never
+  derive one enum from another in client code, and never key lifecycle
+  governance on a field *name* — `app/src/lib/statusTransitions.ts` is keyed
+  by model id. Full convention + guardrails in `docs/independent-enums.md`.
 - Custom actions (FR-R003) follow the widget drop-in contract: one `.ts` in
   `app/src/actions/` exporting `meta{label,scope,model?,confirm?,input?,handler}`
   — the registry globs it, nothing to edit. Endpoint URLs come from
