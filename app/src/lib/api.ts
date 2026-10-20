@@ -349,7 +349,7 @@ export async function fetchCsv(
   let resp: Response;
   try {
     resp = await fetch(url + path, {
-      headers: { Accept: "text/csv", ...(token ? { Authorization: `Token ${token}` } : {}) },
+      headers: { Accept: "text/csv, */*;q=0.8", ...(token ? { Authorization: `Token ${token}` } : {}) },
     });
   } catch (err: any) {
     throw new ApiError(`Cannot reach backend at ${url}`, { network: true, detail: redactSecrets(err) });

