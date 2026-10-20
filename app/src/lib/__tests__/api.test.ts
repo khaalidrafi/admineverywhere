@@ -86,3 +86,117 @@ describe("fieldErrors extraction", () => {
     expect(result).toEqual({ _: "General error message" });
   });
 });
+
+describe("fetchCsv (FR-R005 layer 2)", () => {
+  const MODEL_EXPORT = "/api/orders/export/";
+
+  function respond(over: Record<string, any> = {}) {
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ "Content-Disposition": 'attachment; filename="orders-line.csv"' }),
+      text: async () => "﻿id\r\n1\r\n",
+      ...over,
+    };
+  }
+
+  it("authenticates the GET and asks for text/csv, on the base URL only", async () => {
+    let captured: [string, RequestInit] | null = null;
+    mockFetch.mockImplementationOnce((url: string, init: RequestInit) => {
+      captured = [url, init];
+      return Promise.resolve(respond());
+    });
+    const { fetchCsv } = await import("../api");
+    const pending = fetchCsv(
+      { apiUrl: "http://srv:8000/" } as any, "tok-1", MODEL_EXPORT, "fallback.csv",
+    );
+    const [url, init] = captured as unknown as [string, RequestInit];
+    // path comes from the schema, so the call is base + the documented path —
+    // never a bare segment concatenated onto a URL.
+    expect(url).toBe("http://srv:8000/api/orders/export/");
+    expect((init.headers as any).Accept).toBe("text/csv");
+    expect((init.headers as any).Authorization).toBe("Token tok-1");
+    expect((await pending).filename).toBe("orders-line.csv");
+  });
+
+  it("sends no Authorization header when signed out", async () => {
+    let captured: RequestInit | null = null;
+    mockFetch.mockImplementationOnce((_url: string, init: RequestInit) => {
+      captured = init;
+      return Promise.resolve(respond());
+    });
+    const { fetchCsv } = await import("../api");
+    await fetchCsv({ apiUrl: "http://srv" } as any, null, MODEL_EXPORT, "f.csv");
+    expect((captured as any as RequestInit).headers).not.toHaveProperty("Authorization");
+  });
+
+  it("takes the filename from Content-Disposition, quoted or bare", async () => {
+    const { fetchCsv } = await import("../api");
+    mockFetch.mockResolvedValueOnce(respond());
+    expect((await fetchCsv({ apiUrl: "http://srv" } as any, null, MODEL_EXPORT, "fb.csv")).filename)
+      .toBe("orders-line.csv");
+
+    mockFetch.mockResolvedValueOnce(respond({
+      headers: new Headers({ "Content-Disposition": "attachment; filename=raw-export.csv" }),
+    }));
+    expect((await fetchCsv({ apiUrl: "http://srv" } as any, null, MODEL_EXPORT, "fb.csv")).filename)
+      .toBe("raw-export.csv");
+  });
+
+  it("falls back to the caller's name when the header is missing", async () => {
+    mockFetch.mockResolvedValueOnce(respond({ headers: new Headers() }));
+    const { fetchCsv } = await import("../api");
+    expect((await fetchCsv({ apiUrl: "http://srv" } as any, null, MODEL_EXPORT, "orders-line.csv")).filename)
+      .toBe("orders-line.csv");
+  });
+
+  it("will not let a hostile header steer the save path", async () => {
+    mockFetch.mockResolvedValueOnce(respond({
+      headers: new Headers({ "Content-Disposition": 'attachment; filename="../../etc/cron.d/x.csv"' }),
+    }));
+    const { fetchCsv } = await import("../api");
+    const name = (await fetchCsv({ apiUrl: "http://srv" } as any, null, MODEL_EXPORT, "fb.csv")).filename;
+    expect(name).not.toContain("..");
+    expect(name).not.toContain("/");
+    expect(name.endsWith(".csv")).toBe(true);
+  });
+
+  it("normalises a doubled .csv suffix rather than appending to it", async () => {
+    mockFetch.mockResolvedValueOnce(respond({
+      headers: new Headers({ "Content-Disposition": 'attachment; filename="orders.csv"' }),
+    }));
+    const { fetchCsv } = await import("../api");
+    expect((await fetchCsv({ apiUrl: "http://srv" } as any, null, MODEL_EXPORT, "fb.csv")).filename)
+      .toBe("orders.csv");
+  });
+
+  it("raises ApiError with the status on a 4xx/5xx, JSON detail or not", async () => {
+    mockFetch.mockResolvedValueOnce(respond({
+      ok: false, status: 403, text: async () => JSON.stringify({ detail: { token: "leak" } }),
+    }));
+    const { ApiError: E, fetchCsv } = await import("../api");
+    await expect(
+      fetchCsv({ apiUrl: "http://srv" } as any, "tok", MODEL_EXPORT, "fb.csv"),
+    ).rejects.toThrow(/403/);
+    mockFetch.mockResolvedValueOnce(respond({ ok: false, status: 500, text: async () => "<html>gateway</html>" }));
+    await expect(
+      fetchCsv({ apiUrl: "http://srv" } as any, "tok", MODEL_EXPORT, "fb.csv"),
+    ).rejects.toBeInstanceOf(E);
+  });
+
+  it("raises a network ApiError that never carries the token", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("down at token=tok"));
+    const { ApiError: E, fetchCsv } = await import("../api");
+    const err = await fetchCsv({ apiUrl: "http://srv" } as any, "tok", MODEL_EXPORT, "fb.csv")
+      .then(() => null).catch((e) => e);
+    expect(err).toBeInstanceOf(E);
+    expect(String(err?.detail)).not.toContain("tok");
+  });
+
+  it("returns the server body untouched (its BOM is the writer's, not ours)", async () => {
+    mockFetch.mockResolvedValueOnce(respond({ text: async () => "﻿id\r\n1\r\n" }));
+    const { fetchCsv } = await import("../api");
+    const out = await fetchCsv({ apiUrl: "http://srv" } as any, null, MODEL_EXPORT, "fb.csv");
+    expect(out.text.startsWith("﻿")).toBe(true);
+  });
+});
