@@ -14,8 +14,17 @@ flag and bulk-scope bulk_flag, both appending to the audit log — and
 AuditEntryViewSet serves the append-only audit endpoint: list + create
 only (PUT/PATCH/DELETE 405 by construction), newest first, actor always
 derived from the request. See docs/custom-actions.md.
+
+FR-R005: OrderViewSet gains the line-level export reference — GET
+/api/orders/export/ streams the WHOLE collection (search honoured,
+pagination off) as one row per parent/child pair with the parent ids
+repeated, in a stable order. The thin client's own Export button covers
+visible columns of the current page client-side; a flattened join is the
+part only the server can do. See docs/csv-export.md.
 """
 from django.db.models import Q
+from django.http import HttpResponse
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -31,6 +40,7 @@ from .models import (
     OrderHistory,
     Product,
 )
+from .csv_export import ORDER_EXPORT_HEADER, csv_text, order_export_rows
 from .serializers import (
     AuditEntrySerializer,
     BulkFlagRequestSerializer,
@@ -217,6 +227,33 @@ class OrderViewSet(SearchableModelViewSet):
             for flagged in found
         ]
         return Response(AuditEntrySerializer(entries, many=True).data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        request=None,
+        responses={(200, "text/csv"): OpenApiTypes.BINARY},
+        description="Line-level CSV export (FR-R005 reference): the WHOLE order collection "
+        "in primary-key order, one row per order/history pair with the parent ids repeated. "
+        "Honours ?search=, ignores pagination (a page of an export is not an export). "
+        "Answers text/csv with an attachment disposition and a UTF-8 BOM.",
+    )
+    # pagination_class=None for the same reason history is: the default
+    # PageNumberPagination would document a paginated wrapper this endpoint
+    # never emits — a CSV body has no page shape at all.
+    @action(detail=False, methods=["get"], pagination_class=None)
+    def export(self, request):
+        orders = (
+            self.get_queryset()
+            .select_related("customer", "product")
+            .prefetch_related("history__actor")
+            .order_by("id")
+        )
+        rows = [ORDER_EXPORT_HEADER, *order_export_rows(orders)]
+        # utf-8-sig: Excel on Windows reads a BOM-less file as the local
+        # codepage and mangles every non-ASCII name.
+        body = csv_text(rows).encode("utf-8-sig")
+        response = HttpResponse(body, content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="orders-line.csv"'
+        return response
 
 
 class AuditEntryViewSet(ListModelMixin, CreateModelMixin, viewsets.GenericViewSet):
