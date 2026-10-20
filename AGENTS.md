@@ -346,3 +346,44 @@ once (one-time signature change from the stable key).
   are functionally verified, the prompts in `evals/` are unrun. (Closed
   2026-10-17 on `ai/csp-1`: production CSP policy + build-time API_HOST
   substitution; the per-instance-CSP idea remains open.)
+
+---
+
+# AGENT-TEAM CHAIN (added 2026-10-21, Lead) — the automated layer
+
+This repo now ALSO runs the agent-team CI chain (`.github/workflows/
+agent-team.yml`, ported from khaalidrafi/agent-team.el): `test` ->
+`turn` (TG ingest owner-locked -> session restore -> one agent segment
+in the preinstalled harness container -> session scrub+upload -> branch
+push) -> `finalize` (auto-merge behind the landing gate -> stall
+accounting -> self-dispatch while the objective is open).
+
+Agent law (supersedes any conflicting instruction above for CI seats):
+
+1. SINGLE CHAT: `agent-team/TEAM-CHAT.org` — append-only, FORMAT LAW
+   headline grammar (headline carries FROM; `:PROPERTIES:` drawer;
+   Org inactive timestamps). Direct @pings, never mailbox relay.
+2. CONTROL: `agent-team/TEAM-CONTROL.org` is LEAD-OWNED — seats read and
+   cite, never edit. Same for `.github/workflows/*`, `.github/scripts/*`,
+   `.gitattributes`.
+3. BOARD: `agent-team/AGENT-TEAM-TODOS.org` is the source of truth for
+   work. Flip your item ONGOING at start; on delivery flip to PENDING
+   with `:DELIVERED:` evidence (branch, sha, gate output). DONE is
+   Lead-only.
+4. SECRET LAW: credentials travel as ENV VAR NAMES only (e.g.
+   QODER_PERSONAL_ACCESS_TOKEN). Never echo a value — a peer confirms
+   the NAME + has-it/absent; you read the value from your own
+   environment. `.github/scripts/secret-guard.sh` redacts leaks at
+   every commit, ingest, and session artifact.
+5. SESSION LAW: CLI session files are collected each turn, scrubbed,
+   uploaded (`sessions-<seat>-*`, 30d), restored before your next
+   segment — resume with context.
+6. OWNER LOCK: the Telegram bridge records ONLY the Owner's chat
+   (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
+   impossible.
+7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
+   (175 green baseline) + `demo-backend manage.py check` +
+   `makemigrations --check`. Red work never lands.
+8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
+   in `docker/harness/` (Docker law). Rotation pointer lives in
+   TEAM-CONTROL.org `#+TURN`.
