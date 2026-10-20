@@ -2,7 +2,8 @@
   /** Schema-driven model CRUD: search + paginated table + create/edit modal. */
   import { get } from "svelte/store";
   import { app, effectiveConfig, handleApiError, toast } from "../lib/stores";
-  import { deleteRecord, fetchAudit, fetchHistory, listRecords, patchRecord, retrieveRecord, transitionRecord } from "../lib/api";
+  import { deleteRecord, fetchAudit, fetchCsv, fetchHistory, listRecords, patchRecord, retrieveRecord, transitionRecord } from "../lib/api";
+  import { downloadCsv, exportFileName, tableToCsv } from "../lib/csv";
   import { actionFailureReason, actionsFor, type RegisteredAction } from "../lib/actions/index";
   import { getStatusField, hasLifecycle } from "../lib/statusTransitions";
   import { cardLabel, planMove, resolveAxis } from "../lib/kanban";
@@ -12,7 +13,7 @@
   import KanbanBoard from "../components/KanbanBoard.svelte";
   import RecordForm from "../components/RecordForm.svelte";
   import Icon from "../components/Icon.svelte";
-  import type { AuditEntry, RecordRow } from "../lib/types";
+  import type { AuditEntry, FieldSpec, RecordRow } from "../lib/types";
 
   let { id, recordId }: { id: string; recordId?: string } = $props();
 
@@ -32,6 +33,7 @@
   let loading = $state(true);
   let view = $state<"table" | "kanban">("table");
   let busyId = $state<string | number | null>(null);
+  let exporting = $state(false);
   let searchInput = $state("");
   let searchTerm = $state("");
   let formOpen = $state(false);
@@ -136,6 +138,50 @@
   function clearSearch() {
     searchInput = "";
     onSearch("");
+  }
+
+  /** FR-R005 layer 1 — the table's own data, client-side, no server call.
+   *  DataTable hands over the columns it actually rendered, so the file cannot
+   *  disagree with what the user is looking at, and it carries the CURRENT
+   *  page only (?search= and pagination already decided that). */
+  function onExportVisible(columns: FieldSpec[]) {
+    if (!model) return;
+    if (rows.length === 0) {
+      toast("info", "Nothing to export — this page has no records.");
+      return;
+    }
+    const name = exportFileName(model.name, searchTerm ? `search-${searchTerm}` : `page-${page}`);
+    if (!downloadCsv(name, tableToCsv(columns, rows))) {
+      toast("error", "This environment cannot start a download.");
+      return;
+    }
+    toast("success", `Exported ${rows.length} row${rows.length === 1 ? "" : "s"} of ${columns.length} columns to ${name}`);
+  }
+
+  /** FR-R005 layer 2 — the flattened line-level export, only when the schema
+   *  documents it (model.exportPath comes from normalizeOpenAPI, never from a
+   *  guessed path). The WHOLE collection is the server's answer, so the bytes
+   *  are handed to downloadCsv untouched; it strips a duplicate BOM, not data. */
+  async function onServerExport() {
+    if (!model?.exportPath || exporting) return;
+    exporting = true;
+    try {
+      const file = await fetchCsv(
+        effectiveConfig(),
+        get(app).token || null,
+        model.exportPath,
+        exportFileName(model.name, "line"),
+      );
+      if (!downloadCsv(file.filename, file.text)) {
+        toast("error", "This environment cannot start a download.");
+        return;
+      }
+      toast("success", `Full export saved as ${file.filename}`);
+    } catch (err) {
+      handleApiError(err);
+    } finally {
+      exporting = false;
+    }
   }
 
   async function onTransition(row: RecordRow, targetStatus: string) {
@@ -333,7 +379,9 @@
                    onmove={onBoardMove} onedit={openEdit} />
     {:else}
       <DataTable {model} {rows} {loading} onedit={openEdit} ondelete={onDelete} ontransition={onTransition} onshowhistory={showHistory}
-                 actions={recordActions} bulkActions={bulkActions} onaction={requestAction} />
+                 actions={recordActions} bulkActions={bulkActions} onaction={requestAction}
+                 onexport={onExportVisible} onserverexport={model.exportPath ? onServerExport : undefined}
+                 {exporting} />
     {/if}
 
     <!-- pagination -->

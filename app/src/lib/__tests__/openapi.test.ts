@@ -126,3 +126,55 @@ describe("helpers", () => {
     expect(titleCase("product")).toBe("Product");
   });
 });
+
+describe("server-export discovery (FR-R005 layer 2)", () => {
+  /** Minimal doc: one list model at /api/things/ plus an optional sibling. */
+  function docWith(sibling?: { get?: boolean; post?: boolean }) {
+    const paths: Record<string, any> = {
+      "/api/things/": {
+        get: { responses: { "200": { content: { "application/json": { schema: { $ref: "#/components/schemas/PaginatedThingList" } } } } } },
+        post: { requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/ThingRequest" } } } } },
+      },
+    };
+    if (sibling?.get) paths["/api/things/export/"] = { get: { responses: { "200": { content: { "text/csv": { schema: { type: "string" } } } } } } };
+    if (sibling?.post) paths["/api/things/export/"].post = { responses: { "200": { content: {} } } };
+    return {
+      paths,
+      components: {
+        schemas: {
+          Thing: { properties: { id: { type: "integer", readOnly: true }, name: { type: "string" } } },
+          ThingRequest: { properties: { name: { type: "string" } }, required: ["name"] },
+          PaginatedThingList: {
+            properties: { results: { type: "array", items: { $ref: "#/components/schemas/Thing" } } },
+          },
+        },
+      },
+    };
+  }
+
+  it("binds exportPath when GET <list>export/ exists", () => {
+    expect(normalizeOpenAPI(docWith({ get: true })).byId.things.exportPath)
+      .toBe("/api/things/export/");
+  });
+
+  it("leaves exportPath undefined when the document carries no export", () => {
+    expect(normalizeOpenAPI(docWith()).byId.things.exportPath).toBeUndefined();
+    // The captured fixture predates the demo rig's export action, so the
+    // shipped client must show no "Full export" button against it — absence is
+    // silent degradation, not an error (same rule as a plain DRF backend and
+    // the static brand).
+    expect(schema.byId.orders.exportPath).toBeUndefined();
+  });
+
+  it("refuses a sibling that also takes POST — that shape is a list, not an action", () => {
+    // Guessing here is how `apiUrl + "export"` once broke the R-001 calls.
+    expect(normalizeOpenAPI(docWith({ get: true, post: true })).byId.things.exportPath)
+      .toBeUndefined();
+  });
+
+  it("never discovers the export sibling as a model of its own", () => {
+    const out = normalizeOpenAPI(docWith({ get: true }));
+    expect(out.byId.export).toBeUndefined();
+    expect(out.models.map((m) => m.id)).toEqual(["things"]);
+  });
+});

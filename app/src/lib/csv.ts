@@ -31,6 +31,16 @@ export type CsvCell = string | number | boolean | null | undefined;
 
 const FORMULA_LEAD = ["=", "+", "-", "@", "\t", "\r"];
 
+/** A string that is nothing but a number. DRF answers a DecimalField with a
+ *  STRING, so "-5.00" reaches this writer as text while the server's writer
+ *  sees a Decimal — guard it here and the two export layers disagree on every
+ *  negative price. Shape, not type, is what both sides key on. */
+const NUMERIC_SHAPED = /^[+-]?(\d+(\.\d*)?|\.\d+)$/;
+
+function isFormulaText(s: string): boolean {
+  return s.length > 0 && FORMULA_LEAD.includes(s[0]) && !NUMERIC_SHAPED.test(s);
+}
+
 function needsQuotes(s: string): boolean {
   return /[",\n\r]/.test(s);
 }
@@ -42,7 +52,7 @@ export function csvCell(value: CsvCell): string {
   if (typeof value === "boolean") s = value ? "true" : "false";
   else if (typeof value === "number") s = String(value); else s = String(value);
 
-  if (typeof value === "string" && FORMULA_LEAD.includes(s[0] as string)) s = `'${s}`;
+  if (typeof value === "string" && isFormulaText(s)) s = `'${s}`;
   return needsQuotes(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
@@ -93,9 +103,12 @@ function slugify(s: string): string {
 const BOM = "\ufeff";
 
 /** Excel on Windows reads a BOM-less UTF-8 file as the local codepage and
- *  mangles every non-ASCII name, so the BOM ships with the document. */
+ *  mangles every non-ASCII name, so the BOM ships with the document.
+ *  Idempotent on purpose: layer 2 hands this function a body the SERVER already
+ *  wrote, BOM included, and a second one shows up as a stray `ï»¿` in the first
+ *  cell of every download. */
 export function csvBlobParts(csv: string): BlobPart[] {
-  return [BOM + csv];
+  return [BOM + (csv.startsWith(BOM) ? csv.slice(1) : csv)];
 }
 
 /** Trigger a browser download. Returns false when there is no DOM to download
