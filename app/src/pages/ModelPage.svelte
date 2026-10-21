@@ -276,16 +276,20 @@
       historyView = null;
       return;
     }
-    try {
-      audit = (await fetchAudit(effectiveConfig(), get(app).token || null, {
-        objectType: model.singular,
-        objectId: row.id,
-        path: findAuditModel(get(app).schema)?.listPath,
-      })).results;
-    } catch (err: any) {
-      // A backend that has not shipped the R-003 audit endpoint has no log to
-      // show — degrade to the lifecycle half instead of failing the sub-view.
-      if (err.status !== 404) handleApiError(err);
+    // A backend that has not documented the R-003 audit model has no log to
+    // show — skip the read entirely (fetchAudit refuses a guessed path), so
+    // the sub-view degrades to the lifecycle half instead of failing.
+    const logModel = findAuditModel(get(app).schema);
+    if (logModel) {
+      try {
+        audit = (await fetchAudit(effectiveConfig(), get(app).token || null, {
+          objectType: model.singular,
+          objectId: row.id,
+          path: logModel.listPath,
+        })).results;
+      } catch (err: any) {
+        if (err.status !== 404) handleApiError(err);
+      }
     }
   }
 
