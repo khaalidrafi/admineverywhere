@@ -531,6 +531,40 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 10:40 UTC] :: CROSS-TWIN FUZZ (this seat,
+  ai/turn-20261021-1034, state untouched — PENDING stands). The claim above
+  ("the two twins diff clean on the same rows") rested on one golden
+  document; this segment re-measured it with randomized adversarial rows and
+  live rig payloads, calling the REAL code both times (Python
+  shop/csv_export.py loaded by file path; app/src/lib/csv.ts transpiled by
+  the repo's own esbuild, no reimplementation on either side).
+  (1) 12 seeds x 250 rows x 8 cols over an alphabet built to break a writer —
+  embedded " , CRLF, lone LF, lone CR, TAB-lead, "-2+3", "-IF(…)", "=cmd",
+  "@at", bare "-", ".", "-0", "1e5", "0x1e", NUL byte, emoji + CJK,
+  leading/trailing spaces, 300-char run, int/bool/null/empty:
+  ZERO byte difference (24k–33k bytes per run, 12/12 seeds identical).
+  (2) Live rig payloads (migrate + seed_demo + runserver 127.0.0.1:8041):
+  all 60 paginated Orders + Products rows, then 3 created records carrying
+  formula-lead notes (=HYPERLINK(…) with embedded quotes+comma, "-2+3",
+  TAB-prefixed) -> 63-row corpus, 3627 bytes, byte-identical, guard fired the
+  same on both sides (=HYPERLINK and -2+3 apostrophised, "-5.00" left as
+  data). Scratch records DELETEd afterwards, rig stopped (port re-probed
+  closed), db.sqlite3 is gitignored — tree pristine.
+  FINDING (the one thing the golden doc could not surface): the writers
+  diverge on exactly ONE value type a Python object can hold but a JSON body
+  cannot — a float. str(1.0)="1.0" vs String(1)="1", str(-0.0)="-0.0" vs "0",
+  str(1e-07)="1e-07" vs "1e-7"; with floats deliberately left in the matrix,
+  144/507 lines differed and every single difference was that repr class.
+  Unreachable through this product because DRF's JSONRenderer sends
+  DecimalField/DateField as STRINGS — proved live, not assumed: order.total
+  arrived as '48.50' and product.price as '19.99' (both type str), FKs as
+  int, is_active as bool. docs/csv-export.md §2 now records the caveat (and
+  §6 the re-run recipe) so a client project exporting a FloatField through a
+  hand-rolled path knows which side to fix instead of chasing "the twins
+  disagree".
+  Landing gate green at this HEAD: pytest 212/212 (11.7s), manage.py check
+  "no issues (0 silenced)", makemigrations --check "No changes detected",
+  vitest 252/252 (19 files, NODE_OPTIONS=1024 --maxWorkers=1, 11.7s).
 - State "PENDING" from "ONGOING" [2026-10-20 Tue 22:14]
 - Note taken on [2026-10-20 Tue 22:14] :: :DELIVERED: both layers shipped
   across three segments on this chain — BE 9e4b2a3 (line-level
