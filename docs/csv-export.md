@@ -162,6 +162,18 @@ regression in the rendering rule goes red on one side and names itself.
 
 ## 6. Proving it
 
+- Re-runnable harness (2026-10-21): `python3 scripts/csv_twin_diff.py` feeds one
+  generated matrix (sentinel strings + float switch points + N random cells,
+  default 3000) through BOTH writers exactly as each one produces a download —
+  `csv_text(header + [[csv_cell(v)]])` on the server, `buildCsv(header, raw)` on
+  the client via the real `csv.ts` under vitest — and compares raw bytes. Exit 0
+  identical, 1 divergence (first 20 differing lines printed), 2 rig could not
+  run. Measured green at this HEAD (870 cells / 17004 B, and 3082 cells earlier
+  the same day), and its negative control bites: disabling the server's formula
+  guard makes it name every missing apostrophe. Compare DOCUMENTS, not cells —
+  `csv_cell` guards before `csv.writer` quotes, while `csvCell` does both, so a
+  stage-by-stage diff invents divergences (see docs/DEVGUIDE.md, FIFTH law).
+
 - `plugin/tests/test_csv_export.py` — writer byte rules, formula guard both
   shapes, line-level ordering, childless parents, search honoured, no
   pagination wrapper, 401 on anonymous, schema advertises the path, and the two
