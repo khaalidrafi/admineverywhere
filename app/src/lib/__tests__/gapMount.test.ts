@@ -426,4 +426,21 @@ describe("QuoteCard", () => {
     flushSync(() => {});
     expect(host.querySelector("blockquote")!.textContent).toContain(QUOTES[8].text);
   });
+
+  it("unmounting mid-flip kills the pending swap — no timer fires against a dead component", async () => {
+    vi.useFakeTimers();
+    const rolls = rollScript(6, 9);
+    const host = renderSync(QuoteCard);
+    expect(rolls.consumed).toBe(1); // the mount drew once
+
+    host.querySelector("button")!.click();
+    vi.advanceTimersByTime(100); // still flipping: the swap is armed for 225
+    unmount(mounted.pop()!);
+
+    vi.advanceTimersByTime(500);
+    // The armed callback writes to a destroyed component's $state; the
+    // $effect cleanup must have cleared the timer before it could run.
+    expect(rolls.consumed).toBe(1);
+    expect(host.querySelector("blockquote")?.textContent ?? "").not.toContain(QUOTES[9].text);
+  });
 });

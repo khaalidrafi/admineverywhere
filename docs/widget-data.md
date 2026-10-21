@@ -79,7 +79,10 @@ through their DOM and their requests:
 - `chartMount.test.ts` — `StatusDonut` (dash/offset geometry from the group
   fraction, top-5 fold into `(other)`, total in the ring, nameable `empty`
   with ZERO requests, friendly `error`), `LeaderBars` (value-descending sort,
-  top-6 cut, percent-of-max widths), `TrendArea` (30-day point set matches the
+  top-6 cut, percent-of-max widths, and the caption: `grouped from N records`
+  with N measured against a server whose pagination never ends — 300 rows at
+  the default `rowCap`, so the number is proven to be the cap and not the
+  fixture), `TrendArea` (30-day point set matches the
   day keys, flat baseline when the window is all zeros) and `ActivityChart`
   — which predates the engine, so its own model-picker (a readOnly
   `created_at` beats every other timestamp) and its 3-page walk cap are pinned
@@ -88,7 +91,17 @@ through their DOM and their requests:
   concatenated URL.
 
 Mutant-checked: dropping the fold, the sort, the offset step, the page cap and
-the picker preference each fail a named test.
+the picker preference each fail a named test; so does `DEFAULT_ROW_CAP` 300→400
+(the caption test) and reverting the caption to the old `first N records`.
+
+## Caption law
+
+`FeedResult.groups.total` is `rows.length` — however many rows the feed
+actually consumed, capped at `rowCap`. It is NOT a statement that a cap was
+applied: a 50-row API returns 50 and says "first 50 records", which promises a
+truncation that never happened. Say what the number is — `grouped from N
+records` — and mean it in both directions. The same reasoning binds any widget
+that prints a fetched count.
 
 ## Copy checklist for client projects
 
@@ -103,3 +116,10 @@ the picker preference each fail a named test.
    schema-derived and generic.
 5. Never compute against `window.__TAURI_INTERNALS__`-specific paths —
    web mode and Tauri mode share this exact code path.
+6. A timer the widget arms itself — a flip, a caret blink, a deferred swap —
+   obeys the same law as the poll: clear it from an `$effect` cleanup, because
+   `startWidgetFeed`'s stop fn only owns the feed's timer. `QuoteCard` had a
+   225 ms flip timer with no cleanup (a click then unmount fired the swap
+   against a destroyed component) and `gapMount.test.ts` now pins the death:
+   click, unmount mid-flip, advance past 225 ms, assert the quote picker drew
+   NO extra random value.
