@@ -172,8 +172,10 @@ requests once the actions are stripped from the schema.
   under the rig's own `core.settings` and fails the pytest suite on any drift
   between the rig and the fixture (paths and component schemas compared
   key-by-key, plus witnesses that `COMPONENT_SPLIT_REQUEST` and the four
-  evidence-law endpoint shapes are still documented). Note it must use the
-  subprocess: the in-process rig scope in `plugin/tests/conftest.py` omits
-  `COMPONENT_SPLIT_REQUEST`, so an in-process generation differs from the
-  fixture on 12 of 13 paths and cannot guard the capture.
+  evidence-law endpoint shapes are still documented). It runs the rig's own
+  `core.settings` because that is what the deployed rig serves — and the
+  in-process rig scope in `plugin/tests/conftest.py` is aligned to the same
+  profile (`COMPONENT_SPLIT_REQUEST` since 2026-10-21, measured zero drift on
+  all 16 paths), so the four rig modules' schema tests generate a
+  fixture-consistent document too.
 - Suites: `pytest 285` / `vitest 283` (`cd app && npm test`).
