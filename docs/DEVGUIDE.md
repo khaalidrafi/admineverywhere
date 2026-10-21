@@ -773,10 +773,74 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   the number is inside the file, so the leg is green while the citation sends the reader
   to unrelated code, and every edit that MOVES code silently ages the number. Writer
   rule: cite a SYMBOL a reader can grep, or re-measure the number in the same commit
-  that moves the code. Harness candidate, deliberately NOT built this segment (scope):
-  a leg that compares the cited line against a keyword from the prose around the
-  citation — fuzzy enough that it would need its own false-red controls first, and a
-  leg that guesses is worse than no leg (same finding as the resolver rule above).
+  that moves the code.
+  THE CANDIDATE IS NOW BUILT: `release_readiness.py` `leg_citation_targets` checks the
+  cited range against the symbol its own doc line spells. It stays a CHECK (it is not
+  one of the three landing-gate legs) and the claim class is deliberately NARROW — a
+  `name()` spelling on the same line as the citation — and that narrowness is a
+  measurement, not a hunch: broadening it to any identifier word on the line scanned
+  **576 claims and fired on 425 of them** (re-measured on the delivered tree — these two
+  numbers move with every doc edit, which is exactly why control 6 re-measures them
+  instead of trusting this sentence), all FALSE (`AGENTS.md:190` cites
+  `core/urls.py:10` for
+  `Demo()`, `core()`, `not()`, `rig()`, `route()` — prose words, not code claims), and
+  a middle ground of backticked-identifier-only claims scanned 13 and fired on 3, still
+  false in every one of the three: `drf_spectacular/hooks.py:89-91` is cited for
+  `StatusEnum`, which is data that code *produces* at line 91 and never spells, and
+  `demo-backend/shop/models.py:87` is cited for `Order` by **lexical containment** —
+  line 87 is a field inside `class Order`, so the citation is correct without the word
+  appearing on it. A leg that fires on a correct citation is worse than no leg: it
+  trains the reader to ignore the verdict. Same-line-only is the other half of the
+  scope: prose that names the symbol on the *next wrapped line* would cross-attribute
+  claims between the two citations sharing that line.
+  Three pins, so the leg cannot be quietly vacuous (ELEVENTH law applied to itself):
+  the population (literal `EXPECTED_CLAIMS` against the claims scanned — mismatch is
+  **exit 2**, a regex that silently matched nothing would otherwise report a GREEN over
+  zero work; it fired on THIS paragraph's own author the day it shipped, when adding the
+  matching AGENTS.md *Releases* sentence moved the honest scan 7 → 8 and the literal had
+  to follow, so a deliberate change is a two-place edit and an accidental one is a RED),
+  a WITNESS (`REQUIRED_CLAIMS`: the `csv_twin_diff.py` + `run()` claim must
+  still be scanned, keyed by path + symbol and never by the line number, because the
+  number is the thing under test — control 1 proved why: keyed WITH the number, the
+  leg reported "lost witness" on every wrong-target mutation and never reported the
+  wrong target), and an exemption with a reverse bite at BOTH ends
+  (the historical quote at `scripts/csv_twin_diff.py:109`, which THIS document and
+  AGENTS.md *Releases* both cite as a PAST state, is exempt from the hits test — and
+  RED if that token stops being scanned OR if the range starts carrying the symbol;
+  the exemption is keyed by the citation TOKEN, not the file, because one file carries
+  both the historical `:109` and the live `:248` claim, and exempting the path would
+  exempt the witness too).
+  Controls, eight, each restoring the tree byte-identical: a live `:248` drifted to
+  `:110` → 1 naming the citation, the symbol and where the name really appears; the
+  `run()` spelling deleted → **2** `7 symbol claim(s) … against a pinned population of
+  8` (one claim fewer than the literal — the pin fires on a coverage loss, not on a
+  correctness claim); the witness symbol swapped for one that IS in range (`cmd()`) →
+  1 `lost its
+  witness`; the historical quote rewritten to a live number in **both** documents that
+  quote it → 1 `match no scanned
+  claim` (rewriting only one of the two is correctly NOT that verdict — the other doc
+  still uses the exemption, which is the second lesson of control 4: an exemption is
+  per citation token, not per paragraph); the exemption re-keyed onto the live citation →
+  1 `target exemption is stale` (and it named both historical citations as wrong-target
+  in the SAME verdict, which is what the aggregated findings are for);
+  the claim class broadened → **2** first (population) and 1 with 392 false reds once
+  the pin was satisfied; a past-EOF citation → 1 from the BOUNDS leg, proving the shared
+  resolver refactor did not blunt it.
+  Four of those eight controls FAILED on the first version of this leg, and three of
+  them were holes in the leg rather than in the test: the witness keyed WITH the line
+  number reported "lost witness" instead of the wrong-target verdict it existed to
+  report (control 1); an exemption that matched nothing stayed silent — rc 0 — because
+  only the hits-side reverse bite was written (control 4); and an exempted historical
+  claim counted as PROOF that the live witness claim was still present, so deleting the
+  live pointer while a quote of the old number survived read GREEN (control 3, rc 0).
+  The fourth failure was in the RIG, not the leg: control 5's mutation string went stale
+  when the exemption's reason text was reworded, so the control silently ran against an
+  unmutated tree and reported rc 0 — which is why every mutation in that driver now
+  asserts its own target text before replacing it. All four also showed that raising on
+  the first finding hides the rest, so the leg collects every finding into one
+  verdict — a leg you have to run twice to read is a leg that lies about the second
+  finding.
+
 - **ELEVENTH harness law — a printed COUNT is not an EXPECTATION, and an artifact
   found by POSITION is not that artifact.** The brand twin went into the landing
   gate last segment, and the gap reported then ("count the POPULATION in the
