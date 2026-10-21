@@ -38,6 +38,10 @@ DEMO_SPECTACULAR_SETTINGS = {
     "TITLE": "Demo Shop API (test)",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Mirror core/settings.py:66 — without it the in-process document differs
+    # from the live rig on 12 of 13 paths and can never guard the client's
+    # proof fixture (test_schema_drift.py measures the parity this keeps).
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 
