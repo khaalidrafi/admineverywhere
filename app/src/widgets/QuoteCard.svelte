@@ -15,6 +15,11 @@
 
   const quote = $derived(QUOTES[index]);
 
+  // unmount mid-flip must kill the pending swap — the same "$effect cleanup
+  // kills the timer" law the FR-R008 poll feeds obey. Without it the 225ms
+  // timer fires against a destroyed component.
+  $effect(() => () => clearTimeout(flipTimer));
+
   function next() {
     if (flipping) return;
     flipping = true;
