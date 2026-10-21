@@ -10,12 +10,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushSync, mount, unmount } from "svelte";
 import ModelPage from "../../pages/ModelPage.svelte";
+import KanbanBoard from "../../components/KanbanBoard.svelte";
 import Toaster from "../../components/Toaster.svelte";
 import { normalizeOpenAPI } from "../openapi";
 import { resolveAxis } from "../kanban";
 import { app, toasts } from "../stores";
 import fixture from "./fixtures/openapi.json";
-import type { AdminSchema, ModelSpec } from "../types";
+import type { AdminSchema, ModelSpec, RecordRow } from "../types";
 
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
@@ -249,5 +250,66 @@ describe("mounted kanban board — columns, keyboard path, wire", () => {
     expect(toastHost.textContent).toBe("");
     // the table view still works — refusing the board is a degrade, not a break
     expect(host.textContent).toContain("pending");
+  });
+});
+
+/** The board's OWN legality gate, isolated from the page. Mounted through
+ *  ModelPage an illegal drop is refused twice over — here and again in
+ *  `planMove` (ModelPage.svelte:236) — so a wire-level test cannot tell which
+ *  guard fired: weakening `drop()`'s `!allowed` at KanbanBoard.svelte:77 left
+ *  every page-level assertion green (mutant survived, R-004 report 12:59Z).
+ *  With a spy `onmove` the component is judged on its own contract. */
+describe("KanbanBoard mounted alone — its drop guard answers to no one", () => {
+  function renderBoard(onmove: (row: RecordRow, column: string) => void) {
+    const model = LIVE.byId["orders"];
+    const axis = resolveAxis(model)!;
+    expect(axis).not.toBeNull();
+    const host = document.createElement("div");
+    document.body.append(host);
+    flushSync(() => {
+      hosts.push({ instance: mount(KanbanBoard, { target: host, props: { model, rows: [{ ...PENDING_ROW }], axis, onmove } }) });
+    });
+    const column = (label: string) =>
+      [...host.querySelectorAll("section")].find((s) => s.getAttribute("aria-label")?.startsWith(label))!;
+    const card = host.querySelector("article")!;
+    expect(card.getAttribute("draggable")).toBe("true");
+    return { host, column, card };
+  }
+
+  it("a drop on a column the machine forbids never reaches onmove", () => {
+    const onmove = vi.fn();
+    const { column, card } = renderBoard(onmove);
+    flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
+    const illegal = column("shipped"); // pending → shipped is not a transition
+    illegal.dispatchEvent(dragEvent("dragover"));
+    flushSync(() => illegal.dispatchEvent(dragEvent("drop")));
+    expect(onmove).not.toHaveBeenCalled();
+  });
+
+  it("a legal drop reaches onmove exactly once, and the drag is consumed", () => {
+    const onmove = vi.fn();
+    const { column, card } = renderBoard(onmove);
+    flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
+    const legal = column("paid");
+    legal.dispatchEvent(dragEvent("dragover"));
+    flushSync(() => legal.dispatchEvent(dragEvent("drop")));
+    expect(onmove).toHaveBeenCalledTimes(1);
+    expect(onmove.mock.calls[0][1]).toBe("paid");
+    expect(String(onmove.mock.calls[0][0].id)).toBe("7");
+    // drop() calls endDrag, so a second drop on the same column is inert
+    flushSync(() => legal.dispatchEvent(dragEvent("drop")));
+    expect(onmove).toHaveBeenCalledTimes(1);
+  });
+
+  it("dragover announces itself legal only on allowed columns", () => {
+    const onmove = vi.fn();
+    const { column, card } = renderBoard(onmove);
+    flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
+    const overLegal = dragEvent("dragover");
+    column("paid").dispatchEvent(overLegal);
+    expect(overLegal.defaultPrevented).toBe(true);
+    const overIllegal = dragEvent("dragover");
+    column("refunded").dispatchEvent(overIllegal);
+    expect(overIllegal.defaultPrevented).toBe(false);
   });
 });
