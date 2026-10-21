@@ -240,7 +240,14 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   NUMERIC *shape* (DRF sends decimals as strings), BOM added once
   (`csvBlobParts` is BOM-idempotent) — keep them in sync like
   `brandToCss`/`render_css`; same commit, both sides, on pain of the two
-  layers disagreeing on every negative price. Server: the `@action` needs a
+  layers disagreeing on every negative price. The twins are held to one byte
+  spec by a SHARED table: `FLOAT_PARITY` (a Python `float` renders with
+  ECMAScript's `String()` form — `js_number_text()` — because layer 1 sees the
+  JSON-parsed number, and the formula guard is keyed on
+  `isinstance(value, str)`, never on the rendered text) appears with the same
+  values and expectations in `plugin/tests/test_csv_export.py` and
+  `app/src/lib/__tests__/csv.test.ts`, and the golden document carries a float
+  column on both sides. Server: the `@action` needs a
   `text/csv` renderer in `renderer_classes` or the client's own Accept 406s
   before the view runs; `csv_export.py` stays DRF-free because `@extend_schema`
   captures `DEFAULT_SCHEMA_CLASS` at decoration time. Contract in
