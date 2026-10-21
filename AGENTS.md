@@ -158,7 +158,8 @@ python3 scripts/landing_gate.py             # 0 green / 1 a leg is red / 2 canno
 python3 scripts/landing_gate.py --fe        # plus vitest (needs app/node_modules)
 
 # the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
-# doc-citation rot, release inputs, no PEP 604 in any harness) — DEVGUIDE NINTH law
+# doc-citation rot AND every cited line landing inside its file, release inputs,
+# no PEP 604 in any harness) — DEVGUIDE NINTH + TENTH laws
 python3 scripts/release_readiness.py        # 0 coherent / 1 a leg is red / 2 cannot run
 python3 scripts/release_readiness.py --expect 0.1.3   # what the NEXT tag must say
 
@@ -204,7 +205,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   schema arrives after mount).
 - Independent enums (FR-R002, "separated status fields") are per-field
   contracts: drf-spectacular hoists a choices field into a component named
-  from the **property name**, not the model (`hooks.py:67-95`), so two
+  from the **property name**, not the model (`drf_spectacular/hooks.py:67-95`), so two
   unrelated `status` fields sharing a value set collapse into one shared
   `StatusEnum` and only genuinely different sets stay separate
   (`OrderStatusEnum` + `ShipmentStatusEnum`). Convention: one nested
@@ -390,8 +391,11 @@ was never committed — measured with `git rev-list --all --objects`, so the
 workflow is the reference, not a script beside it. Re-runnable check: `python3
 scripts/release_readiness.py` diffs the four carriers + the Cargo.lock entry,
 compares them against a `vX.Y.Z` tag pointing at HEAD (or `--expect X.Y.Z`),
-and refuses any doc citation of a path that does not exist (only the Lead-owned
-workflow still carries that stale citation, so it is cited, not edited).
+and refuses any doc citation of a path that does not exist AND any `file:line`
+citation whose number is past the end of that file — a path check cannot see the
+second half of the claim. A bare hooks.py:50 citation is never guessed at, so
+write the directory or the citation stays unverifiable (only the Lead-owned workflow still
+carries that stale citation, so it is cited, not edited).
 Only the `release` job
 holds `contents:write`, and it uses the built-in `GITHUB_TOKEN` — no
 PATs in CI. If a tag push ever fails to trigger, the manual fallback:

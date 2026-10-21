@@ -30,17 +30,17 @@ another field.**
 
 1. **One `Choices` class per semantic field, nested in its model, never shared.**
    `demo-backend/shop/models.py:63-70` declares `class Order.Status(models.TextChoices)`
-   and only `Order` uses it (`models.py:87`). A second concept gets a second class
+   and only `Order` uses it (`demo-backend/shop/models.py:87`). A second concept gets a second class
    (`class PaymentMethod(models.TextChoices)`), even if the values temporarily match.
    Reusing one choices tuple across two unrelated fields is what turns two
    independent enums into one accidental dependency.
 2. **Values are the wire contract; labels are display-only.** The label ("Paid")
    never reaches the client — `CharField.choices` emits the value. drf-spectacular
-   hashes the (name, value) pairs (`hooks.py:50-58`, `x-spec-enum-id`), which is why
+   hashes the (name, value) pairs (`drf_spectacular/hooks.py:50-58`, `x-spec-enum-id`), which is why
    relabelling a choice does not change the schema shape.
 3. **Lifecycle order lives in the machine, not in the schema.** A status field that
    is lifecycle-governed carries `STATUS_ORDER` + `TRANSITIONS` on the model
-   (`models.py:73`, `:78-83`) and the R-001 API (`docs/order-lifecycle.md`). A free
+   (`demo-backend/shop/models.py:73`, `:78-83`) and the R-001 API (`docs/order-lifecycle.md`). A free
    enum carries neither. The client cannot tell them apart from the enum list — see §3.
 4. **Do not set `blank=True` on a choices field unless an empty state is real.**
    It changes the emitted schema shape (`BlankEnum`, §2 case C) and today silently
@@ -50,35 +50,35 @@ another field.**
 
 Enum hoisting is done by the `postprocess_schema_enums` hook
 (`drf_spectacular/hooks.py:40-177`) and the component name is keyed on the
-**property name, not the model** (`hooks.py:67-76`). Consequences, measured by
+**property name, not the model** (`drf_spectacular/hooks.py:67-76`). Consequences, measured by
 feeding the hook synthetic schemas (no app changes; recipe in §5):
 
 - **Case A — one field name, one choice set.**
   `Order.status` and `Invoice.status` with identical sets → a single shared
-  component `StatusEnum`, both properties `$ref` it (`hooks.py:89-91`). Legal, but it
+  component `StatusEnum`, both properties `$ref` it (`drf_spectacular/hooks.py:89-91`). Legal, but it
   is the case to watch: the sharing holds only while the sets stay equal, and the day
   one model gains a value, the schema silently renames the component under both.
 - **Case B — same field name, different sets, each used by one model.**
   `Order.status` = `pending|paid`, `Shipment.status` = `new|delivered` → the name
   gains the component prefix: `OrderStatusEnum` and `ShipmentStatusEnum`
-  (`hooks.py:92-95`). **Independent enums stay independent in the schema** — this is
+  (`drf_spectacular/hooks.py:92-95`). **Independent enums stay independent in the schema** — this is
   the outcome the R-002 pattern relies on, and it needs no client work.
 - **Case C — a set reused across several components *and* competing sets under one
   name.** Non-optimally resolvable collision → hash-suffixed name
-  (`Status<Hash3>Enum`) **plus a warning** (`hooks.py:96-103`):
+  (`Status<Hash3>Enum`) **plus a warning** (`drf_spectacular/hooks.py:96-103`):
   > `enum naming encountered a non-optimally resolvable collision for fields named "status". … add an entry to ENUM_NAME_OVERRIDES to fix the naming.`
   Two further warnings mean the same thing from the other side: *multiple names for
-  the same choice set* (`hooks.py:104-110`) and, at the registry,
+  the same choice set* (`drf_spectacular/hooks.py:104-110`) and, at the registry,
   *`Encountered 2 components with identical names "X" and different identities …
   This will very likely result in an incorrect schema. Try renaming one.`*
-  (`plumbing.py:795-803`). All three are the schema-level form of "you derived one
+  (`drf_spectacular/plumbing.py:795-803`). All three are the schema-level form of "you derived one
   enum from another" — treat any of them as a build defect.
 - **Fix for a collision you cannot rename away:** declare the names explicitly —
   `SPECTACULAR_SETTINGS["ENUM_NAME_OVERRIDES"] = {"StatusEnum": Order.Status.choices}`
   (default `{}`, `drf_spectacular/settings.py:118`); `ENUM_SUFFIX` (`:125`) is the
   other knob.
-- **Blank/nullable choices split into extra components** (`hooks.py:145-164`, and
-  `ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE` defaults to **True**, `settings.py:120`), so
+- **Blank/nullable choices split into extra components** (`drf_spectacular/hooks.py:145-164`, and
+  `ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE` defaults to **True**, `drf_spectacular/settings.py:120`), so
   the property stops being a plain `$ref`:
 
   ```json
@@ -91,14 +91,14 @@ feeding the hook synthetic schemas (no app changes; recipe in §5):
   `components.schemas.StatusEnum = {"enum": ["pending","paid","shipped","refunded"], "type": "string"}`
   and `Order.properties.status = {"$ref": "#/components/schemas/StatusEnum"}`.
 - Enum **value order is not a contract**: serializer properties emit declaration
-  order (`plumbing.py:449-451`), but query/filter parameters get `sorted(enum)`
-  (`plumbing.py:400-407`). Never read lifecycle sequence out of an `enum` array.
+  order (`drf_spectacular/plumbing.py:449-451`), but query/filter parameters get `sorted(enum)`
+  (`drf_spectacular/plumbing.py:400-407`). Never read lifecycle sequence out of an `enum` array.
 
 ## 3. Client contract (what the thin client does, and must keep doing)
 
 - Each field's options come from **that field's own** schema entry: enum detection at
   `app/src/lib/openapi.ts:39-40` (inline `enum`, or a `$ref` resolving to a component
-  that carries `enum`), choices copied per field at `openapi.ts:81-92`. `FieldSpec.choices`
+  that carries `enum`), choices copied per field at `app/src/lib/openapi.ts:81-92`. `FieldSpec.choices`
   is per-field — no option list is ever merged, cached by name, or shared across
   models.
 - `RecordForm` renders **one select per enum field** straight from `f.choices`
@@ -128,10 +128,10 @@ The guardrails, as checks a reviewer can run on a diff:
 
 ## 4. Known gap found while writing this (reported, not fixed)
 
-`openapi.ts` `deref()` follows a **top-level `$ref` only** (`openapi.ts:26-32`). A
+`openapi.ts` `deref()` follows a **top-level `$ref` only** (`app/src/lib/openapi.ts:26-32`). A
 blank-allowing choice field arrives as `{"oneOf": [PriorityEnum, BlankEnum]}` (§2 case
 C), which no branch of `fieldTypeOf` recognises, so it falls through to the
-schemaless default `"text"` (`openapi.ts:70-72`) — **the select silently degrades to a
+schemaless default `"text"` (`app/src/lib/openapi.ts:70-72`) — **the select silently degrades to a
 free-text input**, with no error anywhere. The demo rig has no `blank=True` choices
 field, so the shipped fixture never shows the shape; a real customer API very likely
 does.
