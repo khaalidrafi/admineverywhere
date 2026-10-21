@@ -815,6 +815,70 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 23:55 UTC] :: THE OTHER GATE WAS THE UNPINNED ONE —
+  `gate.sh` vs `MERGE_COMMANDS` is now the FOURTH twin (branch ai/turn-20261021-2336;
+  state untouched — PENDING stands, DONE is the Lead's gate). Work order re-counted at
+  boot: 11 PENDING + 2 DONE, zero TODO/ONGOING/WAIT, every PENDING row carries
+  :DELIVERED:, no unanswered @platform-engineer ping (chat tail through 23:34Z all
+  mine), so the segment took candidate (a) named in my own 23:34Z report. TWELFTH
+  consecutive swallowed boot install (`import admincraft` failed, app/node_modules
+  absent) — self-healed with the gate's printed commands; standing Lead ask unchanged.
+  MEASURED BEFORE THE FIX: the roster pins added in the last two segments grade each
+  file ABOUT ITSELF. AGENTS.md claims the gate finalize replays and the gate a seat runs
+  "run the same", and the file that decides merges — `.github/scripts/gate.sh`
+  (Lead-owned, invoked by agent-team.yml) — had NO count pin and NO roster pin: three
+  bare commands, last segment measured `275 passed` + `GATE: GREEN` rc 0 over a vanished
+  24-test file. The shared roster was prose on both sides, and the side a seat does not
+  own is the side nobody measures.
+  SHIPPED: `scripts/gate_roster_diff.py` parses the commands gate.sh ACTUALLY EXECUTES
+  (cwd + argv + its `|| FAIL=1` capture) and diffs them, IN ORDER, against
+  `MERGE_COMMANDS` (`scripts/landing_gate.py:103`) — which is no longer a description but
+  the spec the merge legs run (`leg_pytest()` reads it at `scripts/landing_gate.py:233`,
+  `leg_django()` at `:256`), so seat behaviour, seat expectation and machine behaviour are
+  ONE object. Four doors: MISSING / UNDECLARED (incl. a silently narrowed argv) / ORDER
+  changed / FAILURE NOT CAPTURED. Wired into the family as FE_ROSTER's `gate-twin`
+  (EXPECTED_TWINS 3 -> 4, `--fe` now 9 legs); TWINS entries gained a per-twin verdict
+  word so an honest roster verdict is not forced to print "BYTE-IDENTICAL".
+  VERDICT SPLIT KEPT ON PURPOSE: drift BETWEEN the gates is RED (a real change in what
+  work gets gated on); a gate that parses to ZERO commands is CANNOT RUN — a harness that
+  reads nothing must never report identity.
+  THE CONTROL THAT CHANGED THE CODE: the first cut defaulted `captured = True`, so the
+  harness written to close door 4 was blind to door 4 — `|| FAIL=1` deleted from the check
+  leg answered `ROSTER-IDENTICAL — 3/3`, rc 0. Mutation run BEFORE the claim; default
+  flipped to False with the reason in a comment.
+  LEAD-OWNED BOUNDARY HELD: gate.sh opened read-only for every run (md5
+  edd19d7babf9629125b2b59f31bd6b08 verified before and after; `git status` clean for
+  .github/). ALL controls ran against COPIES under /tmp through the harness's own `--gate`
+  flag — including the zero-command and echo-only cases.
+  EVIDENCE: 8 child controls (migrations command deleted -> rc 1 MISSING migrations;
+  `|| FAIL=1` dropped -> rc 1 FAILURE NOT CAPTURED naming `python manage.py check`;
+  `-p no:cacheprovider` dropped -> rc 1 MISSING pytest AND UNDECLARED together;
+  `plugin/tests` -> `plugin/tests/unit` -> same pair; check/migrations swapped -> rc 1
+  ORDER changed; an added `python -m ruff check plugin` -> rc 1 UNDECLARED 1; echo-only
+  -> rc 2 ZERO commands; honest rc 0 3/3). 3 parent self-checks rc 2 (FE_ROSTER truncated
+  -> UNDECLARED gate-twin; TWINS truncated -> lists 3 pins 4; MERGE_COMMANDS missing
+  check -> internally inconsistent). 2 END-TO-END wiring proofs, each on the real
+  subprocess with landing_gate.py mutated on disk and restored byte-identical (md5
+  85f43d11e3fef8753f32b7108c1543de): spec loses `check` -> parent leg CannotRun; spec
+  narrows `check` argv -> parent leg LegRed `the twins DIVERGE`. Gates on the delivered
+  tree: `landing_gate.py` rc 0 (4 legs, pytest 299) and `landing_gate.py --fe` rc 0 (9
+  legs, vitest 416/31 files, csv 3070 cells/56287 B, brand 302 over pinned 350, parity
+  25 rows, gate-twin 3/3) and `release_readiness.py` rc 0 — 84 path citations, 82
+  bounds-checked lines, 13/13 symbol claims ON TARGET. THE PIN FIRED ON ITS AUTHOR A
+  FIFTH TIME, and this time it fired on a WRONG TARGET, not a count: my first prose wrap
+  put `leg_django()` on the line citing `:233` and release_readiness answered RED naming
+  256 — the TENTH law's third door caught by the leg itself before shipping.
+  EXPECTED_CLAIMS 11 -> 13 (`scripts/release_readiness.py:137`), the remedy the leg
+  printed, applied in this same commit. Stale pointers repaired in the same commit:
+  landing_gate.py:66 -> :67, :85 -> :86, :135 -> :158, :153 -> :176, :182 -> :213 in
+  AGENTS.md, DEVGUIDE and one release_readiness comment (my own insertions moved them;
+  in-range wrong-target is invisible to a bounds check).
+  DIFF: scripts/gate_roster_diff.py (new), scripts/landing_gate.py,
+  scripts/release_readiness.py (pin + comment), docs/DEVGUIDE.md (ELEVENTH law,
+  "the other gate" section), AGENTS.md (Commands + LANDING GATE bullet). Product code /
+  tests / migrations / lockfiles: ZERO changes. ROLE_LARK_WEBHOOK empty in this seat's
+  env (`[ -z ]`, not assumed) -> Lark report skipped, noted here. SECRET LAW held — no
+  credential read, echoed or committed, no secret names or values in any message.
 - Note taken on [2026-10-21 Wed 23:28 UTC] :: THE POPULATION LAW GOES ONE LEVEL UP —
   WHICH LEGS RUN, not only what they print (branch ai/turn-20261021-2316; state
   untouched — PENDING stands, DONE is the Lead's gate). Work order re-counted at boot:
