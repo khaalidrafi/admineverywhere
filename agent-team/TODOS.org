@@ -175,6 +175,49 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
 :END:
 *** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 12:11 UTC] :: CLIENT TYPECHECK NOW CLEAN
+  (seat platform-engineer, WORK ORDER exhausted — items 1-11 all
+  PENDING-with-delivered-evidence, no unanswered @platform-engineer ping in
+  the chat tail; per instruction 2 took the smallest verifiable improvement).
+  Every FE delivery on this board has carried the same caveat line, "tsc
+  --noEmit = only the known pre-existing errors". Those errors are now ZERO,
+  and one of the seven was in SHIPPED code, not in a test:
+  - app/src/lib/api.ts:153 — listRecords returned `Promise<Page>` while
+    app/src/lib/types.ts:92 declares `Page<T>` with NO default, so TS2314.
+    Now `Promise<Page<RecordRow>>`, matching toPage's own default (api.ts:140)
+    and fetchAllRecords' consumer (api.ts:171 pushes into RecordRow[]).
+  - Six test-fixture sites typed so the check means something:
+    RecordForm.test.ts:49/76/100 (`values` indexed by a string field name →
+    `Record<string, any>`), DataTable.test.ts:68 (rows now `RecordRow[]`, so
+    `r.id` exists), branding.test.ts:157/170 (runtime-tolerated absent
+    color/font expressed as ONE `as unknown as Brand` cast instead of
+    widening the production contract — sanitizeFont takes
+    `string | undefined` at branding.ts:33).
+  - WHY IT STAYED RED INVISIBLY: `npm run build` is plain `vite build`
+    (app/package.json:8) — esbuild strips types and does NOT typecheck, so
+    neither the landing gate (gate.sh, Lead-owned: pytest + check +
+    makemigrations) nor vitest ever ran tsc. Mutation-checked the guard in
+    both directions: reverting api.ts:153 to `Promise<Page>` re-produces
+    TS2314, restore → exit 0.
+  - DOCS: docs/DEVGUIDE.md Commands gained
+    `cd app && npx tsc --noEmit   # clean — 0 errors is the standing bar` and
+    a Hard-won-contracts bullet recording the esbuild-does-not-typecheck trap
+    (the tsc command appeared in NO doc before this).
+  MEASURED at 27f9672: `npx tsc --noEmit` exit 0 (was 7 errors); vitest
+  283/283 over 19 files unchanged (type-only edits — no runtime delta
+  claimed); `npm run build` ✓ 1.84s; landing gate GREEN — pytest 285/285,
+  manage.py check "no issues (0 silenced)", makemigrations "No changes
+  detected". Also reproduced the gate in-container from a cold box: empty
+  node_modules AND admincraft unpip-installed again (SIXTH consecutive),
+  fixed by README one-liners before any test could run.
+  SELF-FLAGGED MISTAKE (kept, because the lesson is the point): the
+  mutation-check used `git checkout -- src/lib/api.ts` to restore, which
+  discarded the UNCOMMITTED fix along with the mutation; re-applied by hand
+  and re-verified. Rule for every seat: commit before mutation-checking with
+  `git checkout`, or restore from a saved copy.
+  State untouched — PENDING stands, DONE is the Lead's gate. Lark report
+  SKIPPED: ROLE_LARK_WEBHOOK absent from this seat's environment (per
+  instruction 8).
 - Note taken on [2026-10-21 Wed 12:30 UTC] :: CONFTEST RIG PROFILE ALIGNED to
   core/settings.py (seat platform-engineer, WORK ORDER exhausted — every item
   1-11 is PENDING-with-delivered-evidence; took the flagged follow-up from the
