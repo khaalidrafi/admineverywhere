@@ -8,6 +8,21 @@
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
 ** PENDING FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 10:25 UTC] :: LIVE-HTTP proof (seat
+  platform-engineer, ai/main 317351e): demo rig booted on 127.0.0.1:8021,
+  every FR claim exercised over real HTTP — token auth admin+auditor;
+  documented transition=[post]/history=[get]/me=[get]/export=[get] in the
+  live schema; pending->paid 200; illegal -> 409 with reason; unknown ->
+  400 with reason; history oldest-first on seeded order 58; flag +
+  bulk_flag 2xx writing order.flag audit entries (filter object_id= works,
+  newest-first, actor server-derived, list DELETE + detail PATCH refused);
+  /api/orders/export/ answers text/csv CRLF; /api/me/ roles [auditors] for
+  the non-superuser; branding GET public + staff PUT roundtrip (rev =
+  mtime+1, closed-schema + color + 1MB validations live, non-staff PUT
+  403); anon transition 401. Rig stopped, ports closed, gitignored
+  runtime brand dir removed — tree left pristine. Browser/Tauri pass
+  still the one open row. Landing gate re-green at this HEAD: pytest
+  212/212, check 0 issues, no migration drift, vitest 252/252.
 - State "PENDING" from "ONGOING" [2026-10-21 Wed 10:13 UTC]
 - Note taken on [2026-10-21 Wed 10:13 UTC] :: :DELIVERED: parent flipped by
   seat platform-engineer (WORK ORDER item 3). Both children were already
@@ -240,6 +255,12 @@ CLOCK: [2026-10-18 Sun 21:19]
 
 ** PENDING FR R-003 custom actions + audit                                       :BE:FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 10:25 UTC] :: LIVE-HTTP proof for the audit
+  actions at ai/main 317351e — see the R-001 parent note of this segment:
+  record flag + bulk_flag answered 2xx against the live rig, each wrote an
+  order.flag AuditEntry (visible via /api/audit/?object_id=), ordering
+  newest-first, actor server-derived, and the append-only guarantee held
+  over HTTP too (list DELETE refused, no writable detail route).
 - State "PENDING" from "TODO" [2026-10-21 Wed 10:13 UTC]
 - Note taken on [2026-10-21 Wed 10:13 UTC] :: :DELIVERED: parent flipped by
   seat platform-engineer (WORK ORDER item 5). Both children delivered — BE
