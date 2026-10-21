@@ -6,15 +6,30 @@ them in sync" and that applyBrand() injects "a <style> with the same --brand-*
 variables". Both were prose, checked by hand and never committed — the same
 expiry disease the CSV twins had (scripts/csv_twin_diff.py, docs/DEVGUIDE.md).
 
-Two writers, one contract, and the artifact that bridges them, so three checks:
-  1. TWINS: for every brand the SERVER accepts (validate_brand == []), the
+Two writers, one contract, and the artifact that bridges them, so five checks:
+  1. POPULATION: the matrix is what this script says it is. A sentinel list that
+     loses rows shrinks the coverage and used to still print BYTE-IDENTICAL
+     (measured: cutting 7 legal fonts left the harness green over a matrix that no
+     longer contained the double-space case docs/DEVGUIDE.md records as a past
+     divergence). So the sentinel count is pinned by a literal AND by the lists,
+     and the two must agree — a silent truncation is impossible, a deliberate one
+     is a two-place edit.
+  2. DOMAIN: every brand the closed schema must refuse is refused, and every legal
+     one is accepted, each pinned by identity. Refusing to trust a printed count:
+     loosening the radius rule made 3 illegal radii legal and the twins still
+     agreed, so the harness said BYTE-IDENTICAL over a softened schema.
+  3. TWINS: for every brand the SERVER accepts (validate_brand == []), the
      build-time writer render_css() and the runtime writer brandToCss() must
      produce the same declarations, byte for byte.
-  2. BUNDLE: the shipped app/public/brand.css must equal render_css of the
+  4. BUNDLE: the shipped app/public/brand.css must equal render_css of the
      brand.json sitting beside it — that pair is first paint.
-  3. HANDOFF: brandToCss of that same brand.json must equal the bundle, because
+  5. HANDOFF: brandToCss of that same brand.json must equal the bundle, because
      applyBrand() re-injects it at boot. bundle != runtime means a visible
-     re-theme flicker, the exact thing the static bundle exists to prevent.
+     re-theme flicker, the exact thing the static bundle exists to prevent. The
+     shipped brand is found BY IDENTITY in the accepted set, never by position:
+     it used to be `runtime_css[-1]`, which silently grabbed a neighbour when the
+     shipped brand was refused and reported "HANDOFF DIVERGENCE — a visible
+     re-theme flicker" about a pair of brands that were never the same brand.
 
 Normalization, and why it is honest: the two carry DIFFERENT banner comments on
 purpose (a generated file says "do not edit", a runtime <style> says
@@ -27,8 +42,10 @@ Usage (from the repo root):
   python3 scripts/brand_twin_diff.py --brands 400     # bigger random matrix
   python3 scripts/brand_twin_diff.py --show           # print the accepted CSS
 
-Exit 0 = byte-identical; exit 1 = divergence (differing lines printed);
-exit 2 = the rig could not be run (missing node / app/node_modules / plugin).
+Exit 0 = byte-identical over the full pinned population; exit 1 = divergence, or a
+refusal expectation broken (the closed schema softened / a legal brand refused);
+exit 2 = the rig could not be run (missing node / app/node_modules / plugin) or the
+matrix disagrees with its own literal, in which case there is no verdict to report.
 """
 import argparse
 import json
@@ -107,6 +124,10 @@ VALID_FONTS = [
     "Noto Sans 2",
     "Space  Grotesk",       # double space -> "Space++Grotesk" on both sides
     "  Inter  ",            # python .strip() vs TS sanitize + trim
+    "\tTabbed Font\t",      # LEGAL, not illegal: both sides strip() before the
+                            # regex, so the tabs are eaten identically. It sat in
+                            # BAD_FONTS and the server accepted it — measured, and
+                            # it is a real twin case, so it stays, on the right side.
     "A" * 60,               # the SAFE_FONT_RE ceiling
     "a",
     "Font With 1 2 3 Digits",
@@ -118,9 +139,10 @@ VALID_RADIUS = ["0.75rem", "12px", "2em", "0px", "12.5rem", "999px", "1rem", "0.
 VALID_HEX = ["#7c3aed", "#AABBCC", "#000000", "#ffffff", "#7C3aEd", "#123456",
              "#FF00FF", "#0F1F2E"]
 
-# Illegal-on-the-server values: these must be REFUSED (and the refusal count is
-# printed), so the matrix also proves the closed schema still bites.
-BAD_FONTS = ["\tTabbed Font\t", "Inter!", "A" * 61, "Naïve Font", "", "   "]
+# Illegal-on-the-server values: each one is pinned below as MUST be refused, by
+# identity — the count is not trusted, because a printed count with no expectation
+# attached is how a softened closed schema passed green.
+BAD_FONTS = ["Inter!", "A" * 61, "Naïve Font", "", "   "]
 BAD_RADIUS = ["0.5", "0.75rem; }", "1.5", "big", "12 pt", "-4px"]
 BAD_HEX = ["#ff00", "red", "#zzzzzz", "#7c3aed ", "7c3aed", "#7c3aed6"]
 
@@ -135,13 +157,34 @@ def _brand(**over):
     return b
 
 
-def build_brands(extra: int, seed: int):
-    brands = [_brand()]
-    brands += [_brand(font=f) for f in VALID_FONTS + BAD_FONTS]
-    brands += [_brand(radius=r) for r in VALID_RADIUS + BAD_RADIUS]
-    brands += [_brand(**{"color_primary": h}) for h in VALID_HEX + BAD_HEX]
-    brands += [_brand(colors=None), _brand(colors={}), _brand(font=None)]
+# The sentinel population, written down as a literal as well as derived from the
+# lists above. Both must equal the built matrix or the script refuses to run: that
+# is the only way a truncated list becomes a loud failure instead of a smaller,
+# still-green verdict. A deliberate change to the matrix is a two-place edit.
+EXPECTED_SENTINELS = 49
+EXPECTED_DERIVED = (1 + len(VALID_FONTS) + len(BAD_FONTS) + len(VALID_RADIUS)
+                    + len(BAD_RADIUS) + len(VALID_HEX) + len(BAD_HEX) + 3)
+
+
+def build_sentinels():
+    """(brand, must_refuse, label) for every deterministic row. `must_refuse` is a
+    claim about the SERVER, checked per row in main() — not a filter."""
+    rows = [(_brand(), False, "baseline")]
+    rows += [(_brand(font=f), False, f"font={f!r}") for f in VALID_FONTS]
+    rows += [(_brand(font=f), True, f"font={f!r}") for f in BAD_FONTS]
+    rows += [(_brand(radius=r), False, f"radius={r!r}") for r in VALID_RADIUS]
+    rows += [(_brand(radius=r), True, f"radius={r!r}") for r in BAD_RADIUS]
+    rows += [(_brand(color_primary=h), False, f"primary={h!r}") for h in VALID_HEX]
+    rows += [(_brand(color_primary=h), True, f"primary={h!r}") for h in BAD_HEX]
+    rows += [(_brand(colors=None), True, "colors=None"),
+             (_brand(colors={}), True, "colors={}"),
+             (_brand(font=None), True, "font=None")]
+    return rows
+
+
+def build_random(extra: int, seed: int):
     rnd = random.Random(seed)
+    out = []
     for _ in range(extra):
         b = _brand(font=rnd.choice(VALID_FONTS), radius=rnd.choice(VALID_RADIUS))
         for k in BASE["colors"]:
@@ -149,8 +192,8 @@ def build_brands(extra: int, seed: int):
                 b["colors"][k] = rnd.choice(VALID_HEX)
         if rnd.random() < 0.1:  # one poisoned field per ~10 rows keeps the
             b["colors"][rnd.choice(list(BASE["colors"]))] = rnd.choice(BAD_HEX)
-        brands.append(b)
-    return brands
+        out.append(b)
+    return out
 
 
 def payload(css: str) -> str:
@@ -225,15 +268,51 @@ def main() -> int:
     work = Path(tempfile.mkdtemp(prefix="brand-twin-"))
     try:
         shipped_brand = json.loads(PUBLIC_JSON.read_text(encoding="utf-8"))
-        candidates = build_brands(args.brands, args.seed) + [shipped_brand]
-        accepted = []
-        for b in candidates:
-            errs = validate_brand(json.loads(json.dumps(b)))
-            if not errs:
-                accepted.append(b)
-        refused = len(candidates) - len(accepted)
-        print(f"matrix: {len(candidates)} brands -> {len(accepted)} accepted by the server, "
-              f"{refused} refused (both writers only ever run on the accepted set)")
+        # A matrix that cannot agree with its own literal has no standing to
+        # certify anything, so it refuses (exit 2) instead of reporting a verdict.
+        if EXPECTED_SENTINELS != EXPECTED_DERIVED:
+            print(f"the matrix disagrees with itself: {EXPECTED_SENTINELS} sentinels in the "
+                  f"literal, {EXPECTED_DERIVED} derived from VALID_*/BAD_* — change BOTH when "
+                  "the matrix changes on purpose", file=sys.stderr)
+            return 2
+        sentinels = build_sentinels()
+        randoms = build_random(args.brands, args.seed)
+        if len(sentinels) != EXPECTED_SENTINELS or len(randoms) != args.brands:
+            print(f"MATRIX TRUNCATED: {len(sentinels)} sentinels built against a literal of "
+                  f"{EXPECTED_SENTINELS}, {len(randoms)} random rows against --brands "
+                  f"{args.brands} — refusing to certify a smaller matrix", file=sys.stderr)
+            return 2
+
+        # One pass through the server's own schema, keeping each row's verdict
+        # EXPECTATION alongside its result.
+        checked = [(b, must_refuse, label, validate_brand(json.loads(json.dumps(b))))
+                   for b, must_refuse, label in sentinels]
+        checked += [(b, None, "random", validate_brand(json.loads(json.dumps(b))))
+                    for b in randoms]
+        checked.append((shipped_brand, False, "SHIPPED app/public/brand.json",
+                        validate_brand(json.loads(json.dumps(shipped_brand)))))
+
+        # The domain leg: the closed schema must bite exactly where it is pinned.
+        softened = [(label, b) for b, mr, label, errs in checked if mr is True and not errs]
+        tightened = [(label, errs) for b, mr, label, errs in checked if mr is False and errs]
+        if softened or tightened:
+            for label, b in softened:
+                print(f"SCHEMA SOFTENED — the server now ACCEPTS a brand it must refuse: "
+                      f"{label}", file=sys.stderr)
+            for label, errs in tightened:
+                print(f"LEGAL BRAND REFUSED — {label}: {errs}", file=sys.stderr)
+            return 1
+
+        accepted = [brand for brand, _, _, errs in checked if not errs]
+        refused = len(checked) - len(accepted)
+        pinned = sum(1 for _, mr, _, _ in checked if mr is not None)
+        matched = sum(1 for _, mr, _, errs in checked
+                      if mr is not None and bool(errs) == mr)
+        print(f"population: {len(checked)} candidates = {len(sentinels)} sentinels "
+              f"(literal {EXPECTED_SENTINELS}) + {len(randoms)} random + shipped; "
+              f"{matched}/{pinned} pinned server verdicts matched")
+        print(f"  -> {len(accepted)} accepted by the server, {refused} refused "
+              f"(both writers only ever run on the accepted set)")
 
         client_out = work / "client.json"
         p = run_client_probe(accepted, client_out)
@@ -246,7 +325,7 @@ def main() -> int:
                   file=sys.stderr)
             return 2
 
-        # 1. the twins, over every brand the server accepts
+        # 3. the twins, over every brand the server accepts
         bad = []
         for b, runtime in zip(accepted, runtime_css):
             try:
@@ -269,10 +348,19 @@ def main() -> int:
                     print(f"    {d}", file=sys.stderr)
             return 1
 
-        # 2 + 3. the bundle the browser paints first, and the boot handoff
+        # 4 + 5. the bundle the browser paints first, and the boot handoff. The
+        # shipped brand is found BY IDENTITY: `runtime_css[-1]` was a position, so a
+        # refused brand.json compared its CSS against an unrelated random brand and
+        # the verdict named a re-theme flicker that never existed.
+        shipped_at = [i for i, b in enumerate(accepted) if b == shipped_brand]
+        if not shipped_at:
+            print("shipped brand not found in the accepted set by identity — no pair "
+                  "to compare (its refusal should already have failed the domain leg)",
+                  file=sys.stderr)
+            return 2
         bundle_css = PUBLIC_CSS.read_text(encoding="utf-8")
         rebuilt = payload(render_css(json.loads(json.dumps(shipped_brand))))
-        injected = payload(runtime_css[-1])  # the shipped brand rides last
+        injected = payload(runtime_css[shipped_at[-1]])
         if payload(bundle_css) != rebuilt:
             d = first_diff(rebuilt, payload(bundle_css))
             print("BUNDLE STALE — app/public/brand.css is not render_css(brand.json); "
@@ -286,10 +374,11 @@ def main() -> int:
             report(d)
             return 1
 
-        print(f"BYTE-IDENTICAL — {len(accepted)} accepted brands; twins agree under the "
-              f"@import marker; bundle == render_css == brandToCss")
+        print(f"BYTE-IDENTICAL — {len(accepted)} accepted brands over a pinned population "
+              f"of {len(checked)}; twins agree under the @import marker; "
+              f"bundle == render_css == brandToCss")
         print(f"  build-time banner: {bundle_css.splitlines()[0]}")
-        print(f"  runtime banner:    {runtime_css[-1].splitlines()[0]}")
+        print(f"  runtime banner:    {runtime_css[shipped_at[0]].splitlines()[0]}")
         if args.show:
             print(rebuilt)
         return 0
