@@ -632,7 +632,12 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    scripts/landing_gate.py` re-runs all three behind a dep preflight, so a swallowed
    `pip install -e plugin` failure reports `CANNOT RUN` with the fix command instead of
    wearing pytest's exit 2 as a red tree — and each leg asserts its own output phrase,
-   because exit 0 alone never proved anything (DEVGUIDE *EIGHTH harness law*). `--fe`
+   because exit 0 alone never proved anything (DEVGUIDE *EIGHTH harness law*). The count
+   legs are graded against pinned literals `EXPECTED_PYTEST`/`EXPECTED_VITEST`/
+   `EXPECTED_VITEST_FILES` (`scripts/landing_gate.py:66`) — pre-fix the PARENT gate was
+   green over vanished coverage (measured: `297 passed`, rc 0), the same hole the twins
+   were fixed for — so when a suite legitimately changes, bump the literal in the SAME
+   commit as the diff (DEVGUIDE *ELEVENTH harness law*, extended to its own author). `--fe`
    adds vitest plus all three twin harnesses (csv/brand/parity): the merge gate
    deliberately stays three legs, because the twins answer `CANNOT RUN` where
    `app/node_modules` is absent and that verdict must not stall every merge — but a
