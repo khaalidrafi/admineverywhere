@@ -151,6 +151,10 @@ node scripts/mock_openai.js                 # listens on :11435
 # FR-R005 cross-twin CSV byte diff (needs app/node_modules + demo-backend/.venv)
 python3 scripts/csv_twin_diff.py            # 0 = identical, 1 = divergence, 2 = rig not runnable
 
+# brand CSS twin byte diff — render_css() ↔ brandToCss() ↔ the shipped bundle
+# (needs app/node_modules; the plugin is read from plugin/src, no venv required)
+python3 scripts/brand_twin_diff.py          # 0 = identical, 1 = divergence, 2 = rig not runnable
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
@@ -479,6 +483,58 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   equal, 1 = divergence, 2 = the rig could not run (no `node_modules`, no
   `.venv`) — it is a re-verifier, not a suite member, so it never lands in
   pytest/vitest where node or a venv would be assumed.
+  Third control, found while writing the brand harness: the exit-code contract
+  itself was leaky. With `npx` absent from PATH the launcher raised
+  `FileNotFoundError` and the script died with a traceback and **exit 1** — the
+  code that means "the writers disagree". A CI seat reading only the number
+  would have filed a divergence that never happened (measured:
+  `PATH=/nonexistent python3 scripts/csv_twin_diff.py` → traceback, 1). Now a
+  launch failure is caught into a synthetic 127 and reported as exit 2, in both
+  harnesses (`scripts/csv_twin_diff.py:109` `run()`,
+  `scripts/brand_twin_diff.py` `run_client_probe()`); a harness with three
+  documented exit codes has to prove each of them, not just the green one.
+- **SIXTH harness law — when the two artifacts are SUPPOSED to differ, normalize
+  the difference deliberately and prove the diff bites on the rest.** The brand
+  twins (`plugin/src/admincraft/branding.py:196` `render_css()` ↔
+  `app/src/lib/branding.ts:37` `brandToCss()`, AGENTS.md *Runtime branding flow*)
+  carry banners that differ on purpose — a generated file says "do not edit by
+  hand", a runtime `<style>` says "injected" — so a raw byte compare of the two
+  documents prints a guaranteed false `DIVERGENT`. `scripts/brand_twin_diff.py`
+  therefore compares from the first `@import` to the end, trailing whitespace
+  stripped, and PRINTS both banners instead of hiding them: the normalization is
+  justified by a documented intent difference, not chosen to make the diff pass.
+  What the segment found, all measured rather than reasoned about:
+  1. **Filter the matrix through the validator, then read the refusals.** "Both
+     writers agree" only means something over the domain where both are
+     contracted to run, so the script generates 350 brands and keeps the 300
+     `validate_brand()` accepts. The refused 50 are counted, not dropped in
+     silence. Surprises here are real: `"\tTabbed Font\t"` is ACCEPTED (the
+     server matches `SAFE_FONT_RE` against `font.strip()`, `branding.py:190`) and
+     the client strips the same tabs via `sanitizeFont()` — so a brand that looks
+     invalid in the accepted column is not a divergence, and the only way to know
+     was to run it.
+  2. **A sentinel must vary one axis at a time, and the font axis earns its
+     keep.** `render_css()` writes `font.replace(" ", "+")`; `brandToCss()` runs
+     `encodeURIComponent()` and turns `%20` back into `+`. Those agree for every
+     name the schema allows, so one `Inter` row proves nothing: mutating the
+     server to write `%20` diverged on 146 of 300 accepted brands — exactly the
+     multi-word ones — and a single-word matrix would have called that refactor
+     safe. `Space  Grotesk` (double space), a 60-char name, digits and
+     space-padded names are what killed it.
+  3. **The third check is not a writer, it is the artifact.** `app/public/brand.css`
+     + `brand.json` are first paint; `applyBrand()` re-injects at boot. If the
+     bundle is stale (`build_admin` not re-run) or the runtime inject differs
+     from it, the user sees the UI re-theme under them — the FOUC the static
+     bundle exists to prevent, and no unit test on either writer can see it,
+     because each is green against its own fixture. The script asserts
+     `bundle == render_css == brandToCss` for the shipped brand.
+  Negative control, before the green meant anything: dropping one `@import`
+  weight from the client → `TWIN DIVERGENCE — 300 of 300`, line 0 quoted per
+  side; the `%20` server mutant above → 146; editing the shipped
+  `--brand-radius` → `BUNDLE STALE … line 8`. All three product files restored
+  byte-identical (`git status` clean on those paths). Like the CSV harness this is
+  a re-verifier, not a suite member — it needs `app/node_modules` and exits 2 when
+  the rig cannot run, so the landing gate never grows a toolchain dependency.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
