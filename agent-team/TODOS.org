@@ -815,6 +815,68 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 21:34 UTC] :: THE BRAND TWIN'S POPULATION IS
+  PINNED PER ROW NOW — AND THE LESSON I SENT @ALL AT 21:16Z HAD THE WRONG
+  MECHANISM, SO IT IS CORRECTED IN PRINT (branch ai/turn-20261021-2122; state
+  untouched — PENDING stands, :DELIVERED: rows above unchanged, DONE is the Lead's
+  gate). Board re-counted with the python pass: 14 PENDING, zero missing
+  :DELIVERED:, zero ONGOING; chat tail 3734 lines held no unanswered
+  @platform-engineer ping. No work order item was open, so this segment took the
+  follow-up I offered myself last turn ("assert the enumerated-brand count matches
+  the brands/ dir it claims to scan").
+  THE OFFER WAS WRONG AND I FOUND THAT BY MEASURING, NOT BY THINKING:
+  scripts/brand_twin_diff.py never reads app/brands/ — its only repo inputs are
+  app/public/brand.css + brand.json (scripts/brand_twin_diff.py:63-64, both
+  preflighted). So the rc-2 control I published last segment (hide
+  app/brands/default/brand.json -> "BYTE-IDENTICAL — 300 accepted brands") was run
+  against a non-input; the verdict was honest and my causal story was not. The
+  general rule survived; the mechanism did not. Correction posted to @all at
+  21:34Z rather than left standing.
+  THREE REAL BLIND SPOTS, each reproduced before being fixed: (1) deleting 7 of
+  the 11 legal font sentinels -> rc 0 BYTE-IDENTICAL at 296, and the deleted rows
+  were the double-space case DEVGUIDE credits with catching the percent-20
+  divergence — coverage for a KNOWN past bug vanished green; (2) loosening the
+  server's RADIUS_RE (plugin/src/admincraft/branding.py:32) so 0.5/1.5/12 pt
+  became legal -> rc 0 BYTE-IDENTICAL at 303, refusals 50 -> 47 unopposed (the font
+  axis only looked protected, and by accident, because brandToCss sanitizes "!" and
+  render_css does not); (3) the shipped brand read by POSITION as runtime_css[-1] —
+  make app/public/brand.json illegal with a matched bundle and the harness printed
+  rc 1 "HANDOFF DIVERGENCE — a visible re-theme flicker" while comparing the
+  shipped brand against an UNRELATED random brand.
+  FIX: sentinel population pinned twice (literal EXPECTED_SENTINELS vs the sum of
+  the VALID_*/BAD_* lists, they must agree -> truncation cannot be silent, a
+  deliberate change is a two-place edit), every sentinel's server verdict pinned
+  individually, shipped brand located by identity (scripts/brand_twin_diff.py:355).
+  Population mismatch -> exit 2 (no verdict to report); flipped pinned verdict ->
+  exit 1 RED naming the row. Side finding, product's not mine:
+  "\tTabbed Font\t" was labelled illegal and the server ACCEPTS it (validation
+  matches font.strip(), plugin/src/admincraft/branding.py:190) — moved to
+  VALID_FONTS with the reason, coverage kept. WHY PER-ROW AND NOT A NUMBER: the
+  accepted count moved 300 -> 302 in this change for an unrelated reason (a legal
+  font entered the random pool, random.choice() rejection depends on sequence
+  length, so the seeded sample shifts) — a leg pinned to "300" would have gone RED
+  on a strictly better harness.
+  EVIDENCE: 6 controls, tree byte-restored after each — 2 fonts deleted -> 2
+  "the matrix disagrees with itself: 49 sentinels in the literal, 47 derived";
+  1 builder row dropped -> 2 "MATRIX TRUNCATED: 48 sentinels built against a
+  literal of 49"; radius mutant -> 1 naming all three; illegal shipped brand ->
+  1 "LEGAL BRAND REFUSED — SHIPPED app/public/brand.json" + the server's own error.
+  LANDING GATE GREEN: `python3 scripts/landing_gate.py --fe` rc 0 — pytest 299,
+  System check identified no issues, No changes detected, vitest 416 (31 files),
+  csv-twin 3070 cells / 56287 B, brand-twin BYTE-IDENTICAL — 302 accepted brands
+  over a pinned population of 350, parity-twin 226 B. Default gate alone: rc 0,
+  three legs, finalize's replay unchanged. release_readiness rc 0 (80 path
+  citations, 55 line citations). Docs: DEVGUIDE *ELEVENTH harness law*
+  (docs/DEVGUIDE.md:769), SIXTH-law items 1+3 corrected, gate-measurement line
+  updated, AGENTS.md:345 carries the identity + pinned-population promise.
+  BOOT NOTE, seventh consecutive: this boot again had no admincraft on the
+  interpreter and no app/node_modules — landing_gate answered CANNOT RUN "No
+  module named 'admincraft'"; I ran the gate's own printed fixes (pip install -e
+  ./plugin --no-deps, npm ci). Lead ask stands: drop `2>/dev/null || true` from the
+  boot install (.turn-inside.sh:16 ~ agent-team.yml:509). Product code / tests /
+  migrations / lockfiles: ZERO changes. SECRET LAW held: no credential read,
+  echoed or committed. ROLE_LARK_WEBHOOK empty in this seat's env ([ -z ], measured,
+  not assumed) -> Lark report skipped, as noted above.
 - Note taken on [2026-10-21 Wed 21:15 UTC] :: THE LANDING GATE LEARNED TO SEE
   BETWEEN THE SUITES (branch ai/turn-20261021-2110; state untouched — PENDING
   stands, :DELIVERED: rows above unchanged, DONE is the Lead's gate). Board
