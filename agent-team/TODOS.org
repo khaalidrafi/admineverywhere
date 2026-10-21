@@ -1234,6 +1234,47 @@ CLOCK: [2026-10-18 Sun 02:30]
   Landing gate green at this segment: pytest 175/175, manage.py check
   0 issues, makemigrations --check no changes, vitest 81/81 (9 files).
   Still UNVERIFIED (unchanged): browser/Tauri visual E2E.
+- Note taken on [2026-10-21 Wed 13:20 UTC] :: PREVIEW-ON-TYPING PROVEN AT THE
+  DOM (seat platform-engineer, this segment — branch ai/turn-20261021-1315,
+  commit 5f6538b). The board was exhausted (no TODO/ONGOING/WAIT headline,
+  `grep -nE '^\*+ .*(TODO|ONGOING|WAIT)' agent-team/TODOS.org` empty) and no
+  unanswered @platform-engineer ping, so the smallest verifiable improvement I
+  picked is the row this item still carries: "visual verification of live
+  preview during typing". pages/Branding.svelte had ZERO test references
+  (`grep -rl Branding.svelte src --include=*.test.ts` no hits) — the
+  pure-module proof (branding.test.ts) never mounted the editor, so the PUT,
+  the rejected-brand rendering and the asset branches were unasserted.
+  WHAT LANDED: app/src/lib/__tests__/brandingMount.test.ts (8 tests) mounting
+  the real page with a stubbed fetch — draft boots from the SERVED brand with
+  only the missing colors filled from BRAND_DEFAULTS (:118); typing re-themes
+  live (document.title + <style id=brand-runtime> --brand-primary) and
+  unmount reverts to orig (:131 — this is the COOL-PREVIEW row closed at DOM
+  level); Save PUTs <apiUrl>/admincraft/branding/ with `Authorization: Token
+  …` and a trimmed body, empty logo keys omitted entirely (:143); a 400
+  detail.errors renders VERBATIM while the live theme stays untouched (:160);
+  an empty appName is refused with fetch never called (:176); a server asset
+  travels as the bare filename with exactly one request, a bundled /logo.svg
+  is re-uploaded as a data URL so the shipped logo survives the first save
+  (:186, :195); a fresh upload wins, is acknowledged, and is cleared after the
+  save (:214). MUTANT RUN LIVE: four sed mutants (client empty-name guard ->
+  `if (false)`, defaults fill-in dropped, errors replaced by the generic
+  message, filename branch returning the full URL) — each failed exactly one
+  test BY NAME, page restored byte-identical (`git diff --stat` empty) before
+  the commit. docs/DEVGUIDE.md counts 294 -> 302 (:116, :144) + the
+  branding-flow row names the new proof (:336).
+  MEASURED at this HEAD: vitest 302/302 over 22 files; `npx tsc --noEmit`
+  exit 0; pytest 285/285 (-p no:cacheprovider, 18.88 s); manage.py check "no
+  issues (0 silenced)"; makemigrations --check "No changes detected".
+  STILL UNVERIFIED, narrowed honestly: a real browser/Tauri window still nobody
+  has looked through — what closed is the DOM-level claim (title + injected
+  CSS vars + the request bytes), what remains is pixels: an actually
+  re-painted screen, the favicon swap and the Tauri setTitle call.
+  BOARD: no state flipped, nothing taken ONGOING, DONE stays your gate,
+  OBJECTIVE-STATE untouched, no completion claim. ROLE_LARK_WEBHOOK empty in
+  this seat's env — Lark report skipped per instruction 8 (noted here).
+  Harness: this seat self-installed for the FOURTH consecutive segment
+  (`python -m pip install -e plugin --no-deps -q` + `cd app && npm ci`) before
+  the gate could run; the 12:42Z :request: is still unlanded.
 :END:
 :PROPERTIES:
 :ORDERED: t
