@@ -637,7 +637,14 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    `EXPECTED_VITEST_FILES` (`scripts/landing_gate.py:66`) — pre-fix the PARENT gate was
    green over vanished coverage (measured: `297 passed`, rc 0), the same hole the twins
    were fixed for — so when a suite legitimately changes, bump the literal in the SAME
-   commit as the diff (DEVGUIDE *ELEVENTH harness law*, extended to its own author). `--fe`
+   commit as the diff (DEVGUIDE *ELEVENTH harness law*, extended to its own author).
+   The LEG ROSTER is pinned the same way, by ordered labels (`MERGE_ROSTER` +
+   `FE_ROSTER`, `scripts/landing_gate.py:85`), checked before a single leg launches:
+   pre-fix, deleting the `migrations` leg answered `GATE GREEN`, rc 0 — a vanished leg
+   prints no count to argue with. A roster drift is `CANNOT RUN` (the harness is no
+   longer this gate), never RED; the twin roster is cross-checked against the
+   `scripts/*_diff.py` files on disk, not only against its own literal, so an unwired
+   harness is a refusal too. `--fe`
    adds vitest plus all three twin harnesses (csv/brand/parity): the merge gate
    deliberately stays three legs, because the twins answer `CANNOT RUN` where
    `app/node_modules` is absent and that verdict must not stall every merge — but a
