@@ -122,8 +122,9 @@ Deleting such a branch is owner-ordered, no review needed.
 
 ## DISPATCH PREAMBLE RULE (2026-10-18)
 Local agents (BRE @ Qoder, OpenCode, Goose) get the law from their GLOBAL config
-(harness bake: docker/harness/AGENT-LAW.md) plus opencode instructions[] — repo-root
-AGENTS.md is never created (Owner 2026-10-21); their prompts need only "git pull first".
+(harness bake: the repo's own AGENTS.md — restored 2026-10-21) plus opencode
+instructions[]; the setup never creates or rewrites AGENTS.md (Owner 2026-10-21);
+their prompts need only "git pull first".
 Web chats (Qwen3.8-Max, GLM-5.3, Z.ai Agent) load nothing — every web-chat dispatch MUST
 open with: "Clone/pull the repo first, then read agent-team/TEAM-CONTROL.org +
 agent-team/TEAM.md + STATE.org before touching anything. You are ID: <id>."

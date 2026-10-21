@@ -1,0 +1,568 @@
+# AGENTS.md — admincraft
+
+Repo-specific notes for AI agents working in this repository. Global agent
+instructions (authorship, commit hygiene, review-first workflow, reply
+style) apply as-is and are deliberately not repeated here.
+
+## What this repo is
+
+A branded, AI-assisted admin app builder for an **existing** Django REST
+Framework backend. No Django runs locally in the shipped product: `plugin/`
+is a pip package (branding engine + schema tooling) installed in the
+*server* project, and `app/` is a Tauri 2 / Svelte 5 / Tailwind 4 thin
+client that talks to any DRF + drf-spectacular API with token auth. The
+whole CRUD UI, dashboard widgets and the Ctrl+K streaming chat are derived
+from the OpenAPI schema. `demo-backend/` is a throwaway rig: fixture source
+for tests plus a live backend for browser E2E (login `admin` / `admin123`,
+or `auditor` / `audit123` to see FR-R007 role gating actually hide something).
+
+Product constraints — do not relax:
+
+- AI chat is OpenAI-compatible only (OpenAI / Groq / Ollama / LM Studio /
+  Mistral — one code path). No Anthropic. No tool calling, no provider
+  abstraction, no history persistence (all v2 material).
+- All visual identity comes from a single `brand.json` (colors, radius,
+  font, logo). Components carry zero hard-coded colors: Tailwind 4
+  `@theme inline` maps `--color-*` utilities onto the runtime `--brand-*`
+  variables. **Release builds never carry a product name**: the shipped
+  default brand is neutral (`app/brands/default/` = "Admincraft"), and
+  every user's identity rides on top — either baked in via `build_admin`
+  (launcher + bundled assets) or live via the runtime branding API
+  (everything in-app: name, colors, font, logos, titles).
+- Branding has TWO layers, never blur them: **runtime** (in-app editor
+  `#/branding`, `GET/PUT /admincraft/branding/` — applies instantly, no
+  rebuild) vs **build-time** (`tauri.conf.json` productName + platform
+  icons — set by `build_admin` / `npx tauri icon` before packaging). The
+  Android launcher label is build-time; the desktop window title is
+  runtime (Tauri setTitle follows the live brand).
+- New dashboard widget = drop one `.svelte` file in `app/src/widgets/`
+  exporting `const meta = { title, size, data? }` — auto-discovered via
+  `import.meta.glob`. No registry to edit. The optional FR-R008 `data` block
+  (`{endpoint, field, aggregate, pollInterval, days, rowCap}`) is a
+  schema-resolved feed contract, not a URL: `endpoint` is a model id looked
+  up in `schema.byId` and fetched through its discovered `listPath` — never
+  concatenated onto `apiUrl`; an unresolvable source renders a friendly
+  empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
+  the `$effect` cleanup kills the timer. Contract + checklist:
+  `docs/widget-data.md`.
+- RBAC (FR-R007) is claims-driven and degrades silently: `normalizeOpenAPI`
+  binds `schema.mePath` ONLY when the document carries `GET …/me/` and no
+  POST (exportPath law again — never a guessed `/api/me/`), the client
+  fetches claims with the schema and a failed/absent read leaves
+  `claims = null` = NO filtering anywhere (plain DRF keeps the full menu).
+  Optional `roles: [str]` on page meta and action meta gates the sidebar
+  entry / buttons via `roleAllows()` (`app/src/lib/rbac.ts`, pure); a bad
+  roles declaration is refused like any other page problem. Hiding is UX,
+  never security — the server re-validates everything, and the demo
+  `/api/me/` (`core/views.py`) emits Django Group names as roles. Because a
+  superuser short-circuits `roleAllows()`, `seed_demo` also creates a
+  non-superuser holding exactly one Group (`auditor` / `audit123`) — a rig
+  of superusers can prove acceptance but never a hidden button. The
+  activity screen (`app/src/pages/Activity.svelte`) is just an R-006
+  drop-in reading the R-003 audit model through its schema-discovered
+  `listPath` (`findAuditModel`), never a hand-written `/api/audit/` — and the
+  same refusal binds the record sub-view: `fetchAudit()` takes the discovered
+  path as its ONLY source of the URL and throws (zero requests) when the
+  document has no audit model, so `ModelPage.showHistory()` skips the log half
+  instead of probing a guess and tolerating the 404; a guessed
+  `/api/audit/` could answer another app's endpoint and be rendered as this
+  record's trail, silently. Wire-pinned by
+  `app/src/lib/__tests__/lifecycleMount.test.ts`.
+  Contract + copy checklist: `docs/rbac.md`.
+- New page (non-CRUD module) = drop one `.svelte` file in `app/src/pages/`
+  exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`
+  — the same glob contract, applied to routes: `app/src/lib/pages/index.ts`
+  validates it, injects the router's route table and the sidebar entry. Router,
+  shell and sidebar carry no page-specific line.
+- Deliberately out of scope: virtual scrolling, command palette, alerts.
+
+## Product spec (from MVP brief)
+
+Acceptance criteria the brief pins down beyond the constraints above.
+
+- **AI chat panel** — one floating panel, opened by Ctrl+K or a button.
+  Settings are *exactly* three inputs — base URL, API key, model name —
+  under the hint "Works with OpenAI, Groq, Ollama & more". Streaming is
+  non-negotiable; the system prompt embeds a schema summary so answers
+  track the live API, and the key lives in the Tauri keyring. The panel
+  stays fully functional when unconfigured: a friendly setup prompt, not
+  an error. The v2 exclusions above (no tool calling / history / provider
+  abstraction) still apply. The prompt the panel ACTUALLY sends is
+  `systemPrompt(brand.appName, buildSchemaPrompt(schema))`
+  (`app/src/ai/ChatPanel.svelte:69`) and `app/src/lib/__tests__/chatMount.test.ts`
+  pins it by asserting the captured request body of a mounted panel —
+  unit tests over `buildSchemaPrompt`/`systemPrompt` alone once kept a
+  disconnected builder and a stripped legend green, so keep the wire-level
+  assertion wired to the real normalized fixture.
+- **CRUD spec** — `RecordForm` renders text, number, bool, date,
+  enum-select and FK-dropdown fields; schema-driven, graceful when the
+  schema omits constraints. `DataTable` = pagination + search + delete.
+  Login is token auth against `config.apiUrl` with a settings field.
+- **Scope rationale & demo flow** — the out-of-scope line above plus
+  multi-provider abstraction, tool calling and history are all *v2*; the
+  nav is built so ⌘K drops in later. Definition of done (demo flow):
+  login `admin` / `admin123` → dashboard widgets → Product table → New
+  Order → Ctrl+K streams (via `scripts/mock_openai.js` on `:11435`) →
+  rebrand with `build_admin`.
+
+## Layout
+
+| path | role |
+| --- | --- |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (212 pytest, written first) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (252 vitest) |
+| `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
+| `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
+| `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
+| `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
+| `skills/` | the two agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
+| `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
+`app/src-tauri/signing/` | committed stable debug keystore for the android apk — why it exists + rotation notes in its README |
+| `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, float, date, bool, readonly datetime) |
+| `flake.nix`, `guix.scm`, `frontend-dist/` | Nix + Guix packaging — rationale in the file headers |
+| `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
+| `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
+| `AI-REVIEW.org` | human review queue (P0 security first) + the Svelte debugging war story — read it before touching reactivity |
+| `docs/` | E2E screenshots + `order-lifecycle.md` (FR-R001 server contract & client-project convention) + `custom-actions.md` (FR-R003 custom actions + audit reference) + `independent-enums.md` (FR-R002 separated-status-fields convention, schema enum-component naming, guardrails) + `csv-export.md` (FR-R005 two export layers + the shared byte-format contract) + `page-registration.md` (FR-R006 page glob contract + the component-test enabler) + `widget-data.md` (FR-R008 meta.data feed contract) + `rbac.md` (FR-R007 role-claims contract + activity screen) |
+
+## Commands
+
+```bash
+# demo backend (schema: http://localhost:8000/api/schema/)
+cd demo-backend
+python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
+.venv/bin/python manage.py migrate && .venv/bin/python manage.py seed_demo
+.venv/bin/python manage.py runserver
+
+# thin client — browser mode is feature-identical to Tauri mode
+cd app && npm install && npm run dev        # http://localhost:5173
+
+# tests
+cd app && npm test                          # 252 vitest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 212 pytest
+
+# mock OpenAI-compatible SSE provider (for chat E2E)
+node scripts/mock_openai.js                 # listens on :11435
+
+# rebrand the whole client in one command (build-time layer)
+cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
+
+# regenerate launcher icons from a 1024px source (in app/)
+npx tauri icon ../app/brands/default/assets/icon-1024.png
+
+# derive a brand from any repo's own source (no logo needed)
+python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo>/brand
+```
+
+## Hard-won contracts (don't relearn these)
+
+- The schema normalizer (`app/src/lib/openapi.ts`) is built against the
+  real fixture `app/src/lib/__tests__/fixtures/openapi.json` (captured from
+  the demo backend's `/api/schema/`), never against guessed shapes:
+  - FKs arrive as bare `type: integer` — detected by name-matching against
+    model ids/singulars.
+  - Decimals arrive as `type: string, format: decimal` — coerced to number.
+  - Enum choices are hoisted to `$ref` components;
+    `COMPONENT_SPLIT_REQUEST` yields `<Model>Request` schemas for forms.
+- Demo-rig token route is `POST /api/auth/token/` (`core/urls.py:10`), **not**
+  Django's default `/api-token-auth/` — that 404s here. `plugin/tests/test_demo_boot.py`
+  boots the real `core.settings` in a subprocess, runs Django's system checks and
+  resolves that path plus the `include("shop.urls")` routes, so a deleted or
+  broken URLConf fails the suite instead of surfacing on the first live request.
+- Dual web/Tauri mode: feature-detect `window.__TAURI_INTERNALS__`. Web
+  mode falls back to localStorage for token + AI key (accepted P2 — see
+  AI-REVIEW.org).
+- Cross-module state uses `svelte/store` writables, not exported runes from
+  `.svelte.ts` modules (compiler limitation hit during E2E).
+- `DataTable`: never reuse an outer keyed-each key variable in a nested
+  each — the `each_key_duplicate` throw aborts the whole render queue
+  silently and looks like dead reactivity.
+- `RecordForm.buildPayload` omits empty non-nullable fields; sending `null`
+  there earns a DRF 400.
+- Widgets render from a schema-reactive `$effect`, not `onMount` (the
+  schema arrives after mount).
+- Independent enums (FR-R002, "separated status fields") are per-field
+  contracts: drf-spectacular hoists a choices field into a component named
+  from the **property name**, not the model (`hooks.py:67-95`), so two
+  unrelated `status` fields sharing a value set collapse into one shared
+  `StatusEnum` and only genuinely different sets stay separate
+  (`OrderStatusEnum` + `ShipmentStatusEnum`). Convention: one nested
+  `Choices` class per semantic field, never shared across models; declare
+  `ENUM_NAME_OVERRIDES` instead of living with the collision warnings; never
+  derive one enum from another in client code, and never key lifecycle
+  governance on a field *name* — `app/src/lib/statusTransitions.ts` is keyed
+  by model id. Full convention + guardrails in `docs/independent-enums.md`.
+- Custom actions (FR-R003) follow the widget drop-in contract: one `.ts` in
+  `app/src/actions/` exporting `meta{label,scope,model?,confirm?,input?,handler}`
+  — the registry globs it, nothing to edit. Endpoint URLs come from
+  `actionPath(model, slug, recordId?)`, i.e. the schema-discovered
+  `model.listPath`, NEVER from `apiUrl + model.id` (`apiUrl` is only the base
+  origin; concatenating a bare segment produced `http://hostapi…` and silently
+  broke the R-001 transition/history calls).
+- Lifecycle (FR-R001) is a TWO-SIDED proof, never a client-side assertion: the
+  registry (`statusTransitions.ts`, keyed by model id) declares the machine,
+  `normalizeOpenAPI` binds `model.transitionPath` only from a documented
+  `POST …/transition/` and `model.historyPath` only from a `get && !post`
+  `…/history/` — the same evidence law as `exportPath`/`mePath`. A machine the
+  server does not document is **refused**: `lifecycleProblem()` names the
+  reason, `lifecycleAvailable()` gates the DataTable buttons, `showHistory()`
+  reads only a discovered path, and `transitionRecord`/`fetchHistory` throw
+  rather than re-guess a URL that 404s. Proof is wire-level —
+  `app/src/lib/__tests__/lifecycleMount.test.ts` mounts the real page against
+  `fixtures/openapi.json` (recaptured from the running rig's `/api/schema/`, so
+  it carries the endpoints the renderer calls) and asserts the POST body, the
+  URL the client believed in and a 409 `reason` surfacing verbatim. Recapture
+  that fixture whenever the rig gains an endpoint. Contract + checklist:
+  `docs/order-lifecycle.md`.
+- Kanban (FR-R004) groups a model by a **declared** axis in
+  `app/src/lib/kanban.ts` (`kanbanAxes`, keyed by model id like
+  `statusTransitions`), never by "the field named status" or "the first enum
+  field" — `docs/independent-enums.md` §6 forbids the guess, so a model with no
+  entry shows no toggle. An axis that contradicts the machine (a `transition`
+  axis with no R-001 entry, or a `patch` axis on a lifecycle field, or a
+  non-enum field) is **refused** — no board, with `axisProblem()` naming the
+  reason — rather than rendered optimistically. A drop on a lifecycle axis
+  fires `POST <model.transitionPath>` only for a state the registry allows;
+  a drop on a free enum is `patchRecord` with a **one-key body** (never a
+  whole-row PUT). Drag-and-drop is mouse-only by nature, so every column a drop
+  would accept is also offered by a per-card "Move to" `<select>` — keyboard and
+  screen-reader users get the identical move set, illegal targets are disabled.
+- CSV export (FR-R005) keeps its two layers uncollapsed: DataTable "Export
+  table" = visible columns of the CURRENT page, client-side, no server call;
+  "Full export" = `GET <listPath>export/` line-level (child rows repeat parent
+  ids, pk order, search honoured, `pagination_class=None`) and its button is
+  bound **only when the schema documents it** — `normalizeOpenAPI` sets
+  `model.exportPath` on `get && !post` at that path, and `fetchCsv` calls
+  base + the discovered path, never `apiUrl + "export"`. The writer twins
+  (`app/src/lib/csv.ts` ↔ `demo-backend/shop/csv_export.py`) are
+  byte-identical for the same rows — RFC 4180/CRLF/QUOTE_MINIMAL, null→empty,
+  lowercase booleans, decimals never re-flowed, formula guard on text keyed by
+  NUMERIC *shape* (DRF sends decimals as strings), BOM added once
+  (`csvBlobParts` is BOM-idempotent) — keep them in sync like
+  `brandToCss`/`render_css`; same commit, both sides, on pain of the two
+  layers disagreeing on every negative price. The twins are held to one byte
+  spec by a SHARED table: `FLOAT_PARITY` (a Python `float` renders with
+  ECMAScript's `String()` form — `js_number_text()` — because layer 1 sees the
+  JSON-parsed number, and the formula guard is keyed on
+  `isinstance(value, str)`, never on the rendered text) appears with the same
+  values and expectations in `plugin/tests/test_csv_export.py` and
+  `app/src/lib/__tests__/csv.test.ts`, and the golden document carries a float
+  column on both sides. The golden document ALSO doubles its datetime column
+  (one row an aware `datetime`, one row the same instant as text) because a
+  text-only cell cannot test the server's rendering rule at all — that blind
+  spot hid divergence #2: DRF writes UTC as `…Z` while `isoformat()` writes
+  `…+00:00`, so every datetime column of a live export differed. The server now
+  mirrors DRF step for step in `drf_datetime_text()` (naive → project-local,
+  aware → project timezone, `+00:00` → `Z`) and reads the offset from
+  `django.utils.timezone`, never a hard-coded UTC — a project with another
+  `TIME_ZONE` gets `+06:00` in its JSON and must write the same. Any test that
+  asserts literal bytes therefore pins the timezone (`utc_project_timezone`),
+  since `plugin/tests/conftest.py` sets no `TIME_ZONE` and Django's default is
+  `America/Chicago` while the rig declares `UTC`. The rig is now the fixture for
+  all of it: `Order.weight` is a real `FloatField` (the field type the rig was
+  missing), seeded with `2.0`/`1e-7`/`1e17`/`-0.00042`/`NULL` and carried as a
+  column of the line-level header, so the two writers can be diffed over live
+  HTTP rows — measured 60 rows × 10 parent columns, zero mismatches
+  (`docs/csv-export.md` §6). Server: the `@action` needs a
+  `text/csv` renderer in `renderer_classes` or the client's own Accept 406s
+  before the view runs; `csv_export.py` stays DRF-free because `@extend_schema`
+  captures `DEFAULT_SCHEMA_CLASS` at decoration time. Contract in
+  `docs/csv-export.md`.
+- Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
+  `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
+  `<script module>` (runes are unavailable there — the export must be static).
+  `app/src/lib/pages/index.ts` globs eagerly, validates, and hands
+  `lib/router.ts` its route table via `setPages()` — the router owns NO table,
+  the shell imports NO page, the sidebar types NO entry, so adding a module
+  touches one file. A declaration that cannot be honoured is **refused** into
+  `refusedPages` with a nameable reason (bad pattern, nav entry on a
+  param-carrying path, overlapping path, no default export) and the Modules
+  page renders the refusal list, so a broken drop-in is visible rather than
+  silent; a file with no `meta` at all is merely ignored. Matching prefers
+  **fewest captures** (a static `/legacy` beats a sibling `/:id`) and an
+  unanswered hash resolves to `kind: "none"` — the router never guesses a page
+  from a prefix, same law as `actionPath()` and `resolveAxis()`. Captured
+  segments arrive as **props**, so pattern parameter names are the component's
+  prop names (`ModelPage` takes `modelId`/`recordId`, not `id`). Contract +
+  the copy checklist in `docs/page-registration.md`.
+- Vite: `optimizeDeps.include` covers all svelte entrypoints (prevents two
+  svelte-internals instances); the dev server sends
+  `Cache-Control: no-store`. Vitest additionally needs `resolve.conditions:
+  ["browser"]` + `test.server.deps.inline: [/svelte/]`: without the browser
+  condition Vitest resolves svelte's SSR build, where `mount()` throws
+  `lifecycle_function_unavailable` — that one condition, not a Svelte 5 limit,
+  was the "component tests are impossible" finding, and `shell.test.ts` is the
+  proof. Under happy-dom a test must dispatch `hashchange` itself inside
+  `flushSync()` (it assigns `location.hash` but never fires the event) and
+  tear down with `unmount(instance)`, or a stale `<main>` reads as a routing bug.
+- Runtime branding flow: the client boots with the bundled static brand
+  (`public/brand.{css,json}` — first paint, no FOUC), then `initApp()`
+  tries `GET <api>/admincraft/branding/`; a server brand replaces the
+  static one, and `applyBrand()` fans it out (store + `document.title` +
+  favicon + `injectBrandCss()` writing a `<style id="brand-runtime">`
+  with the same `--brand-*` variables + Tauri `setTitle`). `brandToCss()`
+  mirrors `branding.render_css()` output — keep them in sync. Plain DRF
+  backends without the plugin degrade silently to the static brand.
+- Brand writes are staff-only (DRF token auth) and validated server-side
+  by the SAME closed schema as `build_admin` (`brandstore.save_brand`);
+  uploads must be data URLs (png/jpeg/svg, magic-byte checked, 1 MB cap).
+  `rev` (mtime+1) advances on every save so clients can poll for remote
+  rebrands.
+
+## CI — build-all, live
+
+`.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
+(vitest 58 + pytest 175, plus a CSP-hygiene check on the shipped
+tauri.conf.json) runs FIRST and every build leg `needs:` it, so a
+red tree spends zero build minutes. Legs: web / windows (.exe) / linux
+(.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
+with `--target aarch64 --target armv7` (repeated flags, NOT a comma
+list), signed by the committed
+`app/src-tauri/signing/debug.keystore` so every run's apk signature is
+identical and new builds install over old ones) / nix / guix, each uploading test-only
+artifacts a user launches and registers their own DRF API against on the
+login screen — nothing bundled, nothing calls home. Triggers: push +
+pull_request on `ai/main`, `workflow_dispatch` from any branch, and `v*`
+tag pushes (which additionally run the `release` job — see *Releases*).
+Per the GitHub docs, `branches:` + `tags:` under one `push:` filter is
+OR semantics, so plain ai/main pushes are unaffected. Paid minutes on
+this private repo — use sparing, and put `[skip ci]` on doc-only pushes
+to ai/main that don't need artifacts. The old `build-demo.yml.disabled`
+stays parked (its legs were reused for build-all).
+`app/src-tauri/Cargo.lock` is committed — regenerate it whenever
+`Cargo.toml` changes (the nix `cargoLock` and guix vendor builds depend
+on it).
+
+## Releases
+
+Push an annotated `vX.Y.Z` tag on `ai/main` (bump the version in ALL FOUR
+carriers first — `plugin/pyproject.toml`, `app/package.json`,
+`app/src-tauri/tauri.conf.json` (drives the apk `versionCode`), and
+`app/src-tauri/Cargo.toml` + its lock entry in `Cargo.lock` — the tag
+should match them). The pipeline runs on the tag and the `release` job cuts the
+GitHub Release from that run's artifacts plus the plugin wheel/sdist,
+with a `SHA256SUMS.txt`. Asset names and assembly rules mirror v0.1.0
+exactly (reference implementation: `scripts/cut_v010_release.sh`, which
+cut v0.1.0 by hand from green run 39000890302). Only the `release` job
+holds `contents:write`, and it uses the built-in `GITHUB_TOKEN` — no
+PATs in CI. If a tag push ever fails to trigger, the manual fallback:
+dispatch a run on the tag's commit, download its artifacts, and re-run
+the assembly steps from the release job. Release assets are permanent;
+run artifacts expire after 14 days.
+
+## Android apk — install rules (learned from v0.1.0)
+
+v0.1.0's apk failed to install on phones with "App not installed": it
+was `arm64-v8a`-only (32-bit phones reject it) and every CI run minted
+a fresh ephemeral debug keystore (Android refuses to update an app
+whose signature changed). Since v0.1.1 the apk is universal
+(`aarch64,armv7` targets) and signed with the committed stable debug
+key. Sideload rules: Android 7.0+ (minSdk 24), 64- or 32-bit, install
+from the **release** asset (run-page artifacts download as a zip —
+extract first), and devices that had the v0.1.0 apk must uninstall it
+once (one-time signature change from the stable key).
+
+## State as of 2026-10-17 (after the branding-flexibility pass)
+
+- **Neutral default brand landed**: `app/brands/default/` ("Admincraft",
+  neutral grid-mark logo + regenerated full icon set via `npx tauri icon`).
+  `tauri.conf.json` productName/window title no longer say "Freshorama
+  Admin" — release builds ship generic, users brand on top. freshorama +
+  minimal-light remain as examples only.
+- **Runtime branding API + in-app editor landed** (75 pytest / 58 vitest,
+  both suites extended test-first): `plugin` gained
+  `brandstore.py`/`views.py`/`urls.py` (GET public, PUT staff-token,
+  closed schema, magic-byte-checked data-URL uploads ≤ 1 MB, jailed
+  writes, `rev` counter); demo-backend mounts `/admincraft/` and points
+  `ADMINCRAFT_BRAND_DIR` at a gitignored runtime dir. Client: brand store
+  fetch on boot with silent fallback, `applyBrand()` live re-theme
+  (CSS vars + titles + favicon + Tauri window title via the new
+  `core:window:allow-set-title` capability), and the `#/branding` editor
+  page with live preview + server-error rendering.
+- **CSP widened deliberately** (was dev-only localhost policy): the
+  product's promise is "point the client at ANY DRF API", so
+  `connect-src`/`img-src` now allow any http/https origin and
+  `style-src`/`font-src` allow Google Fonts for branded fonts;
+  `script-src 'self'` unchanged. Documented tradeoff: script execution
+  stays locked down, network egress does not. (Superseded on `ai/csp-1`: the
+  shipped conf now carries the *production* policy — see the csp-1 bullet —
+  so the any-origin egress survives only in web/dev mode.)
+- **`skills/` shipped**: `admincraft-onboard` + `admincraft-craft`
+  (duplicated stdlib engine scripts by design — `inspect_project.py`,
+  `derive_brand.py` — ask/auto modes, references, evals). Verified live
+  against demo-backend and a scratch client dir.
+- v0.1.2 released 2026-10-17: first release carrying the neutral
+  identity (see *Releases* for the version-bump checklist — all four
+  carriers were bumped before tagging).
+- Shipped on `ai/main` (default branch): plugin, thin client, demo backend,
+  Nix + Guix packaging, README, AI-REVIEW. Every topic branch — `be-1`, `be-2`,
+  `be-3`, `be-6`, `fe-1`…`fe-5`, `mvp-build` — is merged in and safe to prune;
+  checked with `git merge-base --is-ancestor <tip> ai/main`, not assumed.
+- Suites, both green at this HEAD: `pytest` 75/75, `vitest` 58/58. On this
+  4 GB box run vitest capped:
+  `NODE_OPTIONS=--max-old-space-size=1024 npx vitest run --maxWorkers=1`.
+- Fixed & merged, P0→P1: `brand.json` closed schema + realpath/commonpath jail
+  on all writes; demo-backend dev-only DEBUG/CORS startup warning (`DEMO_DEV=1`
+  ack); `api.ts` secret redaction + credentials stripped from URLs; `chat.ts`
+  SSE oversized-line cap (1 MB, skip+warn); `secrets.ts` one-time
+  web-localStorage SECURITY warning; `RecordForm.buildPayload` omits empty
+  non-nullable fields; `DataTable` nested `{#each}` keyed on `col.name`;
+  widgets auto-imported via `import.meta.glob` (`meta{title,size}`).
+- Fixed & merged, later the same day: `tauri.conf.json` CSP `null` → working
+  **dev** policy (localhost/ws + inline styles, no wildcards; production policy
+  still open). The widget registry lives at `app/src/widgets/index.ts` — the
+  old `app/src/lib/widgets.ts` is gone. Vitest runs in `happy-dom` so
+  `localStorage`/`location` exist in tests. The widgets test asserts the
+  drop-in *contract* (valid meta, `widgetUnits`, built-ins by contains) instead
+  of a pinned count or id list, so dropping in a 4th widget cannot break it.
+- Demo-backend regression, fixed & merged: `demo-backend/shop/urls.py` was
+  silently deleted by the `381bed3` package rename (rig died on the first
+  request; 48/48 stayed green because nothing booted Django). Restored
+  byte-identical, and `plugin/tests/test_demo_boot.py` is now the gate — it
+  boots the real `core.settings` in a subprocess, runs Django's system checks,
+  and resolves `api/auth/token/`, the `shop.urls` router routes and
+  `/api/schema/`. Needs no database.
+- Fixed & pushed to `ai/csp-1` (rebased on `ai/main`, not yet merged): the
+  **production CSP policy** item is closed. `tauri.conf.json` ships
+  self-only script/media/worker + connect-src 'self' https://API_HOST — a
+  placeholder, no localhost, no wildcards. After BRE Finding 2 it also
+  carries `img-src 'self' data: https:`, `font-src 'self'
+  https://fonts.googleapis.com https://fonts.gstatic.com` and
+  `https://fonts.googleapis.com` under `style-src`: a brand.json webfont
+  (@import is gated by style-src, the .woff2 files by font-src) and a
+  hosted logo URL are product promises a self-only policy breaks silently,
+  with no error. `build_admin --api-host <origin>` substitutes the deployed
+  origin at deploy build time via `branding.normalize_api_host` (https only,
+  dotted DNS, optional port; localhost/loopback, wildcards, paths, userinfo
+  fail loudly; CSP drift fails loudly; same-origin re-runs are idempotent
+  no-ops). pytest 114 / vitest 58, green; the CSP + API_HOST tests moved to
+  `plugin/tests/test_branding_api.py`. CI test-gate gained a CSP-hygiene
+  step that fails if localhost/http/ws/wildcards ever reappear in the shipped
+  conf.
+- **BLOCKED-ON-FOLLOW-UP on csp-1** (queued as `prod-CSP follow-through` in
+  TODOS.org): a placeholder CSP also breaks the flow this file
+  and the README advertise — a downloaded CI artifact (.exe/.AppImage/.apk)
+  pointed at the user's own DRF API on the login screen cannot connect,
+  because `connect-src` is 'self' + `https://API_HOST` until a build passes
+  `--api-host`. Web mode is unaffected (no Tauri CSP). Needs either a
+  runtime-set connect-src (same mechanism as live branding) or the artifact
+  story changed, before this merges. SAME ROOT CAUSE, SECOND VICTIM: the
+  committed CSP no longer carries the `http://localhost:*` + `ws://localhost:*`
+  allowances `4a89fba` added, so `tauri dev` HMR is expected to break again
+  (browser `npm run dev` is fine) — UNVERIFIED, proving it needs a Tauri
+  build, which this box must not run. A dev-override config is the likely fix.
+- v0.1.0 released 2026-10-17: tag on `f1678cd`, assets from green run
+  39000890302 (wheel + sdist, NSIS exe, AppImage, aarch64 debug apk, web
+  bundle, nix/guix store tarballs, SHA256SUMS). All six build legs are
+  proven green in CI — the old "android/nix/guix unverified" caveat is
+  closed.
+- v0.1.1 released 2026-10-17, same day: the apk became universal
+  (aarch64 + armv7) and stable-signed (committed debug keystore) after
+  v0.1.0's apk hit "app not installed" on phones (aarch64-only ABI +
+  ephemeral per-run signing key). First live fire of the automated
+  `release` job (v0.1.0 was cut by hand).
+- FR-R001 (ROADLOG R-001), on `ai/fr-r001-be`: demo-backend Order gained the
+  reference lifecycle state machine — ordered Status enum + STATUS_ORDER +
+  TRANSITIONS table (pending→paid→shipped, refunds from paid/shipped,
+  refunded terminal), apply_transition() with typed IllegalTransition(reason),
+  reserve/release stock shipped as # TODO(client) no-ops inside the
+  transactional side-effect seam (_apply_side_effects), append-only
+  OrderHistory (actor FK, creation entry via perform_create, seed_demo rows),
+  and two router @actions: POST /api/orders/<id>/transition/ (guard failures
+  = 409 + {reason}; unknown/missing target = 400 + {reason}) and
+  GET /api/orders/<id>/history/ (oldest-first, deliberately not paginated —
+  pagination_class=None so the OpenAPI schema matches the runtime shape).
+  Additive only: status stays PATCH-writable (pre-existing MVP behavior).
+  Client projects copy the pattern — contract + checklist in
+  docs/order-lifecycle.md. +37 pytest (114 → 151) in
+  plugin/tests/test_order_lifecycle.py: machine matrix, 409/400 shapes,
+  trail order/actor, creation entry, seam invocation + rollback-on-failure,
+  schema exposure. conftest now mounts the demo rig apps in-memory so the
+  contract tests run in-process — still zero new deps (no pytest-django; the
+  test DB comes from Django's own DiscoverRunner utilities).
+- FR-R003 (ROADLOG R-003), on `ai/fr-r003-be` (stacked on `ai/fr-r001-be`):
+  the custom-actions + audit reference — append-only `AuditEntry` (loose
+  object_type/object_id targeting, no GFK; actor always server-derived,
+  client-supplied actor ignored) whose append-only guarantee is structural:
+  the ViewSet has List+Create mixins only, so list mutations answer 405 and
+  the router never generates a detail route. Audit reads newest-first
+  (triage) while R-001 history stays oldest-first (replay) — the ordering
+  ruling recorded in the model and docs. Optional `?object_type=` /
+  `?object_id=` filters back the record sub-view and the R-007 activity
+  screen. Two audit-wired reference actions on Order: record-scope POST
+  `/api/orders/<id>/flag/` and bulk-scope POST `/api/orders/bulk_flag/`
+  (guard errors keep the R-001 400+{reason} shape; bulk writes one entry per
+  order with provenance in data). Registry contract (FE meta + handler
+  pairing) + copy-this-pattern checklist in docs/custom-actions.md.
+  +24 pytest (151 → 175) in plugin/tests/test_audit_actions.py.
+- Open, by priority: AI-REVIEW.org human P0 sign-off; web-mode secrets still in
+  localStorage (accepted P2 — warned, not eliminated); icons are neutral
+  generated grid marks — real product art still welcome; full skill eval
+  loop (subagent runs + benchmark viewer) not yet executed — the scripts
+  are functionally verified, the prompts in `evals/` are unrun. (Closed
+  2026-10-17 on `ai/csp-1`: production CSP policy + build-time API_HOST
+  substitution; the per-instance-CSP idea remains open.)
+
+---
+
+# AGENT-TEAM CHAIN (added 2026-10-21, Lead) — the automated layer
+
+This repo now ALSO runs the agent-team CI chain (`.github/workflows/
+agent-team.yml`, ported from khaalidrafi/agent-team.el): `test` ->
+`turn` (TG ingest owner-locked -> session restore -> one agent segment
+in the preinstalled harness container -> session scrub+upload -> branch
+push) -> `finalize` (auto-merge behind the landing gate -> stall
+accounting -> self-dispatch while the objective is open).
+
+Agent law (supersedes any conflicting instruction above for CI seats):
+
+1. SINGLE CHAT: `agent-team/TEAM-CHAT.org` — append-only, FORMAT LAW
+   headline grammar (headline carries FROM; `:PROPERTIES:` drawer;
+   Org inactive timestamps). Direct @pings, never mailbox relay.
+2. CONTROL: `agent-team/TEAM-CONTROL.org` is LEAD-OWNED — seats read and
+   cite, never edit. Same for `.github/workflows/*`, `.github/scripts/*`,
+   `.gitattributes`.
+3. BOARD: `agent-team/TODOS.org` is the source of truth for
+   work. Flip your item ONGOING at start; on delivery flip to PENDING
+   with `:DELIVERED:` evidence (branch, sha, gate output). DONE is
+   Lead-only.
+4. SECRET LAW: credentials travel as ENV VAR NAMES only (e.g.
+   QODER_PERSONAL_ACCESS_TOKEN). Never echo a value — a peer confirms
+   the NAME + has-it/absent; you read the value from your own
+   environment. `.github/scripts/secret-guard.sh` redacts leaks at
+   every commit, ingest, and session artifact.
+5. SESSION LAW: CLI session files are collected each turn, scrubbed,
+   uploaded (`sessions-<seat>-*`, 30d), restored before your next
+   segment — resume with context.
+6. OWNER LOCK: the Telegram bridge records ONLY the Owner's chat
+   (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
+   impossible.
+7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
+   (212 green baseline as of FR-R007-LIVE; vitest 252 as of FR-R001-FE) + `demo-backend manage.py check` +
+   `makemigrations --check`. Red work never lands.
+8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
+   in `docker/harness/` (Docker law). Rotation pointer lives in
+   TEAM-CONTROL.org `#+TURN`.
+
+## Global agent law — DISTRIBUTED (Owner order 2026-10-21 03:53Z #hq:
+## "don't forget to give global instructions' AGENTS.md to the team").
+## Canonical source: khaalidrafi/agent-team.el AGENTS.md.
+
+1. FORMAT LAW: TEAM-CHAT.org messages are Org headlines carrying FROM,
+   routing in tags, fields in a :PROPERTIES: drawer; append at EOF only.
+2. TELEGRAM LAW: TG-bound messages open with FROM:/TO: lines.
+3. SECRET LAW: credentials NEVER travel in chat/files/commits — only as
+   ENV VAR NAMES. A peer replies with the NAME + has-it/absent; the asker
+   reads the value from their OWN environment. SECRET GUARD
+   (.github/scripts/secret-guard.sh) redacts at every choke point.
+4. SESSION LAW: CLI session files collected at turn end, scrubbed,
+   uploaded as sessions-<seat>-* artifacts (30d), restored next turn.
+5. OWNER LOCK: the TG bridge ingests ONLY the Owner's chat.
+6. DOCKER LAW: agents PREINSTALLED in docker/harness; keys env-injected.
+7. SEAT BOUNDARIES: never edit .github/workflows/*, TEAM-CONTROL.org,
+   .gitattributes; never push to ai/main (finalize auto-merges).
+8. BOARD DISCIPLINE: ONGOING at start, evidence in :LOGBOOK:, DONE is
+   Lead-only.
+9. IDENTITY: commit as your seat identity.
+10. NO SPEND, no destructive actions; :escalation: @lead after 2 failed
+    self-attempts.
