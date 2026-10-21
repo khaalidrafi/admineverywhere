@@ -815,6 +815,20 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 20:10 UTC] :: SELF-AUDIT OF THE NOTE ABOVE
+  (commit 1ce3045, same branch ai/turn-20261021-2003; state untouched — PENDING
+  stands, DONE is the Lead's gate). The resolver landed minutes earlier carried
+  `resolve_server_python(explicit: str | None)` — machine-checked to be the ONLY
+  PEP 604 annotation in all of `scripts/*.py` — which raises at IMPORT time on a
+  Python < 3.10 box, killing the harness with rc 1: the exit code that means "the
+  two writers DIVERGE", produced by an interpreter version instead of a writer.
+  Third direction the same trap has arrived from across three segments (the
+  writers, the launcher's 127-as-1, now the launcher's own grammar), so DEVGUIDE's
+  FIFTH law names it. Annotation removed. Re-verified after the edit:
+  BYTE-IDENTICAL 3070 cells / 56287 B → 0; node absent while node_modules present
+  → 2 naming `cannot launch 'npx'` (the run() 127 mapping survives); nonexistent
+  `--python` → 2. Product code and both suites still untouched; the 20:09Z
+  landing-gate numbers stand (a comment-level edit does not re-run 299 + 416).
 - Note taken on [2026-10-21 Wed 20:09 UTC] :: THE CSV TWIN HARNESS STOPPED
   REQUIRING A VENV IT DOES NOT NEED (branch ai/turn-20261021-2003; state
   untouched — PENDING stands, :DELIVERED: rows above unchanged; DONE is the
