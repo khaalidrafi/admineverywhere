@@ -29,6 +29,7 @@ import json
 import re
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 from django.conf import settings
 
@@ -61,10 +62,10 @@ def brand_dir() -> Path:
 
 def _asset_url(name: str) -> str:
     try:
-        from django.urls import NoReverseMatch, reverse
+        from django.urls import reverse
         return reverse("admincraft:brand-asset", args=[name])
     except Exception:  # NoReverseMatch, urlconf not loaded, no namespace...
-        return FALLBACK_ASSET_URL.format(name=name)
+        return FALLBACK_ASSET_URL.format(name=quote(name))
 
 
 def asset_path(name: str) -> Path:
@@ -126,12 +127,17 @@ def _decode_data_url(key: str, value: str) -> tuple[str, bytes]:
 # ------------------------------------------------------------- public ----
 
 def _public(brand: dict) -> dict:
-    """Client-facing form: asset keys become API-relative asset URLs."""
+    """Client-facing form: asset keys become API-relative asset URLs.
+
+    The stored relative path travels WHOLE — "assets/logo.svg" is what every
+    shipped brand.json says, and flattening it to "logo.svg" produced a URL
+    that 404s (the asset route cannot name a file that lives in a subfolder).
+    """
     out = dict(brand)
     for key in ("logo", "favicon"):
         rel = out.get(key)
         if rel:
-            out[key] = _asset_url(Path(rel).name)
+            out[key] = _asset_url(rel)
     return out
 
 

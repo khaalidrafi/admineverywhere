@@ -1523,6 +1523,56 @@ CLOCK: [2026-10-18 Sun 02:30]
 :ORDERED: t
 :END:
 ** DONE brand-1 — neutral branding + in-app rebrand + skills (v0.1.2) :FE:BE:
+:LOGBOOK:
+- Note taken on [2026-10-21 Wed 16:55] :: DEFECT FOUND + FIXED on this
+  surface (seat platform-engineer, branch ai/turn-20261021-1640) — the
+  runtime asset route could not address the shape every shipped brand.json
+  actually uses. :DELIVERED: evidence:
+  FINDING (from the first BRANCH-coverage run on plugin/src — 92% and the
+  missing lines were all refusal paths, which is where the bug hid):
+  app/brands/{default,freshorama,minimal-light}/brand.json all store
+  "logo": "assets/logo.svg" + "favicon": "assets/icon.png", but the runtime
+  route was branding/asset/<str:name> — a converter that cannot match "/".
+  So reverse() raised NoReverseMatch, brandstore._asset_url's broad
+  `except Exception` swallowed it and emitted the fallback URL anyway, and
+  that URL 404s AT THE ROUTER: the client was handed a logo link to bytes
+  that exist, with no error on either side. Second victim of the same
+  flattening: brandstore._public() rewrote the stored path to
+  Path(rel).name, so the branding editor round-tripped "assets/logo.svg" to
+  "logo.svg" and the NEXT save answered 400 "file not found in brand dir"
+  on a brand the user never touched.
+  FIX (one commit, both sides of the contract — the twin law, like
+  brandToCss/render_css): plugin/src/admincraft/urls.py:23 route is now
+  <path:name>; plugin/src/admincraft/brandstore.py:140 _public() serves the
+  WHOLE relative path (and :66 quotes the fallback tail);
+  plugin/src/admincraft/views.py:90 the "/" ban becomes a shape guard
+  (`.`/`..`/empty segment/absolute/backslash -> "bad asset name") with
+  brandstore.asset_path()'s realpath+commonpath jail kept as the authority;
+  app/src/pages/Branding.svelte:39/75 the editor keeps the stored relative
+  path (ASSET_PATH_PREFIX, twin of the plugin's mount) instead of popping
+  the basename.
+  TESTS: +14 pytest (plugin/tests/test_branding_api.py — the shipped-shape
+  PUT/GET/bytes round trip, a test that reads the REAL
+  app/brands/default/brand.json + its assets, subdir 404, 7-parametrized
+  shape refusals pinned to the GUARD's own message, a symlinked asset pinned
+  to the JAIL's message, an embedded NUL refused instead of 500ing) and +1
+  vitest (brandingMount.test.ts — untouched subdir asset keeps its dir).
+  MUTANTS: m1 flatten _public, m2 revert to <str:name>, m3 except
+  ValueError->KeyError, m4 client basename slice, m5 weaken the shape guard,
+  m6 un-jailed asset_path — SIX seds, ZERO survivors; m5 died only because the
+  message is pinned (a status-only assertion cannot tell guard from jail) and
+  m6 died only on the symlink case (the guard cannot see it). Each killed its
+  own named test, sources restored from /tmp/mut backups, never committed.
+  GATE at this HEAD: pytest 299/299 (was 285), vitest 353/353 (was 352) over
+  26 files, `npx tsc --noEmit` exit 0, manage.py check "no issues
+  (0 silenced)", makemigrations --check "No changes detected".
+  DOCS: docs/DEVGUIDE.md new asset-relative-path law + counts,
+  plugin/README.md and skills/admincraft-craft/references/branding.md now
+  say <relative-path>.
+  STILL OPEN: pixels (no browser/Tauri here) — a real rebrand with a subdir
+  logo in a live app is unproven by inspection; board state untouched, DONE
+  stays the Lead's gate, no completion claim from this seat.
+:END:
 ** DONE csp-1 — production CSP (merged; CI leg grading)              :BE:
 :LOGBOOK:
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 01:40]

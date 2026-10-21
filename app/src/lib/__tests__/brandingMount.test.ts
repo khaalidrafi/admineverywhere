@@ -200,6 +200,25 @@ describe("Branding editor mounted (runtime branding API)", () => {
     expect(mockFetch.mock.calls.length, "keeping a server asset must not fetch it").toBe(1);
   });
 
+  it("an untouched subdirectory asset keeps its directory — the shipped brand shape", async () => {
+    // app/brands/*/brand.json stores "assets/logo.svg"; the server serves that
+    // file as .../branding/asset/assets/logo.svg. Stripping to "logo.svg" here
+    // made the next save a 400 ("file not found in brand dir") on a brand the
+    // user never touched.
+    routePut({ status: 200, body: { brand: SERVED, rev: 6 } });
+    const root = render({
+      ...SERVED,
+      logo: "http://api.test/admincraft/branding/asset/assets/logo.svg",
+      favicon: "/admincraft/branding/asset/assets/icon.png",
+    });
+    await clickSave(root);
+
+    const { body } = putCall();
+    expect(body.logo).toBe("assets/logo.svg");
+    expect(body.favicon).toBe("assets/icon.png");
+    expect(mockFetch.mock.calls.length, "keeping a server asset must not fetch it").toBe(1);
+  });
+
   it("a bundled static asset is re-uploaded as a data URL on the first save", async () => {
     routePut({ status: 200, body: { brand: SERVED, rev: 4 } });
     mockFetch.mockImplementation(async (url: string) => {

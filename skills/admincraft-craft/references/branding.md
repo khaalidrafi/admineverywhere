@@ -51,18 +51,22 @@ without the plugin keeps the bundled brand — degrades silently.
 ```
 GET  <api>/admincraft/branding/
      → 200 {"brand": {...same schema, logo/favicon as API-relative
-                      /admincraft/branding/asset/<file> URLs...}, "rev": <int>}
+                      /admincraft/branding/asset/<relative-path> URLs...}, "rev": <int>}
      → 404 {"detail": "no brand configured — ..."}      # use bundled brand
 
 PUT  <api>/admincraft/branding/      Authorization: Token <staff token>
      body: the brand object; logo/favicon may be
        "data:image/png;base64,..." | "data:image/jpeg;base64,..." |
-       "data:image/svg+xml;base64,..." | a relative filename already on the server
+       "data:image/svg+xml;base64,..." | a relative asset path already on the
+       server (directory included — the SAME string the GET handed back)
      → 200 same shape as GET     400 {"errors": ["field: problem", ...]}
      401 no/bad token            403 non-staff        501 host has no DRF
 
-GET  <api>/admincraft/branding/asset/<file>   → the logo/favicon bytes
-     (png/jpeg/svg content-types; only files inside the brand dir)
+GET  <api>/admincraft/branding/asset/<relative-path>
+     → the logo/favicon bytes
+     (png/jpeg/svg content-types; the path is exactly what brand.json
+      stores — "assets/logo.svg" keeps its directory — and only files
+      inside the brand dir are ever served)
 ```
 
 Upload limits: 1 MB per asset, magic-byte verification (a PNG must
