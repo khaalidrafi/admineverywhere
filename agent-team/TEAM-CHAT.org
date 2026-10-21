@@ -960,3 +960,70 @@
   .github/workflows/*, .github/scripts/*, .gitattributes; no completion
   claim from this seat. Branch ai/turn-20261021-1027 carries the
   LOGBOOK note + this report.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 10:45 UTC]
+:END:
+  RESULT: DONE — no OPEN board item existed at HEAD 9d9a938 (items 1-11 all
+  PENDING-with-delivered-evidence, no unanswered @platform-engineer ping in
+  the tail), so this segment stress-tested the weakest link in that evidence
+  instead of re-reading it: the FR-R005 byte-identical-writers law, which
+  until now leaned on ONE golden document (test_csv_export.py:170).
+  METHOD — real code both sides, no reimplementation: Python
+  demo-backend/shop/csv_export.py loaded by file path, app/src/lib/csv.ts
+  transpiled with the repo's own esbuild (node_modules had to be restored
+  with `npm ci --prefix app` first — the empty-node_modules signature my
+  10:32 report described is confirmed reproducible in fresh containers).
+  WHAT I RAN (new, no prior segment did this):
+  1. Randomised cross-twin fuzz, 12 seeds x 250 rows x 8 cols of adversarial
+     cells (embedded " , CRLF, lone LF/CR, TAB-lead, "-2+3", "-IF(...)",
+     "=cmd", "@at", bare "-"/".", "-0", NUL, emoji+CJK, 300-char runs,
+     int/bool/null/empty) restricted to JSON-deliverable types ->
+     12/12 runs BYTE-IDENTICAL, zero differing lines.
+  2. Live-payload corpus: booted the rig (migrate + seed_demo + runserver
+     127.0.0.1:8041), pulled all 60 paginated Orders + Products over real
+     HTTP, POSTed 3 records carrying formula-lead notes
+     (=HYPERLINK("http://evil/",click) with embedded quotes+comma, "-2+3",
+     TAB-prefixed), ran both writers over the 63 rows -> 3627 bytes
+     byte-identical, guard firing identically (=HYPERLINK and -2+3
+     apostrophised, "-5.00" left as data — the NUMERIC_SHAPED rule proven on
+     live decimals, not fixture ones). Scratch rows DELETEd, rig stopped and
+     the port re-probed closed, db.sqlite3 is gitignored, tree pristine.
+  FINDING, and it is a real one: the twins DO diverge — on exactly one value
+  type a Python object can hold but a DRF JSON body cannot deliver: a float.
+  str(1.0)="1.0" vs String(1)="1", str(-0.0)="-0.0" vs "0",
+  str(1e-07)="1e-07" vs "1e-7". Leave floats in the matrix and 144/507 lines
+  differ, every difference in that single class; take them out and the
+  difference is zero. It is unreachable through this product, proven live
+  rather than assumed: order.total arrives as the STRING '48.50' and
+  product.price as '19.99' (DecimalField/DateField render as strings), FKs as
+  int, is_active as bool. So no shipped row can hit it, and no FE :DELIVERED:
+  claim is falsified. I recorded it instead of leaving it buried:
+  docs/csv-export.md §2 now names the float caveat (a client project that
+  exports a FloatField through a hand-rolled path knows which side to fix)
+  and §6 the re-run recipe.
+  BOARD: LOGBOOK note added to FR R-005 (state untouched — PENDING stands,
+  DONE is your gate). No item flipped, no control file touched.
+  LANDING GATE green at this HEAD: pytest 212/212 (11.7s), manage.py check
+  "no issues (0 silenced)", makemigrations --check "No changes detected",
+  vitest 252/252 (19 files, NODE_OPTIONS=1024 --maxWorkers=1, 11.7s).
+  STILL-OPEN ROWS, with one new datum for (2):
+  (1) the runner-side red `test` job — unchanged, this box still has no gh
+      CLI/API access, so the run log needs you or a seat that has it.
+  (2) "nobody watched the live UI in a real browser/Tauri window" is now
+      provably NOT closable on this harness at all: chromium,
+      chromium-browser, google-chrome, firefox and playwright are all absent
+      (`command -v` -> nothing; `npx --no-install playwright` -> ERR), and
+      installing a browser is a spend I am not authorised to make. So a
+      human E2E pass (login admin/admin123 -> dashboard -> Product table ->
+      New Order -> transition click -> Ctrl+K stream -> rebrand) is
+      mandatory, not deferred — no further automated check from any seat can
+      substitute for it. Flagging so the objective does not wait on a
+      deliverable this chain cannot produce.
+  I have NOT touched OBJECTIVE-STATE, TEAM-CONTROL.org, .github/workflows/*,
+  .github/scripts/*, .gitattributes; no completion claim from this seat.
+  Branch ai/turn-20261021-1034 carries the doc note, the R-005 LOGBOOK entry
+  and this report.
