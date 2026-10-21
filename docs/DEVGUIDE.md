@@ -148,7 +148,8 @@ cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
-# FR-R005 cross-twin CSV byte diff (needs app/node_modules + demo-backend/.venv)
+# FR-R005 cross-twin CSV byte diff (needs app/node_modules; layer 2 probes
+# demo-backend/.venv/bin/python then the running interpreter — no venv required)
 python3 scripts/csv_twin_diff.py            # 0 = identical, 1 = divergence, 2 = rig not runnable
 
 # brand CSS twin byte diff — render_css() ↔ brandToCss() ↔ the shipped bundle
@@ -484,9 +485,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   switched off (`if False and is_text and is_formula_text(text)`), it names
   every apostrophe difference (`line 10: client=b"8,'=SUM(A1:A9)"
   server=b'8,=SUM(A1:A9)'`); restored, it prints `BYTE-IDENTICAL`. Exit 0 =
-  equal, 1 = divergence, 2 = the rig could not run (no `node_modules`, no
-  `.venv`) — it is a re-verifier, not a suite member, so it never lands in
-  pytest/vitest where node or a venv would be assumed.
+  equal, 1 = divergence, 2 = the rig could not run (no `node`/`node_modules`, or
+  no interpreter that can import the rig's deps) — it is a re-verifier, not a
+  suite member, so it never lands in pytest/vitest where node would be assumed.
   Third control, found while writing the brand harness: the exit-code contract
   itself was leaky. With `npx` absent from PATH the launcher raised
   `FileNotFoundError` and the script died with a traceback and **exit 1** — the
@@ -497,6 +498,33 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   harnesses (`scripts/csv_twin_diff.py:109` `run()`,
   `scripts/brand_twin_diff.py` `run_client_probe()`); a harness with three
   documented exit codes has to prove each of them, not just the green one.
+  Fourth control, same trap from the OTHER side: a false BLOCKED. An exit 2 is
+  only honest if the thing genuinely cannot run, and `csv_twin_diff.py` was
+  demanding `demo-backend/.venv/bin/python` BY PATH — so on a box whose system
+  python satisfies every rig dependency it printed "cannot run" in 0 s and the
+  FR-R005 live claim stayed un-re-runnable (measured here: the same interpreter
+  ran the server probe perfectly, and `scripts/brand_twin_diff.py` had always
+  worked without a venv). Worse, the CI landing gate pip-installs the plugin into
+  its OWN environment and never builds a rig venv, so the gate could not have
+  re-run the very harness its docs cite. Layer 2 now resolves an interpreter by
+  PROBE (venv first, then the running one; `import django, rest_framework,
+  drf_spectacular, admincraft`) and prints `layer 2 interpreter: …`, because a
+  pass must say which environment proved it; `--python <exe>` is honoured
+  exclusively — when a seat names an interpreter, that interpreter's failure is
+  the answer, not a licence to fall back and report someone else's green.
+  Controls measured: nonexistent exe → 2 `cannot launch`; a real dep-free venv
+  → 2 naming `No module named 'django'`; a dep-free `.venv` sitting at the
+  preferred path → falls back and says so, still 0; the bool branch mutated
+  server-side (`true/false` → `1/0`) → 1 naming `line 101: client=b'98,false'
+  server=b'98,0'`. Third-party finding, caught while writing this paragraph: a
+  `str | None` annotation in the new resolver was the only PEP 604 syntax in
+  all of `scripts/` — on a Python < 3.10 box it raises at IMPORT time, i.e. a
+  launcher crash with rc 1, the same false `DIVERGENT` as the 127 above, from a
+  whole different cause (interpreter version, not missing tool). Removed; a
+  re-verifier's own syntax is part of its exit-code contract.
+  The lesson generalises: **a harness must fail to run for a
+  reason it can name, and succeed with the environment it can show.** Both
+  halves are exit-code contracts; only the first one was written down.
 - **SIXTH harness law — when the two artifacts are SUPPOSED to differ, normalize
   the difference deliberately and prove the diff bites on the rest.** The brand
   twins (`plugin/src/admincraft/branding.py:196` `render_css()` ↔
