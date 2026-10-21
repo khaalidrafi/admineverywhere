@@ -815,6 +815,63 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 23:28 UTC] :: THE POPULATION LAW GOES ONE LEVEL UP —
+  WHICH LEGS RUN, not only what they print (branch ai/turn-20261021-2316; state
+  untouched — PENDING stands, DONE is the Lead's gate). Work order re-counted at boot:
+  11 PENDING + 2 DONE, zero TODO/ONGOING/WAIT, every PENDING row carries :DELIVERED:,
+  no unanswered @platform-engineer ping (chat tail through 23:10Z all mine), so the
+  segment took the CANDIDATE #5 named in my own 23:10Z report: landing_gate's LEG COUNT
+  was still prose-only. TENTH consecutive swallowed boot install (import admincraft
+  failed, app/node_modules absent) — self-healed with the gate's printed commands; the
+  standing Lead ask is unchanged.
+  MEASURED BEFORE THE FIX on the delivered tree, four mutations, each restored
+  byte-identical, EVERY ONE rc 0 / GATE GREEN: (1) the `migrations` leg deleted from the
+  roster → gate ran 2 verdict legs; (2) `parity-twin` deleted from TWINS → `--fe`
+  compared 2 of 3 pairs; (3) a 4th `scripts/*_diff.py` harness written and never wired →
+  silently not run; (4) the dep preflight moved BEHIND pytest → ran anyway. All four
+  still closed with "every leg above asserted its own output" — a sentence true of the
+  legs that ran and blind to the one that did not.
+  SHIPPED: MERGE_ROSTER + FE_ROSTER (`scripts/landing_gate.py:85`) — ordered label
+  tuples = identity + population + ORDER in one compare (the preflight must stay first:
+  it exists precisely because a swallowed install wears pytest's exit 2 as a red tree) —
+  graded by pin_roster() (`scripts/landing_gate.py:153`) and pin_twins()
+  (`scripts/landing_gate.py:182`), the latter cross-checking EXPECTED_TWINS
+  (`scripts/landing_gate.py:91`) against the `scripts/*_diff.py` files ON DISK, because
+  a roster and its own literal are two copies of one intent (the weakest pin this law
+  was measured for twice). The pin runs BEFORE a single leg launches. VERDICT SPLIT,
+  deliberately reversing the count pin: roster drift = CANNOT RUN rc 2 (the harness is
+  no longer this gate → no opinion about the diff), count drift = RED rc 1 (the tree is
+  not making the claim its own runner prints). Legs + roster now printed on every run so
+  a report quotes a measured number, not an assumption.
+  TWO SELF-CATCHES, both the design working: (a) the first cut raised the pin exception
+  outside the legs loop, so `__main__`'s crash handler printed "CANNOT RUN — harness
+  failure CannotRun:" — a deliberate verdict wearing a broken-rig word, which invites a
+  re-run of something that will not change (TWELFTH law); fixed to
+  `CANNOT RUN [roster]`. (b) my own insertion MOVED population() from
+  landing_gate.py:112 to :135, making the DEVGUIDE citation in my PREVIOUS segment's
+  paragraph in-range-but-wrong-target; release_readiness would fire on it, so both stale
+  pointers (docs/DEVGUIDE.md, scripts/release_readiness.py:130) were corrected in this
+  commit — and this is exactly why a file whose line numbers are cited by two other
+  files should be edited last or measured first. EXPECTED_CLAIMS 9 -> 11 (the two new
+  `pin_roster()`/`pin_twins()` witness claims), measured by the leg itself.
+  CONTROL for the control: deliberately citing `pin_roster()` at :182 (a real line, in
+  range, wrong function) → RELEASE READINESS RED rc 1 naming line 182 and printing the
+  correct 153; restored byte-identical, rc 0 again.
+  GATE: `landing_gate.py --fe` rc 0 on the delivered tree (8 legs: pytest 299, System
+  check no issues, No changes detected, vitest 416/31 files, csv-twin 3070 cells,
+  brand-twin 302 over pinned 350, parity-twin 25 rows) and the default merge gate rc 0
+  printing `legs 4 (env, pytest, check, migrations)`; release_readiness rc 0 (82 repo
+  path citations, 78 bounds-checked lines, 11/11 symbol claims on target). NOTE FOR
+  LEAD, read-only and cited: finalize's gate does NOT call this script —
+  `.github/workflows/agent-team.yml:68` runs `.github/scripts/gate.sh` inside the
+  "Landing gate" step at :66, so the roster pin guards the SEATS' claim about the gate,
+  and the machine replay is a separate roster worth the same question. Product code /
+  tests / migrations / lockfiles: ZERO.
+  Docs: DEVGUIDE ELEVENTH law gained "the same door, one level up — which legs run" with
+  the four controls + the RED-vs-CANNOT-RUN ruling + the seat rule extended to pin the
+  roster, not only the numbers; AGENTS.md LANDING GATE bullet now states the roster pin
+  and that a vanished leg is a refusal. Lark: ROLE_LARK_WEBHOOK empty in this seat's env
+  (`[ -z ]`, not assumed) -> Lark report skipped, per seat law noted here.
 - Note taken on [2026-10-21 Wed 23:09 UTC] :: THE ELEVENTH LAW REACHED ITS OWN
   AUTHOR'S FILE (branch ai/turn-20261021-2256; state untouched — PENDING stands, DONE
   is the Lead's gate). Work order re-counted at boot: 11 PENDING + 2 DONE, zero
