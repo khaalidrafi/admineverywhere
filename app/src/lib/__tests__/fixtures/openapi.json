@@ -5,6 +5,87 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/audit/": {
+            "get": {
+                "operationId": "audit_list",
+                "description": "Append-only audit log (FR-R003): GET list + POST append, nothing else.\n\nNo update/delete mixins exist, so PUT/PATCH/DELETE answer 405 by\nconstruction — the log can only grow. Entries read newest-first\n(triage order — the R-003 ordering ruling; R-001's history replays\noldest-first). Optional ``?object_type=`` / ``?object_id=`` filters\nback the record sub-view and the R-007 activity-log screen. POST\nnever trusts the client with ``actor``: perform_create derives it\nfrom the authenticated request.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "audit"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAuditEntryList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "audit_create",
+                "description": "Append-only audit log (FR-R003): GET list + POST append, nothing else.\n\nNo update/delete mixins exist, so PUT/PATCH/DELETE answer 405 by\nconstruction — the log can only grow. Entries read newest-first\n(triage order — the R-003 ordering ruling; R-001's history replays\noldest-first). Optional ``?object_type=`` / ``?object_id=`` filters\nback the record sub-view and the R-007 activity-log screen. POST\nnever trusts the client with ``actor``: perform_create derives it\nfrom the authenticated request.",
+                "tags": [
+                    "audit"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AuditEntryRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AuditEntryRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AuditEntryRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuditEntry"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/auth/token/": {
             "post": {
                 "operationId": "auth_token_create",
@@ -560,6 +641,34 @@
                 }
             }
         },
+        "/api/me/": {
+            "get": {
+                "operationId": "me_retrieve",
+                "description": "Role claims of the authenticated caller (FR-R007). 'roles' are the Django Group names, sorted. Read-only: the client filters its menu and actions from these, the server stays the actual gate.",
+                "tags": [
+                    "me"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {},
+                                    "description": "Unspecified response body"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/orders/": {
             "get": {
                 "operationId": "orders_list",
@@ -811,6 +920,257 @@
                 "responses": {
                     "204": {
                         "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/orders/{id}/flag/": {
+            "post": {
+                "operationId": "orders_flag_create",
+                "description": "Record-scope custom action (FR-R003 reference): flag this order for review. Changes no order fields; appends one append-only audit entry (actor = requesting user).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this order.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FlagRequestRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FlagRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FlagRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuditEntry"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/orders/{id}/history/": {
+            "get": {
+                "operationId": "orders_history_list",
+                "description": "Append-only, timestamped lifecycle trail, oldest first. The creation entry has from_status=\"\"; actor is null for system/seed moves. Deliberately NOT paginated — clients always get the full trail.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this order.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OrderHistory"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/orders/{id}/transition/": {
+            "post": {
+                "operationId": "orders_transition_create",
+                "description": "Move the order through its lifecycle. Body: {transition: <target state>}. Illegal moves answer 409 with {reason}; unknown targets answer 400 with {reason}.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this order.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequestRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Order"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/orders/bulk_flag/": {
+            "post": {
+                "operationId": "orders_bulk_flag_create",
+                "description": "Bulk-scope custom action (FR-R003 reference): flag many orders with one reason. Appends one audit entry per order; unknown ids answer 400 with {reason} listing them. Duplicate ids collapse to one entry per order.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkFlagRequestRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkFlagRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkFlagRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedAuditEntryList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/orders/export/": {
+            "get": {
+                "operationId": "orders_export_retrieve",
+                "description": "Line-level CSV export (FR-R005 reference): the WHOLE order collection in primary-key order, one row per order/history pair with the parent ids repeated. Honours ?search=, ignores pagination (a page of an export is not an export). Answers text/csv with an attachment disposition and a UTF-8 BOM.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "format",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "csv",
+                                "json"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "description": ""
                     }
                 }
             }
@@ -1073,6 +1433,95 @@
     },
     "components": {
         "schemas": {
+            "AuditEntry": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "action": {
+                        "type": "string",
+                        "description": "Slug of the performed action, e.g. 'order.flag'.",
+                        "maxLength": 100
+                    },
+                    "object_type": {
+                        "type": "string",
+                        "description": "Loose target type, e.g. 'order' — no FK, any model audits here.",
+                        "maxLength": 120
+                    },
+                    "object_id": {
+                        "type": "string",
+                        "description": "Primary key of the target, as a string.",
+                        "maxLength": 64
+                    },
+                    "actor": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true,
+                        "description": "Username of the acting user; null for system/seed entries."
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "Human-readable one-liner surfaced in audit screens.",
+                        "maxLength": 255
+                    },
+                    "data": {
+                        "nullable": true,
+                        "description": "Structured payload (reason, bulk provenance, diff — action-defined)."
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "action",
+                    "actor",
+                    "created_at",
+                    "id",
+                    "object_id",
+                    "object_type"
+                ]
+            },
+            "AuditEntryRequest": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Slug of the performed action, e.g. 'order.flag'.",
+                        "maxLength": 100
+                    },
+                    "object_type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Loose target type, e.g. 'order' — no FK, any model audits here.",
+                        "maxLength": 120
+                    },
+                    "object_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Primary key of the target, as a string.",
+                        "maxLength": 64
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "Human-readable one-liner surfaced in audit screens.",
+                        "maxLength": 255
+                    },
+                    "data": {
+                        "nullable": true,
+                        "description": "Structured payload (reason, bulk provenance, diff — action-defined)."
+                    }
+                },
+                "required": [
+                    "action",
+                    "object_id",
+                    "object_type"
+                ]
+            },
             "AuthToken": {
                 "type": "object",
                 "properties": {
@@ -1102,6 +1551,34 @@
                 "required": [
                     "password",
                     "username"
+                ]
+            },
+            "BlankEnum": {
+                "enum": [
+                    ""
+                ]
+            },
+            "BulkFlagRequestRequest": {
+                "type": "object",
+                "description": "Body for POST /api/orders/bulk_flag/ — many orders, one reason.",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Why the order is flagged; surfaced verbatim in the audit summary.",
+                        "maxLength": 255
+                    },
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "description": "Order primary keys to flag (duplicates collapse to one entry each)."
+                    }
+                },
+                "required": [
+                    "ids",
+                    "reason"
                 ]
             },
             "Category": {
@@ -1203,6 +1680,31 @@
                     "name"
                 ]
             },
+            "FlagRequestRequest": {
+                "type": "object",
+                "description": "Body for POST /api/orders/<id>/flag/ (FR-R003 reference action).\n\nKept as an explicit serializer so the OpenAPI contract documents the\nrequest body (the thin client derives everything from the schema).",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Why the order is flagged; surfaced verbatim in the audit summary.",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "reason"
+                ]
+            },
+            "FromStatusEnum": {
+                "enum": [
+                    "pending",
+                    "paid",
+                    "shipped",
+                    "refunded"
+                ],
+                "type": "string",
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+            },
             "Order": {
                 "type": "object",
                 "properties": {
@@ -1241,6 +1743,49 @@
                     "product"
                 ]
             },
+            "OrderHistory": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "order": {
+                        "type": "integer"
+                    },
+                    "from_status": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FromStatusEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
+                    },
+                    "to_status": {
+                        "$ref": "#/components/schemas/ToStatusEnum"
+                    },
+                    "actor": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true,
+                        "description": "Username of the user that performed the move; null for system/seed moves."
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "actor",
+                    "created_at",
+                    "id",
+                    "order",
+                    "to_status"
+                ]
+            },
             "OrderRequest": {
                 "type": "object",
                 "properties": {
@@ -1266,6 +1811,37 @@
                     "customer",
                     "product"
                 ]
+            },
+            "PaginatedAuditEntryList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AuditEntry"
+                        }
+                    }
+                }
             },
             "PaginatedCategoryList": {
                 "type": "object",
@@ -1580,6 +2156,43 @@
                 ],
                 "type": "string",
                 "description": "* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+            },
+            "ToStatusEnum": {
+                "enum": [
+                    "pending",
+                    "paid",
+                    "shipped",
+                    "refunded"
+                ],
+                "type": "string",
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+            },
+            "TransitionEnum": {
+                "enum": [
+                    "pending",
+                    "paid",
+                    "shipped",
+                    "refunded"
+                ],
+                "type": "string",
+                "description": "* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+            },
+            "TransitionRequestRequest": {
+                "type": "object",
+                "description": "Body for POST /api/orders/<id>/transition/ — the target state.\n\nKept as an explicit serializer so the OpenAPI contract documents the\nrequest body (the thin client derives everything from the schema).",
+                "properties": {
+                    "transition": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TransitionEnum"
+                            }
+                        ],
+                        "description": "Target lifecycle state (must be legal from the current state).\n\n* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+                    }
+                },
+                "required": [
+                    "transition"
+                ]
             }
         },
         "securitySchemes": {
