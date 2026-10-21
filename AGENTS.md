@@ -144,6 +144,9 @@ cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
 python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence / 2 rig not runnable
 
+# brand CSS twin byte diff: render_css() ↔ brandToCss() ↔ shipped app/public/brand.css
+python3 scripts/brand_twin_diff.py          # 0 identical / 1 divergence / 2 rig not runnable
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
@@ -242,7 +245,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   lowercase booleans, decimals never re-flowed, formula guard on text keyed by
   NUMERIC *shape* (DRF sends decimals as strings), BOM added once
   (`csvBlobParts` is BOM-idempotent) — keep them in sync like
-  `brandToCss`/`render_css`; same commit, both sides, on pain of the two
+  `brandToCss`/`render_css` (that pair gained its own one-command harness the
+  same way: `scripts/brand_twin_diff.py`, DEVGUIDE *SIXTH harness law*); same
+  commit, both sides, on pain of the two
   layers disagreeing on every negative price. The twins are held to one byte
   spec by a SHARED table: `FLOAT_PARITY` (a Python `float` renders with
   ECMAScript's `String()` form — `js_number_text()` — because layer 1 sees the
@@ -304,7 +309,19 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   static one, and `applyBrand()` fans it out (store + `document.title` +
   favicon + `injectBrandCss()` writing a `<style id="brand-runtime">`
   with the same `--brand-*` variables + Tauri `setTitle`). `brandToCss()`
-  mirrors `branding.render_css()` output — keep them in sync. Plain DRF
+  mirrors `branding.render_css()` output — keep them in sync, and the claim is
+  now re-runnable rather than prose: `python3 scripts/brand_twin_diff.py` feeds
+  every brand the server's own `validate_brand()` accepts through BOTH writers and
+  diffs the declarations from the first `@import` (the two banner comments differ
+  by design, so that region is the one thing the compare must not see — the same
+  normalization hazard as the CSV twins, arriving from the opposite side: there a
+  naive compare produced false divergences, here it would guarantee one). It then
+  checks the shipped `app/public/brand.css` against `render_css` AND `brandToCss`
+  of the `brand.json` beside it — a stale bundle, or a boot-time inject that
+  differs from it, is the visible re-theme flicker the static bundle exists to
+  prevent, and no per-side unit test can see either because each writer is green
+  against its own fixture. A brand the server REFUSES is out of domain, not a
+  divergence: the client sanitizes so a hand-edited bundle still paints. Plain DRF
   backends without the plugin degrade silently to the static brand.
 - Brand writes are staff-only (DRF token auth) and validated server-side
   by the SAME closed schema as `build_admin` (`brandstore.save_brand`);
