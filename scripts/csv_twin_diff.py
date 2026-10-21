@@ -107,9 +107,17 @@ open(out, "w", encoding="utf-8", newline="").write(csv_text([["i", "v"]] + rows)
 
 
 def run(cmd, cwd=None, **env):
+    """Run a probe. A tool that is NOT THERE (no node on PATH) must not read as
+    a divergence: exit 1 is reserved for "the two writers disagree", so a launch
+    failure becomes a synthetic 127 result and the callers report exit 2.
+    Without this, `PATH=/nonexistent python3 scripts/csv_twin_diff.py` died with
+    a FileNotFoundError traceback and exit 1 — a false DIVERGENT from a rig that
+    never ran (measured 2026-10-21)."""
     e = {**os.environ, **env}
-    p = subprocess.run(cmd, cwd=cwd, env=e, capture_output=True, text=True)
-    return p
+    try:
+        return subprocess.run(cmd, cwd=cwd, env=e, capture_output=True, text=True)
+    except OSError as exc:
+        return subprocess.CompletedProcess(cmd, 127, "", f"cannot launch {cmd[0]!r}: {exc}\n")
 
 
 def main() -> int:
