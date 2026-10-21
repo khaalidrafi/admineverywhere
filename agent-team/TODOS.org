@@ -567,6 +567,64 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 11:11 UTC] :: THE FLOAT DIVERGENCE FIXED,
+  both sides, one commit (this seat, ai/turn-20261021-1101; state untouched —
+  PENDING stands, DONE is the Lead's gate). The [10:40] note above recorded
+  the finding as unreachable-by-product and documented it. It is reachable by
+  CLIENT PROJECTS, which is the product: a FloatField goes out of DRF's
+  JSONRenderer as a JSON number, layer 1 parses it and `String()`s it ("1"),
+  layer 2 formats the same double with Python `str()` ("1.0") — so a real
+  customer export gets two buttons and two files, silently. Fixed on the wrong
+  side (the server; the browser's rendering is what the user sees in the table):
+  - demo-backend/shop/csv_export.py: new `js_number_text()` — ECMA-262
+    Number::toString layout over Python's shortest round-trip repr (integral
+    floats, the -6 < n <= 21 switch points, unpadded exponents, String(-0)="0",
+    NaN/Infinity named as JS names them). `csv_cell` uses it for `float` only;
+    Decimal still writes its own serial form ("decimals never re-flowed" holds).
+  - SECOND DIVERGENCE FOUND WHILE FIXING THE FIRST, same file, previously
+    unreported: the formula guard was keyed on the RENDERED TEXT, not on the
+    value being text — contradicting this file's own docstring ("formula guard
+    on text only") and app/src/lib/csv.ts, which literally checks
+    `typeof value === "string"`. A negative float in exponent form ("-1e-9") is
+    not NUMERIC_SHAPED, so the server apostrophised what the browser left bare.
+    Live on HEAD for any FloatField holding |x| < 1e-6 or >= 1e17, i.e. before
+    the repr fix it could not even be reached by test. Now `if is_text and
+    is_formula_text(text)`.
+  PROOF (test-first, both directions):
+  - plugin/tests/test_csv_export.py: `FLOAT_PARITY` (25 node-verified
+    String() pairs) parametrized into `test_float_is_rendered_the_way_the_client
+    _renders_it` + `test_floats_are_never_formula_guarded`, and the SHARED
+    golden document gained a `weight` column (1.0, -0.5, 1e-7). RED FIRST,
+    measured: 27 failed / 53 passed on HEAD's writer before the fix.
+  - app/src/lib/__tests__/csv.test.ts: the same table and the same golden bytes
+    asserted against `csvCell`/`buildCsv` — this side was green immediately,
+    because it IS the reference. Mutation-checked so it is not a tautology:
+    with the string-only guard removed from csv.ts, 2 tests fail, then
+    `git checkout` restored the file (tree verified clean).
+  - Cross-twin fuzz RE-RUN with floats deliberately LEFT IN the matrix (the
+    [10:40] run had to take them out to get a clean diff): 12 seeds x 250 rows
+    x 8 cols — integral floats, subnormals, 1e100, 5e-324, -0.0, random
+    magnitudes 1e-8..1e9, ints to 2^53, bools, nulls and the adversarial text
+    alphabet — real code both sides (shop/csv_export.py by file path, csv.ts via
+    the repo's own esbuild). 295,678 bytes, ZERO differing lines (the same
+    matrix on HEAD's writer: 144/507 lines differed). Scratch scripts stayed in
+    /tmp, nothing added to the repo, tree otherwise pristine.
+  DOCS: docs/csv-export.md §2 replaces the "caveat" paragraph with the rule +
+  why the browser is the reference + the guard-is-text clause; §6 records the
+  with-floats re-run. AGENTS.md's CSV bullet now names the shared FLOAT_PARITY
+  table as the byte-level pin (both suites, same values).
+  GATE AT THIS HEAD: pytest 262/262 (was 212; +50 float params), manage.py
+  check "no issues (0 silenced)", makemigrations --check "No changes detected",
+  vitest 281/281 across 19 files (was 255; +26, capped NODE_OPTIONS=1024
+  --maxWorkers=1 after `npm ci` — empty node_modules again in this fresh
+  container, third reproduction of that signature).
+  NOT DONE, deliberately: no FloatField was added to demo-backend to exercise
+  this end-to-end — that needs a migration + seed + schema-fixture recapture and
+  the fixture-vs-live schema comparison, which is a different item's scope. The
+  parity is pinned by the shared table instead, which is deterministic and
+  needs no rig. ROLE_LARK_WEBHOOK is ABSENT from this seat's environment
+  (`env | sed 's/=.*//'` has no such name), so the Lark report step is skipped
+  silently per instruction 8 — noted here as the evidence.
 - Note taken on [2026-10-21 Wed 10:40 UTC] :: CROSS-TWIN FUZZ (this seat,
   ai/turn-20261021-1034, state untouched — PENDING stands). The claim above
   ("the two twins diff clean on the same rows") rested on one golden

