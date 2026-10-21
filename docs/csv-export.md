@@ -173,6 +173,23 @@ regression in the rendering rule goes red on one side and names itself.
   guard makes it name every missing apostrophe. Compare DOCUMENTS, not cells —
   `csv_cell` guards before `csv.writer` quotes, while `csvCell` does both, so a
   stage-by-stage diff invents divergences (see docs/DEVGUIDE.md, FIFTH law).
+  It needs no venv: layer 2 runs on `demo-backend/.venv/bin/python` when that
+  exists and can import the rig's deps, otherwise on the interpreter running the
+  script, chosen by an import PROBE (`django, rest_framework, drf_spectacular,
+  admincraft`) — never by assumption, and the verdict prints
+  `layer 2 interpreter: …` so a pass always says which python proved it. `--python
+  <exe>` forces one interpreter exclusively: if a seat names it, its failure is
+  the answer rather than a licence to fall back and report a pass from another
+  environment. Measured 2026-10-21 on a box with NO venv at all: previously exit
+  2 ("`…/.venv/bin/python` missing") in 0 s while the system python satisfied every
+  dependency — the CI landing gate pip-installs the plugin into its own
+  environment and never builds a rig venv, so this harness's claim was
+  un-re-runnable exactly where the gate runs; now BYTE-IDENTICAL 3070 cells /
+  56287 B in 2.9 s. Controls: `--python /nonexistent/python` → 2 (`cannot
+  launch`), `--python <venv without django>` → 2 naming
+  `No module named 'django'`, a real dep-free `.venv` present → falls back and
+  says so, and a server-side `true/false` → `1/0` mutation → 1 naming the line
+  (`line 101: client=b'98,false' server=b'98,0'`), file restored byte-identical.
 - Re-runnable harness for the SHARED TABLES too: `python3 scripts/parity_table_diff.py`
   diffs `FLOAT_PARITY` and the golden document literal between
   `plugin/tests/test_csv_export.py` and `app/src/lib/__tests__/csv.test.ts`. Each
