@@ -1592,3 +1592,161 @@
   No assertion of yours changed, no file outside Dashboard.svelte + the new
   test + DEVGUIDE touched. No lead-owned file edited; no secret value read or
   echoed.
+
+* MSG platform-engineer -> @lead :request:                :msg:platform-engineer:lead:request:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: request
+:WHEN: [2026-10-21 Wed 12:42 UTC]
+:END:
+  HARNESS ROW CLOSED WITH A ROOT CAUSE, and it overturns the guess I filed at
+  12:28Z. Eight segments in a row have reported "fresh container, gate could
+  not run as delivered" and my own last report said the boot install might be
+  "silently failing". It is not. It SUCCEEDS, into a home the seat never reads.
+  MECHANISM, timestamped in this very container (branch ai/turn-20261021-1235):
+  - /home/agent/.local/lib/python3.12/site-packages/__editable__.admincraft-0.1.2.pth
+    birth = 12:35:36.071016550 (`stat -c '%w'`) and its dist-info 12:35:36.072.
+  - PID1 start = 12:35:33.632022604 (`stat -c '%y' /proc/1`).
+  So agent-team.yml:509 (`python -m pip install -e /workspace/plugin --no-deps
+  -q 2>/dev/null || true`, .turn-inside.sh:16) ran 2.4 s AFTER the container
+  booted, as user `agent` with the container's default HOME=/home/agent, and
+  pip exited 0. Nothing failed; nothing was swallowed.
+  - The seat is then launched with a DIFFERENT home: agent-team.yml:519
+    `env HOME=/usr/local/lib/qoder-home qoder -p …`. Python's user-site follows
+    $HOME — `site.getusersitepackages()` in this seat returns
+    /usr/local/lib/qoder-home/.local/lib/python3.12/site-packages — so the boot
+    .pth sits on a path the seat interpreter never reads. Result: first
+    `import admincraft` → ModuleNotFoundError. My 12:28Z report deliberately
+    refused to claim which of two .pth writes was the boot one; now it is
+    measured, and the "silently failed install" framing was wrong.
+  DISCRIMINATING TESTS (both run here, so the fix is chosen on evidence):
+  1. A plain one-line `admincraft-src.pth` containing `/workspace/plugin/src`,
+     dropped into the PINNED user site → `pytest plugin/tests -p
+     no:cacheprovider -q` 285/285 and `manage.py check` "no issues (0
+     silenced)". The editable machinery (dist-info, import hooks) is NOT
+     needed for the gate; a path .pth is sufficient.
+  2. `PYTHONPATH=/workspace/plugin/src` with NO .pth at all → 5 failed, 276
+     passed, 4 errors. So a bare PYTHONPATH is NOT sufficient — please do not
+     reach for that one.
+  THE ASK, one line, either form (agent-team.yml is lead-owned — read, cited,
+  never touched by this seat):
+  - (a) make the install line use the SAME HOME as the launch line:
+    `env HOME=/usr/local/lib/qoder-home python -m pip install -e
+     /workspace/plugin --no-deps -q`
+    Cheapest, no image change, lands the .pth where the seat looks.
+  - (b) make it HOME-independent by installing into the SHARED prefix (no user
+    site). Measured cost of the seat doing this itself: `touch
+    /usr/local/lib/python3.12/site-packages/admincraft-src.pth` → Permission
+    denied (`whoami` = agent), so (b) means a root `python -m pip install -e`
+    or a chown in docker/harness/Dockerfile, not a boot-script tweak.
+  - FE sibling, separate and now CONFIRMED rather than inferred: there is no
+    npm boot line at all — `grep -n "npm " .github/workflows/agent-team.yml`
+    hits only :64-65 and :752-753, both in the CI test job, never the seat job.
+    A `npm ci --prefix /workspace/app` next to the pip line is the whole fix.
+    One honest limit: /home/agent is shared across this seat's containers, so
+    for the FE I cannot tell whether THIS container's app/node_modules (76
+    entries after my run) was fresh or inherited — unlike the pip case, which
+    has in-container birth timestamps.
+  BASELINE, measured here after the two self-install commands, at d612d06:
+  pytest 285/285 (-p no:cacheprovider, 19.4 s), manage.py check "no issues (0
+  silenced)", makemigrations --check "No changes detected", vitest 286/286 over
+  20 files, `npx tsc --noEmit` exit 0. Nothing on the board moved: no state
+  flipped, DONE stays your gate, no completion claim, OBJECTIVE-STATE untouched.
+  Lark SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's env. SECRET LAW held: no
+  credential value read, echoed or committed.
+
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 12:42 UTC]
+:END:
+  IF YOUR SEGMENT BOOTS AND `import admincraft` RAISES ModuleNotFoundError, do
+  not treat it as a broken lane — it is a HOME split, and two commands fix it.
+  Verified on this box (seat platform-engineer runs with
+  HOME=/usr/local/lib/qoder-home while pip at boot installs as
+  HOME=/home/agent, so the boot .pth is invisible to your interpreter):
+  1. `python -m pip install -e plugin --no-deps -q`   → exit 0, writes
+     $HOME/.local/lib/python3.12/site-packages/__editable__.admincraft-0.1.2.pth
+     where your OWN interpreter looks.
+  2. `cd app && npm ci`                               → 76 entries in
+     node_modules, vitest runnable.
+  After them the landing gate is green as delivered: pytest 285/285, check
+  "no issues (0 silenced)", makemigrations --check "No changes detected",
+  vitest 286/286, `npx tsc --noEmit` exit 0. Do NOT substitute
+  `PYTHONPATH=/workspace/plugin/src` for step 1 — I measured it: 5 failed /
+  276 passed / 4 errors. The editable .pth does more than put the tree on the
+  path.
+  ONE SELF-CORRECTION, because I flagged this rule myself at 12:13Z and broke
+  it an hour later: my 12:28Z report told you the boot install might be
+  "silently failing" behind `2>/dev/null || true`. It was not failing at all.
+  I had found two .pth files and, as I said in that message, had NOT measured
+  which was which — the honest move was to say "unknown" instead of handing you
+  a "silent failure" framing with a proposed fix aimed at the stderr, not at
+  the HOME. Timestamped birth times settled it in five minutes (`stat -c '%w'`
+  on the .pth vs `/proc/1`). If you are about to report a root cause you have
+  named as unproven, the fix is usually one `stat` away.
+  Full mechanism and the two one-liner candidates for the harness are in my
+  12:42Z :request: to @lead. No file outside agent-team/ touched this segment;
+  no lead-owned file edited; no secret value read or echoed.
+
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 12:42 UTC]
+:END:
+  RESULT: DONE — the container-boot harness row that has trailed eight
+  segments now has a measured root cause and a one-line fix ready for you; I
+  also corrected a wrong diagnosis this seat filed an hour ago.
+  WHY THIS SEGMENT: the work order is exhausted — `grep -nE '^\*+ (\S+ )?(TODO|
+  ONGOING|WAIT)' agent-team/TODOS.org` returns zero hits, all 11 items sit
+  PENDING-with-delivered-evidence, and the chat tail held no unanswered
+  @platform-engineer ping (the only commit on origin/ai/main since my last
+  segment, d612d06, is a ci-chain verdict line in TEAM-CONTROL.org). Per
+  instruction 2 I took the smallest verifiable improvement that serves the
+  objective, and it is the row my own 12:28Z report left open as "I am
+  deliberately NOT claiming which write was the boot install".
+  WHAT LANDED (branch ai/turn-20261021-1235, rebased onto d612d06 BEFORE the
+  first push per the 12:05Z stale-base rule — `git log -1` showed origin ahead,
+  rebase clean, no conflicts):
+  - agent-team/TODOS.org, :LOGBOOK: note under FR R-008 (the item that carries
+    this row): the mechanism, the timestamp evidence, the two discriminating
+    tests, the one-liner candidates, and the verified seat recipe.
+  - This chat thread: 12:42Z :request: to you with the fix, 12:42Z :note: to
+    @all with the two-command recipe and the self-correction.
+  FINDING, stated in one breath: the boot install is NOT silently failing —
+  it succeeds into /home/agent's user-site (birth 12:35:36.071, PID1 12:35:33.
+  632, same container), and the seat then runs with HOME=/usr/local/lib/
+  qoder-home (agent-team.yml:519), so Python's user-site moves and the boot
+  .pth is invisible. Evidence and both negative controls are in the :request:.
+  MEASURED AT d612d06 (landing gate, after two self-install commands):
+  pytest 285/285 (-p no:cacheprovider, 19.4 s); `manage.py check` "no issues
+  (0 silenced)"; `makemigrations --check` "No changes detected"; vitest 286/286
+  over 20 files (NODE_OPTIONS=1024, --maxWorkers=1); `npx tsc --noEmit` exit 0
+  — the standing bar from 5834538 still holds.
+  NEXT / WHAT REMAINS: (1) the one-liner itself is yours to land — candidates
+  (a) `env HOME=/usr/local/lib/qoder-home python -m pip install -e /workspace/
+  plugin --no-deps -q` at agent-team.yml:509, or (b) a shared-prefix/root
+  install in the image (measured: a seat cannot write
+  /usr/local/lib/python3.12/site-packages — Permission denied, whoami=agent);
+  an `npm ci --prefix /workspace/app` sibling line is the FE half, since
+  `grep -n "npm "` shows no seat npm step at all (only :64-65, :752-753 in the
+  CI test job). (2) Unchanged and not closable from this box: no browser/Tauri
+  window here, so every "nobody clicked it in a real window" row on the board
+  stays yours or the Owner's; the runner-side red `test` job stays yours (no
+  gh CLI, no GITHUB_TOKEN in this seat's env).
+  BOARD: no state flipped anywhere, no item taken to ONGOING, DONE stays your
+  gate, OBJECTIVE-STATE untouched, NO completion claim from this seat — open
+  rows still exist as residual UNVERIFIED lines and as your verdicts.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK is empty in this seat's environment
+  (checked with `[ -n "$ROLE_LARK_WEBHOOK" ]`; noted in the LOGBOOK per
+  instruction 8).
+  SECRET LAW held: no credential value read, echoed or committed. No lead-owned
+  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/* — read and cited only; lines 509/519 and 64-65/752-753 of
+  agent-team.yml were READ to establish what the seat boot does and does not
+  install).
