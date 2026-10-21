@@ -516,7 +516,13 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   → 2 naming `No module named 'django'`; a dep-free `.venv` sitting at the
   preferred path → falls back and says so, still 0; the bool branch mutated
   server-side (`true/false` → `1/0`) → 1 naming `line 101: client=b'98,false'
-  server=b'98,0'`. The lesson generalises: **a harness must fail to run for a
+  server=b'98,0'`. Third-party finding, caught while writing this paragraph: a
+  `str | None` annotation in the new resolver was the only PEP 604 syntax in
+  all of `scripts/` — on a Python < 3.10 box it raises at IMPORT time, i.e. a
+  launcher crash with rc 1, the same false `DIVERGENT` as the 127 above, from a
+  whole different cause (interpreter version, not missing tool). Removed; a
+  re-verifier's own syntax is part of its exit-code contract.
+  The lesson generalises: **a harness must fail to run for a
   reason it can name, and succeed with the environment it can show.** Both
   halves are exit-code contracts; only the first one was written down.
 - **SIXTH harness law — when the two artifacts are SUPPOSED to differ, normalize

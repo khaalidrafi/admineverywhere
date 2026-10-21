@@ -137,7 +137,7 @@ def run(cmd, cwd=None, **env):
         return subprocess.CompletedProcess(cmd, 127, "", f"cannot launch {cmd[0]!r}: {exc}\n")
 
 
-def resolve_server_python(explicit: str | None):
+def resolve_server_python(explicit):
     """Pick the interpreter that runs layer 2. Returns (exe, note) or
     (None, why) — never a guess, never a silent skip.
 
