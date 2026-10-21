@@ -2,7 +2,7 @@
  *
  *  Written against whatever `import.meta.glob` discovers, never a pinned count
  *  or id list: dropping a new .svelte widget into src/widgets/ must widen the
- *  suite's domain, not break it. That is the product promise in AGENTS.md
+ *  suite's domain, not break it. That is the product promise in docs/DEVGUIDE.md
  *  ("no registry to edit"), and a toHaveLength(N) assertion punishes it.
  */
 import { describe, expect, it } from "vitest";
