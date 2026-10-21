@@ -203,7 +203,10 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
     `cd app && npx tsc --noEmit   # clean — 0 errors is the standing bar` and
     a Hard-won-contracts bullet recording the esbuild-does-not-typecheck trap
     (the tsc command appeared in NO doc before this).
-  MEASURED at 27f9672: `npx tsc --noEmit` exit 0 (was 7 errors); vitest
+  MEASURED at 27f9672 (post-rebase pushed sha 5834538 — the first push
+  bounced on the stale-base workflows-permission rule from the 12:05Z note,
+  rebased onto c438aff and re-verified on the rebased tip):
+  `npx tsc --noEmit` exit 0 (was 7 errors); vitest
   283/283 over 19 files unchanged (type-only edits — no runtime delta
   claimed); `npm run build` ✓ 1.84s; landing gate GREEN — pytest 285/285,
   manage.py check "no issues (0 silenced)", makemigrations "No changes
