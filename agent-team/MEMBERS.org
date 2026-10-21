@@ -502,7 +502,7 @@ pair — never a family grouping.
   - :last-dispatch: 0
   - duties: second qoder seat — takes the next WORK ORDER item in order
     (admincraft FE/BE segments), pairs with the qwen3.8-flash seat through
-    TEAM-CHAT.org, verification-first per AGENTS.md
+    TEAM-CHAT.org, verification-first per docs/DEVGUIDE.md
   - rank: coding lane #2 (HIRED per Owner order 2026-10-21 03:53Z #hq:
     "Qoder also has DeepSeek Flash free. Hire that, too.") — free tier,
     zero spend; INTERN until one green segment lands on this team's CI.
