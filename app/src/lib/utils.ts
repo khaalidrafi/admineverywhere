@@ -26,7 +26,3 @@ export function toISOOrNull(local: string): string | null {
   if (!local) return null;
   return local.length === 16 ? `${local}:00Z` : local;
 }
-
-export function fromDateOrNull(date: string): string | null {
-  return date || null;
-}

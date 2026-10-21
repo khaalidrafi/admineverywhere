@@ -13,7 +13,6 @@ import {
   transitionRecord,
 } from "../api";
 import { actions, actionsFor, actionFailureReason } from "../actions/index";
-import DataTable from "../../components/DataTable.svelte";
 import { normalizeOpenAPI } from "../openapi";
 import fixture from "./fixtures/openapi.json";
 import type { ModelSpec } from "../types";
