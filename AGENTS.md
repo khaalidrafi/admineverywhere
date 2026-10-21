@@ -157,6 +157,11 @@ python3 scripts/parity_table_diff.py        # 0 identical / 1 divergence / 2 can
 python3 scripts/landing_gate.py             # 0 green / 1 a leg is red / 2 cannot run
 python3 scripts/landing_gate.py --fe        # plus vitest (needs app/node_modules)
 
+# the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
+# doc-citation rot, release inputs, no PEP 604 in any harness) — DEVGUIDE NINTH law
+python3 scripts/release_readiness.py        # 0 coherent / 1 a leg is red / 2 cannot run
+python3 scripts/release_readiness.py --expect 0.1.3   # what the NEXT tag must say
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
@@ -378,8 +383,16 @@ carriers first — `plugin/pyproject.toml`, `app/package.json`,
 should match them). The pipeline runs on the tag and the `release` job cuts the
 GitHub Release from that run's artifacts plus the plugin wheel/sdist,
 with a `SHA256SUMS.txt`. Asset names and assembly rules mirror v0.1.0
-exactly (reference implementation: `scripts/cut_v010_release.sh`, which
-cut v0.1.0 by hand from green run 39000890302). Only the `release` job
+exactly. The assembly rules live ONLY in the workflow's `release` job
+(`.github/workflows/build-all.yml:417-443`); the hand-cut script v0.1.0 was
+assembled with (`scripts/cut_v010_release.sh`, still cited in that job's comments)
+was never committed — measured with `git rev-list --all --objects`, so the
+workflow is the reference, not a script beside it. Re-runnable check: `python3
+scripts/release_readiness.py` diffs the four carriers + the Cargo.lock entry,
+compares them against a `vX.Y.Z` tag pointing at HEAD (or `--expect X.Y.Z`),
+and refuses any doc citation of a path that does not exist (only the Lead-owned
+workflow still carries that stale citation, so it is cited, not edited).
+Only the `release` job
 holds `contents:write`, and it uses the built-in `GITHUB_TOKEN` — no
 PATs in CI. If a tag push ever fails to trigger, the manual fallback:
 dispatch a run on the tag's commit, download its artifacts, and re-run
