@@ -815,6 +815,53 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 19:40 UTC] :: RE-VERIFIED THE TWIN CONTRACT and
+  made its proof RE-RUNNABLE (branch ai/turn-20261021-1918; state untouched —
+  PENDING stands, :DELIVERED: evidence above unchanged; DONE is the Lead's gate).
+  The §6 cross-twin diff in docs/csv-export.md had been performed by hand twice
+  and the harness died with each segment, so a fresh seat could not re-check the
+  claim. Now it can:
+  - scripts/csv_twin_diff.py (new, 188 lines) — one generated matrix (sentinel
+    guard/quoting strings + the float switch points + N random cells, default
+    3000) fed through BOTH writers as each actually produces a download:
+    layer 2 = csv_text(header + [[csv_cell(v) …]]) , layer 1 = buildCsv(header,
+    raw) run against the REAL app/src/lib/csv.ts under vitest; compared as BYTES.
+    Exit 0 identical / 1 divergence (first 20 differing lines) / 2 rig not
+    runnable (no app/node_modules, no demo-backend/.venv). It is a re-verifier,
+    deliberately NOT a pytest/vitest member, so no suite ever assumes node.
+  - MEASURED GREEN: 3082 cells (100 sentinels+floats, 2982 random, seed 20261021)
+    byte-identical, and 870 cells / 17004 B / 879 CRLF lines via the committed
+    script. Product code changed: ZERO.
+  - NEGATIVE CONTROL (the part that makes a green harness meaningful): with the
+    server guard switched off (`if False and is_text and is_formula_text(text)`
+    in shop/csv_export.py) the script prints DIVERGENT and names each apostrophe
+    (`line 10: client=b"8,'=SUM(A1:A9)" server=b'8,=SUM(A1:A9)'`); the file was
+    restored byte-identical (git status clean, then 299 pytest green).
+  - TWO false DIVERGENT readings paid for during this segment, both recorded as
+    the FIFTH harness law in docs/DEVGUIDE.md: (1) diffing csv_cell output
+    against csvCell output compares different STAGES — the server guards inside
+    csv_cell but quotes inside csv_text, the client does both in csvCell, so the
+    phantom result reads "server does not quote commas / does not guard"; only
+    document-vs-document is honest. (2) reading the artifacts in TEXT mode —
+    Python translates CRLF to LF, so identical 86952-byte files (cmp: equal)
+    split into one "line" and looked divergent; compare read_bytes().
+  - Docs: docs/csv-export.md §6 gained the command + the exit-code contract +
+    the compare-documents caveat; docs/DEVGUIDE.md gained the FIFTH law and the
+    Commands block gained the one-liner. Verified claims: `npx tsc --noEmit`
+    exit 0 (the standing 0-error bar holds), vitest 416, pytest 299
+    (-p no:cacheprovider), manage.py check "no issues (0 silenced)",
+    makemigrations --check "No changes detected".
+  - HARNESS (escalating, not editing — lead-owned): EIGHTEENTH consecutive
+    self-install, now measured: boot to first test took 19:11 -> 19:19 (~8 min)
+    because the generated turn script (.github/workflows/agent-team.yml:509,
+    mirrored at /workspace/.turn-inside.sh:16) only does
+    `pip install -e /workspace/plugin --no-deps` — no `cd app && npm install`
+    and no rig venv, which is exactly what the landing gate (row 7 of the
+    seat brief) needs. Second cost, same job: the finalize landing gate
+    re-runs `pip install -r demo-backend/requirements.txt pytest` with NO
+    `cache: pip`, while test-gate already caches at :60 — add
+    `cache: pip` to setup-python there. ROLE_LARK_WEBHOOK empty in this seat's
+    env (checked with [ -z ], not assumed) -> Lark report skipped.
 - Note taken on [2026-10-21 Wed 11:11 UTC] :: THE FLOAT DIVERGENCE FIXED,
   both sides, one commit (this seat, ai/turn-20261021-1101; state untouched —
   PENDING stands, DONE is the Lead's gate). The [10:40] note above recorded
