@@ -1,0 +1,31 @@
+#+TITLE: SECURITY-AUDIT.org — full-history secret audit (published per Owner order)
+#+AUDIT: 2026-10-21T04:20Z · auditor: Lead (glm-5.3-flash) · tool: scripts/audit_repo_secrets.py (agent-team.el)
+
+* SCOPE
+- every commit reachable from all refs: 253 commits, 672 unique blobs
+- worktree: recursive credential-shape scan
+
+* PATTERNS CHECKED
+github_pat_ / ghp_ / gho_ / x-access-token: / Telegram bot token shape /
+sk- (word-bounded) / bearer JWT (eyJ...) / pt- (Qoder) / AKIA (AWS) / xox
+(Slack) / literal password=|secret= assignments
+
+* RESULT: NO LIVE LEAKS — 6 findings, ALL test fixtures.
+
+* FINDINGS (redacted in tool output by policy)
+- app/src/lib/__tests__/api.test.ts — `password: "secret123", token:
+  "xyz"` inside a MOCKED fetch response fixture (6 historical blobs, 2
+  worktree hits; first introduced c857c445). These are fabricated test
+  strings exercising the credential-strip path, not credentials. No
+  rotation needed. Left in place deliberately: they test the stripping.
+- all other patterns (PAT/TG/sk-/JWT/pt-/AWS/Slack): ZERO hits across
+  253 commits.
+
+* LAW GOING FORWARD
+- SECRET GUARD is wired at tg-ingest / branch-push / staged-gate /
+  session-artifact choke points (see .github/scripts/secret-guard.sh).
+- credentials travel as ENV VAR NAMES only (SECRET LAW, AGENTS.md).
+- repo secrets now provisioned: CODEBUDDY_AUTH_TOKEN (Lead machine auth
+  per Owner order 02:46Z), QODER_PERSONAL_ACCESS_TOKEN, TELEGRAM_BOT_TOKEN,
+  TELEGRAM_OWNER_ID, GROQ_API_KEY, ZAI_API_KEY, OPENROUTER_API_KEY
+  (relayed sealed, plaintext never landed on GitHub).
