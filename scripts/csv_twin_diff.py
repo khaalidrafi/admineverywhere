@@ -18,10 +18,21 @@ because the guard-then-quote stages are interleaved differently.
 Usage (from the repo root):
   python3 scripts/csv_twin_diff.py                 # full battery
   python3 scripts/csv_twin_diff.py --rows 400      # bigger random matrix
-  app/demo-backend/.venv/bin/python ...            # if your venv lives elsewhere
+  python3 scripts/csv_twin_diff.py --python <exe>  # force the layer-2 interpreter
+
+Layer 2 needs an interpreter that can import the rig's dependencies. The rig
+venv (`demo-backend/.venv/bin/python`) is used when it exists, otherwise the
+interpreter running this script is PROBED and used — the same no-venv behaviour
+scripts/brand_twin_diff.py has always had, and the reason this harness can now
+be re-run by the CI landing gate, which pip-installs the plugin into its own
+environment and never builds a venv (a venv demanded BY PATH made the whole
+FR-R005 live-rig claim read "cannot run" on a dependency-complete box;
+measured 2026-10-21). The chosen interpreter is printed in the verdict, so a
+pass always says WHICH python proved it.
 
 Exit 0 = byte-identical; exit 1 = divergence (first differing lines printed);
-exit 2 = the rig could not be run (missing node_modules / venv / plugin).
+exit 2 = the rig could not be run (missing node / node_modules / no interpreter
+that can import the rig's deps).
 """
 import argparse
 import json
@@ -37,6 +48,12 @@ ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "app"
 RIG = ROOT / "demo-backend"
 VENV_PY = RIG / ".venv" / "bin" / "python"
+
+# What SERVER_SPEC actually needs: django.setup() on core.settings plus the
+# writer's own imports. Probing exactly this is what lets a non-venv interpreter
+# be USED rather than assumed — an interpreter that passes this probe but still
+# fails the real run exits 2 with the probe's stderr, never a false verdict.
+RIG_DEPS = ("django", "rest_framework", "drf_spectacular", "admincraft")
 
 # Fixed strings chosen to force every guard/quoting branch at once.
 SENTINELS = [
@@ -120,11 +137,40 @@ def run(cmd, cwd=None, **env):
         return subprocess.CompletedProcess(cmd, 127, "", f"cannot launch {cmd[0]!r}: {exc}\n")
 
 
+def resolve_server_python(explicit: str | None):
+    """Pick the interpreter that runs layer 2. Returns (exe, note) or
+    (None, why) — never a guess, never a silent skip.
+
+    `--python` is honoured exclusively: if a seat names an interpreter, a
+    failure there is the answer, not a licence to fall back to another one and
+    report a pass from a different environment than was asked about.
+    """
+    if explicit:
+        candidates = [explicit]
+    else:
+        candidates = [str(c) for c in (VENV_PY, Path(sys.executable)) if Path(c).exists()]
+    if not candidates:
+        return None, ("no interpreter can run layer 2 — build the rig venv "
+                      f"(see AGENTS.md Commands) or pass --python <exe> with one that "
+                      f"imports {', '.join(RIG_DEPS)}")
+    tried = []
+    for exe in candidates:
+        probe = run([exe, "-c", "import " + ", ".join(RIG_DEPS)], cwd=str(RIG))
+        if probe.returncode == 0:
+            return exe, "probed OK"
+        lines = (probe.stderr or probe.stdout or "").strip().splitlines()
+        tried.append(f"{exe} -> {lines[-1] if lines else 'no output'}")
+    return None, ("no candidate interpreter can import the rig's deps — tried: "
+                  + "; ".join(tried) + f". Need {', '.join(RIG_DEPS)}.")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--rows", type=int, default=3000, help="random cells (default 3000)")
     ap.add_argument("--seed", type=int, default=20261021)
     ap.add_argument("--keep", action="store_true", help="keep the work dir for inspection")
+    ap.add_argument("--python", default=None, metavar="EXE",
+                    help="interpreter for layer 2 (default: the rig venv, else this one, if it imports the rig's deps)")
     args = ap.parse_args()
 
     if not shutil.which("node") and not (APP / "node_modules").exists():
@@ -133,8 +179,9 @@ def main() -> int:
     if not (APP / "node_modules").exists():
         print(f"app/node_modules missing — run `cd app && npm install` first", file=sys.stderr)
         return 2
-    if not VENV_PY.exists():
-        print(f"{VENV_PY} missing - build the rig venv (see AGENTS.md Commands)", file=sys.stderr)
+    server_py, why = resolve_server_python(args.python)
+    if server_py is None:
+        print(why, file=sys.stderr)
         return 2
 
     work = Path(tempfile.mkdtemp(prefix="csv-twin-"))
@@ -160,7 +207,7 @@ def main() -> int:
 
         spec_py = work / "server_probe.py"
         spec_py.write_text(SERVER_SPEC, encoding="utf-8")
-        p = run([str(VENV_PY), str(spec_py), str(matrix), str(server_doc)], cwd=str(RIG))
+        p = run([server_py, str(spec_py), str(matrix), str(server_doc)], cwd=str(RIG))
         if p.returncode != 0:
             print("server probe failed:\n" + p.stdout[-2000:] + p.stderr[-2000:], file=sys.stderr)
             return 2
@@ -168,6 +215,7 @@ def main() -> int:
         a = client_doc.read_bytes()
         b = server_doc.read_bytes()
         n = len(matrix.read_text(encoding="utf-8").splitlines())
+        print(f"  layer 2 interpreter: {server_py}")
         if a == b:
             print(f"BYTE-IDENTICAL — {n} cells, {len(a)} bytes, seed={args.seed}")
             print(f"  {a.count(CRLF)} CRLF-terminated lines on both sides")
