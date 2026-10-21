@@ -113,7 +113,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (364 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (375 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -141,7 +141,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 364 vitest
+cd app && npm test                          # 375 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
@@ -346,6 +346,40 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `4000→5000` timer) each fail a named test; stores.ts is 71% stmts / 71% branch
   after. The still-uncovered lines are the fetch/Tauri paths (`loadSchema`,
   `saveAiSettings`, native window title) — network behaviour, not decision logic.
+- The 17:05Z note's "still-uncovered fetch/Tauri paths" are now closed for the
+  login half: the whole demo flow starts at `app/src/pages/Login.svelte`, and its
+  `submit()` (the auth POST, the token persist, the schema + claims fetches, the
+  three error branches) had ZERO proof — every consumer test mocked `../stores`.
+  `app/src/lib/__tests__/loginMount.test.ts` mounts the REAL page with the REAL
+  stores/api/secrets and stubs only `fetch`, so every assertion is a URL or a
+  byte: the POST goes to the config's `authPath` (never a guessed
+  `/api-token-auth/`) with no `Authorization` header, the token that comes back
+  is what the schema GET carries, the claims read travels the `mePath` the
+  DOCUMENT names, `normalizeOpenAPI` ran (only the normalized shape has
+  `byId`/`listPath`), and a failed login keeps no token. Login.svelte is 100%
+  stmts/branch after (was 55/50). Two notes for the next seat: assert a
+  navigation through `location.hash` + a dispatched `hashchange` (happy-dom
+  assigns the hash but never fires the event, so the router store would read
+  stale), and reach for a sentinel password — the shipped hint text literally
+  prints `admin / admin123` (Login.svelte:95), so a "no secret in the DOM"
+  assertion written with that value can never fail.
+- `app/src/lib/secrets.ts` Tauri branches were the third mock-hides victim
+  (64% stmts): the web-localStorage fallback covered three of four paths and the
+  keyring commands ran zero tests, on both suites' green word. They are a
+  BOUNDARY contract — `src-tauri/src/lib.rs:10` keeps `DEFAULT_SERVICE:
+  "admincraft"` and the commands take `(service, key, value)`; a renamed or
+  dropped argument lands the key under a different keychain bucket or fails the
+  Rust signature, invisibly in web mode. `secrets.test.ts` now pins each
+  `invoke()` tuple with `vi.resetModules()` + `vi.doMock("@tauri-apps/api/core")`
+  per case (the dynamic `import()` inside the functions must resolve to a fresh
+  mock and a fresh `webWarned`), asserts `NoEntry`/unavailable keychain both
+  degrade to `null` rather than killing `loadAiSettings`, and proves the
+  security warning fires exactly once across all three ops. secrets.ts 100/100.
+  Mutant caveat worth remembering: dropping `.trim()` from the stored
+  `apiUrlOverride` SURVIVED — an `<input type="url">` already strips surrounding
+  whitespace per spec (verified against happy-dom's readback), so that trim is
+  redundant defensive code, not a live bug. Record an equivalent mutant as
+  equivalent; do not bend a test to "kill" it.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).

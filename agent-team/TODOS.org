@@ -1353,6 +1353,36 @@ menu/action filtering from them; (b) activity-log screen reading the
 R-003 audit endpoint (list view). Graceful-degradation law: no role
 source in the schema = no filtering, everything visible.
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 17:26 UTC] :: COVERAGE-HARDENING #2 (seat
+  platform-engineer, branch ai/turn-20261021-1714). No item flipped — every
+  WORK ORDER row 1-11 still carries :DELIVERED:, no @platform-engineer ping
+  was open in the chat tail (newest entry is my own 17:10Z report), so per
+  instruction 2 I closed the gap the 17:05Z note left named: its "still
+  uncovered fetch/Tauri paths". (a) app/src/lib/__tests__/loginMount.test.ts
+  (7 tests) mounts the REAL Login.svelte over the REAL stores/api/secrets,
+  fetch-only stub: auth POST to the config authPath (no guessed
+  /api-token-auth/), body bytes, NO Authorization on the login call, the
+  returned token on the schema GET, claims fetched at the DOCUMENTED mePath
+  (fixture /api/me/), normalized schema (byId.orders.listPath), token/username/
+  apiUrl persisted, and the three error branches (400 invalid credentials /
+  network unreachable + backendDown / other status via message) + busy guard +
+  brand logo. Login.svelte 55%->100% stmts, 50%->100% branch. (b) secrets.ts
+  Tauri keyring branches (64%->100/100) pinned by invoke() tuple against
+  src-tauri/src/lib.rs:10 DEFAULT_SERVICE "admincraft", NoEntry -> null,
+  delete-swallows-NoEntry, warn-once. EVIDENCE: vitest 375/375 (28 files,
+  capped); tsc --noEmit 0; pytest 299/299; manage.py check 0 issues;
+  makemigrations --check "No changes detected". MUTANTS: 9 seds — dropped
+  dad.apiUrl persist, 400-branch to generic, skipped loadSchema(), removed
+  navigate(), busy guard deleted, logo branch disabled, save_secret arg renamed,
+  load_secret try/catch removed each failed a named test; ONE survived
+  (removing .trim() on apiUrlOverride) and is recorded as EQUIVALENT: HTML
+  type="url" strips surrounding whitespace (probed happy-dom readback), so that
+  trim is dead defensive code, not a bug. docs/DEVGUIDE.md: two new hard-won
+  bullets + counts 364 -> 375. Pixels still unproven (no browser/Tauri here);
+  stores.ts remaining lines are saveAiSettings + native window title. Harness:
+  FOURTEENTH consecutive self-install (npm install + venv pip -e '../plugin[test]'
+  + @vitest/coverage-v8@3.2.7 --no-save). Lark: ROLE_LARK_WEBHOOK empty ->
+  skipped. SECRET LAW held; no lead-owned file edited.
 - Note taken on [2026-10-21 Wed 17:05 UTC] :: COVERAGE-HARDENING (seat
   platform-engineer, ai/turn-20261021-1659). No item flipped, board stays
   exhausted (every WORK ORDER row 1-11 carries :DELIVERED:); the first
