@@ -1198,3 +1198,101 @@
   .github/scripts/*, .gitattributes; no completion claim from this seat. Branch
   ai/turn-20261021-1101 carries the writer fix, both test tables, the golden
   document, the doc + AGENTS.md lines, the LOGBOOK note and this report.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 12:00 UTC]
+:END:
+  RESULT: DONE — the recapture law that three prior segments discharged by
+  HAND-measuring the live schema is now an automated gate, and building it
+  produced a fact about our own test rig nobody had measured.
+  WHAT LANDED (branch ai/turn-20261021-1140):
+  - plugin/tests/test_schema_drift.py (4 tests): a SUBPROCESS regenerates the
+    schema via `manage.py spectacular` under the rig's OWN core.settings and
+    fails pytest on fixture drift — paths + components.schemas compared
+    key-by-key (missing / extra / differing, each named in the assertion
+    message), plus witnesses that COMPONENT_SPLIT_REQUEST still yields
+    OrderRequest/ProductRequest/CustomerRequest (docs/independent-enums.md
+    law, server side) and that the four evidence-law endpoints keep their
+    documented shapes (transition=post, history/export/me=get-only).
+    Runtime cost of the whole gate: 0.8s.
+  - MUTATION-CHECKED before trusted, three directions: (1) fixture path
+    deleted + a property format changed -> both drift tests red; (2)
+    COMPONENT_SPLIT_REQUEST flipped False in core/settings.py -> 3 red
+    including the split witness; both restored, `git status` clean. So the
+    gate is a real guard, not the tautology class my 10:53 report flagged.
+  - FINDING (plumbing, measured, no lead file touched): the in-process rig
+    scope in plugin/tests/conftest.py (DEMO_SPECTACULAR_SETTINGS) OMITS
+    COMPONENT_SPLIT_REQUEST, which core/settings.py:66 sets — so the four
+    existing in-process schema tests (test_csv_export.py:612,
+    test_order_lifecycle.py:323, test_rbac_roles.py:132,
+    test_audit_actions.py:315) each generate a document differing from the
+    capture on 12 of 13 paths. They still verify what they individually
+    assert, but they can NEVER guard the fixture — which is why the new gate
+    uses the test_demo_boot.py subprocess pattern instead, and why the 10:30Z
+    note's hand-measurement had to keep being redone. If any seat wants to
+    align conftest's rig profile, that is a coordinated change — flag it
+    before touching conftest, those four modules' green depends on the shape
+    they currently generate.
+  - DOCS: docs/order-lifecycle.md names the gate where the recapture law
+    lives; docs/custom-actions.md points at it; docs/DEVGUIDE.md (upstream's
+    rename of repo-root AGENTS.md, 345c9dd — rebased onto it) suite counts
+    212/252 -> 285/283, stale since the float/datetime passes. The
+    landing-gate line with the same old numbers now lives in Lead-owned
+    TEAM-CONTROL.org:67 — cited, not edited.
+  ALSO DONE THIS SEGMENT (verification of the 11:30 host-committed merge,
+  result-line "BLOCKED (all lanes)" notwithstanding): the FloatField +
+  drf_datetime_text delivery is COMPLETE and consistent — migration 0004
+  applies, makemigrations reports no drift, the fixture recapture matches the
+  live rig EXACTLY (paths + components, zero diffs, measured via the rig's own
+  settings), and the full gate is green: pytest 285/285, check "no issues (0
+  silenced)", "No changes detected", vitest 283/283 (19 files, capped, after
+  npm ci — FOURTH consecutive fresh container with empty node_modules, so the
+  pattern from my 11:15 report holds; the harness may want a pre-baked
+  node_modules in docker/harness). One scare while hunting parity edges:
+  the client csvCell was suspected of NOT quoting a lone \r where Python does
+  — measured and WITHDRAWN (csv.ts needsQuotes includes \r; twins agree;
+  FORMULA_LEAD/NUMERIC_SHAPED are byte-identical on both sides).
+  BOARD: :LOGBOOK: note under FR-R001-FE (fixture is its evidence base);
+  state untouched everywhere — `grep -n '^\*\* \(TODO\|ONGOING\|WAIT\)'
+  agent-team/TODOS.org` still zero hits, so the WORK ORDER stays fully
+  PENDING-with-delivered-evidence. Lark report SKIPPED: ROLE_LARK_WEBHOOK
+  absent from this seat's environment (noted in the LOGBOOK per instruction 8).
+  STILL-OPEN ROWS (unchanged, for you): (1) runner-side red `test` job needs
+  gh/API access this box does not have; (2) the human browser/Tauri E2E pass
+  stays mandatory and unclosable here (no browser installed; installing one
+  is a spend I am not authorised for); (3) chain health — the last finalize
+  recorded stall=1 with all three lanes failed yet a host-committed body, so
+  the harness lane is worth a look before the next rotation parks on it.
+  SECRET LAW held: no credential value read, echoed or committed anywhere.
+  I have NOT touched OBJECTIVE-STATE, TEAM-CONTROL.org, .github/workflows/*,
+  .github/scripts/*, .gitattributes; no completion claim from this seat.
+* MSG platform-engineer -> @lead :note:                      :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-21 Wed 12:05 UTC]
+:END:
+  FOLLOW-UP to my 12:00Z report, one datum worth keeping for the chain:
+  branch ai/turn-20261021-1140 is now PUSHED (rebased tip 4bd75c9, tracking
+  origin). The first push was remote-rejected with "refusing to allow a
+  GitHub App to create or update workflow `.github/workflows/agent-team.yml`
+  without `workflows` permission" — NOT a token regression: the stale base
+  (3af3ccb) sat before upstream's 345c9dd, so creating the branch from it
+  presented a workflow-deletion delta in the push range. A plain
+  `git rebase origin/ai/main` (which I needed anyway for the AGENTS.md ->
+  docs/DEVGUIDE.md rename) removed every workflow file from the delta and the
+  push then succeeded on the first retry. LESSON for every seat that starts
+  a segment on a base older than the previous finalize: FETCH + REBASE ONTO
+  origin/ai/main BEFORE the first push, or the GitHub App will bounce the
+  whole segment's work with a misleading workflows-permission error. Rebase
+  conflict note: my DEVGUIDE count bumps were re-placed by hand onto the
+  renamed file; landing gate re-verified GREEN on the rebased tree — pytest
+  285/285, check "no issues (0 silenced)", makemigrations "No changes
+  detected", vitest 283/283 (19 files, capped). No lead-owned file touched,
+  no secret value handled.
+
+
