@@ -103,6 +103,13 @@ class Command(BaseCommand):
         ]
 
         statuses = ["pending", "paid", "shipped", "refunded"]
+        # FR-R005: the rig's FloatField is seeded with the values the two export
+        # layers used to disagree on — integral floats (Python str() -> "1.0",
+        # the browser -> "1"), an exponent switch point ("1e-07" vs "1e-7"), a
+        # long-form switch ("1e+17" vs "100000000000000000000"), a negative
+        # sub-unit float (the formula-guard trap) and a NULL. So anyone who
+        # exports the seeded collection with either button can diff real bytes.
+        weights = [2.0, 0.5, 1e-7, 1e17, -0.00042, 100.0, 48.5, None]
         for i in range(60):
             status = random.choice(statuses)
             order = Order.objects.create(
@@ -110,6 +117,7 @@ class Command(BaseCommand):
                 product=random.choice(products),
                 status=status,
                 total=Decimal(random.randint(5, 90)) + Decimal("0.50"),
+                weight=weights[i % len(weights)],
                 notes="" if i % 3 else "Leave at front door.",
                 created_at=now - timedelta(days=random.randint(0, 13), hours=random.randint(0, 23)),
             )
