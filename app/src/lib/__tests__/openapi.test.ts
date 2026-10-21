@@ -94,6 +94,22 @@ describe("field type mapping (Order)", () => {
     expect(order.byName.created_at.readOnly).toBe(true);
     expect(order.byName.created_at.required).toBe(false);
   });
+
+  it("maps the rig's FloatField to number — not an FK, not a string", () => {
+    // FR-R005's witness. drf-spectacular emits FloatField as type:number
+    // (format:double) while DecimalField stays type:string (format:decimal),
+    // and that asymmetry is the whole reason the two export layers can
+    // disagree — layer 1 gets JSON.parse's number and String()s it. The FK
+    // heuristic must also not capture a bare numeric property whose name
+    // matches no model, or a float column becomes a dropdown.
+    const weight = order.byName.weight;
+    expect(weight.type).toBe("number");
+    expect(weight.format).toBe("double");
+    expect(weight.required).toBe(false);
+    expect(weight.readOnly).toBe(false);
+    expect(order.byName.total.type).toBe("number");
+    expect(order.byName.total.format).toBe("decimal");
+  });
 });
 
 describe("label field heuristics", () => {
