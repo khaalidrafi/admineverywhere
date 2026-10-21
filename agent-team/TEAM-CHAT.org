@@ -1027,3 +1027,86 @@
   .github/scripts/*, .gitattributes; no completion claim from this seat.
   Branch ai/turn-20261021-1034 carries the doc note, the R-005 LOGBOOK entry
   and this report.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 10:53 UTC]
+:END:
+  RESULT: DONE — a DEFECT was found and fixed, not another re-read of the
+  evidence. WORK ORDER items 1-11 still all carry PENDING-with-delivered-
+  evidence (`grep -n '^*\+ \(TODO\|ONGOING\|WAIT\)' agent-team/TODOS.org` ->
+  zero hits) and no unanswered @platform-engineer ping sits in the chat tail,
+  so instead of a third verification pass I ran the check NO prior segment
+  ran: a static-invariant audit of the laws AGENTS.md pins on the FE surface,
+  then a test-first fix of the one violation it found.
+  WHAT THE AUDIT CLEANED (all four, zero findings):
+  - Hard-coded identity: 0 hex/rgb literals in any app/src/**/*.svelte
+    (branding law — every colour rides --brand-* through @theme inline).
+  - apiUrl as base origin only: the 3 concatenation sites left are
+    resolveApiUrl() for the plugin's FIXED /admincraft/branding/ surface,
+    baseUrl() inside request(), and actionPath()/transitionRecord off
+    model.listPath. No model endpoint built from a string.
+  - Provider law: zero Anthropic references anywhere in app/src, plugin,
+    demo-backend, docs.
+  - Drop-in contracts: 6/6 pages and 8/8 widgets export meta from
+    <script module>; app/src/actions/ holds flag.ts + bulk_flag.ts.
+  THE FINDING — a guessed URL shipped inside FR-R003-FE's delivered evidence:
+  app/src/lib/api.ts:354 carried `opts.path ?? "/api/audit/"` while
+  ModelPage.showHistory passed `path: findAuditModel(schema)?.listPath` —
+  undefined exactly when the document has no audit model. So on any backend
+  without the R-003 log the client PROBED a hand-written /api/audit/ and
+  leaned on a 404 catch, which is what the 2026-10-20 21:05 :DELIVERED: note
+  describes as "degrades to the history half". AGENTS.md:63 forbids that
+  phrase for the very same surface, and R-001's transitionRecord/fetchHistory
+  already refuse instead. Not cosmetic: if the deployment mounts something
+  ELSE at that segment, the client reads it as this record's audit trail and
+  renders it with no error anywhere — a silent wrong-data path, the exact
+  failure class the evidence law exists to stop.
+  FIX: fetchAudit now throws ApiError naming the missing evidence and fires
+  ZERO requests when no discovered path is supplied; ModelPage gates the log
+  half on findAuditModel() resolving, so a log-less backend shows the
+  lifecycle half with no probe and no toast. docs/custom-actions.md's stale
+  "fixed /api/audit/ surface" bullet and AGENTS.md:62-63 now state the
+  refusal for both audit readers.
+  PROOF, BOTH DIRECTIONS (and a false-pass caught on the way):
+  - app/src/lib/__tests__/actions.test.ts: +2 tests (typed refusal, zero
+    network calls) and the 3 existing reads now pass the fixture-DISCOVERED
+    listPath, so no test in the repo pins a hand-written audit URL.
+  - app/src/lib/__tests__/lifecycleMount.test.ts: +1 WIRE-LEVEL mount test.
+    With the audit model present the sub-view GETs
+    http://api.test/api/audit/?object_type=order&object_id=7 and renders the
+    entry; with that model stripped from the SAME captured document it makes
+    no /audit/ call and no toast.
+  - Reverted-source check: with HEAD's api.ts the 2 unit tests fail; with
+    HEAD's api.ts + ModelPage.svelte the mount test fails. So all three are
+    real guards, not tautologies. NOTE FOR THE TEAM: the mount test's first
+    run PASSED against the broken code — happy-dom `vi.waitFor` resolved on
+    the history render before the guessed request landed. The absence
+    assertion is now time-boxed to 150 ms, measured as the window in which
+    the old fallback actually fired, so the negative is evidence rather than
+    a race. Any future "no request was made" test needs the same window.
+  LANDING GATE green at this HEAD: pytest 212/212 (-p no:cacheprovider,
+  13.1s), manage.py check "no issues (0 silenced)", makemigrations --check
+  "No changes detected", vitest 255/255 across 19 files (was 252; +2 unit,
+  +1 mount; NODE_OPTIONS=1024 --maxWorkers=1 after npm ci — the
+  empty-node_modules signature from my 10:32 report reproduced again in this
+  fresh container).
+  BOARD: :LOGBOOK: note added under FR-R003-FE (state untouched — PENDING
+  stands, DONE is your gate). No item flipped, no control file edited.
+  STILL-OPEN ROWS, unchanged: (1) the runner-side red `test` job still needs
+  run-log access — this box has no gh CLI (`command -v gh` -> absent);
+  (2) the human browser/Tauri E2E pass stays mandatory and unclosable here
+  (no chromium/firefox/playwright installed; installing one is a spend I am
+  not authorised for). A third row for you: this defect class — a tolerated
+  404 against a guessed URL — was invisible to 212 pytest + 252 vitest
+  because the unit tests pinned the guess as the expected value. If any board
+  item's evidence rests on "degrades on 404", it deserves the same
+  provenance question; the audit recipe is now recorded in FR-R003-FE's
+  LOGBOOK note.
+  I have NOT touched OBJECTIVE-STATE, TEAM-CONTROL.org, .github/workflows/*,
+  .github/scripts/*, .gitattributes; no completion claim from this seat.
+  Branch ai/turn-20261021-1044 carries the fix, the three tests, the doc +
+  AGENTS.md law lines, the LOGBOOK note and this report. The harness's own
+  .turn-inside.sh stays untracked.
