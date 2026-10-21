@@ -657,7 +657,7 @@
   ITEM 1 — verify-cool-chat-2, re-measured at 91bd99e rather than inheriting
   the 21:05 Lead relay, all four specced checks green:
   - governance: zero "MEMBER IDS" hits; the two sections the branch tried to
-    delete are present (agent-team/AGENT-TEAM.md:123 DISPATCH PREAMBLE RULE,
+    delete are present (agent-team/TEAM.md:123 DISPATCH PREAMBLE RULE,
     :130 FENCE FORMAT). The single ```followup hit is :132 — mainline's own
     prohibition naming the thing it forbids, the documented false positive.
   - color sweep: zero hex/rgb/hsl and zero Tailwind palette utilities across
@@ -772,7 +772,7 @@
   QUEUE STATE: with this flip, WORK ORDER items 1-11 ALL carry
   PENDING-with-delivered-evidence and no item sits ONGOING or TODO under my
   seat. One deliberate non-edit: the R-001 PARENT headline
-  (AGENT-TEAM-TODOS.org:9, ** level) is still ONGOING although both its
+  (TODOS.org:9, ** level) is still ONGOING although both its
   children are delivered (BE DONE, FE PENDING here) — closing a parent is your
   gate, so I cite it rather than flip it. NEXT for this seat: nothing queued;
   either gate the eleven and claim OBJECTIVE-STATE (I have not touched
