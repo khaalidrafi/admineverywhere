@@ -1353,6 +1353,48 @@ menu/action filtering from them; (b) activity-log screen reading the
 R-003 audit endpoint (list view). Graceful-degradation law: no role
 source in the schema = no filtering, everything visible.
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 17:44 UTC] :: COVERAGE-HARDENING #3 (seat
+  platform-engineer, branch ai/turn-20261021-1732 @8c81a6e). No item flipped —
+  WORK ORDER rows 1-11 all still carry :DELIVERED: and the chat tail held no
+  open @platform-engineer ping (newest entry was my own 17:28Z report), so per
+  instruction 2 I closed the last gap my report named: stores.ts's remaining
+  Tauri/boot seams. New app/src/lib/__tests__/storesTauri.test.ts (16 tests,
+  nothing from this module mocked; only @tauri-apps/api/{core,window} + fetch):
+  (a) saveAiSettings trims all three fields, persists base/model as localStorage
+  bytes and sends the key ONLY as the save_secret tuple, with a sentinel scan
+  proving zero key bytes in browser storage; (b) loadAiSettings round trip and
+  the unavailable-keychain degradation; (c) applyBrand's native title —
+  getCurrentWindow().setTitle receives the appName while document.title, the
+  favicon href and --brand-* CSS ride synchronously; a rejected title call is
+  swallowed; web mode never touches the window API; (d) initApp boot:
+  config.json + brand.json then the server brand over the DOCUMENTED
+  /admincraft/branding/ with relative assets resolved against apiUrl, and the
+  silent degradations (404 plugin-less backend keeps the neutral static brand,
+  zero toasts, no banner; a rejected fetch still boots; apiUrlOverride wins over
+  bundled config); (e) loadSchema's claims degradation asserted by the exact URL
+  list — no mePath = one request and claims null, a documented mePath answering
+  garbage = claims null, the in-flight guard fires zero extra requests, an
+  anonymous read carries no Authorization header. PRODUCT FIX found from inside
+  those tests: saveAiSettings SKIPPED the secret write when the key field was
+  empty while ChatPanel.svelte:33 hydrates that field from the store — clearing
+  the AI key saved nothing and the old key returned on next boot. stores.ts now
+  calls deleteSecret("ai.apiKey") on an empty field (stores.ts:229-238); the
+  round-trip test pins it in both modes. EVIDENCE: vitest 391/391 (29 files,
+  NODE_OPTIONS=1024 --maxWorkers=1), was 375 (+16); tsc --noEmit 0; pytest
+  299/299 -p no:cacheprovider; manage.py check "no issues (0 silenced)";
+  makemigrations --check "No changes detected". stores.ts 71%->100% stmts,
+  71.4%->93.3% branch (survivors are the typeof window/localStorage guards,
+  unreachable under happy-dom = equivalent). MUTANTS: 10/10 killed — delete-
+  secret removed, native-title call removed, Tauri guard removed, server brand
+  ignored, assets unresolved, key untrimmed, in-flight guard removed, claims
+  force-nulled, mePath guessed, Authorization forced. M3 (Tauri guard) SURVIVED
+  the first draft: the "never called" assertion awaited only two microtasks and
+  the fire-and-forget dynamic-import chain had not run yet — fixed with a
+  setTimeout boundary, then re-mutated to confirm the kill. Sources restored
+  byte-identical; package-lock untouched; docs/DEVGUIDE.md + AGENTS.md counts
+  375->391 / 252->391 and 212->299 (measured). NEXT: pixels still unproven (no
+  browser/Tauri on this box); ChatPanel's own save-settings click path is
+  covered at store level, not at the DOM level.
 - Note taken on [2026-10-21 Wed 17:26 UTC] :: COVERAGE-HARDENING #2 (seat
   platform-engineer, branch ai/turn-20261021-1714). No item flipped — every
   WORK ORDER row 1-11 still carries :DELIVERED:, no @platform-engineer ping
