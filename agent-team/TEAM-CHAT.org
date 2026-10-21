@@ -1351,3 +1351,95 @@
 
 
 
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 12:12 UTC]
+:END:
+  RESULT: DONE — the caveat line that EVERY FE delivery on this board has
+  carried ("tsc --noEmit = only the known pre-existing errors") is now gone:
+  the client typechecks with ZERO errors, and the one error that was in
+  shipped code, not in a test, is fixed.
+  WHY THIS SEGMENT: WORK ORDER is exhausted — items 1-11 all sit
+  PENDING-with-delivered-evidence (`grep -nE '^\*+ (\S+ )?(TODO|ONGOING|WAIT)'
+  agent-team/TODOS.org` → zero hits), and the chat tail holds no unanswered
+  @platform-engineer ping. Per instruction 2 I took the smallest verifiable
+  improvement toward the objective.
+  WHAT LANDED (branch ai/turn-20261021-1205, commit 27f9672):
+  - app/src/lib/api.ts:153 — `listRecords` returned `Promise<Page>` while
+    app/src/lib/types.ts:92 declares `Page<T>` with NO default (TS2314). Now
+    `Promise<Page<RecordRow>>`, matching toPage's own default (api.ts:140) and
+    its consumer fetchAllRecords (api.ts:171 pushes into RecordRow[]). ONE
+    production file, one line.
+  - Six test-fixture sites typed so the check carries weight:
+    RecordForm.test.ts:49/76/100 → `Record<string, any>` (indexed by a string
+    field name, TS7053); DataTable.test.ts:68 → `RecordRow[]` so `r.id`
+    resolves; branding.test.ts:157/170 → the runtime-tolerated absent color /
+    font now rides ONE `as unknown as Brand` cast instead of widening the
+    production contract (sanitizeFont accepts `string | undefined`,
+    branding.ts:33). Also dropped a stale `colors: undefined as any`.
+  - ROOT CAUSE OF IT STAYING RED, plumbing-verified not asserted: `npm run
+    build` is plain `vite build` (app/package.json:8) and esbuild STRIPS types
+    without checking them, so neither gate.sh's three legs (pytest +
+    manage.py check + makemigrations) nor vitest has EVER run tsc. Nothing
+    could have caught this. Mutation-checked the guard both directions:
+    reverting the api.ts line re-produces TS2314, restoring it → exit 0.
+  - DOCS: docs/DEVGUIDE.md Commands gained
+    `cd app && npx tsc --noEmit   # clean — 0 errors is the standing bar` plus
+    a Hard-won-contracts bullet on the esbuild trap. Before this segment the
+    tsc command appeared in NO doc file in the repo (`grep -rn "tsc --noEmit"
+    docs/` → zero hits), which is how the debt survived.
+  MEASURED AT 27f9672: tsc exit 0 (was 7 errors); vitest 283/283 over 19
+  files, UNCHANGED (type-only edits — I claim no runtime delta); `npm run
+    build` ✓ 1.84s; LANDING GATE GREEN in-container — pytest 285/285, check
+  "no issues (0 silenced)", makemigrations "No changes detected". That is the
+  gate reproduced on THIS box, so the still-open runner-side red `test` job is
+  not reproducible from HEAD here and stays yours (no gh CLI, no GITHUB_TOKEN
+  in this seat's env — unchanged row).
+  MY OWN MISTAKE, KEPT ON RECORD BECAUSE THE LESSON IS THE POINT: the
+  mutation-check restored with `git checkout -- src/lib/api.ts`, which threw
+  away the UNCOMMITTED fix together with the mutation. Re-applied and
+  re-verified. Suggested law for the seats: commit BEFORE mutation-checking
+  with `git checkout`. The fix in this delivery is the re-applied one and was
+  re-measured after.
+  CONTAINER SIGNATURE (sixth row): empty node_modules AND admincraft not
+  pip-installed again; both README one-liners, run before any test. The
+  11:15/12:00/12:35Z recommendation for a pre-baked image still stands —
+  docker/harness/Dockerfile bakes the Python DEPS (line 26) but not
+  `pip install -e plugin` nor the client's node_modules, and the editable
+  install + npm ci cannot bake against a mounted workspace.
+  BOARD: :LOGBOOK: note under FR-R001-FE (shared client data layer is its
+  evidence base); no state flipped anywhere, DONE stays your gate, no
+  completion claim from this seat, OBJECTIVE-STATE untouched.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK absent from this seat's environment.
+  SECRET LAW held: no credential value read, echoed or committed. No
+  lead-owned file touched (.github/workflows/*, TEAM-CONTROL.org,
+  .gitattributes, .github/scripts/* — read and cited only; gate.sh and the
+  test job were READ to establish what the gate does and does not check).
+
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 12:13 UTC]
+:END:
+  TWO HOUSE RULES, free to adopt, both measured tonight (branch
+  ai/turn-20261021-1205, commit 27f9672):
+  1. `cd app && npx tsc --noEmit` is now EXIT 0 and NOTHING ENFORCES IT.
+     `npm run build` is plain `vite build` (app/package.json:8) — esbuild
+     strips types without checking — and gate.sh's three legs never touch the
+     client, so a type error can sit in SHIPPED code unnoticed: that is how
+     api.ts:153 (`Promise<Page>` vs `Page<T>` with no default, types.ts:92)
+     survived every green FE delivery on the board. Please run the command in
+     your own segment and keep it 0; if you must break it, say so in your
+     report rather than letting the next seat inherit a silent red.
+  2. Do not mutation-check with `git checkout -- <file>` on UNCOMMITTED work.
+     It restores HEAD, which deletes your fix along with the mutation — it bit
+     me mid-segment (see my 12:12Z report's self-flag row). Commit first, then
+     mutate, then `git checkout`.
+  Test files touched here are RecordForm.test.ts:49/76/100,
+  DataTable.test.ts:68, branding.test.ts:157/170 — type annotations only,
+  vitest stays 283/283 and no assertion changed, so nothing of yours moves.
