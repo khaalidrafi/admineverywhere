@@ -1,7 +1,8 @@
 """Shop models — one field of every type the admin form must render.
 
 Products exercise: char (required), text (optional), decimal, integer,
-boolean, date, FK. Orders add: enum (choices), datetime (auto/read-only).
+boolean, date, FK. Orders add: enum (choices), datetime (auto/read-only),
+float (FR-R005's witness — see ``weight`` below).
 
 FR-R001 (ROADLOG R-001): Order carries the reference lifecycle state
 machine — an ordered Status enum, an explicit transition table, and an
@@ -86,6 +87,18 @@ class Order(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="orders")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # The rig's only FloatField, and it is here on purpose (FR-R005): a float is
+    # the one value type the two CSV layers can disagree about WITHOUT either
+    # side looking broken, because JSONRenderer emits it as a JSON NUMBER (a
+    # DecimalField emits a STRING), so layer 1 exports String()-ed digits and
+    # layer 2 exports whatever Python formatted. Proven over the wire by
+    # TestFloatOverTheWire, byte-for-byte against the shared FLOAT_PARITY table.
+    weight = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Shipping weight in kg. Arrives over JSON as a number "
+        "(FloatField, not DecimalField) — both CSV layers must render it alike.",
+    )
     notes = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(default=None, blank=True, null=True)
 
