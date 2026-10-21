@@ -40,6 +40,18 @@ One carve-out Python has and `csv.ts` does not: `csv.writer` quotes a row
 that is exactly one empty field so the line cannot collapse. No real export
 row is single-column; if yours is, add the rule on both sides at once.
 
+A second divergence, reachable only by *type*, not by this product's data: a
+Python `float` cell. `csv_cell(1.0)` writes `1.0`, `str(-0.0)` writes `-0.0`,
+`str(1e-07)` writes `1e-07`, while `String()` on the same value gives `1`, `0`
+and `1e-7`. Nothing else in the two writers disagrees — quoting, CRLF, null,
+booleans and the formula guard are byte-for-byte twins for every value a JSON
+response can carry (string/number-int/bool/null), which is what a DRF
+`JSONRenderer` sends: decimals and dates arrive as STRINGS, so a client row
+never holds a float to re-format. A client project that exports from a
+`FloatField` through a hand-rolled path (not the API's own JSON) is the one
+case that can drift; if you hit it, format on both sides or ban the field from
+export.
+
 ## 3. Server contract (layer 2)
 
 - Route: `GET <model.listPath>export/` — a DRF `@action(detail=False,
@@ -117,3 +129,15 @@ row is single-column; if yours is, add the rule on both sides at once.
 - Cross-layer diff: log into the demo rig, open Orders, export the table and
   the full export, and diff the parent columns of any overlapping row — they
   are byte-identical.
+- Randomised cross-twin diff (measured 2026-10-21, platform-engineer): the
+  real `csv_cell`/`csv_text` from `shop/csv_export.py` and the real
+  `buildCsv` from `csv.ts` were fed the SAME value matrix — 12 seeds × 250
+  rows over an alphabet built to break a writer (embedded `"`/`,`/CRLF/LF/CR,
+  TAB- and `-`-lead, `=HYPERLINK(…)`, `-2+3` vs `-5.00`, bare `-`/`.`,
+  `\u0000`, emoji + CJK, 300-char runs, int/bool/null/empty) restricted to
+  the types a JSON body can carry — plus the live rig's own 63 rows including
+  three created with formula-lead notes. Every run came out byte-identical,
+  and the guard fired identically (`=HYPERLINK` and `-2+3` apostrophised,
+  `-5.00` left as data). Re-run it with floats in the matrix and the ONLY
+  cells that diverge are the `float`-repr ones above — that is how the §2
+  caveat was found, and it is the whole extent of the disagreement.
