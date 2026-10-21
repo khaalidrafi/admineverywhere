@@ -112,9 +112,8 @@ jobs:
           # Seat pointer: the rotation parks on the PROVEN body. The case
           # keeps the grammar extensible the moment more bodies are added.
           case "$TURN" in
-            qwen3.8-flash@qoder*)  NEXT_SEAT=platform-engineer ;;
-            deepseek-flash@qoder*) NEXT_SEAT=platform-engineer-ds ;;
-            *)                     NEXT_SEAT=platform-engineer ;;
+            qwen3.8-flash@qoder*) NEXT_SEAT=platform-engineer ;;
+            *)                    NEXT_SEAT=platform-engineer ;;
           esac
           echo "seat=$NEXT_SEAT" >> "$GITHUB_OUTPUT"
 
@@ -363,29 +362,14 @@ jobs:
           # The plugin is the code under test: link it fast (deps baked).
           python -m pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true
           case "$SEAT" in
-            platform-engineer | platform-engineer-ds)
-              # The PROVEN lane is qwen3.8-flash@qoder (runs 39467719908/
-              # 39477554903). deepseek-flash@qoder = new hire (Owner order
-              # 2026-10-21 03:53Z "Qoder also has DeepSeek Flash free. Hire
-              # that, too."): the lane SELF-PROBES the --model flag and
-              # falls back to the proven default, so a wrong id degrades
-              # to work-as-usual, never to a stall. HOME pinned to the
-              # install dir (launcher resolves the real CLI under ITS
-              # HOME).
-              QMODEL=""; [ "$SEAT" = "platform-engineer-ds" ] && QMODEL="deepseek-flash"
-              if [ -n "$QMODEL" ] \
-                 && env HOME=/usr/local/lib/qoder-home \
-                     qoder -p "$BRIEF" --model "$QMODEL" --output-format json \
-                     --permission-mode bypassPermissions --max-turns 100; then
-                echo "TURN_RESULT=qoder run OK (lane: ${QMODEL}@qoder — model flag VALID)"
-              elif env HOME=/usr/local/lib/qoder-home \
-                     qoder -p "$BRIEF" --output-format json \
-                     --permission-mode bypassPermissions --max-turns 100; then
-                if [ -n "$QMODEL" ]; then
-                  echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder — ${QMODEL} flag invalid, fell back; REPORT the right id in chat)"
-                else
-                  echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder)"
-                fi
+            platform-engineer)
+              # qwen3.8-flash@qoder — the body PROVEN on this team's CI.
+              # HOME pinned to the install dir (launcher resolves the real
+              # CLI under ITS HOME — runs 39467719908/39477554903 evidence).
+              if env HOME=/usr/local/lib/qoder-home \
+                   qoder -p "$BRIEF" --output-format json \
+                   --permission-mode bypassPermissions --max-turns 100; then  # accept_edits denied ALL Bash (git commit/pytest/pip) — seat escalation, run 39488529938
+                echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder)"
               elif [ -n "$ZAI_API_KEY" ]; then
                 if command -v goose >/dev/null 2>&1; then
                   env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
@@ -512,9 +496,8 @@ jobs:
           echo "branch=${TURN_BRANCH:-}" >> "$GITHUB_OUTPUT"
           CTL=agent-team/TEAM-CONTROL.org
           case "${{ steps.control.outputs.seat }}" in
-            platform-engineer)    NEXT="deepseek-flash@qoder (Acting Platform Engineer)" ;;
-            platform-engineer-ds) NEXT="qwen3.8-flash@qoder (Acting Platform Engineer)" ;;
-            *)                    NEXT="qwen3.8-flash@qoder (Acting Platform Engineer)" ;;
+            platform-engineer) NEXT="qwen3.8-flash@qoder (Acting Platform Engineer)" ;;
+            *)                 NEXT="qwen3.8-flash@qoder (Acting Platform Engineer)" ;;
           esac
           git checkout -f ai/main
           git fetch origin ai/main
@@ -674,29 +657,17 @@ jobs:
           echo "" >> "$SUMMARY"
           echo "kill=${KILL:-OFF} state=${OBJSTATE:-OPEN}" >> "$SUMMARY"
 
-      - name: Mirror chain verdict to Telegram (owner-locked, deduped)
+      - name: Mirror chain verdict to Telegram (owner-locked)
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_OWNER_ID: ${{ secrets.TELEGRAM_OWNER_ID }}
           TG_LEARNED_CHAT: ${{ needs.turn.outputs.tg_chat }}
         run: |
-          # TG DEDUPE LAW (Owner 2026-10-21 03:53Z: "I keep getting the same
-          # msgs on Telegram"): fire ONLY when a segment actually RAN and
-          # the verdict differs from #+LAST-VERDICT in the control file.
-          SEG="${{ needs.turn.outputs.seg_result }}"
-          [ -n "$SEG" ] || { echo "telegram mirror: turn skipped — silent (dedupe law)"; exit 0; }
           CHAT="${TELEGRAM_OWNER_ID:-${TG_LEARNED_CHAT}}"
           [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$CHAT" ] || { echo "telegram mirror: silent (no token or chat id yet)"; exit 0; }
-          VH=$(printf '%s' "$SEG" | sha256sum | cut -c1-12)
-          CTL=agent-team/TEAM-CONTROL.org
-          LAST=$(grep -oP '^\#\+LAST-VERDICT:\s*\K.*' "$CTL" | head -1)
-          if [ "$LAST" = "$VH" ]; then
-            echo "telegram mirror: identical verdict ${VH} already mirrored — silent (dedupe law)"
-            exit 0
-          fi
           TXT="$(printf 'FROM: team-lead (glm-5.3-flash, Agent Team)\nTO: @owner\n\n[admincraft] segment done\nbranch: %s\nresult: %s\nmerge: %s\ngate: %s\nstall: %s\ndecision: %s' \
             "${{ needs.turn.outputs.turn_branch }}" \
-            "$SEG" \
+            "${{ needs.turn.outputs.seg_result }}" \
             "${{ steps.merge.outputs.outcome }}" \
             "${{ steps.gate.outputs.gate }}" \
             "${CHAIN_STALL:-?}" \
@@ -706,15 +677,6 @@ jobs:
             --data-urlencode "chat_id=${CHAT}" \
             --data-urlencode "text=${TXT}") || CODE="curl-failed"
           echo "telegram mirror: HTTP ${CODE}"
-          git config user.name "agent-team-ci"
-          git config user.email "agent-team-ci@users.noreply.github.com"
-          git remote set-url --push origin \
-            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
-          git fetch origin ai/main && git reset --hard origin/ai/main
-          sed -i "s|^\#\+LAST-VERDICT:.*|\#\+LAST-VERDICT: ${VH}|" "$CTL"
-          git add "$CTL"
-          git commit -m "ci-chain: verdict ${VH} mirrored" || exit 0
-          for i in 1 2 3; do git push origin "ai/main" && break; git fetch origin ai/main && git reset --hard origin/ai/main; sed -i "s|^\#\+LAST-VERDICT:.*|\#\+LAST-VERDICT: ${VH}|" "$CTL"; git add "$CTL"; git commit -m "ci-chain: verdict ${VH} mirrored" || exit 0; done
 
       # Owner order 2026-10-20 19:56Z: "You serve as the lead of both repos.
       # Their GLM chats go to their respective Discord channels." This repo's
@@ -730,7 +692,6 @@ jobs:
           SEG_RESULT: ${{ needs.turn.outputs.seg_result }}
         run: |
           [ -n "$DISCORD_WEBHOOK_TEAM" ] || { echo "discord mirror: silent (no DISCORD_WEBHOOK_TEAM_ADMINCRAFT secret yet)"; exit 0; }
-          [ -n "$SEG_RESULT" ] || { echo "discord mirror: turn skipped — silent (dedupe law)"; exit 0; }
           post() { # chunk to Discord's 2000-char cap
             local txt="$1"
             while [ -n "$txt" ]; do
