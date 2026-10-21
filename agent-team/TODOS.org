@@ -428,6 +428,18 @@ CLOCK: [2026-10-19 Mon 03:34]--[2026-10-19 Mon 03:41] =>  0:07
 :END:
 *** PENDING FR-R003-FE — action registry + audit sub-view (client side)    :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 12:58 UTC] :: CORRECTION from seat
+  platform-engineer, so the harness row in the 10:55 note below is not read as
+  current: "DOM-level component tests are blocked by a harness limitation" was
+  TRUE when item 5 filed it and is now FALSE. FR-R006 landed the enabler
+  (app/vite.config.ts — resolve.conditions ["browser"] plus server.deps.inline
+  [/svelte/], explained in that file's own comment), and lifecycleMount /
+  chatMount / dashboardMount / widgetMount / shell all mount real .svelte
+  components today. This item's own wire-level proof already uses it
+  (lifecycleMount.test.ts asserts the discovered /api/audit/?object_type=… URL
+  and the no-audit-model silence), so nothing here is outstanding on the mount
+  front. Same segment added kanbanMount.test.ts (+5 tests, vitest 291/291, tsc
+  0 errors) for the FR-R004 rendered-board row. State untouched.
 - Note taken on [2026-10-21 Wed 10:55 UTC] :: DEFECT FIXED by seat
   platform-engineer (no open board item this segment, so the static-invariant
   audit ran instead; this is what it caught). The 20:52 :DELIVERED: note below
@@ -595,6 +607,64 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-004 kanban view                                                  :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 12:58 UTC] :: RENDERED-COMPONENT GAP CLOSED (seat
+  platform-engineer; no open board item this segment — the work order is
+  exhausted, `grep -nE '^\*+ .*(TODO|ONGOING|WAIT)' agent-team/TODOS.org` = 0
+  hits — so per instruction 2 I took the smallest verifiable improvement, and
+  this was the one open evidence row on the item that was still closable from
+  this box). The 21:33 note left exactly one unchecked line: "the board's
+  wiring is proven by the pure module + build + live API, not by a rendered
+  component", justified by the mount() harness limitation item 5 filed. That
+  justification is now STALE — FR-R006 landed the enabler (vite.config.ts
+  resolve.conditions browser + server.deps.inline /svelte/, documented in its
+  own comment), and lifecycleMount/chatMount/dashboardMount/widgetMount/shell
+  already mount real .svelte components. The board was the gap, not the harness.
+  Added app/src/lib/__tests__/kanbanMount.test.ts — 5 tests, ModelPage + the
+  real KanbanBoard mounted against the captured fixture (same wire-level law:
+  stub fetch, route by URL, assert the bytes and the DOM):
+  1. toggling the view fires a SECOND list request carrying page_size=100 on
+     the DISCOVERED listPath, and every declared column renders, empties
+     included (aria-labels pending 1 / paid 0 / shipped 0 / refunded 0).
+  2. the keyboard path: the per-card select exposes exactly
+     ["", pending(disabled), paid(enabled), shipped(disabled), refunded(disabled)]
+     for a pending card, and choosing paid POSTs body {"transition":"paid"} to
+     http://api.test/api/orders/7/transition/ — the discovered detail path, not
+     a built URL — then the card is re-rendered into "paid column, 1 record".
+  3. drag/drop: dragstart on the card then a drop on the shipped column sends
+     ZERO requests (illegal target); the same pair on paid fires exactly one
+     transition POST with the same one-key body.
+  4. a record whose status is outside the declared set ("void") lands in
+     "Unassigned column, 1 record", visible and READ-ONLY — not draggable,
+     select disabled.
+  5. negative: a document with orders.transitionPath removed resolves NO axis
+     (resolveAxis null), so the Kanban toggle is absent, nothing probes
+     /transition/, no toast is raised, and the table view still renders.
+  NEGATIVE CONTROL (so this is not the false-pass class the R-003 note records):
+  mutating ModelPage to drop pageSize -> test 1 fails; mutating kanban.ts
+  reachableColumns to ignore the state machine -> test 2's option matrix fails.
+  MUTANT THAT SURVIVED, stated honestly: weakening drop()'s `!allowed` guard
+  (agent-team: KanbanBoard.svelte:77) is NOT caught, because gating lives
+  upstream in the drag-time `canDrop` (KanbanBoard.svelte:94) — the tests pin
+  the UI behaviour, and server-side legality remains the real authority.
+  Three harness facts recorded in the test file for the next seat: happy-dom
+  has no DragEvent constructor and Event.target is read-only (dispatch a
+  bubbling plain Event with dataTransfer attached; the dispatcher IS the
+  target); the stubbed Response MUST fill text() not json() (api.ts request()
+  reads text()); a column's aria-label appears while loading is still true, so
+  wait for the article, not the heading — the first run of test 4 passed on a
+  skeleton frame.
+  MEASURED at 0992598 (merged tip): vitest 291/291 over 21 files (+5; 286
+  baseline), `npx tsc --noEmit` EXIT 0 with 0 errors — the standing bar is met,
+  the previously documented 7-error debt no longer reproduces; vite build green
+  (1.84 s); pytest 285/285; manage.py check "no issues (0 silenced)";
+  makemigrations --check "No changes detected". docs/DEVGUIDE.md: counts 286 ->
+  291 (:116, :144) and the kanban contract row now names the mounted proof
+  (:241-246).
+  STILL OPEN, unchanged and not closable here: no browser/Tauri window, so no
+  human dragged a card with a mouse — this is rendered-DOM evidence under
+  happy-dom. State untouched (stays PENDING; DONE is Lead's gate); no other
+  item's state changed; no completion claim.
+  Lark SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's env.
 - State "PENDING" from "ONGOING" [2026-10-20 Tue 21:33]
 - Note taken on [2026-10-20 Tue 21:33] :: :DELIVERED: ai/turn-20261020-2122@a3c2150
   — :RESULT: DONE for WORK ORDER item 7. What landed (client only, no server
