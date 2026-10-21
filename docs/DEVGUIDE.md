@@ -549,15 +549,19 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   stripped, and PRINTS both banners instead of hiding them: the normalization is
   justified by a documented intent difference, not chosen to make the diff pass.
   What the segment found, all measured rather than reasoned about:
-  1. **Filter the matrix through the validator, then read the refusals.** "Both
+  1. **Filter the matrix through the validator, then PIN each refusal.** "Both
      writers agree" only means something over the domain where both are
-     contracted to run, so the script generates 350 brands and keeps the 300
-     `validate_brand()` accepts. The refused 50 are counted, not dropped in
-     silence. Surprises here are real: `"\tTabbed Font\t"` is ACCEPTED (the
+     contracted to run, so the script generates 350 brands and keeps the ones
+     `validate_brand()` accepts. Counting the refused half is not enough — see
+     ELEVENTH law below, where a loosened radius rule moved 3 brands across that
+     line and the harness still said `BYTE-IDENTICAL`. Each sentinel now carries
+     the verdict the server owes it and the leg checks it row by row. Surprises
+     here are real: `"\tTabbed Font\t"` is ACCEPTED (the
      server matches `SAFE_FONT_RE` against `font.strip()`, `plugin/src/admincraft/branding.py:190`) and
      the client strips the same tabs via `sanitizeFont()` — so a brand that looks
      invalid in the accepted column is not a divergence, and the only way to know
-     was to run it.
+     was to run it. It now sits in `VALID_FONTS`, where the finding actually puts
+     it, and keeps its twin coverage.
   2. **A sentinel must vary one axis at a time, and the font axis earns its
      keep.** `render_css()` writes `font.replace(" ", "+")`; `brandToCss()` runs
      `encodeURIComponent()` and turns `%20` back into `+`. Those agree for every
@@ -572,7 +576,11 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
      from it, the user sees the UI re-theme under them — the FOUC the static
      bundle exists to prevent, and no unit test on either writer can see it,
      because each is green against its own fixture. The script asserts
-     `bundle == render_css == brandToCss` for the shipped brand.
+     `bundle == render_css == brandToCss` for the shipped brand — and locates
+     that brand BY IDENTITY in the accepted set, never by position (ELEVENTH law:
+     a positional `runtime_css[-1]` once compared the shipped brand's build-time
+     CSS against an unrelated random brand and called the difference a re-theme
+     flicker).
   Negative control, before the green meant anything: dropping one `@import`
   weight from the client → `TWIN DIVERGENCE — 300 of 300`, line 0 quoted per
   side; the `%20` server mutant above → 146; editing the shipped
@@ -682,7 +690,8 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   quoting the harness's own `npm install` line; rc 0 with no output → RED
   `exit 0 alone never proved the compare happened`; rc 3 → CANNOT RUN naming the
   contract break; both twins clean → green. `--fe` rc 0 measures 299 pytest /
-  416 vitest / csv 3070 cells 56287 B / brand 300 accepted brands / parity 226 B
+  416 vitest / csv 3070 cells 56287 B / brand 302 accepted brands over a pinned
+  population of 350 / parity 226 B
   golden, on `/usr/local/bin/python3` with django 5.2.18.
 - **NINTH harness law — a RELEASE procedure is a set of facts about files, and
   files rot silently.** AGENTS.md *Releases* promises "bump the version in ALL
@@ -757,6 +766,60 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   grown to 127 lines → 1 `line allowlist is stale`, because the one exempted
   citation quotes THIS harness's own reject message rather than naming a
   location, and an exemption may not outlive its reason.
+- **ELEVENTH harness law — a printed COUNT is not an EXPECTATION, and an artifact
+  found by POSITION is not that artifact.** The brand twin went into the landing
+  gate last segment, and the gap reported then ("count the POPULATION in the
+  output, not just the success word") was attributed to the wrong cause, so this
+  segment measured the harness instead of repeating the story. It never reads
+  `app/brands/` at all — only `app/public/brand.css` and `app/public/brand.json`,
+  which is why hiding `app/brands/default/brand.json` changed nothing: that verdict
+  was honest about the inputs it actually had. The blind spots are real, but they
+  were three other doors, each measured on this tree and each restored
+  byte-identical:
+  1. **A shrunken matrix still passed.** Deleting 7 of the 11 legal font sentinels
+     answered `BYTE-IDENTICAL — 296 accepted brands`, rc 0. The deleted rows
+     included the double-space case THIS document names as the one that caught a
+     real divergence (SIXTH law: the percent-20 mutant diverged on 146 brands,
+     exactly the multi-word ones). Coverage for a known past bug vanished and the
+     harness called it green, because nothing pinned what the matrix owes.
+  2. **A softened schema is invisible on any axis both writers render passively.**
+     Loosening `RADIUS_RE` (`plugin/src/admincraft/branding.py:32`) to take unitless
+     values and `12 pt` moved 3 brands from refused to accepted and answered
+     `BYTE-IDENTICAL — 303 accepted brands`, rc 0. The font axis looked protected
+     only by accident: `brandToCss()` sanitizes an exclamation mark away while
+     `render_css()` does not, so that mutant tripped a true twin divergence rather
+     than any schema leg. The refusal count moved 50 → 47 and nobody questioned it.
+  3. **Position is not identity.** The shipped brand was read as the LAST item of
+     the accepted set, which is only true while the server accepts it. Make
+     `app/public/brand.json` illegal, match its bundle to it, and leg 4 passes while
+     leg 5 compares the shipped brand's CSS against an unrelated random brand and
+     prints `HANDOFF DIVERGENCE — … a visible re-theme flicker`: a confident verdict
+     about a pair that was never the same brand. That is TENTH law's "a resolver
+     that GUESSES files a confident verdict about the wrong file", arriving at my own
+     harness from the identity side.
+  THE FIX: every sentinel carries the verdict the server OWES it; the sentinel
+  population is pinned twice — a literal AND the sum of the `VALID_*`/`BAD_*`
+  lists, which must agree — so silent truncation is impossible and a deliberate
+  change is a two-place edit; the shipped brand is found by equality against the
+  accepted set or the leg refuses. A population mismatch is exit 2 (the harness
+  does not understand its own matrix, so there is no verdict to report); a flipped
+  pinned verdict is exit 1 RED naming the row, because a closed schema that stopped
+  biting is a product regression, not a tooling gap.
+  CONTROLS: 2 legal fonts deleted → rc 2 `the matrix disagrees with itself: 49
+  sentinels in the literal, 47 derived`; 1 row dropped from the builder alone → rc 2
+  `MATRIX TRUNCATED: 48 sentinels built against a literal of 49`; the radius
+  mutant → rc 1 naming all three rows; an illegal shipped brand with a matched
+  bundle → rc 1 `LEGAL BRAND REFUSED — SHIPPED app/public/brand.json` plus the
+  server's own error string, and the invented flicker verdict is gone. The green run
+  measures 350 candidates, 49/49 sentinels, 50/50 pinned verdicts matched, 302
+  accepted / 48 refused — and the accepted count moved 300 → 302 purely because a
+  legal font entered the random draw pool: `random.choice()` rejection depends on
+  sequence length and re-consumes bits, so a whole seeded sample shifts. A count
+  that can change for a reason like that is exactly why an expectation must be
+  pinned per row and never by a number in the output.
+  SEAT RULE for a merged harness: mapping its exit codes is not enough. Ask what it
+  prints when half its matrix is gone AND what it prints when the promise it checks
+  is weakened. If either answer is a success word, that leg proves nothing.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
