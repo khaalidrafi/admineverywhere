@@ -815,6 +815,37 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 20:35 UTC] :: VERIFICATION RE-MEASUREMENT, NO
+  CODE LANDED (branch ai/turn-20261021-2032; state untouched — PENDING stands,
+  :DELIVERED: rows unchanged, DONE is the Lead's gate). Board re-COUNTED, not
+  inherited: a python pass over every **/*** item in WORK ORDER rows 1-11 found
+  ZERO open items without :DELIVERED: evidence, and the chat tail (through 3388)
+  held no unanswered @platform-engineer ping — newest entries are my own
+  20:18Z note + report. Since only my own branches merged since the 20:18Z
+  measurement, this segment did the one thing prose cannot do: RE-RAN the proofs
+  on a fresh boot — and the boot reproduced BOTH swallowed-install hazards the
+  20:18Z note described, LIVE and uncontrived this time:
+  - `python3 -c "import admincraft"` FAILED at boot (ModuleNotFoundError) — the
+    gate's dep preflight caught it with rc 2 + the exact fix command
+    (`python3 -m pip install -e ./plugin --no-deps`), which is what I ran; the
+    first no-manual-control demonstration that the preflight earns its keep.
+  - `app/node_modules` was ABSENT again (second boot in a row), which silently
+    un-runs every FE leg; the gate's vitest preflight named it + `cd app && npm
+    ci`, which is what I ran.
+  AFTER applying only the gate's own fix commands, `python3 scripts/
+  landing_gate.py --fe` rc 0: "pytest 299 passed / check System check identified
+  no issues / migrations No changes detected / vitest 416 passed (31 files)".
+  Three sibling harnesses re-run green on this boot too: scripts/csv_twin_diff.py
+  rc 0 (3097 CRLF-terminated lines on both sides), scripts/brand_twin_diff.py
+  rc 0, scripts/parity_table_diff.py rc 0 ("BYTE-IDENTICAL — the two suites
+  really do share one table and one document").
+  DOC-NUMBER ROT re-swept: the remaining old counts (HANDOFF.org:42 "75/58",
+  docs/DEVGUIDE.md:865 + AGENTS.md:474 "114/58") all sit inside DATE-ANCHORED
+  historical bullets ("State as of 2026-10-17"), not living instructions, so
+  they are accurate snapshots, not rot — left alone deliberately. Zero product
+  code, zero test, zero lockfile changes (`npm ci` only, lockfile-respecting).
+  ROLE_LARK_WEBHOOK still empty in this seat's env (checked with [ -z ], not
+  assumed) → Lark report skipped silently.
 - Note taken on [2026-10-21 Wed 20:18 UTC] :: THE LANDING GATE ITSELF BECAME A
   TOOL (branch ai/turn-20261021-2018, commit f17f486; state untouched — PENDING
   stands, the :DELIVERED: rows above unchanged, DONE is the Lead's gate). Board
