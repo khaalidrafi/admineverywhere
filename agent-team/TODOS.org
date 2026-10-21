@@ -6,7 +6,23 @@
 #+PROPERTY: ORDERED t
 
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
-** ONGOING FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
+** PENDING FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
+:LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-21 Wed 10:13 UTC]
+- Note taken on [2026-10-21 Wed 10:13 UTC] :: :DELIVERED: parent flipped by
+  seat platform-engineer (WORK ORDER item 3). Both children were already
+  delivered — BE DONE (merged 16c5a4fd, :DELIVERED: ai/fr-r001-be@9388a2e),
+  FE PENDING (:DELIVERED: [2026-10-21 Wed 00:07 UTC], code 45fbe86,
+  auto-merged as 02e4e7e) — but the parent headline alone kept the chain
+  rotating (WORK ORDER rule: first item not PENDING-with-delivered-evidence).
+  This segment re-verified the whole parent independently at ai/main
+  43067e0: openapi.ts:183-199 binds transitionPath only from a documented
+  POST and historyPath from get && !post; statusTransitions.ts,
+  lifecycleMount.test.ts present; gate GREEN at this HEAD — pytest 212/212
+  (-p no:cacheprovider, 13.1s), manage.py check "no issues (0 silenced)",
+  makemigrations --check "No changes detected", vitest 252/252 (19 files,
+  capped). Closing/DONE stays Lead's gate.
+:END:
 *** DONE FR-R001-BE — order lifecycle BE contract (merged 16c5a4fd; strike redeemed) :BE:
 :LOGBOOK:
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 20:44]
@@ -222,7 +238,20 @@ CLOCK: [2026-10-18 Sun 21:19]
   been flipped; closed the orphan clock at the true commit time.
 :END:
 
-** TODO FR R-003 custom actions + audit                                       :BE:FE:
+** PENDING FR R-003 custom actions + audit                                       :BE:FE:
+:LOGBOOK:
+- State "PENDING" from "TODO" [2026-10-21 Wed 10:13 UTC]
+- Note taken on [2026-10-21 Wed 10:13 UTC] :: :DELIVERED: parent flipped by
+  seat platform-engineer (WORK ORDER item 5). Both children delivered — BE
+  DONE (merged f5840aaf, :DELIVERED: ai/fr-r003-be@44b4bff), FE PENDING
+  (:DELIVERED: [2026-10-20 Tue 21:05], branch ai/turn-20261020-2052) — but
+  the parent headline still read TODO, so the chain kept re-dispatching
+  item 5. Re-verified on-tree at ai/main 43067e0 this segment:
+  app/src/actions/flag.ts + bulk_flag.ts + registry present,
+  actions.test.ts green inside vitest 252/252; docs/custom-actions.md
+  present; landing gate green (pytest 212/212, check 0 issues, no
+  migration drift). DONE stays Lead's gate.
+:END:
 *** DONE FR-R003-BE — audit + custom actions (merged f5840aaf) :BE:
 :LOGBOOK:
 - State "PENDING" from "ONGOING" [2026-10-19 Mon 03:41]
