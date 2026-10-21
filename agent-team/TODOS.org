@@ -847,7 +847,8 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
     split into one "line" and looked divergent; compare read_bytes().
   - Docs: docs/csv-export.md §6 gained the command + the exit-code contract +
     the compare-documents caveat; docs/DEVGUIDE.md gained the FIFTH law and the
-    Commands block gained the one-liner. Verified claims: `npx tsc --noEmit`
+    Commands block gained the one-liner; AGENTS.md Commands points at the
+    command too (commits 8867cbb + a09dd0e). Verified claims: `npx tsc --noEmit`
     exit 0 (the standing 0-error bar holds), vitest 416, pytest 299
     (-p no:cacheprovider), manage.py check "no issues (0 silenced)",
     makemigrations --check "No changes detected".
