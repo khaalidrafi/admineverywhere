@@ -167,6 +167,13 @@ requests once the actions are stripped from the schema.
   the R-001 `transition`/`history`, the R-003 `flag`/`bulk_flag`/`audit`, the
   R-005 `export` and the R-007 `me`). Recapture it whenever the rig gains an
   endpoint — a client test that passes against a document the server no longer
-  answers is not proof.
-- Suites: `pytest` 212 (`python -m pytest plugin/tests -p no:cacheprovider -q`),
-  `vitest` 252 (`cd app && npm test`).
+  answers is not proof. That duty is now a gate, not prose:
+  `plugin/tests/test_schema_drift.py` regenerates the schema in a subprocess
+  under the rig's own `core.settings` and fails the pytest suite on any drift
+  between the rig and the fixture (paths and component schemas compared
+  key-by-key, plus witnesses that `COMPONENT_SPLIT_REQUEST` and the four
+  evidence-law endpoint shapes are still documented). Note it must use the
+  subprocess: the in-process rig scope in `plugin/tests/conftest.py` omits
+  `COMPONENT_SPLIT_REQUEST`, so an in-process generation differs from the
+  fixture on 12 of 13 paths and cannot guard the capture.
+- Suites: `pytest 285` / `vitest 283` (`cd app && npm test`).

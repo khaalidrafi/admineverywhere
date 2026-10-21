@@ -163,7 +163,9 @@ and both action request bodies are documented automatically
 - `seed_demo` does not fabricate audit entries; the log fills as actions run.
 - The OpenAPI fixture used by the client's normalizer tests
   (`app/src/lib/__tests__/fixtures/openapi.json`) is recaptured from the live
-  rig, so it carries the audit registration. Nothing in the FE builds the log
+  rig, so it carries the audit registration — and the capture is guarded:
+  `plugin/tests/test_schema_drift.py` fails the pytest suite when the rig's
+  real-settings schema drifts from the fixture (see `docs/order-lifecycle.md`). Nothing in the FE builds the log
   URL from a string: action calls come from `model.listPath` through
   `actionPath()`, and `fetchAudit()` takes the `listPath` that
   `findAuditModel()` resolved from the document — with no audit model in the
