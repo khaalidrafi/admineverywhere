@@ -202,6 +202,36 @@ regression in the rendering rule goes red on one side and names itself.
   `datetime` vs its `Z` string); the asserted BYTE STRING is what must match. Exit
   0 / 1 / 2 as above; it parses both files instead of importing them, so it needs
   `node` but no `node_modules` and no venv. See docs/DEVGUIDE.md, SEVENTH law.
+- BOTH harnesses pin their own POPULATION (2026-10-21), because a byte compare is
+  structurally blind to its own coverage. `csv_twin_diff.py` feeds ONE matrix to both
+  writers, so shrinking the matrix cannot make them disagree — measured before the
+  pins: 5 sentinels deleted (both line-breakers, `cr\rhere`, and the `=SUM`/`+cmd`
+  guard leads, i.e. the cells §2 credits with divergences #1 and #2) answered
+  `BYTE-IDENTICAL — 3065 cells`, rc 0, against the honest 3070. `parity_table_diff.py`
+  compares two COPIES, so a row deleted from both still compares equal — measured: the
+  `1e-7` row gone from both files answered `FLOAT_PARITY: 24 rows, identical values AND
+  expectations`, rc 0, against the honest 25. Now each carries a literal population
+  (`EXPECTED_SENTINELS`/`EXPECTED_FLOATS`, `EXPECTED_ROWS`) that must agree with the
+  lists / parsed rows, and the rows holding a RECORDED divergence are pinned one by one
+  by identity: floats by IEEE-754 bytes, never by equality, since `0.0 == -0.0` in
+  Python cannot tell a matrix that kept negative zero from one that lost it; the golden
+  document by required substrings (`2026-10-20T21:00:00Z`, `'=HYPERLINK`,
+  `"Gizmo, big"`, `-5.00`, `1e-7`) rather than by length, which a re-wrap legitimately
+  moves. The verdict split matches the brand twin: population disagrees with its pin →
+  exit 2 `CANNOT RUN` (the harness does not understand its input, so there is no
+  verdict); a pinned row vanished → exit 1 RED naming the row and the promise it
+  carried (a proof regression, not a tooling gap). Controls, each restored
+  byte-identical: 5 sentinels deleted → 2 `43 sentinels in the literal, 38 built`; one
+  NON-required sentinel → 2 at 42-vs-43 (only the literal can see it); `build_matrix`
+  dropping a float while both lists stayed honest → 2 `MATRIX TRUNCATED: 3069 cells
+  built against 3070 expected`; `1e-7` → `1e-8` swapped on BOTH sides with 25 rows
+  intact → 1 `COVERAGE LOST … python copy lost 1e-07` naming both copies; the guard
+  dropped from both golden literals → 1 naming `'=HYPERLINK` in each. A line COUNT is
+  not a row count: the first attempt pinned `cells + 1 == CRLF lines` and went RED on
+  the honest run, because 3070 cells ride 3097 lines — a quoted cell may contain CRLF —
+  so the compare's coverage is pinned by row IDENTITY (column 0 is the index the probe
+  was handed, so the last matrix index must appear as its own record).
+  See docs/DEVGUIDE.md, ELEVENTH law.
 
 - `plugin/tests/test_csv_export.py` — writer byte rules, formula guard both
   shapes, line-level ordering, childless parents, search honoured, no

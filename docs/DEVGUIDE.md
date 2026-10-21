@@ -150,7 +150,7 @@ node scripts/mock_openai.js                 # listens on :11435
 
 # FR-R005 cross-twin CSV byte diff (needs app/node_modules; layer 2 probes
 # demo-backend/.venv/bin/python then the running interpreter — no venv required)
-python3 scripts/csv_twin_diff.py            # 0 = identical, 1 = divergence, 2 = rig not runnable
+python3 scripts/csv_twin_diff.py            # 0 = identical, 1 = divergence or coverage lost, 2 = cannot run
 
 # brand CSS twin byte diff — render_css() ↔ brandToCss() ↔ the shipped bundle
 # (needs app/node_modules; the plugin is read from plugin/src, no venv required)
@@ -158,7 +158,7 @@ python3 scripts/brand_twin_diff.py          # 0 = identical, 1 = divergence, 2 =
 
 # FR-R005 SHARED-TABLE diff — FLOAT_PARITY + the golden literal, pytest side vs vitest side
 # (parses both files; needs `node`, but NOT node_modules and NOT the rig venv)
-python3 scripts/parity_table_diff.py        # 0 = identical, 1 = divergence, 2 = cannot run
+python3 scripts/parity_table_diff.py        # 0 = identical, 1 = divergence or coverage lost, 2 = cannot run
 
 # the LANDING GATE as one command — pytest + manage.py check + makemigrations --check,
 # behind a dep preflight (see EIGHTH harness law: a swallowed boot install must not
@@ -508,7 +508,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   would have filed a divergence that never happened (measured:
   `PATH=/nonexistent python3 scripts/csv_twin_diff.py` → traceback, 1). Now a
   launch failure is caught into a synthetic 127 and reported as exit 2, in both
-  harnesses (`scripts/csv_twin_diff.py:109` `run()`,
+  harnesses (`scripts/csv_twin_diff.py:248` `run()`,
   `scripts/brand_twin_diff.py` `run_client_probe()`); a harness with three
   documented exit codes has to prove each of them, not just the green one.
   Fourth control, same trap from the OTHER side: a false BLOCKED. An exit 2 is
@@ -766,6 +766,17 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   grown to 127 lines → 1 `line allowlist is stale`, because the one exempted
   citation quotes THIS harness's own reject message rather than naming a
   location, and an exemption may not outlive its reason.
+  THIRD DOOR, MEASURED ON THIS DOCUMENT: **in range is not on target.** Until this
+  pass DEVGUIDE cited `scripts/csv_twin_diff.py:109` for `run()`, while line 109 of
+  that commit was the closing `"""` of `CLIENT_SPEC` and `run()` started at 126 (248
+  now, after the population pins landed). A bounds check cannot see this class at all —
+  the number is inside the file, so the leg is green while the citation sends the reader
+  to unrelated code, and every edit that MOVES code silently ages the number. Writer
+  rule: cite a SYMBOL a reader can grep, or re-measure the number in the same commit
+  that moves the code. Harness candidate, deliberately NOT built this segment (scope):
+  a leg that compares the cited line against a keyword from the prose around the
+  citation — fuzzy enough that it would need its own false-red controls first, and a
+  leg that guesses is worse than no leg (same finding as the resolver rule above).
 - **ELEVENTH harness law — a printed COUNT is not an EXPECTATION, and an artifact
   found by POSITION is not that artifact.** The brand twin went into the landing
   gate last segment, and the gap reported then ("count the POPULATION in the
@@ -820,6 +831,44 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   SEAT RULE for a merged harness: mapping its exit codes is not enough. Ask what it
   prints when half its matrix is gone AND what it prints when the promise it checks
   is weakened. If either answer is a success word, that leg proves nothing.
+  A TWO-COPY COMPARE IS THE WEAKEST POPULATION PIN OF ALL. The same segment measured
+  the two sibling twins, and both had the door the brand twin's story had described
+  (wrongly): `csv_twin_diff.py` builds ONE matrix and feeds it to BOTH writers, so a
+  truncated `SENTINELS` list cannot make them disagree — it only makes them agree over
+  less. Deleting 5 sentinels (both line-breakers, `cr\rhere`, and the `=SUM`/`+cmd`/`-`
+  guard leads — the cells `docs/csv-export.md` §2 credits with divergence #1 and #2)
+  answered `BYTE-IDENTICAL — 3065 cells`, rc 0, against an honest 3070.
+  `parity_table_diff.py` compares two COPIES of `FLOAT_PARITY`, so a row deleted from
+  both still compares identical: dropping the `1e-7` row from both files answered
+  `FLOAT_PARITY: 24 rows, identical values AND expectations`, rc 0, against an honest 25.
+  Neither verdict was wrong about what it ran; both were silent about what stopped
+  existing. THE FIX, in both: the population is pinned twice — a literal
+  (`scripts/csv_twin_diff.py:103`, `scripts/parity_table_diff.py:86`) AND the lists /
+  parsed rows it describes, which must agree — and the rows carrying a RECORDED
+  divergence are pinned individually by identity. Floats are keyed by their IEEE-754
+  bytes, never by equality or a dict, because `0.0 == -0.0` in Python would collapse
+  negative zero into plain zero — the exact pair the table exists to distinguish; and
+  one renderer (`scripts/csv_twin_diff.py:190` `cell_text()`) is shared by the builder
+  and the check, so the check cannot re-implement the builder's spelling and then
+  report its own drift as a truncation.
+  A LINE COUNT IS NOT A ROW COUNT: the first attempt pinned `cells + 1 == CRLF lines`
+  and went RED on the honest run — 3070 cells ride 3097 lines, because a quoted cell
+  may contain CRLF. The coverage pin is therefore IDENTITY (column 0 is the row index
+  the probe was handed, so the matrix's last index must appear as its own record), not
+  arithmetic on the delimiter.
+  CONTROLS, each restored byte-identical: 5 sentinels deleted → rc 2 `the matrix
+  disagrees with itself: 43 sentinels in the literal, 38 built`; one NON-required
+  sentinel deleted → rc 2 at 42-vs-43 (only the literal can see that one);
+  `build_matrix` dropping a float while both lists stayed honest → rc 2 `MATRIX
+  TRUNCATED: 3069 cells built against 3070 expected`; the `1e-7` row deleted from both
+  copies → rc 2 (population first); `1e-7` SWAPPED for `1e-8` on both sides, 25 rows
+  intact, coverage moved → rc 1 `COVERAGE LOST … python copy lost 1e-07 (…)` naming both
+  copies — the case only a per-row identity catches; the formula guard dropped from both
+  golden literals → rc 1 naming `'=HYPERLINK` in each.
+  THE SAME VERDICT SPLIT AS THE BRAND TWIN: a coverage row that vanished is RED (the
+  twins still agree, over less than the proof claims — a proof regression, not a tooling
+  gap), while a matrix that no longer matches its own pin is `CANNOT RUN` (the harness
+  does not understand its own input, so it has no verdict to give).
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
