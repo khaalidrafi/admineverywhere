@@ -60,7 +60,14 @@ Product constraints — do not relax:
   of superusers can prove acceptance but never a hidden button. The
   activity screen (`app/src/pages/Activity.svelte`) is just an R-006
   drop-in reading the R-003 audit model through its schema-discovered
-  `listPath` (`findAuditModel`), never a hand-written `/api/audit/`.
+  `listPath` (`findAuditModel`), never a hand-written `/api/audit/` — and the
+  same refusal binds the record sub-view: `fetchAudit()` takes the discovered
+  path as its ONLY source of the URL and throws (zero requests) when the
+  document has no audit model, so `ModelPage.showHistory()` skips the log half
+  instead of probing a guess and tolerating the 404; a guessed
+  `/api/audit/` could answer another app's endpoint and be rendered as this
+  record's trail, silently. Wire-pinned by
+  `app/src/lib/__tests__/lifecycleMount.test.ts`.
   Contract + copy checklist: `docs/rbac.md`.
 - New page (non-CRUD module) = drop one `.svelte` file in `app/src/pages/`
   exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`
