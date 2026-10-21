@@ -65,7 +65,7 @@ Save — whole app, new identity, one second, no rebuild.
 | `frontend-dist/` | stub for the Nix flake input — the repo ships no prebuilt web assets |
 | `docs/` | E2E screenshots |
 | `.github/workflows/` | `build-all.yml` — live CI: test gate + six build legs + tag-triggered releases (`build-demo.yml.disabled` — the old parked demo-CI) |
-| `AGENTS.md` | repo-specific agent notes — constraints, hard-won contracts, commands, current state |
+| `docs/DEVGUIDE.md` | repo dev guide (moved from AGENTS.md 2026-10-21 — a repo-root AGENTS.md is never created): constraints, hard-won contracts, commands |
 | `flake.nix` | Nix package — `rustPlatform.buildRustPackage` + `cargoLock` (nixpkgs manual recipe) |
 | `guix.scm` | Guix package — `gnu-build-system`, vendored Cargo, offline `--frozen` (Guix manual recipe) |
 
