@@ -199,17 +199,36 @@ describe("LeaderBars", () => {
     expect(host.textContent).toContain("Order · status");
   });
 
-  it("caps the caption at the fetched row total — 50 rows here", async () => {
+  it("names the rows it grouped, without claiming a cap that was not applied", async () => {
     boot(SCHEMA);
     const rows = Array.from({ length: 50 }, (_, i) => ({ id: i, status: i % 2 ? "pending" : "paid" }));
     mockFetch.mockResolvedValue(jsonReply({ count: 50, results: rows, next: null }));
     const host = await render(LeaderBars);
     await paint(host, () => host.textContent!.includes("records"));
-    // NOTE (suspected copy bug, pinned as-measured, NOT fixed here): the
-    // caption prints the row TOTAL under the word "first" — with a rowCap
-    // above the count these agree, so "first N records" reads as a cap claim
-    // the number does not make. Flagged to @lead in the segment report.
-    expect(host.textContent).toContain("first 50 records");
+    // The number is the rows aggregated, not a truncation: 50 < the 300 rowCap,
+    // so the old copy "first 50 records" asserted a cap this feed never applied.
+    expect(host.textContent).toContain("grouped from 50 records");
+    expect(host.textContent).not.toContain("first");
+  });
+
+  it("when the rowCap IS the limit the caption names the capped count — 300 from an endless server", async () => {
+    boot(SCHEMA);
+    // Server whose `next` never ends: only a component that genuinely obeys
+    // rowCap stops at 300. A well-behaved fixture would prove the server, not
+    // the guard (14:01Z note), so this one paginates forever.
+    let pages = 0;
+    mockFetch.mockImplementation(async () => {
+      pages++;
+      return jsonReply({
+        count: 99_999,
+        results: Array.from({ length: 100 }, (_, i) => ({ id: `${pages}-${i}`, status: "pending" })),
+        next: `http://api.test/api/orders/?page=${pages + 1}`,
+      });
+    });
+    const host = await render(LeaderBars);
+    await paint(host, () => host.textContent!.includes("records"));
+    expect(host.textContent).toContain("grouped from 300 records");
+    expect(pages).toBe(3); // pageSize 100 × 3 = the default rowCap, then stop walking
   });
 
   it("renders the nameable reason, zero requests, when no enum field can feed it", async () => {
