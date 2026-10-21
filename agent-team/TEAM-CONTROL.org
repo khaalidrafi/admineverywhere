@@ -30,3 +30,4 @@
   finalize posts the chain verdict + this segment's new TEAM-CHAT.org
   entries to secret DISCORD_WEBHOOK_TEAM_ADMINCRAFT (silent until the
   Owner creates the channel webhook and sets the secret).
+#+LAST-BLOCKED-NOTIFY: 0
