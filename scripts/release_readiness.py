@@ -125,8 +125,10 @@ REQUIRED_CLAIMS = {
 # the moment it was written: adding the AGENTS.md *Releases* paragraph, which
 # quotes the same historical `:109` claim, moved this literal 7 -> 8 — the pin
 # fires on its own doc edits, so a deliberate change is a two-place edit and an
-# accidental one is a RED.
-EXPECTED_CLAIMS = 8
+# accidental one is a RED. Measured again the same way: the DEVGUIDE paragraph
+# documenting the landing_gate population pin cites `population()`
+# (scripts/landing_gate.py:112), moving 8 -> 9 in the same commit as the leg.
+EXPECTED_CLAIMS = 9
 
 # `name()` spellings only. Control words that are commonly written with parens in
 # prose (`if (x)`, `for (let i)`) are not claims about the cited code.
