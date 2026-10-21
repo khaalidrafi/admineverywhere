@@ -173,6 +173,18 @@ regression in the rendering rule goes red on one side and names itself.
   guard makes it name every missing apostrophe. Compare DOCUMENTS, not cells —
   `csv_cell` guards before `csv.writer` quotes, while `csvCell` does both, so a
   stage-by-stage diff invents divergences (see docs/DEVGUIDE.md, FIFTH law).
+- Re-runnable harness for the SHARED TABLES too: `python3 scripts/parity_table_diff.py`
+  diffs `FLOAT_PARITY` and the golden document literal between
+  `plugin/tests/test_csv_export.py` and `app/src/lib/__tests__/csv.test.ts`. Each
+  suite is green against ITS OWN copy, so before this script a one-sided edit (a
+  value added, a golden re-wrapped) kept 299 pytest + 416 vitest green while the
+  word "shared" stopped meaning anything. Floats are keyed by their IEEE-754 bytes,
+  never by `str()`/`String()` — the rendering is the claim under test, and the two
+  languages differ in it on purpose (`1e17`). The golden ROWS are deliberately not
+  compared (`Decimal("19.99")` server-side vs the text DRF sent, an aware
+  `datetime` vs its `Z` string); the asserted BYTE STRING is what must match. Exit
+  0 / 1 / 2 as above; it parses both files instead of importing them, so it needs
+  `node` but no `node_modules` and no venv. See docs/DEVGUIDE.md, SEVENTH law.
 
 - `plugin/tests/test_csv_export.py` — writer byte rules, formula guard both
   shapes, line-level ordering, childless parents, search honoured, no
