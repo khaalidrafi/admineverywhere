@@ -143,6 +143,8 @@ cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
 python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence / 2 rig not runnable
+                                            # no venv needed: layer 2 probes .venv/bin/python
+                                            # then this interpreter; --python <exe> forces one
 
 # brand CSS twin byte diff: render_css() ↔ brandToCss() ↔ shipped app/public/brand.css
 python3 scripts/brand_twin_diff.py          # 0 identical / 1 divergence / 2 rig not runnable
