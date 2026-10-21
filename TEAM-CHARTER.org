@@ -56,4 +56,4 @@ FROM: <role> · <model@platform>
 4. VERIFICATION: <step> — GREEN or UNVERIFIED (label every unrun check explicitly)
 5. BLOCKERS / 6. OWNER FLAGS (options, never resolved by members)
 7. PM-PROMPT → <the one instruction wanted next; EM answers it verbatim>
-DISPATCH RULE: reference AGENTS.md (branch, commit identity, test runner) — never repeat it in prompts.
+DISPATCH RULE: reference the team law (agent-team/TEAM-CONTROL.org, agent-team/TEAM.md) and docs/DEVGUIDE.md (branch, commit identity, test runner) — never repeat it in prompts; a repo-root AGENTS.md is never created (Owner 2026-10-21).

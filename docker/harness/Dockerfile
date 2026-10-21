@@ -6,9 +6,10 @@
 # REFRESHED by agent-team.el setup (Owner order 2026-10-21 10:12Z): the
 # pkg's proven recipe merged in — OpenCode + Goose + CodeBuddy bodies
 # (the goose fallback lanes were DEAD before: the old image baked only
-# qoder), and the GLOBAL AGENTS.md CONFIG bakes verified per agent docs
+# qoder), and the GLOBAL AGENT-LAW CONFIG bakes verified per agent docs
 # (OpenCode ~/.config/opencode/AGENTS.md, Goose ~/.config/goose/.goosehints,
-# CodeBuddy ~/.codebuddy/CODEBUDDY.md; Qoder reads repo-root AGENTS.md).
+# CodeBuddy ~/.codebuddy/CODEBUDDY.md — baked from docker/harness/
+# AGENT-LAW.md; a repo-root AGENTS.md is never created in this project).
 # Project deps (Django/DRF/drf-spectacular/cors + pytest) stay baked so
 # the landing gate runs offline-fast inside segments too.
 
@@ -68,24 +69,27 @@ RUN useradd -m -u 1001 agent
 #     Keys are env-interpolated at run time; nothing secret is baked. -------
 COPY docker/harness/opencode.json     /home/agent/.config/opencode/opencode.json
 COPY docker/harness/goose-config.yaml /home/agent/.config/goose/config.yaml
-# Global AGENTS.md = agent law, CONFIGURED into memory (Owner 2026-10-21
-# 08:22Z "configure the agent to load global AGENTS.md"; 09:16Z "read docs
-# for each agent for how they configure global AGENTS.md"). Verified against
+# Global agent law = CONFIGURED into memory (Owner 2026-10-21 08:22Z
+# "configure the agent to load global AGENTS.md"; 09:16Z "read docs for
+# each agent for how they configure global AGENTS.md"). Bake source is
+# docker/harness/AGENT-LAW.md — a repo-root AGENTS.md is NEVER created in
+# this project (Owner 2026-10-21: "It shouldn't be made!"). Verified per
 # each agent's official docs on 2026-10-21:
 #   OpenCode  ~/.config/opencode/AGENTS.md — "applied across all opencode
-#             sessions" (opencode.ai/docs/rules); repo-root AGENTS.md also
-#             rides instructions[] in opencode.json.
+#             sessions" (opencode.ai/docs/rules); repo-root file (where a
+#             project has one of its own) also rides instructions[] in
+#             opencode.json.
 #   Goose     ~/.config/goose/.goosehints is the GLOBAL hints file (goose
 #             config dir, ~/.config/goose/); repo-root AGENTS.md/.goosehints
 #             are additionally read from CWD per session.
 #   CodeBuddy ~/.codebuddy/CODEBUDDY.md is the USER-LEVEL memory file,
-#             "takes effect in all projects"; repo-root AGENTS.md auto-loads
-#             when no CODEBUDDY.md exists (documented backward compat).
-#   Qoder     no global/user rules path documented — repo-root AGENTS.md is
-#             auto-recognized (docs.qoder.com/user-guide/rules); no bake.
-COPY AGENTS.md /home/agent/.config/opencode/AGENTS.md
-COPY AGENTS.md /home/agent/.config/goose/.goosehints
-COPY AGENTS.md /home/agent/.codebuddy/CODEBUDDY.md
+#             "takes effect in all projects".
+#   Qoder     no global/user rules path documented — the team law reaches
+#             it via the dispatch preamble (TEAM-CONTROL.org + TEAM.md
+#             manual pointer); no bake, no repo-root file.
+COPY docker/harness/AGENT-LAW.md /home/agent/.config/opencode/AGENTS.md
+COPY docker/harness/AGENT-LAW.md /home/agent/.config/goose/.goosehints
+COPY docker/harness/AGENT-LAW.md /home/agent/.codebuddy/CODEBUDDY.md
 RUN chown -R agent:agent /home/agent
 
 ENV HOME=/home/agent \

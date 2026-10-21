@@ -8,7 +8,7 @@ UI honest, and the three failure modes with the warning text that names them.
 
 ROADLOG R-002 (`ROADLOG.org:12-15`): *"Independent enums already render as
 independent select fields (schema-driven RecordForm); guardrails: never derive one
-from the other in client code. Doc path: AGENTS.md hard-won contracts. Kanban over
+from the other in client code. Doc path: docs/DEVGUIDE.md hard-won contracts. Kanban over
 them needs R-001/R-004."*
 
 ## 0. What "independent enum" means here
