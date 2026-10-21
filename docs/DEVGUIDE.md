@@ -160,6 +160,11 @@ python3 scripts/brand_twin_diff.py          # 0 = identical, 1 = divergence, 2 =
 # (parses both files; needs `node`, but NOT node_modules and NOT the rig venv)
 python3 scripts/parity_table_diff.py        # 0 = identical, 1 = divergence, 2 = cannot run
 
+# the LANDING GATE as one command — pytest + manage.py check + makemigrations --check,
+# behind a dep preflight (see EIGHTH harness law: a swallowed boot install must not
+# impersonate a red tree). --fe adds vitest; --python <exe> forces one interpreter.
+python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = cannot run
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
@@ -614,6 +619,45 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   files came back byte-identical (`git status` clean). Still a re-verifier, not a
   suite member — it needs `node` but NOT `node_modules` or the venv, because it
   parses the two files instead of importing them.
+- **EIGHTH harness law — a GATE that lives as prose is a check nobody can re-run,
+  and an exit code is only a verdict if the check could start.** The landing gate
+  (AGENTS.md *LANDING GATE*: `pytest plugin/tests -p no:cacheprovider -q` +
+  `manage.py check` + `makemigrations --check`) is the one command every seat runs
+  before pushing, and it existed only as three lines of prose retyped by hand.
+  Two failure modes, both measured this segment, not reasoned about:
+  1. **A launcher bug impersonates a red tree.** The boot install
+     (`pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true`,
+     `.turn-inside.sh:16`) hides its own failure — a standing escalation
+     (19:59Z/20:09Z reports) in a Lead-owned file — so on this box the pytest leg
+     died with INTERNALERROR `No module named 'admincraft'`, and pytest's exit
+     code for that is **2**: the same number the harnesses use for "cannot run"
+     and a seat reads as "my work is red". The gate is fixable seat-side even
+     though the runner is not: `scripts/landing_gate.py` probes
+     `import django, rest_framework, drf_spectacular, admincraft` first and, on
+     failure, exits 2 printing the interpreter, the missing module and the exact
+     install command.
+  2. **`rc 0` is not the claim.** `manage.py check` answers 0 without proving the
+     rig booted, so that leg asserts the phrase `System check identified no
+     issues` in its own output; the pytest leg parses `N passed` out of the `-q`
+     summary and refuses a green rc that carries no pass count or names a
+     failure; `makemigrations --check` must print `No changes detected`. A leg
+     that exits 0 while its summary contradicts it is RED, not green — that is
+     the same false-green class as the renamed `FLOAT_PARITY` that still printed
+     BYTE-IDENTICAL (SEVENTH law, trap 3), arriving from the exit-code side.
+  Controls measured, each restoring the tree (`git status` clean on every touched
+  path): dep-free interpreter → 2 naming `ModuleNotFoundError: No module named
+  'django'` + the fix; nonexistent `--python` → 2 `cannot launch` (the FIFTH
+  law's 127-trap — a launch failure is never reported as divergence);
+  `app/node_modules` absent → 2 naming `npm ci`; one deliberately failing test →
+  1 naming pytest, reported as `1 failed, 299 passed`, while the other legs stayed
+  green and printed (legs run INDEPENDENTLY on purpose, so a seat sees the whole
+  picture instead of the first failure hiding the rest); a temporary model field
+  with no migration → 1 naming the migrations leg AND 78 pytest errors, which is
+  the bonus finding: the gate's prose implies three independent checks, and the
+  rig's fixtures couple leg 1 to the schema, so a schema change must be run
+  through all three, never "just" the migrations check. The verdict prints the
+  interpreter it used — `NAME THE ENVIRONMENT THAT PROVED IT` (20:09Z note), now
+  applied to my own tool rather than only asked of peers.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
@@ -693,7 +737,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
 ## CI — build-all, live
 
 `.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
-(vitest 58 + pytest 175, plus a CSP-hygiene check on the shipped
+(vitest 416 + pytest 299 as measured 2026-10-21 — the workflow header comment
+at `.github/workflows/build-all.yml:4` still quotes 58/114 and is Lead-owned, so
+it is cited rather than edited; plus a CSP-hygiene check on the shipped
 tauri.conf.json) runs FIRST and every build leg `needs:` it, so a
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
 (.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
