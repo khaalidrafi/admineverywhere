@@ -1750,3 +1750,115 @@
   .github/scripts/* — read and cited only; lines 509/519 and 64-65/752-753 of
   agent-team.yml were READ to establish what the seat boot does and does not
   install).
+
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 12:59 UTC]
+:END:
+  RESULT: DONE — FR R-004's last closable evidence row ("proven by the pure
+  module + build + live API, not by a rendered component") is now backed by a
+  mounted board, and a stale "DOM tests are blocked by the harness" claim on
+  FR-R003-FE is corrected.
+  WHY THIS SEGMENT: the work order is exhausted (zero TODO/ONGOING/WAIT
+  headlines on the board, `grep -nE '^\*+ .*(TODO|ONGOING|WAIT)'
+  agent-team/TODOS.org` = no hits) and the chat tail held no unanswered
+  @platform-engineer ping — the newest entry is still my own 12:42Z thread, and
+  my harness :request: has not drawn a verdict yet. Instruction 2, so I took
+  the smallest verifiable improvement that serves the objective.
+  FINDING THAT MADE IT POSSIBLE: R-004's open row is justified by "the mount()
+  harness limitation the item-5 report filed still blocks DOM-level component
+  tests". That is out of date. FR-R006 landed the enabler (app/vite.config.ts
+  resolve.conditions ["browser"] + server.deps.inline [/svelte/], documented in
+  that file's comment) and lifecycleMount / chatMount / dashboardMount /
+  widgetMount / shell mount real .svelte components today. The gap was the
+  board, not the harness.
+  WHAT LANDED (branch ai/turn-20261021-1248):
+  - app/src/lib/__tests__/kanbanMount.test.ts — NEW, 5 tests, ModelPage + the
+    real KanbanBoard mounted against the captured fixture, wire-level law
+    (assert the URL and body the component actually produced):
+    1. the view toggle fires a second list request with page_size=100 on the
+       DISCOVERED listPath; all four declared columns render, empties included.
+    2. keyboard path: a pending card's select exposes paid enabled and
+       pending/shipped/refunded disabled; choosing it POSTs exactly
+       {"transition":"paid"} to http://api.test/api/orders/7/transition/ and the
+       card re-renders into "paid column, 1 record".
+    3. drag/drop: drop on the shipped column sends ZERO requests; the same pair
+       on paid fires exactly ONE transition POST with the same one-key body.
+    4. a record with an undeclared status ("void") lands in "Unassigned column,
+       1 record" — visible, not draggable, select disabled.
+    5. negative: strip orders.transitionPath and resolveAxis returns null, so
+       no toggle, no /transition/ probe, no toast, table still renders.
+  - docs/DEVGUIDE.md: vitest counts 286 -> 291 (:116, :144) and the kanban
+    contract row now names the mounted proof (:241-246).
+  - agent-team/TODOS.org: :LOGBOOK: note under FR R-004 (mechanism, negative
+    control, three harness gotchas) and a correction note under FR-R003-FE so
+    nobody re-reads the blocked-mount row as current.
+  NEGATIVE CONTROL (the 10:55 note on R-003-FE records a false pass, so I ran
+  the mutants): dropping pageSize in ModelPage -> test 1 fails; making
+  reachableColumns ignore the state machine -> test 2's option matrix fails.
+  One MUTANT SURVIVED and I say so rather than overselling: weakening the
+  `!allowed` guard in KanbanBoard.svelte:77 is not caught, because gating lives
+  upstream in the drag-time canDrop (:94) — the tests pin the UI behaviour, the
+  server stays the authority on legality.
+  MEASURED at 0992598: vitest 291/291 over 21 files; `npx tsc --noEmit` EXIT 0
+  with 0 errors — the previously documented 7-error debt does not reproduce, so
+  the standing bar is met; vite build green (1.84 s); pytest 285/285;
+  manage.py check "no issues (0 silenced)"; makemigrations --check "No changes
+  detected".
+  NEXT / WHAT REMAINS: (1) every "nobody clicked it in a real window" row is
+  still yours or the Owner's — this box has no browser/Tauri, so this is
+  rendered-DOM evidence under happy-dom, not a human click. (2) The harness
+  one-liner from my 12:42Z :request: (HOME split at agent-team.yml:509 vs :519,
+  plus a missing seat-side `npm ci`) is still unlanded; three consecutive
+  segments including this one had to self-install before the gate could run.
+  (3) BOARD: no state flipped, nothing taken to ONGOING, DONE stays your gate,
+  OBJECTIVE-STATE untouched, NO completion claim from this seat.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's env (noted in the
+  LOGBOOK per instruction 8).
+  SECRET LAW held: no credential value read, echoed or committed. No lead-owned
+  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/* — read and cited only).
+
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 12:59 UTC]
+:END:
+  FOUR GOTCHAS for anyone writing a mounted .svelte test — each cost me a red
+  run here, all measured in this container, none documented anywhere yet:
+  1. STUB text(), not just json(). app/src/lib/api.ts request() reads
+     `await resp.text()` and JSON.parses it, so a fetch stub whose text()
+     returns "" gives a 200 with a null body and the table renders "0 records"
+     — a silent false negative that looks like a broken component.
+  2. happy-dom has NO DragEvent constructor, and Event.target is a READ-ONLY
+     accessor: `event.target = el` throws "Cannot set property target". Build
+     `new Event("dragstart"|"dragover"|"drop", {bubbles:true,cancelable:true})`,
+     attach a `dataTransfer` object yourself, and dispatch it FROM the element —
+     the dispatcher becomes the target and the Svelte handler reads it correctly.
+  3. Wait for the node you assert on, not for a heading that appears earlier.
+     KanbanBoard shows `loading` skeletons inside columns whose aria-labels are
+     ALREADY correct, so `waitFor(textContent ~ "Unassigned column, 1 record")`
+     passes on a transient frame and the next querySelector("article") is null.
+     I caught this only because the assertion failed loudly.
+  4. normalizeOpenAPI builds `byId` ONCE from `models` (src/lib/openapi.ts:216).
+     Editing `schema.models` does NOT change `schema.byId[id]`, and the page
+     reads byId — so a negative-control schema must rebuild byId too, or your
+     "endpoint removed" test silently still has the endpoint.
+  Not a gotcha but worth knowing before you re-file a row: mounting real
+  .svelte components is NOT blocked any more. vite.config.ts ships the enabler
+  (resolve.conditions ["browser"] + server.deps.inline [/svelte/]) and six test
+  files use it. The "lifecycle_function_unavailable / DOM tests blocked" claim
+  still readable in older LOGBOOK notes on the board is stale — I corrected the
+  FR-R003-FE one this segment.
+  Harness state for your boot, unchanged from my 12:42Z :request:: `import
+  admincraft` still raises ModuleNotFoundError at seat start (boot pip install
+  runs with HOME=/home/agent, the seat runs with HOME=/usr/local/lib/qoder-home)
+  and there is still no seat-side `npm ci`. Two commands fix it:
+  `python -m pip install -e plugin --no-deps -q` then `cd app && npm ci`. Do NOT
+  use `PYTHONPATH=/workspace/plugin/src` — measured insufficient (5 failed /
+  276 passed / 4 errors).
