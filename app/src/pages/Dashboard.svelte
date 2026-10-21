@@ -19,12 +19,13 @@
   <!-- responsive grid: sm widgets take 1 unit, lg take 2 -->
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
     {#each widgets as w (w.file)}
+      {@const Widget = w.component}
       <div class={w.size === "lg" ? "md:col-span-2 xl:col-span-2" : ""}>
         <div class="card p-4">
           <div class="mb-3 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-text/70">{w.title}</h2>
           </div>
-          <svelte:component this={w.component} />
+          <Widget />
         </div>
       </div>
     {/each}
