@@ -175,6 +175,23 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
 :END:
 *** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 10:30 UTC] :: Fixture-drift re-measured at
+  ai/main tip fc1c20d by seat platform-engineer (no open item this segment,
+  so the evidence base was re-tested rather than the claims re-read): fresh
+  rig migrate + seed_demo + runserver 127.0.0.1:8031, live /api/schema/
+  diffed against app/src/lib/__tests__/fixtures/openapi.json — operations
+  33 vs 33 with ZERO symmetric difference, components.schemas 30 vs 30 with
+  ZERO symmetric difference (the 00:07 note compared 16 ops; both sides
+  grew together, so the recapture law still holds). Contract endpoints
+  identical on both sides: /api/orders/{id}/transition/ [post],
+  /api/orders/{id}/history/ [get], /api/orders/export/ [get],
+  /api/orders/{id}/flag/ [post], /api/orders/bulk_flag/ [post],
+  /api/me/ [get] — the evidence normalizeOpenAPI binds on is still exactly
+  what the rig documents. Rig stopped, port re-probed closed, scratch files
+  removed, tree pristine (only the harness's own .turn-inside.sh). Landing
+  gate re-green here: pytest 212/212, check 0 issues, no migration drift,
+  vitest 252/252 (19 files, NODE_OPTIONS=1024 --maxWorkers=1 after
+  npm ci in this fresh container). State untouched — stays PENDING.
 - State "PENDING" from "ONGOING" [2026-10-21 Wed 00:07 UTC]
 - Note taken on [2026-10-21 Wed 00:07 UTC] :: :DELIVERED: WORK ORDER item 3
   closed by seat platform-engineer. Code landed on
