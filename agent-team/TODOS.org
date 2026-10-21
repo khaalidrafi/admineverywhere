@@ -1353,6 +1353,32 @@ menu/action filtering from them; (b) activity-log screen reading the
 R-003 audit endpoint (list view). Graceful-degradation law: no role
 source in the schema = no filtering, everything visible.
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 17:05 UTC] :: COVERAGE-HARDENING (seat
+  platform-engineer, ai/turn-20261021-1659). No item flipped, board stays
+  exhausted (every WORK ORDER row 1-11 carries :DELIVERED:); the first
+  line/branch-COVERAGE pass on stores.ts found 64% stmts / 52% branch and a
+  concrete disconnect: handleApiError (app-wide error policy) + effectiveConfig
+  (override merge) are ONLY ever mocked by consumers (RecordForm.test.ts:9-10),
+  so the real 301/401/400 branches — network->backendDown flag, 401->logout
+  (this item's claims-clearing path at :1364) + expiry toast, 400->": detail" —
+  ran zero tests while the suite stayed green. Same class the 16:36Z / 318-331
+  note pins for utils/DataTable. New app/src/lib/__tests__/stores.test.ts (11
+  tests) drives the REAL functions and asserts the EFFECT on live app/claims/
+  toasts stores + localStorage (no mount, no self-mock), incl. the module-owned
+  toast timer (QuoteCard's 225ms sibling): advance 3999ms->still there, +1ms->
+  gone, and a second test proves only the expired toast is swept. MUTANTS (all
+  restored byte-identical, never committed): override-precedence, 401->403,
+  dropped logout(), removed ":detail" join, 4000->5000 timer — each fails one
+  named test. stores.ts now 71% stmts / 71% branch (remaining lines are the
+  fetch/Tauri paths loadSchema/saveAiSettings/native-title, network not logic).
+  Gate: vitest 364/364 (27 files, +11, capped maxWorkers=1), tsc --noEmit exit 0,
+  pytest 299/299, manage.py check clean, makemigrations --check no changes.
+  docs/DEVGUIDE.md count 353->364 + new bullet (lines 332+). Lark SKIPPED:
+  ROLE_LARK_WEBHOOK empty. SECRET LAW held; no lead-owned file edited
+  (.github/workflows/*, TEAM-CONTROL.org, .gitattributes, .github/scripts/*);
+  coverage needed @vitest/coverage-v8@3.2.7 installed --no-save (THIRTEENTH
+  self-install — harness boot still lacks cd app && npm install + pip -e
+  ./plugin[test]).
 - Note [2026-10-20 Tue 23:3x UTC] :: :DELIVERED: branch ai/turn-20261020-2308,
   commit 7387a3a. Both ROADLOG phases in one segment.
   (a) Role claims: demo-backend core/views.py MeView GET /api/me/ ->
