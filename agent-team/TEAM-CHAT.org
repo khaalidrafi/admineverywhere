@@ -1110,3 +1110,91 @@
   Branch ai/turn-20261021-1044 carries the fix, the three tests, the doc +
   AGENTS.md law lines, the LOGBOOK note and this report. The harness's own
   .turn-inside.sh stays untracked.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 11:15 UTC]
+:END:
+  RESULT: DONE — the float divergence my own 10:45 report left as a DOCUMENTED
+  caveat is now FIXED, because that caveat was wrong about who it reaches. It
+  said "unreachable through this product" — true for demo-backend, which has no
+  FloatField — but the product IS client projects on their own DRF APIs, and a
+  FloatField leaves JSONRenderer as a JSON number: layer 1 parses it and
+  `String()`s it ("1"), layer 2 wrote it with Python `str()` ("1.0"). Two
+  buttons, two files, no error anywhere — the exact silent-wrong-data class the
+  evidence law exists to stop. I re-read my own finding rather than inherit it.
+  FIX, server side (the browser is the reference — it is what the user sees in
+  the table): demo-backend/shop/csv_export.py gained `js_number_text()`, an
+  ECMA-262 Number::toString layout over Python's shortest round-trip repr
+  (integral floats, the -6 < n <= 21 switch points, unpadded exponents,
+  String(-0)="0"). Decimal still writes its own serial form, so "decimals never
+  re-flowed" is untouched.
+  SECOND DIVERGENCE, found inside the first and never reported before: the
+  formula guard was keyed on the RENDERED TEXT, not on the value being text —
+  contradicting csv_export.py's own docstring ("formula guard on text only")
+  and csv.ts, where the check is literally `typeof value === "string"`. A
+  negative float in exponent form ("-1e-9") is not NUMERIC_SHAPED, so the
+  server apostrophised what the browser left bare. That was live on HEAD for any
+  FloatField with |x| < 1e-6 or >= 1e17 — and it sat UNDER the repr bug, so no
+  float-parity test could have surfaced it first. Now `if is_text and
+  is_formula_text(text)` (csv_export.py:126).
+  PROOF, TEST-FIRST AND MUTATION-CHECKED (the 10:53 report's lesson applied to
+  myself — a table asserted on both sides must be able to fail on both sides):
+  - plugin/tests/test_csv_export.py: `FLOAT_PARITY` = 25 node-verified
+    String() pairs, parametrized into two tests, + the shared golden document
+    gained a `float` `weight` column. RED FIRST, measured on HEAD's writer:
+    27 failed / 53 passed.
+  - app/src/lib/__tests__/csv.test.ts: same table, same golden bytes, asserted
+    against the real csvCell/buildCsv — green immediately, as the reference
+    side should be. To prove it is not a tautology I removed the string-only
+    guard from csv.ts: 2 tests went red, then `git checkout -- src/lib/csv.ts`
+    restored it and `git status` confirms the file clean. csv.ts is UNCHANGED
+    in this delivery — one side fixed, one side pinned.
+  - Cross-twin fuzz re-run with floats LEFT IN the matrix (the 10:40 run had to
+    remove them to get a clean diff): 12 seeds x 250 rows x 8 cols — integral
+    floats, subnormals, 1e100, 5e-324, -0.0, random magnitudes 1e-8..1e9, ints
+    to 2^53, bools, nulls, adversarial text — real code both sides (writer by
+    file path, csv.ts via the repo's own esbuild). 295,678 bytes, ZERO
+    differing lines. The same matrix on HEAD's writer: 144/507 lines differed.
+    Scratch stayed in /tmp; no rig needed, so no db writes and no fixture
+    churn; tree otherwise pristine.
+  DOCS: docs/csv-export.md §2's "caveat" paragraph is replaced by the rule
+  (with why the browser wins) + the guard-is-text clause; §6 records the
+  with-floats re-run; AGENTS.md's CSV bullet now names the shared FLOAT_PARITY
+  table as the byte-level pin.
+  LANDING GATE green at this HEAD: pytest 262/262 (was 212, +50 float params),
+  manage.py check "no issues (0 silenced)", makemigrations --check "No changes
+  detected", vitest 281/281 over 19 files (was 255, +26; capped
+  NODE_OPTIONS=1024 --maxWorkers=1 after `npm ci` — empty node_modules for the
+  THIRD fresh container in a row, so the signature in my 10:32 report is now a
+  pattern, not an anecdote).
+  BOARD: :LOGBOOK: note under FR R-005 (state untouched — PENDING stands, DONE
+  is your gate). No item flipped. No unanswered @platform-engineer ping was in
+  the tail (the only dispatch, 01:55Z, was answered by the 20:48Z/21:05Z/
+  10:45Z/10:53Z reports).
+  WHAT I DID NOT DO, on purpose: no FloatField was added to demo-backend. It
+  would prove the path end-to-end but needs a migration + seed_demo + a
+  schema-fixture recapture (the fixture-vs-live comparison test then has to be
+  re-baselined), which is another item's scope and a bigger blast radius than
+  one segment. If you want it, it is a clean follow-up dispatch — say the word
+  and the next segment takes it.
+  STILL-OPEN ROWS: (1) the runner-side red `test` job — this container has no
+  gh CLI and NO GitHub token in its environment (`env` carries
+  QODER_PERSONAL_ACCESS_TOKEN and OPENROUTER/ZAI keys by name only; no
+  GITHUB_TOKEN), so the run log is still yours or a seat with API access. (2)
+  the human browser/Tauri E2E pass stays mandatory and unclosable here — no
+  chromium/firefox/playwright installed, installing one is a spend I am not
+  authorised for. (3) NEW, plumbing-only, for the chain rather than the board:
+  three consecutive stalls ("segment no-branch, result none", e6a319c / b701160
+  / fb7e6e2) precede this run, and 5d6b5d2 says the cause was an un-wrapped
+  `case "$TURN" in` block in a lead-owned file; this segment produced a real
+  branch, so if the next one stalls too, the case block is not the whole story.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK is absent from this seat's environment
+  (`env | sed 's/=.*//'` has no such name) — noted in the board LOGBOOK per
+  instruction 8. SECRET LAW held: no value read, echoed or committed anywhere.
+  I have NOT touched OBJECTIVE-STATE, TEAM-CONTROL.org, .github/workflows/*,
+  .github/scripts/*, .gitattributes; no completion claim from this seat. Branch
+  ai/turn-20261021-1101 carries the writer fix, both test tables, the golden
+  document, the doc + AGENTS.md lines, the LOGBOOK note and this report.
