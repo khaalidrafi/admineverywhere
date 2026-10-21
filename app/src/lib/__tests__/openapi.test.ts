@@ -6,9 +6,11 @@ import { normalizeOpenAPI, schemaSummary, singularize, titleCase } from "../open
 const schema = normalizeOpenAPI(fixture);
 
 describe("model discovery", () => {
-  it("finds exactly the 4 router-registered models", () => {
+  it("finds exactly the router-registered models of the live rig", () => {
+    // audit is the FR-R003 model; the R-001/R-003 @actions and the R-005 export
+    // sibling are detail/collection actions and must NOT become models.
     expect(schema.models.map((m) => m.id).sort()).toEqual(
-      ["categories", "customers", "orders", "products"],
+      ["audit", "categories", "customers", "orders", "products"],
     );
   });
 
@@ -112,7 +114,9 @@ describe("schemaSummary (AI system prompt)", () => {
     const s = schemaSummary(schema);
     expect(s).toContain("- Product [/api/products/]:");
     expect(s).toContain("category(fk->categories)");
-    expect(s.split("\n")).toHaveLength(4);
+    // one line per discovered model — actions never add a line
+    expect(s.split("\n")).toHaveLength(schema.models.length);
+    expect(s.split("\n")).toHaveLength(5);
   });
 });
 
@@ -159,11 +163,12 @@ describe("server-export discovery (FR-R005 layer 2)", () => {
 
   it("leaves exportPath undefined when the document carries no export", () => {
     expect(normalizeOpenAPI(docWith()).byId.things.exportPath).toBeUndefined();
-    // The captured fixture predates the demo rig's export action, so the
-    // shipped client must show no "Full export" button against it — absence is
-    // silent degradation, not an error (same rule as a plain DRF backend and
-    // the static brand).
-    expect(schema.byId.orders.exportPath).toBeUndefined();
+    // The live rig DOES document GET /api/orders/export/ (FR-R005 layer 2), so
+    // the captured fixture binds it — and a model without the sibling stays
+    // undefined, which is silent degradation, not an error (same rule as a
+    // plain DRF backend and the static brand).
+    expect(schema.byId.orders.exportPath).toBe("/api/orders/export/");
+    expect(schema.byId.products.exportPath).toBeUndefined();
   });
 
   it("refuses a sibling that also takes POST — that shape is a list, not an action", () => {
@@ -176,5 +181,66 @@ describe("server-export discovery (FR-R005 layer 2)", () => {
     const out = normalizeOpenAPI(docWith({ get: true }));
     expect(out.byId.export).toBeUndefined();
     expect(out.models.map((m) => m.id)).toEqual(["things"]);
+  });
+});
+
+describe("lifecycle discovery (FR-R001)", () => {
+  /** Minimal doc: one list model plus optional detail actions. */
+  function docWithActions(actions: Record<string, { get?: boolean; post?: boolean }>) {
+    const paths: Record<string, any> = {
+      "/api/orders/": {
+        get: { responses: { "200": { content: { "application/json": { schema: { $ref: "#/components/schemas/PaginatedOrderList" } } } } } },
+        post: { requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/OrderRequest" } } } } },
+      },
+      "/api/orders/{id}/": {
+        get: { responses: { "200": { content: { "application/json": { schema: { $ref: "#/components/schemas/Order" } } } } } },
+      },
+    };
+    for (const [slug, verbs] of Object.entries(actions)) {
+      const op: Record<string, any> = {};
+      if (verbs.get) op.get = { responses: { "200": { content: { "application/json": { schema: { type: "array", items: {} } } } } } };
+      if (verbs.post) op.post = { responses: { "200": { content: { "application/json": { schema: {} } } } } };
+      paths[`/api/orders/{id}/${slug}/`] = op;
+    }
+    return {
+      paths,
+      components: {
+        schemas: {
+          Order: { properties: { id: { type: "integer", readOnly: true }, status: { type: "string" } } },
+          OrderRequest: { properties: { status: { type: "string" } }, required: ["status"] },
+          PaginatedOrderList: { properties: { results: { type: "array", items: { $ref: "#/components/schemas/Order" } } } },
+        },
+      },
+    };
+  }
+
+  it("binds both endpoints where the captured rig documents them", () => {
+    expect(schema.byId.orders.transitionPath).toBe("/api/orders/{id}/transition/");
+    expect(schema.byId.orders.historyPath).toBe("/api/orders/{id}/history/");
+    // the trail is read-only; the transition takes a POST — a model that ships
+    // neither keeps both keys absent rather than a guessed path
+    expect(schema.byId.products.transitionPath).toBeUndefined();
+    expect(schema.byId.products.historyPath).toBeUndefined();
+  });
+
+  it("binds transition only on evidence of a POST", () => {
+    expect(normalizeOpenAPI(docWithActions({ transition: { post: true } })).byId.orders.transitionPath)
+      .toBe("/api/orders/{id}/transition/");
+    // a GET-only sibling is not a transition — the verb is the evidence
+    expect(normalizeOpenAPI(docWithActions({ transition: { get: true } })).byId.orders.transitionPath)
+      .toBeUndefined();
+    expect(normalizeOpenAPI(docWithActions({})).byId.orders.transitionPath).toBeUndefined();
+  });
+
+  it("binds history only on GET without POST — same law as exportPath", () => {
+    expect(normalizeOpenAPI(docWithActions({ history: { get: true } })).byId.orders.historyPath)
+      .toBe("/api/orders/{id}/history/");
+    expect(normalizeOpenAPI(docWithActions({ history: { get: true, post: true } })).byId.orders.historyPath)
+      .toBeUndefined();
+  });
+
+  it("never discovers a lifecycle action as a model of its own", () => {
+    const out = normalizeOpenAPI(docWithActions({ transition: { post: true }, history: { get: true } }));
+    expect(out.models.map((m) => m.id)).toEqual(["orders"]);
   });
 });
