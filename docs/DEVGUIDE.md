@@ -165,6 +165,11 @@ python3 scripts/parity_table_diff.py        # 0 = identical, 1 = divergence, 2 =
 # impersonate a red tree). --fe adds vitest; --python <exe> forces one interpreter.
 python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = cannot run
 
+# the RELEASE story as one command — the four carriers + the Cargo.lock entry vs a
+# HEAD tag (or --expect), doc path citations that must exist, release inputs present,
+# and no PEP 604 annotation in any harness (see NINTH harness law)
+python3 scripts/release_readiness.py        # 0 = coherent, 1 = a leg is red, 2 = cannot run
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
@@ -658,6 +663,36 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   through all three, never "just" the migrations check. The verdict prints the
   interpreter it used — `NAME THE ENVIRONMENT THAT PROVED IT` (20:09Z note), now
   applied to my own tool rather than only asked of peers.
+- **NINTH harness law — a RELEASE procedure is a set of facts about files, and
+  files rot silently.** AGENTS.md *Releases* promises "bump the version in ALL
+  FOUR carriers first … the tag should match them" and points at a reference
+  implementation. Nothing re-ran either claim, so building the check found the
+  second one false immediately: `scripts/cut_v010_release.sh` is cited in
+  AGENTS.md, docs/DEVGUIDE.md and three comments in
+  `.github/workflows/build-all.yml` (Lead-owned, so cited not edited) as the
+  script that cut v0.1.0 — and exists in ZERO git objects (`git rev-list --all
+  --objects | grep -i cut_v010`: empty). The prose is corrected to name the real
+  reference, the `release` job's own assemble step
+  (`.github/workflows/build-all.yml:417-443`). `scripts/release_readiness.py`
+  (exit 0 / 1 red / 2 cannot run, per the FIFTH law) now holds the whole story
+  re-runnable: five version reads — `plugin/pyproject.toml`, `app/package.json`,
+  `tauri.conf.json`, `Cargo.toml`, and the `admincraft` entry inside `Cargo.lock`
+  (the pair the nix `cargoLock` and guix vendor builds depend on, so a lock that
+  drifted from its manifest is a packaging break, not a typo) — a `vX.Y.Z` tag on
+  HEAD or `--expect X.Y.Z`, the release inputs (`debug.keystore`, `flake.nix`,
+  `guix.scm`), the citation scan, and the 1ce3045 rule machine-enforced: a
+  `ast.walk` over annotation nodes for `BinOp(BitOr)` finds a PEP 604 `X | None`
+  in a harness, because `ast.parse` alone CANNOT — the syntax is valid, it dies
+  at def time on a < 3.10 box, and it dies with rc 1, which in this family means
+  "the writers DIVERGE". A dead-path allowlist carries the reasons (the two
+  deliberate "the old X is gone" / example citations) and the leg goes RED if an
+  allowlisted path reappears, so the exemption rots in both directions. Controls
+  measured, each restoring the tree: one carrier bumped → 1 naming all five
+  values on two legs; `--expect 0.2.0` → 1 naming `plugin/pyproject.toml:7`; the
+  dead file created → 1 `allowlist is stale`; a fresh bad citation appended → 1
+  naming `docs/widget-data.md:127`; a PEP 604 temp script → 1 naming the line;
+  `plugin/pyproject.toml` moved aside → **2** not 1 (a missing input is not a
+  verdict).
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
@@ -769,8 +804,16 @@ carriers first — `plugin/pyproject.toml`, `app/package.json`,
 should match them). The pipeline runs on the tag and the `release` job cuts the
 GitHub Release from that run's artifacts plus the plugin wheel/sdist,
 with a `SHA256SUMS.txt`. Asset names and assembly rules mirror v0.1.0
-exactly (reference implementation: `scripts/cut_v010_release.sh`, which
-cut v0.1.0 by hand from green run 39000890302). Only the `release` job
+exactly. The assembly rules live ONLY in the workflow's `release` job
+(`.github/workflows/build-all.yml:417-443`); the hand-cut script v0.1.0 was
+assembled with (`scripts/cut_v010_release.sh`, still cited in that job's comments)
+was never committed — measured with `git rev-list --all --objects`, so the
+workflow is the reference, not a script beside it. Re-runnable check: `python3
+scripts/release_readiness.py` diffs the four carriers + the Cargo.lock entry,
+compares them against a `vX.Y.Z` tag pointing at HEAD (or `--expect X.Y.Z`),
+and refuses any doc citation of a path that does not exist (only the Lead-owned
+workflow still carries that stale citation, so it is cited, not edited).
+Only the `release` job
 holds `contents:write`, and it uses the built-in `GITHUB_TOKEN` — no
 PATs in CI. If a tag push ever fails to trigger, the manual fallback:
 dispatch a run on the tag's commit, download its artifacts, and re-run
