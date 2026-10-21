@@ -166,8 +166,9 @@ python3 scripts/parity_table_diff.py        # 0 = identical, 1 = divergence, 2 =
 python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = cannot run
 
 # the RELEASE story as one command — the four carriers + the Cargo.lock entry vs a
-# HEAD tag (or --expect), doc path citations that must exist, release inputs present,
-# and no PEP 604 annotation in any harness (see NINTH harness law)
+# HEAD tag (or --expect), doc path citations that must exist AND every cited line
+# that must land inside its file, release inputs present,
+# and no PEP 604 annotation in any harness (see NINTH + TENTH harness laws)
 python3 scripts/release_readiness.py        # 0 = coherent, 1 = a leg is red, 2 = cannot run
 
 # rebrand the whole client in one command (build-time layer)
@@ -192,7 +193,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
     `COMPONENT_SPLIT_REQUEST` yields `<Model>Request` schemas for forms.
 - The client typechecks CLEAN: `cd app && npx tsc --noEmit` exits 0 (it was 7
   errors until 2026-10-21 — one in shipped code, `listRecords` returned
-  `Promise<Page>` while `types.ts:92` declares `Page<T>` with no default, so
+  `Promise<Page>` while `app/src/lib/types.ts:92` declares `Page<T>` with no default, so
   every `build`/`vitest` run silently stripped an unmet type). `vite build`
   uses esbuild and does NOT typecheck, so nothing gated it; keep the command
   green by hand. Edge-case tests that pass values the contract forbids but the
@@ -217,7 +218,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   schema arrives after mount).
 - Independent enums (FR-R002, "separated status fields") are per-field
   contracts: drf-spectacular hoists a choices field into a component named
-  from the **property name**, not the model (`hooks.py:67-95`), so two
+  from the **property name**, not the model (`drf_spectacular/hooks.py:67-95`), so two
   unrelated `status` fields sharing a value set collapse into one shared
   `StatusEnum` and only genuinely different sets stay separate
   (`OrderStatusEnum` + `ShipmentStatusEnum`). Convention: one nested
@@ -314,8 +315,8 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `docs/csv-export.md`.
 - Dynamic components take the runes form `{@const Widget = w.component}` then
   `<Widget />`, never `<svelte:component this={…}>` — deprecated in runes mode.
-  Both declaration-driven grids comply now: `Shell.svelte:53` (pages, FR-R006)
-  and `Dashboard.svelte:22` (widgets, FR-R008). The widget grid had no DOM test
+  Both declaration-driven grids comply now: `app/src/components/Shell.svelte:53` (pages, FR-R006)
+  and `app/src/pages/Dashboard.svelte:22` (widgets, FR-R008). The widget grid had no DOM test
   until `app/src/lib/__tests__/dashboardMount.test.ts`, which is registry-driven
   like the shell tests — a drop-in that fails to render is a red test, not an
   empty card.
@@ -354,7 +355,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
 - The same mock-hides-the-real-code trap bites a **pure logic module**, not just
   components. `app/src/lib/stores.ts` carries the app-wide error policy
   (`handleApiError`) and the config override merge (`effectiveConfig`) — and
-  every consumer test only ever *mocked* them (`RecordForm.test.ts:9-10`), so the
+  every consumer test only ever *mocked* them (`app/src/lib/__tests__/RecordForm.test.ts:9-10`), so the
   three shipped branches (network→banner flag, 401→logout+toast, 400→toast with
   `: detail`) never executed and sat at 64% stmts / 52% branch.
   `app/src/lib/__tests__/stores.test.ts` now drives the REAL functions and
@@ -404,7 +405,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   equivalent; do not bend a test to "kill" it.
 - `app/src/lib/stores.ts` had a FOURTH mock-hides gap and one genuinely
   USER-VISIBLE defect behind it. `saveAiSettings` skipped the secret write when
-  the key field was empty, while `ChatPanel.svelte:33` hydrates that field from
+  the key field was empty, while `app/src/ai/ChatPanel.svelte:33` hydrates that field from
   the store — so clearing the API key saved nothing and the old key came back on
   next boot. Now an empty field means "forget it": `deleteSecret("ai.apiKey")`,
   proven by a save-then-clear-then-reload round trip (`storesTauri.test.ts`),
@@ -551,7 +552,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
      contracted to run, so the script generates 350 brands and keeps the 300
      `validate_brand()` accepts. The refused 50 are counted, not dropped in
      silence. Surprises here are real: `"\tTabbed Font\t"` is ACCEPTED (the
-     server matches `SAFE_FONT_RE` against `font.strip()`, `branding.py:190`) and
+     server matches `SAFE_FONT_RE` against `font.strip()`, `plugin/src/admincraft/branding.py:190`) and
      the client strips the same tabs via `sanitizeFont()` — so a brand that looks
      invalid in the accepted column is not a divergence, and the only way to know
      was to run it.
@@ -693,6 +694,49 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   naming `docs/widget-data.md:127`; a PEP 604 temp script → 1 naming the line;
   `plugin/pyproject.toml` moved aside → **2** not 1 (a missing input is not a
   verdict).
+- **TENTH harness law — a `file:line` citation is HALF a claim, and the half a
+  path check sees is the half that cannot fail.** `release_readiness.py` now
+  bounds-checks every cited line (`leg_citation_lines`): a doc pointing at
+  openapi.ts line 9999 resolves perfectly and stays green under the
+  path leg while sending the next reader into unrelated code — the same failure
+  direction as NINTH, arriving one level deeper (NINTH was a dead PATH, this is a
+  live path with a dead NUMBER, invisible to an existence test by construction).
+  Illustrative numbers like that one are deliberately written WITHOUT backticks:
+  the leg scans backticked tokens, so a hypothetical in backticks is
+  indistinguishable from a claim and correctly goes red — which is how this
+  paragraph was caught on its own first run.
+  Resolution is deliberately CONSERVATIVE, because a resolver that guesses files
+  a confident verdict about the wrong file: verified only when the target is an
+  exact repo path, a directory suffix matching exactly ONE repo file, or a
+  site-packages path the running interpreter can import. `docs/independent-enums.md`
+  used to cite settings.py:120 bare, meaning **drf_spectacular's**, while this
+  repo's only
+  `demo-backend/core/settings.py` has 110 lines — so a bare
+  citation is reported as `bare-name not verified` and the leg stays silent, and
+  the writer rule is **cite the directory**. External citations are checked
+  against the installed package and the log PRINTS THE VERSION it checked them
+  against (`drf_spectacular 0.30.0` here) — a line number is only true of one
+  release, so an upgrade turning these red is the correct verdict, not noise: the
+  doc's "measured on 0.30" claim would be stale. Measured payoff: qualifying 24
+  bare citations (16 in `docs/independent-enums.md`, 7 in DEVGUIDE, 1 in
+  AGENTS.md) took verified lines **26 → 50** and guesses **24 → 0**; the tree now
+  measures **54 bounds-checked (35 repo + 19 site-packages), 0 guesses**, all 19
+  drf-spectacular line claims land in range, and the 7 sampled by eye hit their
+  exact code (`ENUM_NAME_OVERRIDES: {}` at `drf_spectacular/settings.py:118`,
+  `ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE: True` at
+  `drf_spectacular/settings.py:120`, `x-spec-enum-id` hashing at
+  `drf_spectacular/hooks.py:50-58`, property-name keying at
+  `drf_spectacular/hooks.py:67-76`). The leg caught two bare citations IN THIS
+  PARAGRAPH on its own first run, which is the rule applying to its author.
+  Controls, each
+  restoring the tree byte-identical: two past-EOF citations → 1 naming both with
+  the real lengths (229, 251); a past-EOF site-packages citation → 1; the same
+  citation re-bare'd → **0** with `1 bare-name not verified` (the false-red
+  control — the leg must refuse, not guess); an unknown external path → 0 with
+  `2 unresolvable` (no verdict about a file it cannot read); `docs/widget-data.md`
+  grown to 127 lines → 1 `line allowlist is stale`, because the one exempted
+  citation quotes THIS harness's own reject message rather than naming a
+  location, and an exemption may not outlive its reason.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
@@ -811,8 +855,12 @@ was never committed — measured with `git rev-list --all --objects`, so the
 workflow is the reference, not a script beside it. Re-runnable check: `python3
 scripts/release_readiness.py` diffs the four carriers + the Cargo.lock entry,
 compares them against a `vX.Y.Z` tag pointing at HEAD (or `--expect X.Y.Z`),
-and refuses any doc citation of a path that does not exist (only the Lead-owned
-workflow still carries that stale citation, so it is cited, not edited).
+and refuses any doc citation of a path that does not exist AND any `file:line`
+citation whose number is past the end of that file — a path check cannot see the
+second half of the claim. A bare hooks.py:50 citation is never guessed at, so
+write the directory or the citation stays unverifiable (only the Lead-owned
+workflow still
+carries that stale citation, so it is cited, not edited).
 Only the `release` job
 holds `contents:write`, and it uses the built-in `GITHUB_TOKEN` — no
 PATs in CI. If a tag push ever fails to trigger, the manual fallback:
