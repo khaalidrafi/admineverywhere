@@ -78,4 +78,4 @@ Agent law:
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.
-#+LAST-CHAT: 0479a1a82fb2
+#+LAST-CHAT: 322add8b670f
