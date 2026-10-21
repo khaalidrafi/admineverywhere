@@ -113,7 +113,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (285 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (336 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (352 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -141,7 +141,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 336 vitest
+cd app && npm test                          # 352 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 285 pytest
 
@@ -315,6 +315,20 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   until the test process OOMs — script the draws as a finite sequence; and
   `vi.useFakeTimers()` must not meet a `vi.waitFor()` poll, so components that
   paint from stores alone mount synchronously.
+- A component's cell text is only proven when it is rendered through the REAL
+  helper. `DataTable.test.ts` carried `vi.mock("../lib/utils", …)` stubbing
+  `formatCell` to `String(v ?? "")` while its own tests judged each-keys in
+  plain code — the mock never ran, the real display rules never ran, and the
+  pair stayed green together (`app/src/lib/__tests__/utils.test.ts` now pins
+  formatCell/toISOOrNull/debounce on the shipped module;
+  `app/src/lib/__tests__/tableDisplay.test.ts` mounts DataTable unmocked and
+  asserts the DOM: em dash, FK `#`, enum pill, the 57+… ellipsis at exactly 60
+  chars, a decimal never re-flowed, and the json column refused — with json
+  placed MID-list so the six-column slice cannot mask a dropped filter).
+  If a mount test needs a module stub, pin the same values through the real
+  one somewhere. Same sweep deleted two dead exports: `fromDateOrNull()`
+  (`RecordForm.buildPayload` already inlines the rule) and an unused
+  `DataTable` import in `actions.test.ts`.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
