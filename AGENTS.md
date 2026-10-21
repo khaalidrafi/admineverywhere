@@ -341,8 +341,17 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   of the `brand.json` beside it — a stale bundle, or a boot-time inject that
   differs from it, is the visible re-theme flicker the static bundle exists to
   prevent, and no per-side unit test can see either because each writer is green
-  against its own fixture. A brand the server REFUSES is out of domain, not a
-  divergence: the client sanitizes so a hand-edited bundle still paints. Plain DRF
+  against its own fixture — and that shipped `brand.json` is looked up in the
+  accepted set BY IDENTITY, never by position, because a positional read once
+  compared it against an unrelated brand and reported the invented divergence as a
+  re-theme flicker. A brand the server REFUSES is out of domain, not a
+  divergence: the client sanitizes so a hand-edited bundle still paints. But the
+  matrix's own population is pinned, not just printed: the sentinel count is
+  asserted against a literal AND against the sum of the `VALID_*`/`BAD_*` lists,
+  and each sentinel carries the verdict `validate_brand()` owes it, checked row by
+  row — a printed count with no expectation attached passed rc 0 after 7 legal-font
+  cases were deleted and again after the server's radius rule stopped refusing
+  unitless values (DEVGUIDE *ELEVENTH harness law*). Plain DRF
   backends without the plugin degrade silently to the static brand.
 - Brand writes are staff-only (DRF token auth) and validated server-side
   by the SAME closed schema as `build_admin` (`brandstore.save_brand`);
