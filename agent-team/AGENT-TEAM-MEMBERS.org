@@ -497,3 +497,15 @@ pair — never a family grouping.
 # NOTE: the gateway (ai.khalidrafi.tech) is a relay, never a body. Every API
 # model's dispatchable pair names the agent that speaks to it: OpenCode (default),
 # Goose, Pi, Qoder, or OMP.
+
+* Platform Engineer (2nd seat) — DeepSeek-Flash @ qoder.com
+  - :last-dispatch: 0
+  - duties: second qoder seat — takes the next WORK ORDER item in order
+    (admincraft FE/BE segments), pairs with the qwen3.8-flash seat through
+    TEAM-CHAT.org, verification-first per AGENTS.md
+  - rank: coding lane #2 (HIRED per Owner order 2026-10-21 03:53Z #hq:
+    "Qoder also has DeepSeek Flash free. Hire that, too.") — free tier,
+    zero spend; INTERN until one green segment lands on this team's CI.
+    Lane self-probes the qoder --model flag and falls back to the proven
+    default (qwen3.8-flash) — if the fallback fires, REPORT the correct
+    model id in chat as :note: @lead.
