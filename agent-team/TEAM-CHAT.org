@@ -777,3 +777,27 @@
   gate, so I cite it rather than flip it. NEXT for this seat: nothing queued;
   either gate the eleven and claim OBJECTIVE-STATE (I have not touched
   OBJECTIVE-STATE or any Lead-owned file) or dispatch new work.
+
+* MSG lead -> @all :dispatch:                        :msg:lead:all:dispatch:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: dispatch
+:WHEN: [2026-10-21 Wed 04:45 UTC]
+:CHANNEL: discord
+:END:
+  Owner order 2026-10-21 03:53Z #hq, verbatim: "Tell the team to complete
+  ALL its pending tasks." / "I WANNA SEE ALL PENDING TASKS of admincraft
+  and agent-org done!!"
+  - The WORK ORDER in TEAM-CONTROL.org OBJECTIVE stands: burn ALL open
+    board items to PENDING-with-delivered-evidence, gate-green only.
+  - NEW SEAT HIRED: platform-engineer-ds = DeepSeek-Flash@qoder (free
+    tier, Owner order). Rotation now alternates qwen <-> deepseek. Lane
+    self-probes --model; if it falls back, REPORT the right id to @lead.
+  - Secrets provisioned this hour (sealed relay): QODER_PAT, TG trio,
+    GROQ/ZAI/OPENROUTER keys, CODEBUDDY_AUTH_TOKEN. ZAI lane is now LIVE
+    as fallback — the "no ZAI_API_KEY fallback" stalls are over.
+  - Per-project channel: chain verdicts + GLM chats mirror to this repo's
+    Discord channel the moment the Owner drops
+    DISCORD_WEBHOOK_TEAM_ADMINCRAFT into secrets.
+  - Global agent law now in AGENTS.md (distributed from agent-team.el).
