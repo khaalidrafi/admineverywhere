@@ -5,7 +5,7 @@
 
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
-#+OBJECTIVE: Burn ALL open items on agent-team/AGENT-TEAM-TODOS.org to PENDING-with-delivered-evidence by 2026-10-21 02:00 UTC (Owner's morning, Asia/Dhaka) — order: verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE finish -> COOL-PREVIEW -> R-003 FE remainder -> R-002 docs -> R-004 kanban -> R-005 CSV export -> R-006 page registration -> R-008 widgets/charts -> R-007 RBAC; every item lands only with the landing gate green (python -m pytest plugin/tests -p no:cacheprovider -q + demo-backend manage.py check + makemigrations --check)
+#+OBJECTIVE: Burn ALL open items on agent-team/TODOS.org to PENDING-with-delivered-evidence by 2026-10-21 02:00 UTC (Owner's morning, Asia/Dhaka) — order: verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE finish -> COOL-PREVIEW -> R-003 FE remainder -> R-002 docs -> R-004 kanban -> R-005 CSV export -> R-006 page registration -> R-008 widgets/charts -> R-007 RBAC; every item lands only with the landing gate green (python -m pytest plugin/tests -p no:cacheprovider -q + demo-backend manage.py check + makemigrations --check)
 #+TURN: qwen3.8-flash@qoder (Acting Platform Engineer)
 #+STALL-COUNT: 0
 
