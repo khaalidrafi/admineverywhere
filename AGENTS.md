@@ -142,7 +142,7 @@ cd app && npm test                          # 416 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
-python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence / 2 rig not runnable
+python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence or coverage lost / 2 cannot run
                                             # no venv needed: layer 2 probes .venv/bin/python
                                             # then this interpreter; --python <exe> forces one
 
@@ -150,7 +150,7 @@ python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence / 2 rig
 python3 scripts/brand_twin_diff.py          # 0 identical / 1 divergence / 2 rig not runnable
 
 # CSV shared-table diff: FLOAT_PARITY + the golden document literal, pytest side vs vitest side
-python3 scripts/parity_table_diff.py        # 0 identical / 1 divergence / 2 cannot run
+python3 scripts/parity_table_diff.py        # 0 identical / 1 divergence or coverage lost / 2 cannot run
 
 # the LANDING GATE itself (pytest + manage.py check + makemigrations --check),
 # with a dep preflight so a swallowed boot-install failure is exit 2 not a false red
@@ -276,7 +276,21 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   prose: `python3 scripts/parity_table_diff.py` parses both files and diffs
   `FLOAT_PARITY` plus the golden byte string — floats keyed by their IEEE-754
   bytes, since the two languages' *renderings* are the thing under test and
-  disagree on purpose (DEVGUIDE *SEVENTH harness law*). The golden document ALSO doubles its datetime column
+  disagree on purpose (DEVGUIDE *SEVENTH harness law*). BOTH CSV harnesses also pin
+  their own POPULATION, because a comparison cannot see its own coverage: the matrix
+  feeds both writers, so a truncated `SENTINELS` list only makes them agree over less
+  (measured pre-fix: 5 sentinels deleted, including both line-breakers and the `=SUM`
+  guard lead, answered `BYTE-IDENTICAL — 3065 cells` rc 0), and a row deleted from BOTH
+  `FLOAT_PARITY` copies still compares equal (measured pre-fix: the `1e-7` row gone from
+  both answered `24 rows, identical` rc 0). So each harness carries a literal row/sentinel
+  count that must agree with the lists/parsed rows it describes (mismatch = `CANNOT RUN`,
+  the harness does not understand its input) AND the rows holding a recorded divergence
+  pinned individually by identity (vanished = RED naming the row and the promise it
+  carried) — floats by IEEE-754 bytes, never by equality, since `0.0 == -0.0` in Python
+  cannot tell a matrix that kept negative zero from one that lost it. The golden
+  document is pinned the same way, by required substrings (`…T21:00:00Z`, `'=HYPERLINK`,
+  the quoted comma, the un-refloed `-5.00`) rather than by length, which any re-wrap
+  legitimately moves. DEVGUIDE *ELEVENTH harness law*. The golden document ALSO doubles its datetime column
   (one row an aware `datetime`, one row the same instant as text) because a
   text-only cell cannot test the server's rendering rule at all — that blind
   spot hid divergence #2: DRF writes UTC as `…Z` while `isoformat()` writes
