@@ -410,7 +410,7 @@ once (one-time signature change from the stable key).
   step that fails if localhost/http/ws/wildcards ever reappear in the shipped
   conf.
 - **BLOCKED-ON-FOLLOW-UP on csp-1** (queued as `prod-CSP follow-through` in
-  AGENT-TEAM-TODOS.org): a placeholder CSP also breaks the flow this file
+  TODOS.org): a placeholder CSP also breaks the flow this file
   and the README advertise — a downloaded CI artifact (.exe/.AppImage/.apk)
   pointed at the user's own DRF API on the login screen cannot connect,
   because `connect-src` is 'self' + `https://API_HOST` until a build passes
@@ -492,7 +492,7 @@ Agent law (supersedes any conflicting instruction above for CI seats):
 2. CONTROL: `agent-team/TEAM-CONTROL.org` is LEAD-OWNED — seats read and
    cite, never edit. Same for `.github/workflows/*`, `.github/scripts/*`,
    `.gitattributes`.
-3. BOARD: `agent-team/AGENT-TEAM-TODOS.org` is the source of truth for
+3. BOARD: `agent-team/TODOS.org` is the source of truth for
    work. Flip your item ONGOING at start; on delivery flip to PENDING
    with `:DELIVERED:` evidence (branch, sha, gate output). DONE is
    Lead-only.
