@@ -815,6 +815,54 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 20:18 UTC] :: THE LANDING GATE ITSELF BECAME A
+  TOOL (branch ai/turn-20261021-2018, commit f17f486; state untouched — PENDING
+  stands, the :DELIVERED: rows above unchanged, DONE is the Lead's gate). Board
+  re-COUNTED not inherited: every WORK ORDER row 1-11 carries :DELIVERED: and the
+  chat tail held no unanswered @platform-engineer ping (newest entries are my own
+  20:09Z/20:10Z note + report), so this segment applied the 19:29Z law ("a proof
+  you cannot re-run is a proof that expires") to the one command EVERY seat runs
+  before pushing and nobody could run as a unit: the LANDING GATE
+  (AGENTS.md:574) existed only as three prose lines.
+  WHAT LANDED: scripts/landing_gate.py — legs run INDEPENDENTLY (one red does not
+  hide the rest), and a NEW hazard class for me: the gate's own launcher bug
+  impersonates a red tree. Measured on this box at boot, exactly as escalated at
+  19:59Z: `python3 -c "import admincraft"` → ModuleNotFoundError (the boot install
+  is `pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true`,
+  .turn-inside.sh:16 — Lead-owned, so the seat-side fix is a preflight, not an
+  edit), and pytest answers that INTERNALERROR with rc 2 — the very code the twin
+  harnesses reserve for "cannot run". So leg 0 probes
+  `django, rest_framework, drf_spectacular, admincraft` and exits 2 naming the
+  missing module AND the install command. Second law applied: rc 0 is NOT the
+  claim — each leg asserts its own output ("System check identified no issues",
+  "No changes detected", the parsed `N passed`; a green rc whose summary names a
+  failure is RED). Verdict prints the interpreter, per my own 20:09Z rule 1
+  ("NAME THE ENVIRONMENT THAT PROVED IT"), now turned on my own tool.
+  GREEN: `python3 scripts/landing_gate.py --fe` from the repo root →
+  env /usr/local/bin/python3 (django 5.2.18) / pytest 299 passed / check no issues
+  / migrations No changes detected / vitest 416 passed (31 files), rc 0. NOTE for
+  every seat: this box had NO app/node_modules at boot (npm ci had to run before
+  the FE legs were possible), which is why the FE legs of the twin harnesses were
+  un-runnable on turn start.
+  FIVE CONTROLS measured, each restoring the tree (`git status` clean afterwards;
+  models.py byte-identical from a saved copy): dep-free venv as `--python` → 2
+  naming `ModuleNotFoundError: No module named 'django'` + the fix;
+  nonexistent `--python` → 2 `cannot launch` (FIFTH law 127-trap held: a launch
+  failure never wears the 1 that means divergence); node_modules moved aside → 2
+  naming `npm ci` (and the four server legs still printed green first — honest
+  about what it did run); one deliberately failing test → 1 naming pytest as
+  `1 failed, 299 passed`; a migration-less model field → 1 on the migrations leg
+  AND 78 pytest errors, which is the BONUS FINDING: the gate's prose implies three
+  independent checks, but the rig's fixtures couple leg 1 to the schema, so a
+  schema change must go through all three, never "just" makemigrations.
+  DOCS: DEVGUIDE gained the EIGHTH harness law; both Commands blocks cite the
+  command; TWO stale numbers fixed with measured ones — AGENTS.md law 7 said
+  "212 pytest / 252 vitest" and the CI section (AGENTS.md:349, DEVGUIDE:740) said
+  "58 + 175"; actual is 299 / 416. The workflow header comment
+  `.github/workflows/build-all.yml:4` still says 58/114 — Lead-owned, cited not
+  edited. Product code: ZERO changes; both suites: ZERO changes; package-lock:
+  ZERO changes (`npm ci` only, lockfile-respecting). ROLE_LARK_WEBHOOK still empty
+  in this seat's env (checked with [ -z ], not assumed) → Lark report skipped.
 - Note taken on [2026-10-21 Wed 20:10 UTC] :: SELF-AUDIT OF THE NOTE ABOVE
   (commit 1ce3045, same branch ai/turn-20261021-2003; state untouched — PENDING
   stands, DONE is the Lead's gate). The resolver landed minutes earlier carried
