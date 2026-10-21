@@ -26,11 +26,13 @@ is genuinely RED, 2 = the gate could not be RUN (missing interpreter deps,
 missing node_modules, a tool that cannot launch). Launch failures are 2, never
 1 — a check that cannot start has no opinion about your diff. ``--fe`` adds the
 vitest leg (not part of the merge gate, but every seat is told to keep it
-green) and refuses with 2 when ``app/node_modules`` is absent.
+green) plus the three twin harnesses (csv/brand/parity byte identity — the
+claim NO single suite can see, since each writer is green against its own
+fixture) and refuses with 2 when ``app/node_modules`` is absent.
 
 Usage (from the repo root):
   python3 scripts/landing_gate.py          # the three merge-gate legs
-  python3 scripts/landing_gate.py --fe     # plus vitest
+  python3 scripts/landing_gate.py --fe     # plus vitest and the twin harnesses
   python3 scripts/landing_gate.py --python /path/to/exe   # force one interpreter
 """
 import argparse
@@ -134,6 +136,36 @@ def leg_vitest(log):
     log("vitest     %s passed (%s files)" % (tests.group(1), files.group(1)))
 
 
+# The twin harnesses prove a claim NEITHER suite can see: AGENTS.md states each
+# writer (brandToCss/render_css, csv.ts/csv_export.py, the parity table) is
+# green against its OWN fixture while the byte-identity lives between them — so
+# a drift where both suites stay 100% green lands behind a gate that never ran
+# the comparison. Seats have been writing "siblings re-run green" in reports by
+# hand; a leg turns that prose back into a measurement. The twins already speak
+# the FIFTH-law grammar (0/1/2), so the mapping is direct, not invented here.
+TWINS = [("csv-twin", "csv_twin_diff.py"), ("brand-twin", "brand_twin_diff.py"),
+         ("parity-twin", "parity_table_diff.py")]
+
+
+def leg_twin(py, name, script, log):
+    proc = launch([py, str(ROOT / "scripts" / script)], ROOT)
+    out = proc.stdout + "\n" + proc.stderr
+    if proc.returncode == 1:
+        raise LegRed("%s (%s) rc 1 — the twins DIVERGE: %s"
+                     % (name, script, tail(out)))
+    if proc.returncode == 2:
+        raise CannotRun("%s (%s) says it cannot run: %s" % (name, script, tail(out)))
+    if proc.returncode != 0:
+        raise CannotRun("%s (%s) exited %d, outside its documented 0/1/2 "
+                        "contract: %s" % (name, script, proc.returncode, tail(out)))
+    line = next((ln for ln in out.splitlines() if ln.startswith("BYTE-IDENTICAL")),
+                None)
+    if line is None:
+        raise LegRed("%s rc 0 but printed no BYTE-IDENTICAL verdict — exit 0 "
+                     "alone never proved the compare happened: %s" % (name, tail(out)))
+    log("%-10s %s" % (name, line))
+
+
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--python", dest="py", default=sys.executable,
@@ -154,6 +186,8 @@ def main(argv):
                           "No changes detected", log))]
     if opts.fe:
         legs.append((leg_vitest, (log,)))
+        legs += [(leg_twin, (py, name, script, log))
+                 for name, script in TWINS]
 
     failures = []
     for fn, args in legs:
