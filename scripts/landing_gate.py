@@ -30,9 +30,10 @@ is genuinely RED, 2 = the gate could not be RUN (missing interpreter deps,
 missing node_modules, a tool that cannot launch). Launch failures are 2, never
 1 — a check that cannot start has no opinion about your diff. ``--fe`` adds the
 vitest leg (not part of the merge gate, but every seat is told to keep it
-green) plus the three twin harnesses (csv/brand/parity byte identity — the
-claim NO single suite can see, since each writer is green against its own
-fixture) and refuses with 2 when ``app/node_modules`` is absent.
+green) plus the four twin harnesses (csv/brand/parity byte identity and the
+machine-gate roster — the claims NO single suite can see, since each writer is
+green against its own fixture) and refuses with 2 when ``app/node_modules`` is
+absent.
 
 Usage (from the repo root):
   python3 scripts/landing_gate.py          # the three merge-gate legs
@@ -83,12 +84,34 @@ EXPECTED_VITEST_FILES = 31
 # a wrong roster means this file is no longer the gate finalize replays, so it has no
 # opinion about the diff in front of it.
 MERGE_ROSTER = ("env", "pytest", "check", "migrations")
-FE_ROSTER = ("vitest", "csv-twin", "brand-twin", "parity-twin")
+FE_ROSTER = ("vitest", "csv-twin", "brand-twin", "parity-twin", "gate-twin")
 # Third, INDEPENDENT source for the twin legs: the harnesses that exist on disk. The
 # roster and a literal are two copies of one intent (the weakest pin the twins were
 # fixed for); the filesystem is not, so a 4th *_diff.py harness written and never
 # wired into the gate, or a roster naming a script that is gone, both fire here.
-EXPECTED_TWINS = 3
+EXPECTED_TWINS = 4
+
+# WHAT EACH MERGE LEG ACTUALLY RUNS — the contract in one place, and EXECUTED by the
+# legs, not described beside them. This exists because of a fourth member of the same
+# family: the gate the machine replays on every merge is .github/scripts/gate.sh
+# (Lead-owned, called from .github/workflows/agent-team.yml), and AGENTS.md claims the
+# two "run the same". That claim had no measurement — a seat could keep this file honest
+# while the real merge gate silently dropped a leg or stopped capturing a failure. The
+# twin in scripts/gate_roster_diff.py diffs gate.sh's executed commands against the
+# spec below, so the spec is the one source of truth BOTH sides are graded against;
+# `python` in argv[0] is the launcher placeholder this file re-spells with --python.
+MERGE_COMMANDS = {
+    "pytest": (".", ("python", "-m", "pytest", "plugin/tests",
+                     "-p", "no:cacheprovider", "-q")),
+    "check": ("demo-backend", ("python", "manage.py", "check")),
+    "migrations": ("demo-backend",
+                   ("python", "manage.py", "makemigrations", "--check", "--dry-run")),
+}
+# The one leg gate.sh is allowed not to run: the dep preflight is this file's own
+# addition (EIGHTH law), so its absence there is a documented difference, not drift.
+# The twin fires if the exemption ever stops applying (release_readiness's
+# reverse-bite rule: an exemption that covers nothing reads as "handled").
+ALLOWED_MACHINE_ABSENCE = ("env",)
 
 
 class CannotRun(Exception):
@@ -153,6 +176,14 @@ def population(leg, got, want, carrier):
 def pin_roster(labels, fe):
     """Refuse to run if the leg roster is not the roster this gate advertises."""
     owed = list(MERGE_ROSTER) + (list(FE_ROSTER) if fe else [])
+    if sorted(MERGE_COMMANDS) != sorted(l for l in MERGE_ROSTER
+                                        if l not in ALLOWED_MACHINE_ABSENCE):
+        raise CannotRun("MERGE_COMMANDS (%s) is not MERGE_ROSTER minus the allowed "
+                        "absences (%s) — a leg would run an argv this file does not "
+                        "advertise, and the machine-gate twin would then diff against "
+                        "a spec that is not the gate"
+                        % (", ".join(sorted(MERGE_COMMANDS)),
+                           ", ".join(MERGE_ROSTER)))
     if labels == owed:
         return
     missing = [l for l in owed if l not in labels]
@@ -182,11 +213,11 @@ def twin_roster_on_disk():
 def pin_twins():
     """The TWINS roster vs the harnesses that actually exist — two independent views."""
     on_disk = twin_roster_on_disk()
-    named = sorted(script for _, script in TWINS)
+    named = sorted(script for _, script, _probe in TWINS)
     if len(TWINS) != EXPECTED_TWINS:
         raise CannotRun("TWINS lists %d harness(es), EXPECTED_TWINS pins %d. A twin "
                         "deleted from the roster still leaves its harness on disk and "
-                        "green on its own — the byte-identity claim would then cover "
+                        "green on its own — the identity/roster claim would then cover "
                         "less than it says. Fix the roster, or bump EXPECTED_TWINS in "
                         "the SAME commit as the deliberate change." % (len(TWINS), EXPECTED_TWINS))
     if named != on_disk:
@@ -194,14 +225,14 @@ def pin_twins():
                         "disk (%s) — an unwired harness is a comparison nobody runs, a "
                         "roster naming a gone harness is a leg that cannot pass."
                         % (", ".join(named), ", ".join(on_disk)))
-    if [name for name, _ in TWINS] != list(FE_ROSTER)[1:]:
+    if [name for name, _s, _p in TWINS] != list(FE_ROSTER)[1:]:
         raise CannotRun("the TWINS labels (%s) do not match FE_ROSTER's twin slots (%s)"
-                        % (", ".join(n for n, _ in TWINS), ", ".join(FE_ROSTER[1:])))
+                        % (", ".join(n for n, _s, _p in TWINS), ", ".join(FE_ROSTER[1:])))
 
 
 def leg_pytest(py, log):
-    proc = launch([py, "-m", "pytest", "plugin/tests",
-                   "-p", "no:cacheprovider", "-q"], ROOT)
+    cwd, spec = MERGE_COMMANDS["pytest"]
+    proc = launch([py] + list(spec)[1:], ROOT / cwd)
     out = proc.stdout + proc.stderr
     if proc.returncode != 0:
         raise LegRed("pytest rc %d: %s" % (proc.returncode, tail(out)))
@@ -222,8 +253,9 @@ def leg_pytest(py, log):
     log("pytest     %s passed (plugin/tests)" % passed.group(1))
 
 
-def leg_django(py, name, argv, probe, log):
-    proc = launch([py, "manage.py"] + argv, ROOT / "demo-backend")
+def leg_django(py, name, probe, log):
+    cwd, spec = MERGE_COMMANDS[name]
+    proc = launch([py] + list(spec)[1:], ROOT / cwd)
     if proc.returncode != 0:
         raise LegRed("%s rc %d: %s" % (name, proc.returncode,
                                        tail(proc.stdout + "\n" + proc.stderr)))
@@ -259,11 +291,13 @@ def leg_vitest(log):
 # the comparison. Seats have been writing "siblings re-run green" in reports by
 # hand; a leg turns that prose back into a measurement. The twins already speak
 # the FIFTH-law grammar (0/1/2), so the mapping is direct, not invented here.
-TWINS = [("csv-twin", "csv_twin_diff.py"), ("brand-twin", "brand_twin_diff.py"),
-         ("parity-twin", "parity_table_diff.py")]
+TWINS = [("csv-twin", "csv_twin_diff.py", "BYTE-IDENTICAL"),
+         ("brand-twin", "brand_twin_diff.py", "BYTE-IDENTICAL"),
+         ("parity-twin", "parity_table_diff.py", "BYTE-IDENTICAL"),
+         ("gate-twin", "gate_roster_diff.py", "ROSTER-IDENTICAL")]
 
 
-def leg_twin(py, name, script, log):
+def leg_twin(py, name, script, probe, log):
     proc = launch([py, str(ROOT / "scripts" / script)], ROOT)
     out = proc.stdout + "\n" + proc.stderr
     if proc.returncode == 1:
@@ -274,11 +308,10 @@ def leg_twin(py, name, script, log):
     if proc.returncode != 0:
         raise CannotRun("%s (%s) exited %d, outside its documented 0/1/2 "
                         "contract: %s" % (name, script, proc.returncode, tail(out)))
-    line = next((ln for ln in out.splitlines() if ln.startswith("BYTE-IDENTICAL")),
-                None)
+    line = next((ln for ln in out.splitlines() if ln.startswith(probe)), None)
     if line is None:
-        raise LegRed("%s rc 0 but printed no BYTE-IDENTICAL verdict — exit 0 "
-                     "alone never proved the compare happened: %s" % (name, tail(out)))
+        raise LegRed("%s rc 0 but printed no %s verdict line — exit 0 alone never "
+                     "proved the compare happened: %s" % (name, probe, tail(out)))
     log("%-10s %s" % (name, line))
 
 
@@ -296,15 +329,14 @@ def main(argv):
 
     legs = [("env", leg_env, (py, log)),
             ("pytest", leg_pytest, (py, log)),
-            ("check", leg_django, (py, "check", ["check"],
+            ("check", leg_django, (py, "check",
                                    "System check identified no issues", log)),
             ("migrations", leg_django, (py, "migrations",
-                                         ["makemigrations", "--check", "--dry-run"],
                                          "No changes detected", log))]
     if opts.fe:
         legs.append(("vitest", leg_vitest, (log,)))
-        legs += [(name, leg_twin, (py, name, script, log))
-                 for name, script in TWINS]
+        legs += [(name, leg_twin, (py, name, script, probe, log))
+                 for name, script, probe in TWINS]
 
     # Pinned before a single leg launches: a roster that drifted is not a verdict
     # about the tree, and running the survivors first would print green lines for a

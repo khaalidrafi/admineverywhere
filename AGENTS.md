@@ -152,11 +152,18 @@ python3 scripts/brand_twin_diff.py          # 0 identical / 1 divergence / 2 rig
 # CSV shared-table diff: FLOAT_PARITY + the golden document literal, pytest side vs vitest side
 python3 scripts/parity_table_diff.py        # 0 identical / 1 divergence or coverage lost / 2 cannot run
 
+# MACHINE GATE vs SEAT GATE: .github/scripts/gate.sh (what finalize replays, Lead-owned
+# and opened read-only here) diffed command-by-command against landing_gate's
+# MERGE_COMMANDS — same legs, same order, same argv, each `|| FAIL=1` capture intact
+python3 scripts/gate_roster_diff.py         # 0 identical / 1 divergence / 2 cannot run
+python3 scripts/gate_roster_diff.py --gate /tmp/copy.sh   # controls run on copies
+
 # the LANDING GATE itself (pytest + manage.py check + makemigrations --check),
 # with a dep preflight so a swallowed boot-install failure is exit 2 not a false red
 python3 scripts/landing_gate.py             # 0 green / 1 a leg is red / 2 cannot run
-python3 scripts/landing_gate.py --fe        # plus vitest AND the three twin harnesses
-                                            # (csv/brand/parity — needs app/node_modules)
+python3 scripts/landing_gate.py --fe        # plus vitest AND the four twin harnesses
+                                            # (csv/brand/parity/gate-roster — the first
+                                            # three need app/node_modules)
 
 # the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
 # doc-citation rot AND every cited line landing inside its file, release inputs,
@@ -634,23 +641,31 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    wearing pytest's exit 2 as a red tree — and each leg asserts its own output phrase,
    because exit 0 alone never proved anything (DEVGUIDE *EIGHTH harness law*). The count
    legs are graded against pinned literals `EXPECTED_PYTEST`/`EXPECTED_VITEST`/
-   `EXPECTED_VITEST_FILES` (`scripts/landing_gate.py:66`) — pre-fix the PARENT gate was
+   `EXPECTED_VITEST_FILES` (`scripts/landing_gate.py:67`) — pre-fix the PARENT gate was
    green over vanished coverage (measured: `297 passed`, rc 0), the same hole the twins
    were fixed for — so when a suite legitimately changes, bump the literal in the SAME
    commit as the diff (DEVGUIDE *ELEVENTH harness law*, extended to its own author).
    The LEG ROSTER is pinned the same way, by ordered labels (`MERGE_ROSTER` +
-   `FE_ROSTER`, `scripts/landing_gate.py:85`), checked before a single leg launches:
+   `FE_ROSTER`, `scripts/landing_gate.py:86`), checked before a single leg launches:
    pre-fix, deleting the `migrations` leg answered `GATE GREEN`, rc 0 — a vanished leg
    prints no count to argue with. A roster drift is `CANNOT RUN` (the harness is no
    longer this gate), never RED; the twin roster is cross-checked against the
    `scripts/*_diff.py` files on disk, not only against its own literal, so an unwired
-   harness is a refusal too. `--fe`
-   adds vitest plus all three twin harnesses (csv/brand/parity): the merge gate
+   harness is a refusal too. `--fe` adds vitest plus all four twin harnesses
+   (csv/brand/parity byte identity and the machine-gate roster): the merge gate
    deliberately stays three legs, because the twins answer `CANNOT RUN` where
    `app/node_modules` is absent and that verdict must not stall every merge — but a
    seat delivering work that touches a twin pair must run `--fe`, because per-side
    unit tests are green against their own fixture and therefore cannot see a
-   divergence *between* the two.
+   divergence *between* the two. The fourth twin is the one a seat cannot see at
+   all: `.github/scripts/gate.sh` (Lead-owned, what `finalize` actually replays) is
+   diffed command-by-command against `MERGE_COMMANDS` (`scripts/landing_gate.py:103`),
+   which the merge legs themselves now execute — so "the landing gate runs the same"
+   is measured, not asserted. Drift is RED naming `MISSING` / `UNDECLARED` / `ORDER
+   changed` / `FAILURE NOT CAPTURED` (a leg that runs but whose `|| FAIL=1` is gone can
+   print a red and still exit 0); a gate parsing to zero commands is `CANNOT RUN`.
+   `python3 scripts/gate_roster_diff.py` runs it alone, and gate.sh is only ever opened
+   read-only — controls go to copies via its `--gate` flag.
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.
