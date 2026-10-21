@@ -40,17 +40,25 @@ One carve-out Python has and `csv.ts` does not: `csv.writer` quotes a row
 that is exactly one empty field so the line cannot collapse. No real export
 row is single-column; if yours is, add the rule on both sides at once.
 
-A second divergence, reachable only by *type*, not by this product's data: a
-Python `float` cell. `csv_cell(1.0)` writes `1.0`, `str(-0.0)` writes `-0.0`,
-`str(1e-07)` writes `1e-07`, while `String()` on the same value gives `1`, `0`
-and `1e-7`. Nothing else in the two writers disagrees — quoting, CRLF, null,
-booleans and the formula guard are byte-for-byte twins for every value a JSON
-response can carry (string/number-int/bool/null), which is what a DRF
-`JSONRenderer` sends: decimals and dates arrive as STRINGS, so a client row
-never holds a float to re-format. A client project that exports from a
-`FloatField` through a hand-rolled path (not the API's own JSON) is the one
-case that can drift; if you hit it, format on both sides or ban the field from
-export.
+Floats are the value type that once disagreed by *type* rather than by shape,
+and the server side now carries the rule: `csv_cell()` renders a Python `float`
+with `js_number_text()`, i.e. exactly what ECMAScript's `String()` writes for
+the same double. That matters because the two layers see a float differently —
+layer 1 receives `JSON.parse`'d number and `String()`s it (`1.0` -> `1`,
+`1e-07` -> `1e-7`), layer 2 formats it in Python (`str(1.0)` -> `1.0`), so a
+client project with a `FloatField` got two buttons producing two files. Python's
+shortest round-trip `repr` yields the same digits the spec would choose, so only
+the presentation is re-laid out (integral floats, the `-6 < n <= 21` switch
+points, unpadded exponents). `Decimal` is untouched: its own serial form is
+data and must never be re-flowed (§5). The guard rides along: it is keyed on
+`isinstance(value, str)`, never on the rendered text, because a negative float
+in exponent form (`-1e-9`) is not numeric-shaped and would otherwise be
+apostrophised server-side while the browser left it bare.
+
+The byte-level pin is a shared table, not a claim: `FLOAT_PARITY` appears in
+`plugin/tests/test_csv_export.py` and, with the same values and expectations,
+in `app/src/lib/__tests__/csv.test.ts`, and the §5 golden document now carries a
+`weight` column of `1.0`, `-0.5`, `1e-7`.
 
 ## 3. Server contract (layer 2)
 
@@ -138,6 +146,10 @@ export.
   the types a JSON body can carry — plus the live rig's own 63 rows including
   three created with formula-lead notes. Every run came out byte-identical,
   and the guard fired identically (`=HYPERLINK` and `-2+3` apostrophised,
-  `-5.00` left as data). Re-run it with floats in the matrix and the ONLY
-  cells that diverge are the `float`-repr ones above — that is how the §2
-  caveat was found, and it is the whole extent of the disagreement.
+  `-5.00` left as data). Run the SAME matrix with `float` cells left in — the
+  2026-10-21 segment that found the `repr` divergence did exactly that (144 of
+  507 lines differed, every one of them a float) — and it is now byte-identical
+  too: 12 seeds × 250 rows × 8 columns including integral floats, subnormals,
+  `1e100`, `5e-324`, `-0.0` and random magnitudes from `1e-8` to `1e9`, 295 KB
+  of output, zero differing lines. That is the whole extent of the disagreement,
+  and §2 is how it is closed.
