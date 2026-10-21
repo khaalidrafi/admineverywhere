@@ -113,7 +113,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (285 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (291 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (294 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -141,7 +141,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 291 vitest
+cd app && npm test                          # 294 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 285 pytest
 
@@ -245,6 +245,10 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `{"transition":"<target>"}` body and URL from BOTH the select and a
   drag/drop pair, the disabled-option set for an illegal target, the read-only
   Unassigned bucket, and the no-`transitionPath` refusal (no toggle, no probe).
+  The board ALSO mounts alone with a spy `onmove`: through the page an illegal
+  drop is refused twice (board guard + `planMove`), so only the isolated mount
+  pins `KanbanBoard.drop()`'s own `!allowed` guard — a mutant that removed it
+  survived every page-level assertion.
 - CSV export (FR-R005) keeps its two layers uncollapsed: DataTable "Export
   table" = visible columns of the CURRENT page, client-side, no server call;
   "Full export" = `GET <listPath>export/` line-level (child rows repeat parent
