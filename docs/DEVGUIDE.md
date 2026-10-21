@@ -160,11 +160,18 @@ python3 scripts/brand_twin_diff.py          # 0 = identical, 1 = divergence, 2 =
 # (parses both files; needs `node`, but NOT node_modules and NOT the rig venv)
 python3 scripts/parity_table_diff.py        # 0 = identical, 1 = divergence or coverage lost, 2 = cannot run
 
+# THE MACHINE GATE vs THE SEAT GATE — .github/scripts/gate.sh (what finalize replays on
+# every merge, Lead-owned and read-only here) diffed command by command against
+# scripts/landing_gate.py's MERGE_COMMANDS: same legs, same order, same argv, each with
+# its `|| FAIL=1` capture still in place. Neither file can see this drift from inside
+# itself (see ELEVENTH harness law — the roster of the OTHER gate).
+python3 scripts/gate_roster_diff.py         # 0 = identical, 1 = divergence, 2 = cannot run
+
 # the LANDING GATE as one command — pytest + manage.py check + makemigrations --check,
 # behind a dep preflight (see EIGHTH harness law: a swallowed boot install must not
-# impersonate a red tree). --fe adds vitest AND the three twin harnesses — the
-# byte-identity claims NO single suite can see, since every writer is green against
-# its own fixture; --python <exe> forces one interpreter.
+# impersonate a red tree). --fe adds vitest AND the four twin harnesses — the
+# byte-identity claims and the machine-gate roster that NO single suite can see, since
+# every writer is green against its own fixture; --python <exe> forces one interpreter.
 python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = cannot run
 
 # the RELEASE story as one command — the four carriers + the Cargo.lock entry vs a
@@ -944,8 +951,8 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   forbid, hidden in the file that enforces it, because a law written about harnesses
   is not automatically a law about the law's own file.
   THE FIX: `EXPECTED_PYTEST` / `EXPECTED_VITEST` / `EXPECTED_VITEST_FILES`
-  (`scripts/landing_gate.py:66`) are literals, one shared grader
-  (`scripts/landing_gate.py:135` `population()`), and a mismatch is RED that names the
+  (`scripts/landing_gate.py:67`) are literals, one shared grader
+  (`scripts/landing_gate.py:158` `population()`), and a mismatch is RED that names the
   direction: SHRANK = coverage lost (restore the tests, or bump the literal in the
   same commit as a deliberate deletion); GREW = the pin is stale (bump it in the same
   commit as the added tests). Unlike the twins there is no CANNOT RUN tier here: the
@@ -973,12 +980,12 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   launches, so a drift REFUSES rather than running the survivors and printing green
   lines for a gate that is no longer the gate finalize replays. Identity, population
   AND order in one compare:
-  graded by `pin_roster()` (`scripts/landing_gate.py:153`) against MERGE_ROSTER +
-  FE_ROSTER (`scripts/landing_gate.py:85`). Two copies of one intent are the weakest
+  graded by `pin_roster()` (`scripts/landing_gate.py:176`) against MERGE_ROSTER +
+  FE_ROSTER (`scripts/landing_gate.py:86`). Two copies of one intent are the weakest
   pin there is — measured twice above — so the twin roster is ALSO cross-checked against
   a source that is not a copy, the `scripts/*_diff.py` files on disk, by
-  `pin_twins()` (`scripts/landing_gate.py:182`) against the EXPECTED_TWINS literal
-  (`scripts/landing_gate.py:91`).
+  `pin_twins()` (`scripts/landing_gate.py:213`) against the EXPECTED_TWINS literal
+  (`scripts/landing_gate.py:92`).
   THE VERDICT SPLIT IS THE POINT, and it reverses the ruling two lines above on
   purpose: a COUNT mismatch is RED (the tree is not making the claim its own runner
   summary prints — a verdict about the work), a ROSTER mismatch is `CANNOT RUN` (this
@@ -991,6 +998,51 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   CONTROLS: honest run rc 0 (4 legs default, 8 under `--fe`, roster printed); each of
   the four mutations above → rc 2 naming MISSING migrations / TWINS lists 2, pins 3 /
   roster-vs-disk / ORDER changed, every time BEFORE a leg launched.
+  THE LAST UNPINNED ROSTER WAS THE OTHER GATE'S. Both files above pin THEMSELVES. Neither
+  ever asked whether the gate the MACHINE replays on every merge is the gate the SEAT
+  runs, while AGENTS.md states they "run the same" — and the file that decides merges,
+  `.github/scripts/gate.sh`, is three bare commands with no count pin and no roster pin.
+  Measured with that file opened read-only: one 24-test file moved aside and it answered
+  `275 passed` and `GATE: GREEN`, rc 0. A pin inside the seat's own file structurally
+  cannot see that, because it pins the seat's own file; the roster the two gates share
+  was prose on both sides.
+  THE FIX: `scripts/gate_roster_diff.py` — the FOURTH twin, wired into FE_ROSTER as
+  `gate-twin` — parses the commands gate.sh ACTUALLY EXECUTES and diffs them, in order,
+  against `MERGE_COMMANDS` (`scripts/landing_gate.py:103`), which is no longer a
+  description of the gate but its source: `leg_pytest()` at `scripts/landing_gate.py:233`
+  and `leg_django()` at `scripts/landing_gate.py:256` read it, so
+  seat behaviour, seat expectation and machine behaviour are ONE object instead of three
+  claims that can each drift. Four doors, one verdict word `ROSTER-DIVERGENCE`: MISSING
+  (a leg the seat advertises is not run by the merge gate), UNDECLARED (the merge gate
+  runs a command no seat is told about — which includes a silently NARROWED one, because
+  an argv change makes the command unrecognisable rather than quietly partial), ORDER
+  changed, and FAILURE NOT CAPTURED (the leg still runs, but `|| FAIL=1` is gone, so its
+  red can print and the gate still exit 0 — the same class as TWELFTH law's transport
+  verdict, arriving from the shell side). The verdict split holds: a drift BETWEEN the two
+  gates is RED (a real change in what work gets gated on), while a gate that parses to
+  zero commands is `CANNOT RUN` (the parser lost the shape, so there is no verdict to
+  report, and a harness that reads nothing must never report identity).
+  THE CONTROL THAT CHANGED THE CODE: the first cut defaulted `captured = True`, so the
+  version written to close door 4 could not see door 4 — deleting `|| FAIL=1` from the
+  check leg answered `ROSTER-IDENTICAL — 3/3`, rc 0. The mutation was run BEFORE the
+  claim, caught it, and the default flipped to False with a comment naming the reason.
+  LEAD-OWNED BOUNDARY HELD: gate.sh was opened read-only for every single run; all six
+  mutations went to COPIES under /tmp through the harness's own `--gate` flag, and the
+  shipped file's md5 was verified unchanged (and `git status` clean) before and after.
+  CONTROLS: honest run rc 0 (3/3 verdict legs, same order, each captured); the
+  makemigrations command deleted → rc 1 `MISSING migrations`; `|| FAIL=1` dropped from
+  check → rc 1 `FAILURE NOT CAPTURED … python manage.py check`; `-p no:cacheprovider`
+  dropped → rc 1 naming MISSING pytest AND UNDECLARED (both doors at once, both
+  reported — a leg that reports one door hides the rest); `plugin/tests` →
+  `plugin/tests/unit` → the same pair; check and migrations swapped → rc 1 `ORDER
+  changed`; an added `python -m ruff check plugin` → rc 1 `UNDECLARED 1`; an echo-only
+  script → rc 2 `parsed to ZERO commands`. Parent gate, three self-checks: FE_ROSTER
+  truncated → rc 2 `UNDECLARED gate-twin`; TWINS truncated → rc 2 `TWINS lists 3
+  harness(es), EXPECTED_TWINS pins 4`; MERGE_COMMANDS missing `check` → rc 2 `internally
+  inconsistent`. `--fe` now runs 9 legs.
+  SEAT RULE, one file wider: a population pin only ever covers the file that holds it.
+  When TWO files implement ONE contract, the pin that matters is the DIFF between them —
+  and the side you do not own is exactly the side nobody measures.
   SEAT RULE, extending the law to its author: when you write a population law for a
   harness family, the next file to measure is the one that runs the family — and the
   population to pin there is BOTH the numbers its legs print and the roster of legs
