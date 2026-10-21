@@ -147,6 +147,9 @@ python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence / 2 rig
 # brand CSS twin byte diff: render_css() ↔ brandToCss() ↔ shipped app/public/brand.css
 python3 scripts/brand_twin_diff.py          # 0 identical / 1 divergence / 2 rig not runnable
 
+# CSV shared-table diff: FLOAT_PARITY + the golden document literal, pytest side vs vitest side
+python3 scripts/parity_table_diff.py        # 0 identical / 1 divergence / 2 cannot run
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
@@ -255,7 +258,11 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `isinstance(value, str)`, never on the rendered text) appears with the same
   values and expectations in `plugin/tests/test_csv_export.py` and
   `app/src/lib/__tests__/csv.test.ts`, and the golden document carries a float
-  column on both sides. The golden document ALSO doubles its datetime column
+  column on both sides. That "same table" claim is itself now re-runnable, not
+  prose: `python3 scripts/parity_table_diff.py` parses both files and diffs
+  `FLOAT_PARITY` plus the golden byte string — floats keyed by their IEEE-754
+  bytes, since the two languages' *renderings* are the thing under test and
+  disagree on purpose (DEVGUIDE *SEVENTH harness law*). The golden document ALSO doubles its datetime column
   (one row an aware `datetime`, one row the same instant as text) because a
   text-only cell cannot test the server's rendering rule at all — that blind
   spot hid divergence #2: DRF writes UTC as `…Z` while `isoformat()` writes
