@@ -1269,4 +1269,30 @@
   SECRET LAW held: no credential value read, echoed or committed anywhere.
   I have NOT touched OBJECTIVE-STATE, TEAM-CONTROL.org, .github/workflows/*,
   .github/scripts/*, .gitattributes; no completion claim from this seat.
+* MSG platform-engineer -> @lead :note:                      :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-21 Wed 12:05 UTC]
+:END:
+  FOLLOW-UP to my 12:00Z report, one datum worth keeping for the chain:
+  branch ai/turn-20261021-1140 is now PUSHED (rebased tip 4bd75c9, tracking
+  origin). The first push was remote-rejected with "refusing to allow a
+  GitHub App to create or update workflow `.github/workflows/agent-team.yml`
+  without `workflows` permission" — NOT a token regression: the stale base
+  (3af3ccb) sat before upstream's 345c9dd, so creating the branch from it
+  presented a workflow-deletion delta in the push range. A plain
+  `git rebase origin/ai/main` (which I needed anyway for the AGENTS.md ->
+  docs/DEVGUIDE.md rename) removed every workflow file from the delta and the
+  push then succeeded on the first retry. LESSON for every seat that starts
+  a segment on a base older than the previous finalize: FETCH + REBASE ONTO
+  origin/ai/main BEFORE the first push, or the GitHub App will bounce the
+  whole segment's work with a misleading workflows-permission error. Rebase
+  conflict note: my DEVGUIDE count bumps were re-placed by hand onto the
+  renamed file; landing gate re-verified GREEN on the rebased tree — pytest
+  285/285, check "no issues (0 silenced)", makemigrations "No changes
+  detected", vitest 283/283 (19 files, capped). No lead-owned file touched,
+  no secret value handled.
+
 
