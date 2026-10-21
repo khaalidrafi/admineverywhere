@@ -970,6 +970,63 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 14:05 UTC] :: :DELIVERED: (evidence
+  strengthening, state untouched — DONE stays the Lead's gate; no OBJECTIVE-STATE
+  change, no completion claim.) Board exhausted again: `grep -nE '^\*+ (\S+
+  )?(TODO|ONGOING|WAIT)' agent-team/TODOS.org` → zero hits; no unanswered
+  @platform-engineer ping in the chat tail (newest entries are still my own
+  13:21Z/13:23Z thread; the 12:42Z harness :request: has no verdict, and
+  agent-team.yml stays lead-owned — cited, never touched). So per instruction 2,
+  the smallest verifiable improvement, in the row's own uncovered half: the
+  feed ENGINE had mount proof, the chart COMPONENTS did not.
+  MEASURED GAP: the gap detector from my 13:21Z :note: listed 8 never-mounted
+  components; 4 of them are FR-R008 charts (StatusDonut, LeaderBars,
+  TrendArea, ActivityChart) and ActivityChart is the one chart that bypasses
+  `feed.ts` entirely — its model-picker and page-walk were asserted nowhere.
+  WHAT LANDED (branch ai/turn-20261021-1352):
+  - app/src/lib/__tests__/chartMount.test.ts (NEW, 12 tests) — mounts the four
+    charts against fixture schemas and judges DOM + requests: donut slice
+    dash/offset built from the group FRACTION of 2πr (exact toFixed(2) bytes),
+    top-5 fold into one "(other)" slice, total in the ring, nameable `empty`
+    with ZERO fetches, friendly `error` line; LeaderBars value-descending sort,
+    top-6 cut, percent-of-max bar widths; TrendArea 30-day point set matches
+    the day keys and counts, flat baseline on an all-zero window; ActivityChart
+    picker prefers the readOnly `created_at` model, walks max 3 pages even
+    against a server whose pagination never ends, and the footer names the
+    model+field it chose. Every URL asserted as
+    `http://api.test/api/orders/?page…` (schema-discovered listPath) with
+    `Authorization: Token …`. All four components byte-identical to HEAD.
+  - MUTANT RUN: five seds — fold removed (StatusDonut), sort removed
+    (LeaderBars), slice offset step 1→2 (StatusDonut), page cap 3→5
+    (ActivityChart), picker readOnly preference inverted (ActivityChart) — each
+    failed exactly one test BY NAME; all restored, `git diff --stat` empty
+    before commit. The FIRST draft of the walk-cap assertion survived the
+    cap→5 mutant (the fixture's own `next: null` ended the loop before the cap
+    mattered) — caught by running the mutant instead of trusting the green,
+    and fixed with an always-paginating second server.
+  - docs/widget-data.md — new "Proof (mount-level, not module-level)" section
+    naming chartMount + widgetMount and the mutant list; docs/DEVGUIDE.md
+    counts 302 → 314 (:116, :144).
+  SUSPECTED COPY BUG, pinned as-measured and NOT fixed (scope): LeaderBars'
+  caption prints the fetched row TOTAL under the word "first"
+  (`LeaderBars.svelte:50`, `groups.total`), so a 50-row feed reads
+  "first 50 records" — a cap claim the number does not make. A comment in
+  chartMount.test.ts marks it; report carries it to @lead.
+  MEASURED at this HEAD (landing gate): vitest 314/314 over 23 files; `npx tsc
+  --noEmit` exit 0; pytest 285/285 (12.86 s); manage.py check "no issues (0
+  silenced)"; makemigrations --check "No changes detected".
+  HARNESS (NINTH consecutive self-install): `demo-backend/.venv` absent again.
+  Full verified boot, 3 commands: `python3 -m venv .venv && .venv/bin/pip
+  install -r requirements.txt -e ../plugin` + `pip install pytest` (pytest is
+  NOT in requirements.txt — it lives in plugin/pyproject.toml:18 `test`
+  extra, so the boot line needs `admincraft[test]` or an explicit pytest) +
+  `cd app && npm ci`. Note the `npm ci` output can be empty while the install
+  is still finishing — check `ls node_modules/.bin/vitest` before concluding.
+  ROLE_LARK_WEBHOOK: empty in this seat's env (checked, `[ -n ]` → empty) —
+  report skipped per instruction 8, noted here. SECRET LAW held: no credential
+  value read, echoed or committed. No lead-owned file edited
+  (.github/workflows/*, TEAM-CONTROL.org, .gitattributes, .github/scripts/* —
+  read/cited only).
 - Note taken on [2026-10-21 Wed 12:41 UTC] :: Root cause of the CONTAINER-BOOT
   harness row (the eighth fresh container where the seat had to install
   deps itself before the gate could run) — MEASURED, and it overturns my own
