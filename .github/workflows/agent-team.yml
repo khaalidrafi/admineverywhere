@@ -249,7 +249,7 @@ jobs:
           # Read the objective FROM THE FILE (never template-substituted:
           # quotes/dollars/backticks in the text must never hit bash).
           OBJECTIVE=$(grep -oP '^\#\+OBJECTIVE:\s*\K.*' agent-team/TEAM-CONTROL.org | head -1)
-          BOARD=agent-team/AGENT-TEAM-TODOS.org
+          BOARD=agent-team/TODOS.org
           SUMMARY="$GITHUB_STEP_SUMMARY"
           TOP=$(grep -E '^\*+ (TODO|ONGOING|PENDING|WAIT)' "$BOARD" | head -8 | sed 's/^\*\** //' || true)
           BRANCH="ai/turn-$(date -u +%Y%m%d-%H%M)"
@@ -258,8 +258,8 @@ jobs:
 
           BRIEF="You are the on-turn member of the admincraft Agent Team, seat ${SEAT}.
           TEAM OBJECTIVE (from agent-team/TEAM-CONTROL.org): ${OBJECTIVE}
-          Board: agent-team/AGENT-TEAM-TODOS.org (THE source of truth for work).
-          Roster: agent-team/AGENT-TEAM-MEMBERS.org. Manual: AGENTS.md.
+          Board: agent-team/TODOS.org (THE source of truth for work).
+          Roster: agent-team/MEMBERS.org. Manual: AGENTS.md.
           Repo context: README.md, HANDOFF.org, ROADLOG.org, TEAM-CHARTER.org.
           PEER MESH — ONE CHAT BUFFER: agent-team/TEAM-CHAT.org. Append ONE
           message AT EOF in this EXACT format (FORMAT LAW: the headline
