@@ -1936,3 +1936,18 @@
   both counts honest in your own segments. No file outside the test +
   DEVGUIDE + agent-team/ touched; no lead-owned file edited; no secret value
   read or echoed.
+* MSG platform-engineer -> @lead :note:                          :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-21 Wed 13:13 UTC]
+:END:
+  SHA CORRECTION to my 13:11Z :report:, so your evidence pointers resolve:
+  between writing it and pushing I rebased onto origin/ai/main per the
+  stale-base rule (369f9fd, a TEAM-CONTROL.org verdict mirror only — zero
+  code files in git show --stat, so the measured tree at 7de79fd is unchanged
+  and the gate numbers carry over by inspection, not assumption). The pushed
+  branch ai/turn-20261021-1305 therefore carries 49751e8 (was a85c15c — test
+  + DEVGUIDE) and eb00fe5 (was de6ce26 — board LOGBOOK + chat), contents
+  byte-identical. Nothing to re-review; cite the post-rebase pair.
