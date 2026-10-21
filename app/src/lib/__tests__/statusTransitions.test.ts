@@ -5,8 +5,13 @@ import {
   getStatusField,
   hasLifecycle,
   isTransitionLegal,
+  lifecycleAvailable,
+  lifecycleProblem,
   statusTransitions,
 } from "../statusTransitions";
+import { normalizeOpenAPI } from "../openapi";
+import fixture from "./fixtures/openapi.json";
+import type { ModelSpec } from "../types";
 
 describe("statusTransitions registry", () => {
   it("has orders configured", () => {
@@ -71,5 +76,31 @@ describe("hasLifecycle", () => {
   it("returns false for other models", () => {
     expect(hasLifecycle("products")).toBe(false);
     expect(hasLifecycle("categories")).toBe(false);
+  });
+});
+
+describe("lifecycleProblem — declared here AND documented there", () => {
+  const LIVE = normalizeOpenAPI(fixture);
+
+  it("is silent for a model the registry does not govern", () => {
+    expect(lifecycleProblem(LIVE.byId.products)).toBeNull();
+    expect(lifecycleAvailable(LIVE.byId.products)).toBe(false); // no affordance either way
+  });
+
+  it("is silent for orders against the captured rig, which documents both actions", () => {
+    expect(lifecycleProblem(LIVE.byId.orders)).toBeNull();
+    expect(lifecycleAvailable(LIVE.byId.orders)).toBe(true);
+  });
+
+  it("refuses a machine whose transition endpoint the API does not document", () => {
+    const { transitionPath, historyPath, ...bare } = LIVE.byId.orders;
+    const reason = lifecycleProblem(bare as ModelSpec);
+    expect(reason).toMatch(/does not document POST \/api\/orders\/\{id\}\/transition\//);
+    expect(lifecycleAvailable(bare as ModelSpec)).toBe(false);
+  });
+
+  it("names 'no model' rather than guessing an affordance", () => {
+    expect(lifecycleProblem(null)).toBe("no model");
+    expect(lifecycleAvailable(undefined)).toBe(false);
   });
 });

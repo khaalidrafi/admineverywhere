@@ -3,7 +3,7 @@
   import Icon from "./Icon.svelte";
   import { formatCell } from "../lib/utils";
   import type { FieldSpec, ModelSpec, RecordRow } from "../lib/types";
-  import { getLegalTransitions, getStatusField, hasLifecycle } from "../lib/statusTransitions";
+  import { getLegalTransitions, getStatusField, lifecycleAvailable } from "../lib/statusTransitions";
   import type { RegisteredAction } from "../lib/actions/index";
 
   let {
@@ -44,7 +44,9 @@
 
   const columns = $derived(model.fields.filter((f) => f.type !== "json").slice(0, 6));
   const statusField = $derived(getStatusField(model.id));
-  const hasLifecycleGovernance = $derived(hasLifecycle(model.id));
+  /** Declared here AND documented by the server — a machine whose
+   *  POST …/transition/ is absent from the schema offers no buttons. */
+  const hasLifecycleGovernance = $derived(lifecycleAvailable(model));
 
   /** Bulk selection holds ids, not row objects, so a page reload cannot leave
    *  a stale row reference behind — selectedRows re-reads from the live rows. */

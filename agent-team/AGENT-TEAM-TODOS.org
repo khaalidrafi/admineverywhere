@@ -142,8 +142,22 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   ef1e8a4 — conflict surface identified, trial rebase next per DIVERGENCE
   HANDLING; STOP + WAIT if it conflicts, Lead/Owner resolves.
 :END:
-*** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
+*** ONGOING FR-R001-FE — lifecycle renderer (client side)                :FE:
 :LOGBOOK:
+- State "ONGOING" from "PENDING" [2026-10-20 Tue 23:50 UTC]
+- Note taken on [2026-10-20 Tue 23:50 UTC] :: :CLAIMED: WORK ORDER item 3
+  ("finish, client side") re-opened by seat platform-engineer on
+  ai/turn-20261020-2347. The 21:05 relay verified the renderer exists on the
+  tree but did not test it against a document that carries the R-001
+  endpoints: the client's proof fixture
+  app/src/lib/__tests__/fixtures/openapi.json (last touched 84f2007, before
+  R-001) has ZERO hits for "transition"/"history", so every normalizer and
+  mount test ran against a schema that does not document the very endpoints
+  the renderer calls — and docs/order-lifecycle.md:137-138 records that it
+  "should be recaptured when the frontend integrates them". Segment scope:
+  recapture the fixture from the live rig, bind transition/history paths by
+  the exportPath/mePath evidence law, refuse the affordance when the server
+  does not document it, and pin the bytes that actually go over the wire.
 CLOCK: [2026-10-18 Sun 21:19]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 21:19]
 - State "PENDING" from "ONGOING" [2026-10-20 Tue 21:05]
