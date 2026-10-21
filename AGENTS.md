@@ -417,7 +417,19 @@ scripts/release_readiness.py` diffs the four carriers + the Cargo.lock entry,
 compares them against a `vX.Y.Z` tag pointing at HEAD (or `--expect X.Y.Z`),
 and refuses any doc citation of a path that does not exist AND any `file:line`
 citation whose number is past the end of that file — a path check cannot see the
-second half of the claim. A bare hooks.py:50 citation is never guessed at, so
+second half of the claim — AND any citation whose line is inside the file but not
+on the `name()` the prose beside it names (the third door: DEVGUIDE once cited
+`scripts/csv_twin_diff.py:109` for `run()` while that line was the closing
+triple-quote of `CLIENT_SPEC`, green the whole time). The claim class is a same-line
+`name()` spelling only, measured on the delivered tree (the pair moves with every doc
+edit, so it is re-measured by the DEVGUIDE control rather than trusted as prose):
+widening it to any identifier word on the line scanned 576 claims and fired on 425 of
+them, and widening it to backticked
+identifiers still fired on three genuinely correct ones (`StatusEnum` is data
+`drf_spectacular/hooks.py:91`
+produces, never spells; `demo-backend/shop/models.py:87` is cited for `Order` by
+lexical containment). A leg that fires on a correct citation is worse than no leg.
+A bare hooks.py:50 citation is never guessed at, so
 write the directory or the citation stays unverifiable (only the Lead-owned workflow still
 carries that stale citation, so it is cited, not edited).
 Only the `release` job
