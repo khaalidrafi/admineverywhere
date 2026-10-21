@@ -13,7 +13,8 @@
    *
    * Asset handling on save (logo, same for favicon):
    *   - newly uploaded file        → sent as a data URL (server checks magic bytes)
-   *   - already a server asset     → sent as its filename (kept as-is)
+   *   - already a server asset     → sent as its stored relative path (kept
+   *                                   as-is; "assets/logo.svg" keeps its dir)
    *   - bundled static asset       → re-uploaded as data URL so the first save
    *                                   doesn't drop the shipped logo
    */
@@ -32,6 +33,10 @@
   ];
 
   const orig: Brand = structuredClone(get(app).brand);
+
+  // Twin of brandstore.FALLBACK_ASSET_URL's path (the plugin mounts its
+  // branding endpoints under "admincraft/" — see plugin/src/admincraft/urls.py).
+  const ASSET_PATH_PREFIX = "/admincraft/branding/asset/";
 
   // Draft starts from the live brand with color defaults filled in, so
   // every color input has a concrete value to bind to.
@@ -71,8 +76,12 @@
     const current = orig[key];
     if (!current) return undefined;
     if (current.startsWith("data:")) return current;
-    if (current.includes("/admincraft/branding/asset/")) {
-      return current.split("/").pop(); // server-relative: keep the file
+    if (current.includes(ASSET_PATH_PREFIX)) {
+      // Server-relative: send back the stored relative path, directory and
+      // all. Truncating to the basename broke every shipped brand.json, whose
+      // assets live in "assets/" — the next save 400'd on a brand the user
+      // never touched (brandstore stores and serves the whole relative path).
+      return current.slice(current.indexOf(ASSET_PATH_PREFIX) + ASSET_PATH_PREFIX.length);
     }
     try {
       // bundled static asset (e.g. /logo.svg): re-upload it so it survives
