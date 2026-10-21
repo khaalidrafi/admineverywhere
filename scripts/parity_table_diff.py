@@ -37,8 +37,12 @@ Usage (from the repo root):
   python3 scripts/parity_table_diff.py
 
 Exit 0 = both tables identical; exit 1 = divergence (the one-sided rows / the
-first differing bytes are printed); exit 2 = the check could not be RUN (a file
-or a subject is missing, node absent, an expression failed to evaluate). A
+first differing bytes are printed) OR coverage lost (a pinned population that no
+longer matches the rows parsed from the files, or a required row/substring that
+vanished from either copy — the case a two-copy compare cannot see, ELEVENTH
+harness law); exit 2 = the check could not be RUN (a file
+or a subject is missing, node absent, an expression failed to evaluate, the
+table's own population disagrees with its pin). A
 harness that silently greys out when it cannot find its subject is a false
 green, so every "not there" case is exit 2, never 0 — and a launch failure is
 exit 2, never 1 (that trap is what cost csv_twin_diff.py its exit-code contract).
@@ -58,6 +62,60 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PY_TABLE = ROOT / "plugin" / "tests" / "test_csv_export.py"
 TS_TABLE = ROOT / "app" / "src" / "lib" / "__tests__" / "csv.test.ts"
+
+
+class HarnessError(Exception):
+    """The harness does not understand its own subject: no verdict may be
+    reported, which is exit 2, never 0 and never 1."""
+
+
+# ---------------------------------------------------------------------------
+# ELEVENTH harness law (docs/DEVGUIDE.md): a printed COUNT is not an EXPECTATION.
+# This script compares two copies, so a row deleted from BOTH still compares
+# equal — the "shared table" survives while the coverage the table exists to
+# provide does not. Measured on this tree before these pins existed: dropping the
+# 1e-7 row from both copies answered `FLOAT_PARITY: 24 rows, identical values AND
+# expectations` with rc 0 (the honest table is 25). So the population is pinned
+# twice — a literal AND the rows actually parsed from each file — and the rows
+# that carry a recorded divergence are pinned individually by identity, because
+# a coverage row that vanished is a proof regression, not a tooling gap.
+# Changing the table deliberately is a two-place edit; shrinking it silently is
+# loud.
+# ---------------------------------------------------------------------------
+
+EXPECTED_ROWS = 25
+
+# value -> (expected rendering, the promise this row holds). Keys are compared as
+# IEEE-754 bytes on both sides, exactly like the table itself.
+REQUIRED_ROWS = {
+    1.0: ("1", "str(1.0) is 1.0 while String(1.0) is 1 — the commonest divergence"),
+    -0.0: ("0", 'String(-0) is "0", not "-0"'),
+    0.1 + 0.2: ("0.30000000000000004", "the shortest round trip, identical in both languages"),
+    1 / 3: ("0.3333333333333333", "a 17-significant-digit round trip"),
+    1e-7: ("1e-7", "Python pads the exponent (1e-07), ECMAScript does not"),
+    1e17: ("100000000000000000", "Python switches to 1e+17 at the 17-digit boundary"),
+    1e21: ("1e+21", "above 1e21 both sides use exponent form"),
+    5e-324: ("5e-324", "the smallest subnormal double"),
+    1.7976931348623157e308: ("1.7976931348623157e+308", "the largest finite double"),
+    123456789012345680000.0: ("123456789012345680000",
+                              "an integer-valued double past 2**53 stays expanded"),
+    -0.00042: ("-0.00042", "a value the demo rig actually seeds (seed_demo)"),
+}
+
+# The golden document is ONE byte string asserted in two languages. Its coverage
+# is pinned by substring identity (the case that must stay in the document), not
+# by length, which any re-wrap legitimately moves.
+GOLDEN_RECORDS = 4
+REQUIRED_GOLDEN = {
+    "2026-10-20T21:00:00Z": "the `Z` UTC rendering — divergence #2 in docs/csv-export.md §2",
+    "'=HYPERLINK": "the formula guard, applied to a text cell",
+    '"Gizmo, big"': "QUOTE_MINIMAL — a comma forces quotes",
+    '"say ""hi"""': "an embedded double quote doubles",
+    "19.99": "a decimal string is never re-flowed",
+    "-5.00": "a negative decimal keeps its trailing zero",
+    "1e-7": "the float column, rendered by each side's own rule",
+    ",,": "a null cell is empty, never \"null\" or quoted-empty",
+}
 
 
 # --------------------------------------------------------------------------
@@ -301,6 +359,42 @@ def diff_doc(py_doc, js_doc):
     return False
 
 
+def key(v):
+    """IEEE-754 big-endian hex, the same identity the compare uses. Needed
+    instead of dict membership because 0.0 and -0.0 hash EQUAL in a Python dict
+    while their bytes differ — and the bytes are what this table is about."""
+    return struct.pack(">d", v).hex()
+
+
+def check_population(py_rows, js_rows, py_doc, js_doc):
+    """Refuse a verdict the population cannot support, and name every coverage
+    row that vanished from either copy. Returns (ok, red_messages)."""
+    for side, rows in (("python", py_rows), ("js", js_rows)):
+        if len(rows) != EXPECTED_ROWS:
+            raise HarnessError(
+                "the table disagrees with its own pin: %s copy has %d rows, the literal "
+                "pins %d — a shared table whose population is unpinned proves nothing"
+                % (side, len(rows), EXPECTED_ROWS))
+    missing = []
+    for value, (expected, promise) in REQUIRED_ROWS.items():
+        k = key(value)
+        for side, rows in (("python", py_rows), ("js", js_rows)):
+            if (k, expected) not in rows:
+                missing.append("%s copy lost %s (%s)" % (side, repr(value), promise))
+    for text, promise in REQUIRED_GOLDEN.items():
+        for side, doc in (("python", py_doc), ("js", js_doc)):
+            if text not in doc:
+                missing.append("%s golden lost %r (%s)" % (side, text, promise))
+    for side, doc in (("python", py_doc), ("js", js_doc)):
+        records = len([ln for ln in doc.split("\r\n") if ln != ""])
+        if not doc.endswith("\r\n"):
+            missing.append("%s golden is not CRLF-terminated on its last record" % side)
+        elif records != GOLDEN_RECORDS:
+            missing.append("%s golden has %d records, the pin holds %d"
+                           % (side, records, GOLDEN_RECORDS))
+    return missing
+
+
 def main() -> int:
     argparse.ArgumentParser(description=__doc__.splitlines()[0]).parse_args()
     for p in (PY_TABLE, TS_TABLE):
@@ -340,6 +434,14 @@ def main() -> int:
             return 2
 
         print(f"{PY_TABLE.relative_to(ROOT)} <-> {TS_TABLE.relative_to(ROOT)}")
+        lost = check_population(py_rows, js_rows, py_doc, js_doc)
+        if lost:
+            print("COVERAGE LOST — the two copies still agree, over less than the "
+                  "proof claims:")
+            for line in lost:
+                print(f"    {line}")
+            print("RED — the shared table is no longer the table this proof was written for.")
+            return 1
         ok_table = diff_table("FLOAT_PARITY", py_rows, js_rows)
         ok_doc = diff_doc(py_doc, js_doc)
         if ok_table and ok_doc:
@@ -356,6 +458,9 @@ if __name__ == "__main__":
         sys.exit(main())
     except SystemExit:
         raise
+    except HarnessError as exc:
+        print(f"cannot run: {exc}", file=sys.stderr)
+        sys.exit(2)
     except BaseException as exc:  # noqa: BLE001 — a crash is NOT a divergence
         # Measured on the first run of this script: an uncaught AttributeError in
         # the extractor died with a traceback and rc 1, the documented code for

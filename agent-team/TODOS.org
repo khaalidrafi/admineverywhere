@@ -815,6 +815,65 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 21:58 UTC] :: THE SAME LAW APPLIED TO THE TWO
+  SIBLING TWINS, AND BOTH WERE BLIND THE WAY THE BRAND TWIN WAS (branch
+  ai/turn-20261021-2140; state untouched — PENDING stands, :DELIVERED: rows above
+  unchanged, DONE is the Lead's gate). Board re-counted: zero TODO/ONGOING/WAIT
+  headlines, chat tail 3880 lines with every entry from 3736 on mine, so no
+  unanswered @platform-engineer ping and no open work order item. The segment took
+  the hole I named in my own 21:34Z report: the population pins landed on
+  brand_twin_diff only — csv_twin_diff and parity_table_diff were never measured.
+  MEASURED, BEFORE TOUCHING ANYTHING (both rc 0 with coverage gone):
+  - csv_twin_diff feeds ONE matrix to both writers, so a shrunken matrix cannot make
+    them disagree. 5 sentinels deleted — both line-breakers, cr\rhere, and the
+    =SUM/+cmd guard leads, i.e. the cells docs/csv-export.md §2 credits with
+    divergence #1 and #2 — answered `BYTE-IDENTICAL — 3065 cells` rc 0 (honest 3070).
+  - parity_table_diff compares two COPIES of FLOAT_PARITY, so a row deleted from BOTH
+    still compares equal. The 1e-7 row removed from both files answered
+    `FLOAT_PARITY: 24 rows, identical values AND expectations` rc 0 (honest 25).
+  THE FIX (scripts/csv_twin_diff.py, scripts/parity_table_diff.py): population pinned
+  twice — EXPECTED_SENTINELS/EXPECTED_FLOATS (csv_twin_diff.py:103) and EXPECTED_ROWS
+  (parity_table_diff.py:86) must each agree with the lists / parsed rows, mismatch =
+  exit 2 — plus the rows carrying a RECORDED divergence pinned individually by
+  identity: floats by IEEE-754 bytes, never by equality, because 0.0 == -0.0 in Python
+  cannot tell a matrix that kept negative zero from one that lost it, and one shared
+  renderer cell_text() (csv_twin_diff.py:190) so the check cannot re-spell the builder
+  and report its own drift as a truncation. Golden document pinned by required
+  substrings (2026-10-20T21:00:00Z, '=HYPERLINK, "Gizmo, big", -5.00, 1e-7), not by
+  length. Verdict split as the brand twin: vanished pinned row = exit 1 RED naming the
+  row; population disagrees with its pin = exit 2, no verdict to report.
+  A TRAP I FELL INTO AND FIXED IN FLIGHT: my first coverage pin asserted
+  `cells + 1 == CRLF lines` and went RED on the HONEST run — 3070 cells ride 3097
+  lines, because a quoted cell may contain CRLF. A line count is not a row count, so
+  the compare's coverage is pinned by identity instead (column 0 is the index the probe
+  was handed, so the last matrix index must appear as its own record).
+  CONTROLS, seven, each restored byte-identical (diff -q): 5 sentinels -> 2 `43
+  sentinels in the literal, 38 built`; one NON-required sentinel -> 2 at 42-vs-43 (only
+  the literal can see it); build_matrix dropping a float while both lists stayed
+  honest -> 2 `MATRIX TRUNCATED: 3069 cells built against 3070 expected`; 1e-7 deleted
+  from both copies -> 2 population-first; 1e-7 swapped for 1e-8 on both sides with 25
+  rows intact -> 1 `COVERAGE LOST … python copy lost 1e-07` naming BOTH copies (the
+  case only a per-row identity catches); the formula guard dropped from both golden
+  literals -> 1 naming '=HYPERLINK in each.
+  SECOND FINDING, NOT MINE BUT THE DOC'S: DEVGUIDE cited `scripts/csv_twin_diff.py:109`
+  for run(), and line 109 at that commit was the closing triple-quote of CLIENT_SPEC
+  while run() started at 126 (248 now). IN RANGE, WRONG TARGET — a class
+  release_readiness's bounds leg cannot see by construction. Citation corrected to :248
+  and the class written up as the TENTH law's third door.
+  DOCS: DEVGUIDE *ELEVENTH harness law* extended (two-copy compare is the weakest
+  population pin of all + the line-count trap + all controls); csv-export.md §6 carries
+  the measurements; AGENTS.md's CSV bullet now states the pinned-population promise;
+  exit-code legends in DEVGUIDE + AGENTS.md read `1 = divergence or coverage lost`.
+  GATE: `python3 scripts/landing_gate.py --fe` rc 0 — env (django 5.2.18), pytest 299,
+  System check identified no issues, No changes detected, vitest 416 (31 files),
+  csv-twin BYTE-IDENTICAL 3070 cells / 56287 B / 3097 CRLF lines, brand-twin 302
+  accepted over a pinned population of 350, parity-twin 25 rows / golden 226 B
+  identical. Default merge gate alone rc 0, still three legs, so finalize's replay is
+  unchanged. release_readiness rc 0 (81 path citations, 59 bounds-checked lines, up from
+  78/55). Product code / tests / migrations / lockfiles: ZERO changes — the two test
+  files were edited only inside controls and restored byte-identical.
+  ROLE_LARK_WEBHOOK empty in this seat's env ([ -z ], not assumed) -> Lark report
+  skipped.
 - Note taken on [2026-10-21 Wed 21:34 UTC] :: THE BRAND TWIN'S POPULATION IS
   PINNED PER ROW NOW — AND THE LESSON I SENT @ALL AT 21:16Z HAD THE WRONG
   MECHANISM, SO IT IS CORRECTED IN PRINT (branch ai/turn-20261021-2122; state
