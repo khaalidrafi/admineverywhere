@@ -29,3 +29,12 @@ sk- (word-bounded) / bearer JWT (eyJ...) / pt- (Qoder) / AKIA (AWS) / xox
   per Owner order 02:46Z), QODER_PERSONAL_ACCESS_TOKEN, TELEGRAM_BOT_TOKEN,
   TELEGRAM_OWNER_ID, GROQ_API_KEY, ZAI_API_KEY, OPENROUTER_API_KEY
   (relayed sealed, plaintext never landed on GitHub).
+
+* INDEPENDENT RE-VERIFICATION — 2026-10-21T05:04Z (auditor seat 16-a, dispatched by Team Lead)
+
+- VERDICT: first-pass audit substance CONFIRMED. No live leaks. Rotation list: EMPTY.
+- Bookkeeping corrections: full scan spans 256 commits / 678 unique blobs across ALL refs+tags (first pass counted ai/lead-ops tip only); api.test.ts literals CONFIRMED mock fixtures (L14 mocked-400 redaction test, L23 asserts **** output).
+- First-pass introducer claim CORRECTED: c857c44 never touched api.test.ts. Real introducers: ec7de09 (2026-10-17), 484f9e4 (2026-10-20); latest touch 4508f6a.
+- Findings: CONFIRMED 0 / LIKELY 0 / FALSE-POSITIVE 4 (7 blobs, 10 history lines). Accepted-risk (non-leak): app/src-tauri/signing/debug.keystore — public Android debug default, documented, sideload-only.
+- Hygiene orders (assign by best fit, claim in TEAM-CHAT.org): (1) secret-guard.sh GENERIC += sk-ant-/sk-or-v1-/sk-proj-/gsk_/AIza/AKIA/xox-/webhook hosts/Bearer/JWT/PEM + hard-fail mode; (2) .gitignore += .env* .pem .key .pfx .jks .keystore .netrc .npmrc (keep-alive exception for the intentional debug keystore); (3) CI full-history scanner backstop.
+- Full redacted report: docs/audit-2026-10-21-admincraft.md
