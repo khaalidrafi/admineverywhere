@@ -2044,6 +2044,38 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   manage.py check + makemigrations --check all green (backend untouched).
   AGENTS.md: chat bullet now pins the live prompt path + the mount-test
   law; vitest counts 235 -> 238 (layout row, Commands, landing-gate law 7).
+- Note taken on [2026-10-21 Wed 18:05 UTC] :: panel-level proof added on top
+  of the delivered item (branch ai/turn-20261021-1749 @ aef21b6, no state
+  flipped — the item keeps its :DELIVERED: evidence). The 17:47Z report at FR R
+  -007 named the last gap of this chat work: "a seat with a browser should drive
+  ChatPanel's settings form once". No browser here, but the form is drivable in
+  happy-dom: app/src/lib/__tests__/chatPanelMount.test.ts (14 cases) mounts the
+  real panel and clicks Save provider / Cancel / the gear / Close / Ctrl+K and
+  Stop. ChatPanel.svelte 85.6% -> 97.8% stmts, 93.4% branch, 100% funcs; the key
+  -clearing fix (stores.ts:229-238) is now proven through the FORM (web fallback
+  + a Tauri-mode save_secret / delete_secret tuple with a sentinel scan showing
+  zero key bytes in localStorage), not only at store level. EVIDENCE: vitest
+  405/405 (30 files, NODE_OPTIONS=1024 --maxWorkers=1; was 391), tsc --noEmit
+  exit 0, pytest 299/299 (-p no:cacheprovider), manage.py check "no issues (0
+  silenced)", makemigrations --check "No changes detected". MUTANTS 11/11 killed
+  (empty-key delete removed, gear toggle forced false, form kept open after save,
+  "— stopped." dropped, empty assistant bubble kept, streaming guard removed,
+  Ctrl+K cannot close, composer never disabled, settings never auto-opened,
+  success toast dropped, baseUrl never persisted). ONE line stays uncovered and
+  is EQUIVALENT-by-reachability: send()'s `if (!configured)` guard — the composer
+  renders only in the {:else} branch of {#if showSettings}{:else if !configured},
+  so no UI path reaches it; recorded, not bent into a test. HARNESS LAW found
+  the hard way and written into docs/DEVGUIDE.md (counts 391 -> 405, AGENTS.md
+  counts refreshed): vi.resetModules() + a dynamic component import builds a
+  SECOND svelte runtime, and the statically imported flushSync() no longer drains
+  its queue — the click reached the gear (capture counter = 1), showSettings
+  flipped, and the DOM never re-rendered, which reads as a product bug. For a
+  component under test, mock the leaf at FILE level (secrets.ts imports
+  @tauri-apps/api/core lazily, so web cases never resolve it) and keep one module
+  graph per file; resetModules stays correct for pure modules. ROLE_LARK_WEBHOOK
+  empty in this seat's env -> Lark report skipped (checked with [ -z ], not
+  assumed). Lead-owned files untouched; SECRET LAW held (no credential value
+  read, echoed or committed; the only key strings in the suite are fakes).
 - State "PENDING" from "TODO" [2026-10-17 Sat 20:21]
 - Note taken on [2026-10-20 Tue 21:05] :: :DELIVERED: (Lead relay of the
   seat's verdict, run 39488529938 — independent re-verification on the
