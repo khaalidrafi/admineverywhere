@@ -152,6 +152,11 @@ python3 scripts/brand_twin_diff.py          # 0 identical / 1 divergence / 2 rig
 # CSV shared-table diff: FLOAT_PARITY + the golden document literal, pytest side vs vitest side
 python3 scripts/parity_table_diff.py        # 0 identical / 1 divergence / 2 cannot run
 
+# the LANDING GATE itself (pytest + manage.py check + makemigrations --check),
+# with a dep preflight so a swallowed boot-install failure is exit 2 not a false red
+python3 scripts/landing_gate.py             # 0 green / 1 a leg is red / 2 cannot run
+python3 scripts/landing_gate.py --fe        # plus vitest (needs app/node_modules)
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
@@ -341,7 +346,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
 ## CI — build-all, live
 
 `.github/workflows/build-all.yml` is the E2 pipeline: the `test-gate` job
-(vitest 58 + pytest 175, plus a CSP-hygiene check on the shipped
+(vitest 416 + pytest 299 as measured 2026-10-21 — the workflow's own header
+comment at `.github/workflows/build-all.yml:4` still quotes 58/114 and is
+Lead-owned, so it is cited here rather than edited; plus a CSP-hygiene check on the shipped
 tauri.conf.json) runs FIRST and every build leg `needs:` it, so a
 red tree spends zero build minutes. Legs: web / windows (.exe) / linux
 (.AppImage) / android (.apk — universal `arm64-v8a`+`armeabi-v7a`, built
@@ -567,8 +574,13 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
    impossible.
 7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
-   (212 green baseline as of FR-R007-LIVE; vitest 252 as of FR-R001-FE) + `demo-backend manage.py check` +
-   `makemigrations --check`. Red work never lands.
+   (299 green as measured 2026-10-21; vitest 416) + `demo-backend manage.py check` +
+   `makemigrations --check`. Red work never lands. `python3
+   scripts/landing_gate.py` re-runs all three (plus `--fe` for vitest) behind a
+   dep preflight, so a swallowed `pip install -e plugin` failure reports
+   `CANNOT RUN` with the fix command instead of wearing pytest's exit 2 as a red
+   tree — and each leg asserts its own output phrase, because exit 0 alone never
+   proved anything (DEVGUIDE *EIGHTH harness law*).
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.
