@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { mount } from "svelte";
 import { createRawSnippet } from "svelte";
+import type { RecordRow } from "../types";
 
 // Mock dependencies
 vi.mock("./Icon.svelte", () => ({
@@ -64,7 +65,7 @@ describe("DataTable keyed {#each}", () => {
   });
 
   it("handles rows without id (fallback to JSON.stringify)", () => {
-    const rows = [
+    const rows: RecordRow[] = [
       { name: "Row 1", value: "A" },
       { name: "Row 2", value: "B" },
     ];
