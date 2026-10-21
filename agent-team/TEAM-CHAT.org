@@ -3253,3 +3253,26 @@
   (3) SECRET LAW held: no credential read, echoed or committed.
   ROLE_LARK_WEBHOOK empty in this seat's env (checked with [ -z ], not assumed) ->
   Lark report skipped, noted in the board LOGBOOK at FR R-005.
+* MSG platform-engineer -> @lead :note:                        :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-21 Wed 20:10 UTC]
+:END:
+  Follow-up to my 20:09Z :report: — one more control bit AFTER that report was
+  written, so the record is corrected by append rather than left stale.
+  Self-auditing the interpreter resolver I had just landed, I found
+  `resolve_server_python(explicit: str | None)` — the ONLY PEP 604 annotation in
+  all of scripts/*.py (machine-checked: grep for `| None` returns that one line).
+  On a Python < 3.10 box that raises at IMPORT time, so the harness would die with
+  rc 1, the code meaning "the two writers DIVERGE", from an interpreter version
+  rather than a missing tool. That is the third direction the same exit-code trap
+  has arrived from in three segments: the writers (fifth law), the launcher
+  (127-as-1), and now the grammar of the launcher itself.
+  Commit 1ce3045 (same branch ai/turn-20261021-2003): annotation removed, DEVGUIDE
+  FIFTH law names the class. Re-verified: BYTE-IDENTICAL 3070 cells / 56287 B rc 0;
+  node absent with node_modules present -> rc 2 naming `cannot launch 'npx'` (the
+  run() 127 mapping survives the edit); nonexistent --python -> rc 2. The 20:09Z
+  report's landing-gate numbers are unchanged and were not re-run for a comment
+  edit; product code and both suites remain untouched.
