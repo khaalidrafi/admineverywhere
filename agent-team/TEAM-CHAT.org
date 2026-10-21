@@ -2556,3 +2556,93 @@
   untouched; SECRET LAW held (no value read, echoed or committed);
   ROLE_LARK_WEBHOOK empty in this seat's env -> Lark report skipped (checked
   with [ -z ], not assumed), noted in the board LOGBOOK at FR R-007.
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 17:46 UTC]
+:END:
+  A law for every "X is NEVER called" assertion, learned the hard way in this
+  seat's fourth coverage pass (ai/turn-20261021-1732 @8c81a6e):
+  1. Proving a negative needs a MACROTASK. applyBrand fires its Tauri window
+     call as `void setNativeWindowTitle(...)` — an await import() + an await
+     setTitle(). My web-mode test asserted `expect(setTitle).not.toHaveBeenCalled()`
+     after `await Promise.resolve()` twice. Green. I then DELETED the
+     `__TAURI_INTERNALS__` guard from stores.ts to check the test and the file
+     still passed 11/11 — the import chain had simply not run yet. One
+     `await new Promise(r => setTimeout(r, 50))` boundary drains it (the
+     positive Tauri case in the same file proves that budget is enough), and the
+     same mutant then failed as it must. If your test asserts an absence, mutate
+     the code so the call HAPPENS and confirm your test is the one that notices.
+  2. Tauri mode is a marker on the real happy-dom window, never a replacement:
+     `window.__TAURI_INTERNALS__ = {}` keeps document, localStorage and the
+     brand-CSS target alive while `vi.resetModules()` + `vi.doMock(
+     "@tauri-apps/api/core"/"…/window")` + a dynamic `import("../stores")`
+     gives each case a fresh stores/secrets pair. Replacing `globalThis.window`
+     wholesale (as secrets.test.ts can get away with for a pure module) breaks
+     every DOM assertion in the file.
+  3. A defect fell out of seam #1: `saveAiSettings` skipped the secret write on
+     an EMPTY key field, and ChatPanel.svelte:33 hydrates that field from the
+     store — so clearing your API key saved nothing and the old key came back on
+     next boot. Now an empty field means forget-it (`deleteSecret("ai.apiKey")`),
+     pinned by a save-clear-reload round trip under the mocked keyring AND in web
+     fallback. If you touch a store's save path, check what READS it back.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 17:47 UTC]
+:END:
+  RESULT: DONE (segment work; board stays exhausted — WORK ORDER rows 1-11 all
+  carry :DELIVERED: and the chat tail held no open @platform-engineer ping, the
+  newest entry was my own 17:28Z report — so per instruction 2 I closed the gap
+  that report named: stores.ts's remaining Tauri/boot seams. No item flipped, no
+  completion claim, OBJECTIVE-STATE untouched.)
+  WHAT (branch ai/turn-20261021-1732, commit 8c81a6e):
+  - PRODUCT FIX: app/src/lib/stores.ts:229-238 — an emptied AI-key field now
+    deletes the stored secret instead of silently keeping it. Before, the write
+    was skipped on a blank value while ChatPanel.svelte:33 hydrates that field
+    from the store, so clearing the key was impossible: it came back on next
+    boot. Found by wiring the seam, not by guessing.
+  - app/src/lib/__tests__/storesTauri.test.ts — 16 tests, nothing from this
+    module mocked (only @tauri-apps/api/{core,window} + fetch): save_secret /
+    load_secret / delete_secret tuples against src-tauri/src/lib.rs:10, a
+    sentinel scan proving zero key bytes reach localStorage under Tauri, the
+    web-fallback round trip with its one-time warning, setTitle receiving the
+    live appName while document.title + favicon + --brand-* CSS ride
+    synchronously, a rejected title call swallowed, web mode never touching the
+    window API, initApp's boot order + server-brand override over the DOCUMENTED
+    /admincraft/branding/ with relative assets resolved, the three silent
+    degradations (404 plugin-less backend keeps the neutral brand, unreachable
+    fetch still boots, apiUrlOverride wins), and loadSchema's claims degradation
+    by exact URL list (no mePath = ONE request, claims null; garbage /me/ body =
+    claims null; in-flight guard = zero extra requests; anonymous read carries
+    no Authorization header).
+  - docs/DEVGUIDE.md: the negative-assertion / macrotask law + the Tauri-marker
+    harness law; counts 375 -> 391. AGENTS.md layout + commands counts
+    refreshed to the measured 391 vitest / 299 pytest.
+  EVIDENCE: vitest 391/391 (29 files, NODE_OPTIONS=1024 --maxWorkers=1; was
+  375, +16); tsc --noEmit exit 0; pytest 299/299 (-p no:cacheprovider); manage.py
+  check "no issues (0 silenced)"; makemigrations --check "No changes detected".
+  stores.ts 71% -> 100% stmts, 71.4% -> 93.3% branch (v8, --coverage.include on
+  the file). MUTANTS: 10/10 killed (delete-secret removed, native-title call
+  removed, Tauri guard removed, server brand ignored, assets left unresolved,
+  key untrimmed, in-flight guard removed, claims force-nulled, mePath guessed,
+  Authorization forced). M3 initially SURVIVED and that was the bug in MY test —
+  see the 17:46Z note; fixed, then re-mutated to confirm. All sources restored
+  byte-identical from /tmp, package-lock untouched, no product file outside
+  stores.ts changed.
+  NEXT / WHAT REMAINS: (1) pixels still unproven — no browser/Tauri on this box,
+  so the "clear my API key" flow is pinned at store level, not by clicking the
+  panel's Save button; a seat with a browser should drive ChatPanel's settings
+  form once. (2) stores.ts branch survivors are the `typeof window/localStorage
+  === "undefined"` guards — unreachable under happy-dom, recorded as equivalent,
+  not bent into a fake kill. (3) HARNESS: FIFTEENTH consecutive self-install —
+  docker/harness boot still lacks `cd app && npm install` and
+  `pip install -e '../plugin[test]'`; coverage additionally needs
+  @vitest/coverage-v8@3.2.7 --no-save. Lead-owned files untouched (read/cited
+  only); SECRET LAW held (no credential value read, echoed or committed);
+  ROLE_LARK_WEBHOOK empty in this seat's env -> Lark report skipped (checked with
+  [ -z ], not assumed), noted in the board LOGBOOK at FR R-007.
