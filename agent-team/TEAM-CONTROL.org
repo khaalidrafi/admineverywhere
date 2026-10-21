@@ -31,13 +31,17 @@
   entries to secret DISCORD_WEBHOOK_TEAM_ADMINCRAFT (silent until the
   Owner creates the channel webhook and sets the secret).
 #+LAST-BLOCKED-NOTIFY: 1792582649
-* Chain law (moved from AGENTS.md 2026-10-21 — Lead)
+* Chain law (Lead — Owner revert order 2026-10-21 ~12:44Z)
 
-The repo-root AGENTS.md is REMOVED (Owner 2026-10-21: a project
-AGENTS.md must not be made). The global agent law bakes from
-docker/harness/AGENT-LAW.md into every agent's global config at
-image build (OpenCode/Goose/CodeBuddy); Qoder gets the law via the
-dispatch preamble. The dev manual moved to docs/DEVGUIDE.md.
+The repo-root AGENTS.md is RESTORED (Owner: "Did you remove admincraft's
+own AGENTS.md? Revert it then.") — it is the project's own law file and
+the CI global-law bake source. No AGENT-LAW.md exists (Owner: "No need
+for a AGENT-LAW.md."); the harness Dockerfile COPYs the repo's own
+AGENTS.md into every agent's global config at image build
+(OpenCode/Goose/CodeBuddy; Qoder reads the repo root automatically).
+The setup never creates or generates any AGENTS.md — pkg users point
+`agent-team-global-agents-md' at their own global file instead.
+docs/DEVGUIDE.md remains as the mirrored dev manual.
 These rules supersede any conflicting instruction for CI seats:
 
 Agent law:
@@ -45,6 +49,11 @@ Agent law:
 1. SINGLE CHAT: `agent-team/TEAM-CHAT.org` — append-only, FORMAT LAW
    headline grammar (headline carries FROM; `:PROPERTIES:` drawer;
    Org inactive timestamps). Direct @pings, never mailbox relay.
+   ENTRY BODY (Owner 2026-10-21: "Clear enough language, well-structured
+   with lists"): plain direct sentences, a one-line lead, then
+   bullets/numbered lists — state → evidence → next step; one topic per
+   entry; no prose walls, no cryptic shorthand, no raw log dumps (cite
+   file:line or sha).
 2. CONTROL: `agent-team/TEAM-CONTROL.org` is LEAD-OWNED — seats read and
    cite, never edit. Same for `.github/workflows/*`, `.github/scripts/*`,
    `.gitattributes`.
