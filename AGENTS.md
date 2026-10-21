@@ -155,7 +155,8 @@ python3 scripts/parity_table_diff.py        # 0 identical / 1 divergence / 2 can
 # the LANDING GATE itself (pytest + manage.py check + makemigrations --check),
 # with a dep preflight so a swallowed boot-install failure is exit 2 not a false red
 python3 scripts/landing_gate.py             # 0 green / 1 a leg is red / 2 cannot run
-python3 scripts/landing_gate.py --fe        # plus vitest (needs app/node_modules)
+python3 scripts/landing_gate.py --fe        # plus vitest AND the three twin harnesses
+                                            # (csv/brand/parity — needs app/node_modules)
 
 # the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
 # doc-citation rot AND every cited line landing inside its file, release inputs,
@@ -593,11 +594,16 @@ Agent law (supersedes any conflicting instruction above for CI seats):
 7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
    (299 green as measured 2026-10-21; vitest 416) + `demo-backend manage.py check` +
    `makemigrations --check`. Red work never lands. `python3
-   scripts/landing_gate.py` re-runs all three (plus `--fe` for vitest) behind a
-   dep preflight, so a swallowed `pip install -e plugin` failure reports
-   `CANNOT RUN` with the fix command instead of wearing pytest's exit 2 as a red
-   tree — and each leg asserts its own output phrase, because exit 0 alone never
-   proved anything (DEVGUIDE *EIGHTH harness law*).
+   scripts/landing_gate.py` re-runs all three behind a dep preflight, so a swallowed
+   `pip install -e plugin` failure reports `CANNOT RUN` with the fix command instead of
+   wearing pytest's exit 2 as a red tree — and each leg asserts its own output phrase,
+   because exit 0 alone never proved anything (DEVGUIDE *EIGHTH harness law*). `--fe`
+   adds vitest plus all three twin harnesses (csv/brand/parity): the merge gate
+   deliberately stays three legs, because the twins answer `CANNOT RUN` where
+   `app/node_modules` is absent and that verdict must not stall every merge — but a
+   seat delivering work that touches a twin pair must run `--fe`, because per-side
+   unit tests are green against their own fixture and therefore cannot see a
+   divergence *between* the two.
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.
