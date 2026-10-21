@@ -127,10 +127,14 @@ REQUIRED_CLAIMS = {
 # fires on its own doc edits, so a deliberate change is a two-place edit and an
 # accidental one is a RED. Measured again the same way: the DEVGUIDE paragraph
 # documenting the landing_gate population pin cites `population()`
-# (scripts/landing_gate.py:135), moving 8 -> 9 in the same commit as the leg. That
+# (scripts/landing_gate.py:158), moving 8 -> 9 in the same commit as the leg. That
 # paragraph then grew the roster pin, which is two more `name()` claims of its own —
-# the literal moved 9 -> 11 the same deliberate way, measured not guessed.
-EXPECTED_CLAIMS = 11
+# the literal moved 9 -> 11 the same deliberate way, measured not guessed. Measured a
+# FOURTH time the same way: the machine-gate paragraph documents the spec the merge legs
+# EXECUTE, so it cites `leg_pytest()` (scripts/landing_gate.py:233) and `leg_django()`
+# (scripts/landing_gate.py:256) — the leg answered 13 against this 11, and 11 -> 13 is
+# the remedy it printed, applied in this same commit.
+EXPECTED_CLAIMS = 13
 
 # `name()` spellings only. Control words that are commonly written with parens in
 # prose (`if (x)`, `for (let i)`) are not claims about the cited code.
