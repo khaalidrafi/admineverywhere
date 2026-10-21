@@ -88,8 +88,13 @@ def branding(request):
 
 
 def brand_asset(request, name: str):
-    # <str:name> cannot contain "/", and we re-jail anyway — belt+suspenders.
-    if "/" in name or "\\" in name or name in (".", ".."):
+    # <path:name> carries "/" on purpose — a shipped brand.json stores
+    # "assets/logo.svg". Dot segments and absolute forms never name a stored
+    # asset, and the jail in brandstore.asset_path() (realpath + commonpath)
+    # stays the authority for everything else, including symlink escapes.
+    if name.startswith("/") or "\\" in name or any(
+        seg in ("", ".", "..") for seg in name.split("/")
+    ):
         return JsonResponse({"errors": ["bad asset name"]}, status=400)
     try:
         path = brandstore.asset_path(name)

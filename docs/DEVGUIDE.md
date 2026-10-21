@@ -112,8 +112,8 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (285 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (352 vitest) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (353 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -141,9 +141,9 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 352 vitest
+cd app && npm test                          # 353 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 285 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -369,13 +369,36 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `pages/Branding.svelte` and asserts the PUT actually goes to
   `<apiUrl>/admincraft/branding/` with the staff token and a trimmed body,
   that a 400 `detail.errors` list renders verbatim while the live theme stays
-  untouched, that an already-uploaded asset travels as its bare filename (no
-  re-fetch, no re-encode) while a bundled `/logo.svg` is re-uploaded as a data
+  untouched, that an already-uploaded asset travels as its stored RELATIVE
+  path (no re-fetch, no re-encode; `assets/logo.svg` keeps its directory)
+  while a bundled `/logo.svg` is re-uploaded as a data
   URL so the shipped logo survives the first save, and that an empty app name
   is refused with zero requests. Typing re-themes live and unmount reverts —
   the DOM half of the "visual verification of live preview" line on
   COOL-PREVIEW. Four mutants (client guard, defaults fill-in, verbatim errors,
   filename branch) each failed one named test.
+- Brand assets keep their RELATIVE path across all three layers — one twin
+  contract, like `brandToCss`/`render_css`. Every shipped `brand.json`
+  (`app/brands/*/`) stores `"logo": "assets/logo.svg"`; `build_admin` flattens
+  it into `public/`, so the runtime store must not: `brandstore._public()`
+  feeds the WHOLE relative path to `_asset_url()`, and the route is
+  `branding/asset/<path:name>` (NOT `<str:name>`, which cannot match a "/" —
+  `reverse()` then raised `NoReverseMatch`, `_asset_url`'s broad
+  `except Exception` swallowed it, the fallback URL 404'd at the router and
+  the editor round-tripped to a bare basename that failed the NEXT save with
+  "file not found in brand dir"). Silent broken logo, then a 400 on a brand
+  the user never touched. `pages/Branding.svelte` mirrors the prefix as
+  `ASSET_PATH_PREFIX` — change the mount and you change both. On the refusal
+  side the two layers are pinned SEPARATELY on purpose (a status-code-only
+  assertion cannot tell which one fired): `views.brand_asset`'s shape guard
+  answers `bad asset name` for `.`/`..`/empty-segment/absolute/backslash
+  names, while `brandstore.asset_path()`'s jail (realpath + commonpath) is
+  the authority for a well-shaped name that resolves out — a symlinked asset,
+  and the embedded-NUL `ValueError` that the view must convert instead of
+  500ing. Mutants m1–m6 (flatten, `<str:name>`, `except KeyError`, basename
+  slice, weakened guard, un-jailed path) each died on its own named test; the
+  guard-rotation mutant survives every status assertion, which is why the
+  message is pinned too.
 - Brand writes are staff-only (DRF token auth) and validated server-side
   by the SAME closed schema as `build_admin` (`brandstore.save_brand`);
   uploads must be data URLs (png/jpeg/svg, magic-byte checked, 1 MB cap).

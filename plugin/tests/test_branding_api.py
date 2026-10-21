@@ -17,6 +17,7 @@ test_branding.py on the csp-1 rebase.
 """
 import base64
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -261,6 +262,151 @@ def test_asset_404_for_unknown_file(brand_dir):
     with ctx(brand_dir):
         r = Client().get("/branding/asset/nope.png")
     assert r.status_code == 404
+
+
+def test_asset_404_for_unknown_file_in_a_subdir(brand_dir):
+    """A path the route CAN address must still 404 when the bytes are absent."""
+    with ctx(brand_dir):
+        (brand_dir / "assets").mkdir(parents=True)
+        r = Client().get("/branding/asset/assets/nope.svg")
+    assert r.status_code == 404
+
+
+# --- subdirectory assets: the shape every SHIPPED brand.json uses ----------
+# app/brands/{default,freshorama,minimal-light}/brand.json all declare
+# "logo": "assets/logo.svg" and "favicon": "assets/icon.png". build_admin
+# flattens those into public/, so the runtime store is the only layer where a
+# subdirectory asset can break — and it did: the asset route was
+# <str:name>, which cannot carry a "/", so reverse() raised NoReverseMatch,
+# _asset_url() swallowed it, and the client got a URL that 404s at the router.
+# Broken logo, no error anywhere. These tests are the two-sided proof.
+
+SHIPPED_BRAND = {**VALID_BRAND, "logo": "assets/logo.svg", "favicon": "assets/icon.png"}
+
+
+def seed_shipped_assets(brand_dir: Path) -> Path:
+    assets = brand_dir / "assets"
+    assets.mkdir(parents=True, exist_ok=True)
+    (assets / "logo.svg").write_bytes(SVG_OK)
+    (assets / "icon.png").write_bytes(PNG_1PX)
+    return assets
+
+
+def served_asset_names(client: Client) -> dict:
+    """The asset NAMES the served URLs address, whichever mount prefix the
+    host project chose (sliced from /branding/asset/ onwards)."""
+    brand = client.get("/branding/").json()["brand"]
+    marker = "/branding/asset/"
+    return {key: value.split(marker, 1)[1] for key, value in brand.items()
+            if isinstance(value, str) and marker in value}
+
+
+def test_put_accepts_the_shipped_subdir_asset_shape(brand_dir, staff_token):
+    seed_shipped_assets(brand_dir)
+    with ctx(brand_dir):
+        r = put(Client(), SHIPPED_BRAND, staff_token)
+        assert r.status_code == 200, r.json()
+
+
+def test_served_logo_url_names_the_stored_subdir_path(brand_dir, staff_token):
+    """No flattening: the URL must address assets/logo.svg, not logo.svg."""
+    seed_shipped_assets(brand_dir)
+    with ctx(brand_dir):
+        assert put(Client(), SHIPPED_BRAND, staff_token).status_code == 200
+        names = served_asset_names(Client())
+    assert names["logo"] == "assets/logo.svg"
+    assert names["favicon"] == "assets/icon.png"
+
+
+def test_subdir_asset_url_returns_the_stored_bytes(brand_dir, staff_token):
+    seed_shipped_assets(brand_dir)
+    with ctx(brand_dir):
+        assert put(Client(), SHIPPED_BRAND, staff_token).status_code == 200
+        names = served_asset_names(Client())
+        logo = Client().get(f"/branding/asset/{names['logo']}")
+        icon = Client().get(f"/branding/asset/{names['favicon']}")
+    assert logo.status_code == 200, "the URL the client trusts must not 404"
+    assert b"".join(logo.streaming_content) == SVG_OK
+    assert logo.headers["Content-Type"].startswith("image/svg+xml")
+    assert icon.status_code == 200
+    assert b"".join(icon.streaming_content) == PNG_1PX
+
+
+SHIPPED_BRAND_DIR = Path(__file__).resolve().parents[2] / "app" / "brands" / "default"
+
+
+def test_the_actual_shipped_brand_file_round_trips_over_the_runtime_api(brand_dir, staff_token):
+    """app/brands/default/brand.json is what a user is handed, and it stores
+    "assets/logo.svg" — so the runtime store, seeded from that same folder,
+    must serve the identical bytes build_admin would have copied."""
+    brand = json.loads((SHIPPED_BRAND_DIR / "brand.json").read_text())
+    shutil.copytree(SHIPPED_BRAND_DIR / "assets", brand_dir / "assets")
+    with ctx(brand_dir):
+        r = put(Client(), brand, staff_token)
+        assert r.status_code == 200, r.json()
+        names = served_asset_names(Client())
+        for key in ("logo", "favicon"):
+            r = Client().get(f"/branding/asset/{names[key]}")
+            assert r.status_code == 200, f"{key}: {names[key]} is a URL to a file that exists"
+            want = (SHIPPED_BRAND_DIR / names[key]).read_bytes()
+            assert b"".join(r.streaming_content) == want, f"{key} bytes differ"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "../escape.svg",
+        "assets/../../escape.svg",
+        "..",
+        ".",
+        "/etc/passwd",
+        "assets//logo.svg",
+        "assets\\logo.svg",
+    ],
+)
+def test_asset_route_refuses_names_that_climb_out_of_the_brand_dir(brand_dir, tmp_path, name):
+    """The shape guard: no "." / ".." / empty segment, no absolute path, no
+    backslash. These never reached the view under <str:name>, so the guard was
+    dead code and traversal over HTTP was untested end to end.
+
+    Pinned to the guard's OWN message on purpose: the jail behind it answers
+    400 for the same requests, so an assertion on the status alone cannot tell
+    which layer refused — and if the guard ever rots, the symlink case below
+    is the only thing left standing.
+    """
+    (tmp_path / "escape.svg").write_bytes(b'<svg xmlns="http://www.w3.org/2000/svg">SECRET</svg>')
+    (brand_dir / "assets").mkdir(parents=True)
+    (brand_dir / "assets" / "logo.svg").write_bytes(SVG_OK)
+    with ctx(brand_dir):
+        r = Client().get(f"/branding/asset/{name}")
+    assert r.status_code == 400, f"{name} must be refused, not served"
+    assert r.json()["errors"] == ["bad asset name"]
+    assert b"SECRET" not in r.content
+
+
+def test_asset_route_refuses_a_symlinked_asset_the_guard_cannot_see(brand_dir, tmp_path):
+    """The jail is the authority: this name is a perfectly-shaped filename, so
+    only realpath + commonpath can stop it reading a file outside the brand
+    dir. Separate from the shape refusals above — each layer must be killable."""
+    secret = tmp_path / "secret.svg"
+    secret.write_bytes(b'<svg xmlns="http://www.w3.org/2000/svg">SECRET</svg>')
+    brand_dir.mkdir(parents=True, exist_ok=True)
+    (brand_dir / "logo.svg").symlink_to(secret)
+    with ctx(brand_dir):
+        r = Client().get("/branding/asset/logo.svg")
+    assert r.status_code == 400
+    assert "escapes" in r.json()["errors"][0]
+    assert b"SECRET" not in r.content
+
+
+def test_asset_route_refuses_a_nul_byte_instead_of_500(brand_dir):
+    """_jailed()'s realpath() raises ValueError on an embedded NUL; the view
+    must turn that into a refusal, not a 500 with a traceback."""
+    brand_dir.mkdir(parents=True)
+    (brand_dir / "logo.png").write_bytes(PNG_1PX)
+    with ctx(brand_dir):
+        r = Client().get("/branding/asset/log%00o.png")
+    assert r.status_code in (400, 404)
 
 
 def test_put_rejects_non_json_body(brand_dir, staff_token):
