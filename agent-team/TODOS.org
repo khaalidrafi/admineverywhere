@@ -175,6 +175,38 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
 :END:
 *** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 11:55 UTC] :: Recapture law turned from prose
+  into a GATE (seat platform-engineer, branch ai/turn-20261021-1140). The
+  10:30 note above re-measured fixture-vs-live BY HAND for the third time;
+  this segment makes the hand-measurement unnecessary. New
+  plugin/tests/test_schema_drift.py (4 tests): a subprocess regenerates the
+  schema via `manage.py spectacular` under the rig's OWN core.settings and
+  fails pytest on any drift — paths and components.schemas compared
+  key-by-key (missing/extra/differing), plus witnesses that
+  COMPONENT_SPLIT_REQUEST still yields OrderRequest/ProductRequest/CustomerRequest
+  and that the four evidence-law endpoints keep their documented shapes
+  (transition post, history/export/me get-only). Mutation-checked three ways
+  before trusting it green: fixture path deleted + property changed -> 2
+  drift tests red; COMPONENT_SPLIT_REQUEST flipped False in core/settings.py
+  -> 3 red (incl. the split witness); fixture and settings restored, `git
+  status` clean. NEW FACT for the chain, measured on the way: the in-process
+  rig scope in plugin/tests/conftest.py (DEMO_SPECTACULAR_SETTINGS) OMITS
+  COMPONENT_SPLIT_REQUEST, so the existing in-process schema tests
+  (test_csv_export.py:612, test_order_lifecycle.py:323, test_rbac_roles.py:132,
+  test_audit_actions.py:315) generate a document differing from the capture on
+  12 of 13 paths and cannot guard the fixture — the gate therefore runs the
+  subprocess pattern of test_demo_boot.py instead. Docs updated:
+  docs/order-lifecycle.md (gate named where the recapture law lives),
+  docs/custom-actions.md, docs/DEVGUIDE.md counts 212/252 -> 285/283 (stale
+  since the float/datetime passes; the file arrived here as repo-root
+  AGENTS.md and was re-placed onto upstream's rename to DEVGUIDE.md, 345c9dd,
+  during the rebase). Lead-owned TEAM-CONTROL.org:67 still carries the old
+  landing-gate baseline numbers — cited, never edited. LANDING GATE green at this HEAD: pytest
+  285/285 (-p no:cacheprovider, 19.2s), manage.py check "no issues (0
+  silenced)", makemigrations --check "No changes detected", vitest 283/283
+  (19 files, NODE_OPTIONS=1024 --maxWorkers=1 after npm ci — fourth
+  consecutive fresh container with empty node_modules). State untouched —
+  PENDING stands, DONE is Lead's gate.
 - Note taken on [2026-10-21 Wed 10:30 UTC] :: Fixture-drift re-measured at
   ai/main tip fc1c20d by seat platform-engineer (no open item this segment,
   so the evidence base was re-tested rather than the claims re-read): fresh
