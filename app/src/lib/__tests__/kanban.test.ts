@@ -26,7 +26,12 @@ function field(name: string, type: FieldSpec["type"], choices?: string[]): Field
   return { name, type, required: false, readOnly: false, choices };
 }
 
-function modelSpec(id: string, fields: FieldSpec[], labelField = "name"): ModelSpec {
+function modelSpec(
+  id: string,
+  fields: FieldSpec[],
+  labelField = "name",
+  lifecycle: Partial<ModelSpec> = {},
+): ModelSpec {
   const singular = id.replace(/s$/, "");
   return {
     id,
@@ -37,15 +42,29 @@ function modelSpec(id: string, fields: FieldSpec[], labelField = "name"): ModelS
     fields,
     byName: Object.fromEntries(fields.map((f) => [f.name, f])),
     labelField,
+    ...lifecycle,
   };
 }
 
-const ORDERS = modelSpec("orders", [
-  field("id", "number"),
-  field("customer", "fk"),
-  field("total", "number"),
-  field("status", "enum", ["pending", "paid", "shipped", "refunded"]),
-]);
+/** The lifecycle URLs a board may move records through are DISCOVERED, not
+ *  assumed — taken from the real captured document, the same one the client
+ *  boots with. */
+const ORDERS_LIFECYCLE: Partial<ModelSpec> = {
+  transitionPath: normalizeOpenAPI(fixture).byId.orders.transitionPath,
+  historyPath: normalizeOpenAPI(fixture).byId.orders.historyPath,
+};
+
+const ORDERS = modelSpec(
+  "orders",
+  [
+    field("id", "number"),
+    field("customer", "fk"),
+    field("total", "number"),
+    field("status", "enum", ["pending", "paid", "shipped", "refunded"]),
+  ],
+  "name",
+  ORDERS_LIFECYCLE,
+);
 
 const SHIPMENTS = modelSpec("shipments", [
   field("id", "number"),
@@ -86,13 +105,31 @@ describe("kanban axis is declared, never guessed", () => {
   it("never infers column order from the schema enum list", () => {
     // drf-spectacular sorts filter params; declaration order is not a contract.
     // A transition axis takes its order from the machine's states instead.
-    const shuffled = modelSpec("orders", [
-      field("id", "number"),
-      field("status", "enum", ["refunded", "pending", "shipped", "paid"]),
-    ]);
+    const shuffled = modelSpec(
+      "orders",
+      [
+        field("id", "number"),
+        field("status", "enum", ["refunded", "pending", "shipped", "paid"]),
+      ],
+      "name",
+      ORDERS_LIFECYCLE,
+    );
     expect(resolveAxis(shuffled)!.columns).toEqual(
       ["pending", "paid", "shipped", "refunded"],
     );
+  });
+
+  it("refuses a transition axis whose endpoint the API does not document", () => {
+    // The registry declares the machine, but a backend that never shipped the
+    // R-001 @action would answer every drop with a 404. Refused, nameably —
+    // the same law as an axis on a non-enum field or a patch axis on a
+    // lifecycle field (docs/independent-enums.md §6).
+    const undocumented = modelSpec("orders", [
+      field("id", "number"),
+      field("status", "enum", ["pending", "paid", "shipped", "refunded"]),
+    ]);
+    expect(resolveAxis(undocumented)).toBeNull();
+    expect(axisProblem(undocumented, kanbanAxes)).toMatch(/does not document/);
   });
 
   it("honours an explicit column override", () => {

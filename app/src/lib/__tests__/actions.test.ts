@@ -14,22 +14,18 @@ import {
 } from "../api";
 import { actions, actionsFor, actionFailureReason } from "../actions/index";
 import DataTable from "../../components/DataTable.svelte";
+import { normalizeOpenAPI } from "../openapi";
+import fixture from "./fixtures/openapi.json";
 import type { ModelSpec } from "../types";
 
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
 const CFG = { apiUrl: "http://localhost:8000", authPath: "/api/auth/token/", schemaPath: "/api/schema/" };
-const ORDERS: ModelSpec = {
-  id: "orders",
-  name: "Order",
-  singular: "order",
-  listPath: "/api/orders/",
-  detailPath: "/api/orders/{id}/",
-  fields: [],
-  byName: {},
-  labelField: "id",
-};
+/** Discovered from the real captured document, never hand-written: the R-001
+ *  calls below must hit the URLs the schema actually proves, so a hand-made
+ *  spec could not detect a renderer wired to a guessed path. */
+const ORDERS = normalizeOpenAPI(fixture).byId.orders;
 
 const ENTRY = {
   id: 9,
@@ -236,5 +232,15 @@ describe("lifecycle endpoints build their URLs off the schema path", () => {
       expect((err as ApiError).status).toBe(409);
       expect((err as ApiError).detail.reason).toBe("pending → shipped is not allowed");
     }
+  });
+
+  it("a machine the API does not document is refused with zero network calls", async () => {
+    // Same document, lifecycle actions stripped — i.e. a backend that never
+    // shipped the R-001 @actions. The client must not invent the URL.
+    const { transitionPath, historyPath, ...bare } = ORDERS;
+    mockFetch.mockClear();
+    await expect(transitionRecord(CFG, "tok", bare as ModelSpec, 7, "paid")).rejects.toThrowError(ApiError);
+    await expect(fetchHistory(CFG, "tok", bare as ModelSpec, 7)).rejects.toThrowError(ApiError);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });
