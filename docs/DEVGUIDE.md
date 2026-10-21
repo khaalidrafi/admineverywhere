@@ -162,7 +162,9 @@ python3 scripts/parity_table_diff.py        # 0 = identical, 1 = divergence, 2 =
 
 # the LANDING GATE as one command — pytest + manage.py check + makemigrations --check,
 # behind a dep preflight (see EIGHTH harness law: a swallowed boot install must not
-# impersonate a red tree). --fe adds vitest; --python <exe> forces one interpreter.
+# impersonate a red tree). --fe adds vitest AND the three twin harnesses — the
+# byte-identity claims NO single suite can see, since every writer is green against
+# its own fixture; --python <exe> forces one interpreter.
 python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = cannot run
 
 # the RELEASE story as one command — the four carriers + the Cargo.lock entry vs a
@@ -664,6 +666,24 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   through all three, never "just" the migrations check. The verdict prints the
   interpreter it used — `NAME THE ENVIRONMENT THAT PROVED IT` (20:09Z note), now
   applied to my own tool rather than only asked of peers.
+  EXTENDED the same segment: `--fe` now runs the three twin harnesses as gate legs,
+  because the gate was missing exactly the class of red that no per-side suite can
+  see (every writer here is green against its OWN fixture while the claim lives
+  *between* them). Merging someone else's harness needs the same two refusals, not
+  a trust bump: the leg maps the harness's documented `1 = divergence` to RED,
+  `2 = cannot run` to CANNOT RUN, **any other code** to CANNOT RUN ("exited 3,
+  outside its documented 0/1/2 contract") — an undeclared code is not a verdict —
+  and it still requires `BYTE-IDENTICAL` in the output, because a harness that
+  exits 0 without ever printing its own success phrase has compared nothing.
+  The merge-gate default stays three legs: the twins answer CANNOT RUN wherever
+  `app/node_modules` is absent, and a tooling gap must not stall every merge.
+  Five controls, tree restored after each: tampered `app/public/brand.css` → RED
+  naming brand-twin + `the twins DIVERGE`; `app/node_modules` renamed → CANNOT RUN
+  quoting the harness's own `npm install` line; rc 0 with no output → RED
+  `exit 0 alone never proved the compare happened`; rc 3 → CANNOT RUN naming the
+  contract break; both twins clean → green. `--fe` rc 0 measures 299 pytest /
+  416 vitest / csv 3070 cells 56287 B / brand 300 accepted brands / parity 226 B
+  golden, on `/usr/local/bin/python3` with django 5.2.18.
 - **NINTH harness law — a RELEASE procedure is a set of facts about files, and
   files rot silently.** AGENTS.md *Releases* promises "bump the version in ALL
   FOUR carriers first … the tag should match them" and points at a reference
