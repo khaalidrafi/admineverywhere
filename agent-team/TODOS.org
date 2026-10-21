@@ -815,6 +815,56 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 20:47 UTC] :: THE *Releases* PROSE BECAME A
+  HARNESS, AND IT CAUGHT A FALSE CITATION ON ITS FIRST RUN (branch
+  ai/turn-20261021-2041; state untouched — PENDING stands, :DELIVERED: rows above
+  unchanged, DONE is the Lead's gate). Board re-COUNTED not inherited: a python
+  pass over every **/*** headline found all 14 PENDING items carrying
+  :DELIVERED:, and the chat tail (through 3426) held no unanswered
+  @platform-engineer ping — the newest entries are my own 20:36Z report. Boot
+  reproduced BOTH swallowed-install hazards a THIRD consecutive boot (`import
+  admincraft` broken, `app/node_modules` absent); I applied only the gate's own
+  named fixes (`pip install -e ./plugin --no-deps`, `cd app && npm ci`).
+  WHAT LANDED: scripts/release_readiness.py — DEVGUIDE NINTH harness law. The
+  AGENTS.md *Releases* section promised "bump the version in ALL FOUR carriers
+  … the tag should match them" and pointed at a reference implementation, and
+  nothing re-ran either claim. Five legs, each asserting its own fact: the FIVE
+  version reads (pyproject:7, package.json:4, tauri.conf.json:4, Cargo.toml:3,
+  Cargo.lock admincraft entry), a HEAD `vX.Y.Z` tag or `--expect X.Y.Z`, doc
+  path-citation rot, harness grammar (a `ast.walk` for `BinOp(BitOr)` finds a PEP
+  604 `X | None` that `ast.parse` CANNOT see — it is valid syntax that dies at def
+  time on a < 3.10 box, and dies with rc 1 = "the writers DIVERGE"; the 1ce3045
+  rule, machine-enforced for the first time), and release inputs (keystore,
+  flake.nix, guix.scm). Exit 0 / 1 red / 2 cannot run per FIFTH law.
+  THE FINDING (measured, not assumed): `scripts/cut_v010_release.sh` is cited as
+  THE reference implementation in AGENTS.md:381, docs/DEVGUIDE.md:772 and three
+  comments in the Lead-owned workflow (:13, :393, :417) — and exists in ZERO git
+  objects: `git rev-list --all --objects | grep -i cut_v010` → empty. The two docs
+  I own now state the real reference is the workflow's own assemble step
+  (`.github/workflows/build-all.yml:417-443`) and that the hand-cut script was
+  never committed; the workflow's stale citations are cited, not edited (seat
+  boundaries), and the path sits in the harness's reasoned dead-path allowlist —
+  which goes RED if the file ever reappears, so the exemption itself rots in both
+  directions.
+  GREEN: `python3 scripts/release_readiness.py` rc 0 — carriers all 0.1.2 across 5
+  reads, 73 repo path citations resolve across 10 docs, 6 scripts/*.py parse with
+  zero PEP 604 annotations, 5 release inputs present, no tag at HEAD. SIX controls
+  measured, each restoring the tree: one carrier bumped → 1 naming all five values
+  AND 1 on the tag leg (legs independent by design); `--expect 0.2.0` → 1 naming
+  `plugin/pyproject.toml:7`; the dead file created → 1 `allowlist is stale`; a
+  fresh bad citation appended → 1 naming `docs/widget-data.md:127`; a PEP 604 temp
+  script → 1 naming `_ctrl_pep604.py:1`; `plugin/pyproject.toml` moved aside → 2
+  not 1 (a missing input is not a verdict). `git diff --quiet` clean on every
+  touched path after each control.
+  LANDING GATE GREEN: `python3 scripts/landing_gate.py --fe` rc 0 → pytest 299
+  passed / System check identified no issues / No changes detected / vitest 416
+  passed (31 files). Siblings re-run green this boot: csv_twin_diff rc 0 (3070
+  cells / 56287 B / 3097 CRLF lines), brand_twin_diff rc 0, parity_table_diff rc 0
+  (golden 226 B, BYTE-IDENTICAL). Product code: ZERO changes; both suites: ZERO
+  changes; no migration, no lockfile edit (npm ci only). Lead-owned files read and
+  cited only. SECRET LAW held: no credential read, echoed or committed.
+  ROLE_LARK_WEBHOOK still empty in this seat's env (checked with [ -z ], not
+  assumed) → Lark report skipped silently, noted here.
 - Note taken on [2026-10-21 Wed 20:35 UTC] :: VERIFICATION RE-MEASUREMENT, NO
   CODE LANDED (branch ai/turn-20261021-2032; state untouched — PENDING stands,
   :DELIVERED: rows unchanged, DONE is the Lead's gate). Board re-COUNTED, not
