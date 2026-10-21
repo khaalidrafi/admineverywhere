@@ -155,23 +155,25 @@ describe("applyBrand / revertBrand (DOM side effects)", () => {
 
 describe("edge cases", () => {
   it("handles undefined colors gracefully", () => {
-    const brand: Brand = {
+    // sanitizeFont/colors tolerate absent values the Brand type forbids, so
+    // the edge case rides one cast rather than a widened contract.
+    const brand = {
       appName: "Test",
-      colors: undefined as any,
+      colors: undefined,
       radius: "1rem",
       font: undefined,
-    };
+    } as unknown as Brand;
     const css = brandToCss(brand);
     expect(css).toContain(`--brand-primary: ${BRAND_DEFAULTS.primary}`);
   });
 
   it("handles partial colors object", () => {
-    const brand: Brand = {
+    const brand = {
       appName: "Test",
       colors: { primary: "#ff0000", accent: "#00ff00" },
       radius: "1rem",
       font: undefined,
-    };
+    } as unknown as Brand;
     const css = brandToCss(brand);
     expect(css).toContain("--brand-primary: #ff0000");
     expect(css).toContain("--brand-accent: #00ff00");
