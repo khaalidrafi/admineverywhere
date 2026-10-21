@@ -945,7 +945,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   is not automatically a law about the law's own file.
   THE FIX: `EXPECTED_PYTEST` / `EXPECTED_VITEST` / `EXPECTED_VITEST_FILES`
   (`scripts/landing_gate.py:66`) are literals, one shared grader
-  (`scripts/landing_gate.py:112` `population()`), and a mismatch is RED that names the
+  (`scripts/landing_gate.py:135` `population()`), and a mismatch is RED that names the
   direction: SHRANK = coverage lost (restore the tests, or bump the literal in the
   same commit as a deliberate deletion); GREW = the pin is stale (bump it in the same
   commit as the added tests). Unlike the twins there is no CANNOT RUN tier here: the
@@ -957,8 +957,44 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `vitest tests: SHRANK … printed 411, owes 416`. The grew-direction control matters
   as much as the shrank one: a pin that only fires downward is a floor, and a floor
   still lets the cited counts in AGENTS.md and the CI header drift upward unmarked.
+  THE SAME DOOR, ONE LEVEL UP — WHICH LEGS RUN. The counts are pinned; nothing pinned
+  the ROSTER, so the file enforcing this law could pass a merge while silently not
+  running one of the three checks AGENTS.md defines. Measured on the delivered tree
+  before the fix, four mutations, each restored byte-identical, every one rc 0 / GATE
+  GREEN: the `migrations` leg deleted from the roster (the gate ran two verdict legs);
+  `parity-twin` deleted from TWINS (`--fe` compared two of the three pairs); a fourth
+  `*_diff.py` harness written and never wired into the roster (silently not run); and
+  the dep preflight moved BEHIND pytest — the leg whose only job is to stop a swallowed
+  install from wearing pytest's exit 2 as a red tree. In all four the closing line still
+  read "every leg above asserted its own output": true of the legs that ran, blind to
+  the one that did not. Distrust that sentence in any harness whose population is a
+  LIST rather than a number — a vanished leg never prints a count to argue with.
+  THE FIX: the roster is pinned by ORDERED LABELS and checked before a single leg
+  launches, so a drift REFUSES rather than running the survivors and printing green
+  lines for a gate that is no longer the gate finalize replays. Identity, population
+  AND order in one compare:
+  graded by `pin_roster()` (`scripts/landing_gate.py:153`) against MERGE_ROSTER +
+  FE_ROSTER (`scripts/landing_gate.py:85`). Two copies of one intent are the weakest
+  pin there is — measured twice above — so the twin roster is ALSO cross-checked against
+  a source that is not a copy, the `scripts/*_diff.py` files on disk, by
+  `pin_twins()` (`scripts/landing_gate.py:182`) against the EXPECTED_TWINS literal
+  (`scripts/landing_gate.py:91`).
+  THE VERDICT SPLIT IS THE POINT, and it reverses the ruling two lines above on
+  purpose: a COUNT mismatch is RED (the tree is not making the claim its own runner
+  summary prints — a verdict about the work), a ROSTER mismatch is `CANNOT RUN` (this
+  file is no longer the harness, so it has no opinion about the diff in front of it —
+  a launch failure). Both answer the same question: who is lying, the tree or the tool?
+  The refusal prints as the gate's own verdict, `CANNOT RUN [roster]`, never as
+  "harness failure" — measured on the first cut of the fix, an uncaught pin exception
+  reached `__main__`'s crash handler and a deliberate decision appeared as a broken
+  rig, which invites a re-run of something that will not change (TWELFTH law).
+  CONTROLS: honest run rc 0 (4 legs default, 8 under `--fe`, roster printed); each of
+  the four mutations above → rc 2 naming MISSING migrations / TWINS lists 2, pins 3 /
+  roster-vs-disk / ORDER changed, every time BEFORE a leg launched.
   SEAT RULE, extending the law to its author: when you write a population law for a
-  harness family, the next file to measure is the one that runs the family.
+  harness family, the next file to measure is the one that runs the family — and the
+  population to pin there is BOTH the numbers its legs print and the roster of legs
+  that prints them.
 
 - **TWELFTH harness law — a verdict leg that reads the TRANSPORT, not the VERDICT, is
   the EIGHTH law running backwards.** EIGHTH says `exit 0` alone never proved anything;
