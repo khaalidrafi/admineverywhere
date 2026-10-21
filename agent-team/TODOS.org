@@ -867,6 +867,68 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 12:27 UTC] :: :DELIVERED: (evidence
+  strengthening, state untouched — DONE stays the Lead's gate.) No work-order
+  item was open to take: `grep -nE '^\*+ (\S+ )?(TODO|ONGOING|WAIT)'
+  agent-team/TODOS.org` → zero hits, all 11 rows sit
+  PENDING-with-delivered-evidence, and the chat tail held no unanswered
+  @platform-engineer ping. So per instruction 2 the smallest verifiable
+  improvement, landed on the row that names the gap itself: R-006's close-out
+  recorded "no component test covers it" for Dashboard.svelte's widget
+  rendering plus the last `<svelte:component>` in the repo, and R-008 recorded
+  "UNVERIFIED: no browser/Tauri session clicked the dashboard".
+  WHAT LANDED (branch ai/turn-20261021-1218, shas 85a8142 + 9c32b69 +
+  186671b):
+  - app/src/lib/__tests__/dashboardMount.test.ts (NEW, 3 tests) — the FIRST
+    test to mount the Dashboard GRID, i.e. the only place `widgets[].component`
+    is used for real. Registry-driven, no pinned count (house law from
+    widgets.test.ts / pages.test.ts): one grid cell per registered widget in
+    registry order, cell title == meta.title, `md:col-span-2` iff size lg, and
+    each card holds a body element besides the header div — so a drop-in that
+    fails to render is a red test, not an empty card. Committed GREEN ON HEAD
+    BEFORE the product file moved (85a8142), per my own 12:13Z house rule.
+  - MUTATION-CHECKED both directions, not asserted: with the mount line deleted
+    from Dashboard.svelte the new file goes 2 failed / 1 passed ("cell 0
+    rendered no widget body: expected 0 to be greater than 0"); restored, 3/3
+    green again. So the guard is real, not the tautology class flagged at
+    10:53Z.
+  - app/src/pages/Dashboard.svelte:22/27 — `<svelte:component this={w.component}
+    />` replaced with the runes form `{@const Widget = w.component}` +
+    `<Widget />`, matching Shell.svelte:53. That closes the R-006 residual and
+    makes the deprecated construct GONE repo-wide:
+    `grep -rn "svelte:component" app/src plugin/` → zero hits; the only
+    remaining mention is the prose at docs/page-registration.md:52 that
+    documents the deprecation.
+  - LIVE DROP-IN PROOF through the changed line (scratch file, removed after):
+    added app/src/widgets/ScratchProbe.svelte exporting
+    `meta{title:"Scratch Probe"}` and touched NOTHING else — the grid test
+    widened its domain automatically and stayed 3/3 green, which is the R-008
+    drop-in contract proven through the renderer rather than through the
+    registry alone. `git status` clean after removal.
+  - docs/DEVGUIDE.md: new "Hard-won contracts" bullet for the runes
+    dynamic-component form + the grid test; stale suite counts 283 -> 286 at
+    the layout row (:116) and the Commands block (:144).
+  MEASURED AT 186671b: vitest 286/286 over 20 files (was 283/19; +3 new, no
+  existing assertion changed) with NODE_OPTIONS=--max-old-space-size=1024
+  --maxWorkers=1; `npx tsc --noEmit` exit 0 (the standing bar from 5834538
+  held — nothing of mine broke it); `npm run build` ✓ 2.03s; LANDING GATE
+  GREEN — pytest 285/285 (-p no:cacheprovider), manage.py check "no issues
+  (0 silenced)", makemigrations --check "No changes detected". Base was fresh
+  at segment start (HEAD == origin/ai/main aec85f4, `merge-base --is-ancestor`
+  → BASE_FRESH), so no rebase was needed before the first push (the 12:05Z
+  stale-base bounce rule).
+  STILL UNVERIFIED, stated plainly: this is rendered-DOM proof under
+  happy-dom, not a real browser/Tauri window — pixel layout of the responsive
+  grid and the widgets' charts against a LIVE schema remain unclicked here (no
+  browser installed; installing one is a spend this seat is not authorised
+  for). That row is unchanged and stays the Lead's.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK absent from this seat's environment.
+  SECRET LAW held: no credential value read, echoed or committed. No lead-owned
+  file touched (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/* — read and cited only; the harness boot lines at
+  agent-team.yml:508-509 were READ to confirm the editable plugin install the
+  container signature keeps missing). No OBJECTIVE-STATE change, no completion
+  claim from this seat.
 - State "PENDING" from "ONGOING" [2026-10-20 Tue 23:05 UTC] :: :DELIVERED:
   WORK ORDER item 10, seat platform-engineer, branch ai/turn-20261020-2254,
   sha efc9aa2. What landed: meta.data feed contract
