@@ -191,8 +191,10 @@ jobs:
           echo "objective=$OBJECTIVE" >> "$GITHUB_OUTPUT"
           # Seat pointer -> seat id. The case grammar is extensible: one
           # line per rotation entry ("model@body ... role" pointer forms).
+          case "$TURN" in
             qwen3.8-flash@qoder*) NEXT_SEAT=platform-engineer ;;
             *)                    NEXT_SEAT=platform-engineer ;;
+          esac
           echo "seat=$NEXT_SEAT" >> "$GITHUB_OUTPUT"
 
       - name: Stop notice (kill switch / complete / no objective)
