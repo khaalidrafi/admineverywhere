@@ -67,6 +67,29 @@ groups), `HeatStrip` (35-day strip), `DeltaChip` (7-day momentum, the one
 built-in that polls) — all auto-resolve, so they follow any DRF schema;
 `ActivityChart` remains the line chart that predates the contract.
 
+## Proof (mount-level, not module-level)
+
+`feed.ts` is unit-pinned by `widgetFeed.test.ts`, but a chart that maps the
+wrong field, draws slice geometry off the wrong quantity, or forgets its own
+page cap keeps that suite green — the same failure shape `chatMount`/
+`brandingMount` were written against. The components are therefore judged
+through their DOM and their requests:
+
+- `widgetMount.test.ts` — `HeatStrip` day cells, `DeltaChip` poll + timer death.
+- `chartMount.test.ts` — `StatusDonut` (dash/offset geometry from the group
+  fraction, top-5 fold into `(other)`, total in the ring, nameable `empty`
+  with ZERO requests, friendly `error`), `LeaderBars` (value-descending sort,
+  top-6 cut, percent-of-max widths), `TrendArea` (30-day point set matches the
+  day keys, flat baseline when the window is all zeros) and `ActivityChart`
+  — which predates the engine, so its own model-picker (a readOnly
+  `created_at` beats every other timestamp) and its 3-page walk cap are pinned
+  against a server whose pagination never ends. Every request is asserted
+  against the schema-discovered `listPath` with the token header, never a
+  concatenated URL.
+
+Mutant-checked: dropping the fold, the sort, the offset step, the page cap and
+the picker preference each fail a named test.
+
 ## Copy checklist for client projects
 
 1. Drop one `.svelte` in `app/src/widgets/`; export `meta` from
