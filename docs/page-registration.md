@@ -122,6 +122,17 @@ pins down:
   unclean teardown leaves a stale `<main>` that the next `querySelector` reads —
   which looks exactly like a routing bug and is not one.
 
+The Modules page — the screen that SHOWS the registry — is itself mounted in
+`app/src/lib/__tests__/gapMount.test.ts` with the registry module stubbed (the
+real glob can only ever hand it the shipped pages, so a refusal would need a
+deliberately broken file in `src/pages/`). Pinned through its DOM: one row per
+declared page in registry order, `nav:false` as a dash with the standalone
+badge, a parameterised page offering NO Open button, Open routing through
+`pageHref()` rather than a hand-built hash, and every refused declaration
+rendering `id: reason` verbatim while registering no row. The header's page and
+model counters are asserted with different numbers on purpose — with `2 · 2` the
+component could swap the two variables and stay green.
+
 ## Open edges (deliberately not in R-006)
 
 - No nested/parallel page groups (`/m/:id/history/:tab`), no async chunk

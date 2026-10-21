@@ -113,7 +113,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (285 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (314 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (334 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -141,7 +141,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 314 vitest
+cd app && npm test                          # 334 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 285 pytest
 
@@ -297,6 +297,24 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   until `app/src/lib/__tests__/dashboardMount.test.ts`, which is registry-driven
   like the shell tests — a drop-in that fails to render is a red test, not an
   empty card.
+- The last four components with zero test references are pinned by
+  `app/src/lib/__tests__/gapMount.test.ts`: `ErrorBanner` (renders only while
+  `backendDown`, names the **override** URL before the stored config, Dismiss
+  clears the store flag not just the DOM), `Modules` (its own registry stubbed,
+  so the refusal list and the parameterised-row rule are provable without
+  dropping a deliberately broken page into `src/pages/`; the header's two
+  counters are asserted with DIFFERENT numbers so a variable swap is visible),
+  `StatsCards` (exactly one request per model, `base + discovered listPath +
+  ?page=1&page_size=1` with the token header, the server `count` not a row
+  length, zero requests until the schema lands, one sweep per load, card click
+  routes by model id) and `QuoteCard` (brand name painted from the live store,
+  the flip holds its text mid-animation and swaps at 225 ms, `randomQuote`'s
+  exclusion re-roll counted from `Math.random`, a second click swallowed).
+  Two harness traps this file exists to record: a **constant** `Math.random`
+  stub sends `randomQuote`'s re-roll loop (`while (i === excludeIndex)`) spinning
+  until the test process OOMs — script the draws as a finite sequence; and
+  `vi.useFakeTimers()` must not meet a `vi.waitFor()` poll, so components that
+  paint from stores alone mount synchronously.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
