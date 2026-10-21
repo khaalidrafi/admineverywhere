@@ -113,7 +113,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (391 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (405 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -141,7 +141,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 391 vitest
+cd app && npm test                          # 405 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
@@ -401,13 +401,37 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
      `localStorage` and the CSS injection target must stay live while the
      `@tauri-apps/api/{core,window}` entry points are mocked per case with
      `vi.resetModules()` + `vi.doMock` + a dynamic `import("../stores")`.
+  3. **…but `vi.resetModules()` is forbidden once a COMPONENT is mounted.** The
+     dynamic import rebuilds `svelte` itself, so the freshly imported component
+     belongs to a SECOND client runtime whose effect queue the test file's
+     statically imported `flushSync()` never drains. The symptom is a silent
+     false negative: the click reaches the button (prove it with a capture
+     counter), `showSettings` flips, and the DOM simply never re-renders — which
+     reads as "the gear is broken". For a component-under-test, mock the leaf at
+     FILE level (`vi.mock("@tauri-apps/api/core", () => ({ invoke }))`, a hoisted
+     spy the marker switches at call time — `secrets.ts` imports `invoke`
+     lazily, so web cases never resolve it) and keep ONE module graph per file.
+     `resetModules` stays correct for pure modules like `stores.ts`/`secrets.ts`.
   stores.ts is 100% stmts / 93.3% branch; the surviving branches are the
   `typeof localStorage/window === "undefined"` guards (unreachable under
   happy-dom — equivalent, recorded as such). `loadSchema`'s in-flight guard and
   its no-token read are pinned too: a second `loadSchema()` while one is pending
   fires ZERO extra requests, and the anonymous read carries no Authorization
   header, and the claims degradation (documented `mePath` vs none) is asserted
-  by the exact URL list, so a guessed `/api/me/` probe fails the file.- Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
+  by the exact URL list, so a guessed `/api/me/` probe fails the file.
+  `ChatPanel.svelte` is now 97.8% stmts / 93.4% branch / 100% funcs
+  (`chatPanelMount.test.ts`, 14 cases): the settings form is driven by clicking
+  Save provider / Cancel / the gear / the Ctrl+K launcher, the key-clearing fix
+  is re-proven through the FORM rather than only the store, `Stop` aborts a real
+  in-flight stream ("… — stopped."), a 429 surfaces verbatim with the empty
+  assistant bubble popped (asserted by bubble COUNT, not by the absence of an
+  ellipsis — the placeholder only renders while streaming, so a text scan cannot
+  see the ghost), and the keyring path is pinned with a sentinel scan proving no
+  key byte reaches `localStorage` in Tauri mode. The one uncovered line — the
+  `if (!configured)` guard inside `send()` — is UNREACHABLE through the UI: the
+  composer renders only in the `{:else}` branch of `{#if showSettings}{:else if
+  !configured}`, so it is recorded as dead-defensive, not bent into a test.
+- Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
   `app/src/lib/pages/index.ts` globs eagerly, validates, and hands
