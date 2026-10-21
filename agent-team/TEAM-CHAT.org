@@ -2405,3 +2405,66 @@
   model and the 6-column slice hid it. Put the refused case MID-list and
   assert the EXACT header set, not "does not contain". Five seds, zero
   survivors afterwards; vitest 352/352, tsc 0, pytest 285/285 here.
+
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 17:10 UTC]
+:END:
+  RESULT: DONE (segment work — board stays exhausted; every WORK ORDER row 1-11
+  already carries :DELIVERED:, so nothing flipped, no completion claim,
+  OBJECTIVE-STATE untouched.)
+  HARNESS: I ran clean this turn (npm + pip self-install succeeded), so the
+  prior "qoder+zai+minimax lanes all failed" commit e8f87bf looks like a
+  transient provider/seat outage, not a tree defect — the tree is green at HEAD
+  under me. Still the THIRTEENTH consecutive self-install: docker/harness boot
+  lacks `cd app && npm install` and `pip install -e ./plugin[test]` (the
+  Dockerfile has neither; plain `pip -r requirements.txt -e ../plugin` yields no
+  pytest — the [test] extra is required). Coverage additionally needed
+  @vitest/coverage-v8@3.2.7 installed --no-save (vitest is 3.2.7; the default
+  tag pulled the v5 provider and ERESOLVE'd).
+  WHAT: the first line/branch-COVERAGE pass on app/src/lib/stores.ts found a
+  concrete disconnect — 64% stmts / 52% branch, because handleApiError (the
+  app-wide error policy) and effectiveConfig (the override merge) are ONLY ever
+  MOCKED by consumers (RecordForm.test.ts:9-10) and never executed. So the three
+  real branches — network -> backendDown banner flag, 401 -> logout() (the
+  FR-R007 claims-clearing path) + "Session expired" toast, 400 -> "message:
+  detail" toast — ran ZERO tests while the suite stayed green. Same
+  mock-hides-the-real-code class the 16:36Z note and DEVGUIDE:318-331 pin for
+  utils/DataTable, but the SECOND victim is a pure logic module, not a component.
+  DELIVERED (branch ai/turn-20261021-1659):
+  - app/src/lib/__tests__/stores.test.ts — 11 tests driving the REAL functions
+    (no mount, no self-mock) and asserting the EFFECT on the live app/claims/
+    toasts stores + localStorage: override wins ONLY apiUrl and auth/schema ride
+    from the config; a network error sets the flag and emits NO toast; 401
+    clears token/username/schema + claims + both localStorage keys AND toasts the
+    expiry; 400 string detail on one line, 400 object detail never leaks
+    "[object Object]"; a non-ApiError still reaches the user by message.
+  - The toast self-dismiss is a MODULE-OWNED timer (QuoteCard's 225ms sibling the
+    16:20Z note warned about): advance to 3999ms -> still present (proves the cap
+    is 4000, not smaller), +1ms -> gone; a second test proves only the EXPIRED
+    toast is swept, not an in-window sibling (a filter mutation would wrongly
+    drop it).
+  - docs/DEVGUIDE.md: new hard-won bullet (stores.ts = second mock-hides victim)
+    + counts 353 -> 364 (layout row, Commands).
+  EVIDENCE: vitest 364/364 (27 files, capped NODE_OPTIONS=1024 --maxWorkers=1);
+  tsc --noEmit exit 0; pytest 299/299; manage.py check "no issues";
+  makemigrations --check "No changes detected". stores.ts 64%->71% stmts,
+  51.6%->71.4% branch (the branch jump is the error-policy table). MUTANTS: five
+  seds (override precedence, 401->403, dropped logout(), removed ":detail" join,
+  4000->5000 timer) each fail exactly one named test; sources restored
+  byte-identical from /tmp and never committed; npm lockfile stayed clean.
+  NEXT / WHAT REMAINS: (1) pixels still unproven — no browser/Tauri here.
+  (2) stores.ts remaining lines are fetch/Tauri paths (loadSchema, saveAiSettings,
+  native window title) — network behaviour, the next coverage seat can mount those.
+  (3) harness self-install gap above.
+  BOARD: LOGBOOK note added to FR R-007 (where stores.ts logout/claims already
+  lives) at :1364; no state flipped, DONE stays your gate, OBJECTIVE-STATE
+  untouched, no completion claim from this seat.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's env (checked with
+  [ -z ], not assumed).
+  SECRET LAW held: no credential value read, echoed or committed. No lead-owned
+  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/* — read/cited only).
