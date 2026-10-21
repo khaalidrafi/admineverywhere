@@ -142,8 +142,61 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   ef1e8a4 — conflict surface identified, trial rebase next per DIVERGENCE
   HANDLING; STOP + WAIT if it conflicts, Lead/Owner resolves.
 :END:
-*** ONGOING FR-R001-FE — lifecycle renderer (client side)                :FE:
+*** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
 :LOGBOOK:
+- State "PENDING" from "ONGOING" [2026-10-21 Wed 00:07 UTC]
+- Note taken on [2026-10-21 Wed 00:07 UTC] :: :DELIVERED: WORK ORDER item 3
+  closed by seat platform-engineer. Code landed on
+  ai/turn-20261020-2347 @ 45fbe86 (auto-merged into ai/main as 02e4e7e);
+  this segment (ai/turn-20261021-0003) added the missing AGENTS.md contract
+  bullet + count bumps and re-measured every claim against the tree.
+  All four scope points of the 23:50 :CLAIMED: note are met and proven:
+  - FIXTURE RECAPTURED, and now independently re-proven live: demo-backend
+    migrated (0002_orderhistory, 0003_auditentry) + runserver on
+    127.0.0.1:8019, GET /api/schema/?format=json -> path set IDENTICAL to
+    app/src/lib/__tests__/fixtures/openapi.json (16 vs 16, zero symmetric
+    difference) and component count 30 vs 30. Verb shapes match the evidence
+    law: transition=[post], history=[get], flag=[post], bulk_flag=[post],
+    export=[get], me=[get]. Rig stopped; port re-checked closed.
+  - PATHS BOUND BY EVIDENCE: openapi.ts:183-186/198-199 sets
+    model.transitionPath only on a documented POST and model.historyPath
+    only on get && !post — the exportPath/mePath law, no guessing.
+    openapi.test.ts:226-243 pins both directions (a GET-only "transition"
+    binds nothing; a history that also accepts POST is a collection, not a
+    trail) and that a lifecycle action never becomes a model of its own.
+  - AFFORDANCE REFUSED WHEN THE SERVER DOES NOT DOCUMENT IT:
+    statusTransitions.lifecycleProblem()/lifecycleAvailable() (:70-80),
+    DataTable.svelte:49 gates the buttons, ModelPage.svelte:271/434 reads
+    only a discovered historyPath and says so in the UI when absent,
+    kanban.ts:79 refuses a transition axis whose endpoint is missing, and
+    api.ts:264/282 throw instead of re-guessing a URL that 404s.
+  - WIRE BYTES PINNED: app/src/lib/__tests__/lifecycleMount.test.ts (4
+    tests) mounts the REAL ModelPage against normalizeOpenAPI(the captured
+    fixture) with a URL-routing fetch stub — exact POST URL +
+    {transition: "<target>"} body, 409 reason surfaced verbatim, trail read
+    through the discovered history path, and zero requests once the actions
+    are stripped from the document. Same law chatMount.test.ts set.
+  Evidence (measured at this segment):
+  - [x] Landing gate green: pytest 212/212 (-p no:cacheprovider, 17.0s),
+        manage.py check "no issues (0 silenced)", makemigrations --check
+        "No changes detected", vitest 252/252 (19 files, capped
+        NODE_OPTIONS=1024 --maxWorkers=1).
+  - [x] vite build 2.94s zero warnings; tsc --noEmit = the same 7 known
+        pre-existing errors, none from the lifecycle files.
+  - [x] docs: docs/order-lifecycle.md carries the recapture record + the
+        mounted-proof paragraph (:150-172); AGENTS.md gained the lifecycle
+        two-sided-proof bullet, the kanban line now names
+        <model.transitionPath> instead of a hand-built URL, counts 238 ->
+        252 in layout/Commands/landing-gate law 7.
+  - [ ] STILL UNVERIFIED, not a code gap: no human watched a transition
+        happen in a real browser/Tauri window. This box has no
+        playwright/puppeteer/chromium (checked: app/node_modules and PATH),
+        so the final E2E row stays Lead's or the Owner's — I will not claim
+        a click I could not make.
+  Board note: the R-001 PARENT headline (:9, ** level, still ONGOING) is
+  left untouched on purpose — both its children now carry delivered
+  evidence (BE DONE, FE PENDING here), closing the parent is the Lead's
+  gate, not mine.
 - State "ONGOING" from "PENDING" [2026-10-20 Tue 23:50 UTC]
 - Note taken on [2026-10-20 Tue 23:50 UTC] :: :CLAIMED: WORK ORDER item 3
   ("finish, client side") re-opened by seat platform-engineer on
