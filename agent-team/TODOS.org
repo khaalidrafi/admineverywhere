@@ -867,6 +867,47 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 12:41 UTC] :: Root cause of the CONTAINER-BOOT
+  harness row (the eighth fresh container where the seat had to install
+  deps itself before the gate could run) — MEASURED, and it overturns my own
+  12:28Z guess. The boot install is NOT silently failing:
+  /home/agent/.local/lib/python3.12/site-packages/__editable__.admincraft-0.1.2.pth
+  has birth time 12:35:36.071 in THIS container, PID1 start 12:35:33.632
+  (`stat -c %w` vs `/proc/1`) — so agent-team.yml:509 ran and pip exited 0.
+  What breaks it is that the launcher then pins a different HOME
+  (agent-team.yml:519 `env HOME=/usr/local/lib/qoder-home qoder …`), Python's
+  user-site follows $HOME (`site.getusersitepackages()` returns
+  /usr/local/lib/qoder-home/.local/… with this seat's HOME), so the boot .pth
+  is on a path the seat interpreter never reads: first `import admincraft`
+  → ModuleNotFoundError, `app/node_modules` → 0 entries. The discarded stderr
+  and `|| true` are NOT the cause (pip genuinely succeeds); the cause is the
+  HOME split between the install line and the launch line. Discriminating
+  tests, all run here: (1) writing a plain one-line `admincraft-src.pth`
+  containing /workspace/plugin/src into the pinned user site → pytest 285/285
+  + manage.py check "no issues (0 silenced)" — the editable machinery
+  (dist-info, import hooks) is NOT needed, a path .pth is sufficient; (2) the
+  same under `PYTHONPATH=/workspace/plugin/src` WITHOUT the .pth → 5 failed,
+  276 passed, 4 errors, so a bare PYTHONPATH is NOT sufficient.
+  ONE-LINER FOR THE LEAD (agent-team.yml is lead-owned; cited, not touched),
+  safest first: make line 509 use the SAME HOME as line 519 —
+  `env HOME=/usr/local/lib/qoder-home python -m pip install -e /workspace/plugin
+  --no-deps -q` — so the .pth lands where the seat interpreter looks. The
+  HOME-independent variant (write to the shared prefix) needs root: this seat
+  `touch /usr/local/lib/python3.12/site-packages/admincraft-src.pth` →
+  Permission denied (whoami=agent), so it means a chown or a root `python -m
+  pip` in the image build. `npm ci` in app/ has NO boot line at all — `grep
+  -n "npm " .github/workflows/agent-team.yml` hits only 64-65 and 752-753
+  (the CI test job), never the seat job, so "no npm step" is confirmed rather
+  than inferred; a `npm ci --prefix /workspace/app` next to the pip line is
+  the sibling fix.
+  THIS SEAT'S RECIPE, verified, 2 commands: `python -m pip install -e plugin
+  --no-deps -q` (exit 0 under the pinned HOME → lands in the pinned user site)
+  + `cd app && npm ci`. Baseline measured after them at d612d06: pytest
+  285/285, check "no issues (0 silenced)", makemigrations --check "No changes
+  detected", vitest 286/286 over 20 files, `npx tsc --noEmit` exit 0.
+  Board state untouched, no DONE, no completion claim. Lark SKIPPED:
+  ROLE_LARK_WEBHOOK empty (`[ -n "$ROLE_LARK_WEBHOOK" ]` → empty). SECRET LAW
+  held; no lead-owned file edited.
 - Note taken on [2026-10-21 Wed 12:27 UTC] :: :DELIVERED: (evidence
   strengthening, state untouched — DONE stays the Lead's gate.) No work-order
   item was open to take: `grep -nE '^\*+ (\S+ )?(TODO|ONGOING|WAIT)'
