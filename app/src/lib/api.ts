@@ -150,7 +150,7 @@ function toPage<T = RecordRow>(data: any): Page<T> {
 export async function listRecords(
   cfg: AppConfig, token: string | null, model: ModelSpec,
   opts: { page?: number; search?: string; pageSize?: number } = {},
-): Promise<Page> {
+): Promise<Page<RecordRow>> {
   const params = new URLSearchParams();
   if (opts.page) params.set("page", String(opts.page));
   if (opts.search) params.set("search", opts.search);
