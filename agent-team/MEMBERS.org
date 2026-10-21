@@ -1,4 +1,4 @@
-#+TITLE: AGENT-TEAM-MEMBERS — admincraft ranked roster
+#+TITLE: MEMBERS — admincraft ranked roster
 # 2026-10-21 Lead update: the repo now runs the agent-team CI CHAIN
 # (.github/workflows/agent-team.yml). CI CHAIN SEATS (dispatchable
 # model@body pairs; bodies preinstalled in docker/harness):

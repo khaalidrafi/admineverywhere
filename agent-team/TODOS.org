@@ -1,4 +1,4 @@
-#+TITLE: AGENT-TEAM-TODOS — admincraft
+#+TITLE: TODOS — admincraft
 #+TODO: TODO(t) ONGOING(o) WAIT(w@) PENDING(p@) | DONE(d!) CANCELLED(c@) DEFERRED(f@)
 #+COLUMNS: %40ITEM %TODO %CLOCKSUM_EFFORT(Clocked)
 # Hiring rule: the assignee flips its item to ONGOING at task start (first commit of its branch). Marking DONE/CANCELLED is Lead-only.
@@ -130,7 +130,7 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   pagination_class=None), creation entry via perform_create + seed_demo,
   migration 0002, docs/order-lifecycle.md. pytest 90/90 in-sandbox at that
   commit (53 base + 37 new; zero new deps — no pytest-django).
-  Spec letter now VERIFIED (fetched origin/ai/main): agent-team/AGENT-TEAM.md new
+  Spec letter now VERIFIED (fetched origin/ai/main): agent-team/TEAM.md new
   sections read; ROADLOG.org R-001 read. No implementation drift vs the
   dispatch; one deliberate refinement to record: R-001 sketches "@action
   transition endpoints (confirm/cancel)" while the dispatch orders a single
@@ -745,7 +745,7 @@ CLOCK: [2026-10-18 Sun 01:33]--[2026-10-18 Sun 01:40] =>  0:07
   force-pushed. Zero conflicts, and not by luck: the branch's file set
   (git diff --name-only origin/ai/main...ai/csp-1) never contained this todos
   file. Rebase fidelity proved after the fact — git diff --stat ecacdc2 HEAD
-  lists agent-team/AGENT-TEAM-TODOS.org alone, so the tested tree is byte-identical to the
+  lists agent-team/TODOS.org alone, so the tested tree is byte-identical to the
   one measured at ecacdc2.
   New hashes: 5d2874e 48ab762 f75fd79 b2c6f0f 953d725 c38cf08 8d410cf b9b7f65
   (8 ahead / 0 behind), spec items 1-4 still satisfied exactly as evidenced in
@@ -799,7 +799,7 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 01:12]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:10]
 - Note taken on [2026-10-18 Sun 01:33] :: Re-opened on Lead's addendum
-  (standing rules now in agent-team/AGENT-TEAM.md:143 LOCAL-AGENT PUSH RULE and :148
+  (standing rules now in agent-team/TEAM.md:143 LOCAL-AGENT PUSH RULE and :148
   DIVERGENCE HANDLING). Work segment: rebase ai/csp-1 on origin/ai/main per
   the divergence rule and push at every segment end. Spec items 1-4 are
   unchanged and already satisfied at ecacdc2; measured divergence before
@@ -898,7 +898,7 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
   independently on the CURRENT tree at 91bd99e, per the Lead's 01:55Z
   dispatch — not inherited from the 21:05 Lead relay.) All four specced
   checks green: (1) governance intact — zero "MEMBER IDS" hits in
-  agent-team/AGENT-TEAM.md, and both deleted-by-branch sections are still
+  agent-team/TEAM.md, and both deleted-by-branch sections are still
   there (DISPATCH PREAMBLE RULE :123, FENCE FORMAT :130); the one
   ```followup hit is :132, mainline's own prohibition naming the thing it
   forbids — the same documented false positive as the 21:05 note.
@@ -936,11 +936,11 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   Commit author preserved as Qwen3.8-Max; I took no authorship of FE work.
   STEP 2 — one honest exception to report rather than obey blindly. Check 1
   (MEMBER IDS) is EMPTY, pass. Check 2 (the language-named follow-up fence)
-  HITS one line: agent-team/AGENT-TEAM.md:132, which reads "(no ```followup, no ```bash,
+  HITS one line: agent-team/TEAM.md:132, which reads "(no ```followup, no ```bash,
   no ```text)" — that is mainline's OWN FENCE FORMAT prohibition, the rule
-  naming the thing it forbids. Proof it is not branch content: agent-team/AGENT-TEAM.md
+  naming the thing it forbids. Proof it is not branch content: agent-team/TEAM.md
   is byte-identical to ai/main (git diff --stat origin/ai/main ai/cool-chat --
-  agent-team/AGENT-TEAM.md is empty). A literal STOP on that hit would be a false
+  agent-team/TEAM.md is empty). A literal STOP on that hit would be a false
   positive that no resolution can clear, since the file is already ai/main's.
   So I read the stop condition as "the branch must not introduce governance
   text", verified that it introduces none, and continued. Overrule me if you
@@ -983,10 +983,10 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   window too (0:18 total, 01:47 to 02:05), per the workflow rule that WAIT keeps
   the clock running — don't read the effort figure as pure work.
 - Note taken on [2026-10-18 Sun 01:53] :: WAIT — one conflicted file and it is
-  not a code file: agent-team/AGENT-TEAM.md. Clock kept open per the workflow (WAIT keeps
+  not a code file: agent-team/TEAM.md. Clock kept open per the workflow (WAIT keeps
   the clock running), so CLOCKSUM here includes idle time awaiting your ruling.
   REBASE: git rebase origin/ai/main on ai/cool-chat stopped with CONFLICT
-  (content) in agent-team/AGENT-TEAM.md only; app/src/ai/ChatPanel.svelte,
+  (content) in agent-team/TEAM.md only; app/src/ai/ChatPanel.svelte,
   app/src/lib/chat.ts and app/src/lib/__tests__/chat.test.ts applied clean. I
   did NOT resolve it on another member's branch, because the branch side of
   that conflict reinstates the MEMBER IDS section, restores the language-named
@@ -996,7 +996,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   outside the conflict region, so a mechanical --continue would have produced a
   green rebase that quietly rewrote governance.
   WHAT I DID INSTEAD (loses nothing, rewrites nothing of yours): resolved the
-  rebase locally with agent-team/AGENT-TEAM.md taken verbatim from mainline (git checkout
+  rebase locally with agent-team/TEAM.md taken verbatim from mainline (git checkout
   --ours), which leaves the rebased commit diffing against ai/main in the three
   app/ files only, and pushed that tree as a NEW ref ai/cool-chat-verify2 (tip
   49e67fa, 1 ahead / 0 behind, commit author preserved as Qwen3.8-Max).
@@ -1005,7 +1005,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   backup/cool-chat-original at a571257. NEEDED FROM YOU: approve the
   resolution and I force-push ai/cool-chat with a lease, or you rebase it.
   Note the send-back message claims "(rebased on ai/main)" while the branch sat
-  26 behind on a stale agent-team/AGENT-TEAM.md base; the claim is false as of this
+  26 behind on a stale agent-team/TEAM.md base; the claim is false as of this
   segment.
   ITEM 1 — zero hits, both patterns, on all three touched files. Hex/rgb/hsl
   (hash + 3-8 hex digits, rgba?(, hsla?(): no matches. Tailwind palette
@@ -1064,16 +1064,16 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   in between; csp-1 merged as 26ea4a9 plus the todos pushes). Ahead commit is
   a571257 fix(chat): branding sweep + integration (rebased on ai/main) — that
   message claims a rebase it did not actually do, see the next note.
-  Files a571257 touches: agent-team/AGENT-TEAM.md, app/src/ai/ChatPanel.svelte,
+  Files a571257 touches: agent-team/TEAM.md, app/src/ai/ChatPanel.svelte,
   app/src/lib/chat.ts, app/src/lib/__tests__/chat.test.ts. No branding.py or
   plugin test touch, contrary to the dispatch's expectation.
-  FLAG BEFORE ANY REBASE: a571257's agent-team/AGENT-TEAM.md hunk ADDS a "## MEMBER IDS"
+  FLAG BEFORE ANY REBASE: a571257's agent-team/TEAM.md hunk ADDS a "## MEMBER IDS"
   section, changes the mandatory follow-up fence to a language-named block
   (three backticks followed by the word followup), and DELETES
   "## DISPATCH PREAMBLE RULE" and "## FENCE FORMAT". Both deleted sections and
   both opposite rules are in ai/main right now — 4337e1a (drop member IDs) and
   88fc8bb (bare-fence rule) are confirmed ancestors of origin/ai/main via
-  git merge-base --is-ancestor, and mainline agent-team/AGENT-TEAM.md has zero "MEMBER
+  git merge-base --is-ancestor, and mainline agent-team/TEAM.md has zero "MEMBER
   IDS" matches with FENCE FORMAT at :130. So the send-back commit carries a
   silent reversal of two owner rulings, almost certainly a stale-file edit in
   the web chat. A rebase may apply that reversal cleanly rather than conflict,
@@ -1081,7 +1081,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   Standing-rule tension, stated once: DIVERGENCE HANDLING says force-push YOUR
   task branch only; this dispatch orders me to rebase and force-push the Senior
   FE's branch. I am executing the dispatch, keeping a safety ref at the
-  original tip, and I will not push anything that moves agent-team/AGENT-TEAM.md
+  original tip, and I will not push anything that moves agent-team/TEAM.md
   backwards.
 :END:
 ** PENDING COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend       :FE:

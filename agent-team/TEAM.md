@@ -76,7 +76,7 @@ REPORT #n FROM <role> · <model@platform>
 - Low-end box caps: NODE_OPTIONS=--max-old-space-size=1024, vitest --maxWorkers=1,
   sequential services, free -m checks, no heavy builds.
 
-* ORG TODO MACHINERY (queue file: agent-team/AGENT-TEAM-TODOS.org — Lead maintains, members read-only)
+* ORG TODO MACHINERY (queue file: agent-team/TODOS.org — Lead maintains, members read-only)
 #+TODO: TODO(t) DOING(g) WAIT(w@) | DONE(d!) CANCELLED(c@) DEFERLED(f@)
 - Assignee types: BE FE QA DES DOC PM OWN — assign by cycling to a type; next C-c C-t jumps
   straight to DONE.
@@ -124,7 +124,7 @@ Deleting such a branch is owner-ordered, no review needed.
 Local agents (BRE @ Qoder, OpenCode, Goose) auto-load AGENTS.md from the repo — their
 prompts need only "git pull first". Web chats (Qwen3.8-Max, GLM-5.3, Z.ai Agent) load
 nothing — every web-chat dispatch MUST open with: "Clone/pull the repo first, then read
-AGENTS.md + agent-team/AGENT-TEAM.md + STATE.org before touching anything. You are ID: <id>."
+AGENTS.md + agent-team/TEAM.md + STATE.org before touching anything. You are ID: <id>."
 Members are identified by full role + model@platform, never abbreviations.
 
 ## FENCE FORMAT (2026-10-18, owner ruling)
@@ -133,7 +133,7 @@ All fenced blocks are BARE fences: ``` on its own line, NEVER a language/block n
 
 
 ## CLOCK + LOGBOOK WORKFLOW (2026-10-18, owner design — replaces INBOX and report relay)
-Single source: agent-team/AGENT-TEAM-TODOS.org. Members flip their item TODO->ONGOING at start
+Single source: agent-team/TODOS.org. Members flip their item TODO->ONGOING at start
 (with a CLOCK start line), append progress facts to the item's :LOGBOOK: drawer,
 flip WAIT when they need input from anyone, and flip PENDING when finished (clock
 closed). Only the Lead flips DONE after evidence review. Direct-push members commit
@@ -163,7 +163,7 @@ Before ANY work segment: git fetch origin, compare your base with origin/ai/main
 - A repeated block is wasted tokens and noise; the receiver confirms diffs, not
   re-reads canon. Applies to Director->EM updates and EM->member notices alike.
 - Receiver side: confirmations are numbered diff-lists, kept current in
-  agent-team/AGENT-TEAM-MEMBERS.org / HIRING-LOG so senders can diff against them.
+  agent-team/MEMBERS.org / HIRING-LOG so senders can diff against them.
 
 ## MESSAGE CRAFT STANDARD (Director update #3, 2026-10-19 — law on every message)
 - Two readers at once: humans glance-reviewing, AI executing without ambiguity.
