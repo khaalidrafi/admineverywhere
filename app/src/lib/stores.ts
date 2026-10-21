@@ -16,7 +16,7 @@ import {
   saveBranding as apiSaveBranding,
 } from "./api";
 import { injectBrandCss } from "./branding";
-import { loadSecret, saveSecret } from "./secrets";
+import { deleteSecret, loadSecret, saveSecret } from "./secrets";
 import type { RoleClaims } from "./rbac";
 import type { AdminSchema, AppConfig, Brand } from "./types";
 
@@ -227,10 +227,13 @@ export async function loadAiSettings(): Promise<void> {
 }
 
 export async function saveAiSettings(baseUrl: string, apiKey: string, model: string): Promise<void> {
-  ai.set({ baseUrl: baseUrl.trim(), apiKey: apiKey.trim(), model: model.trim() });
+  const key = apiKey.trim();
+  ai.set({ baseUrl: baseUrl.trim(), apiKey: key, model: model.trim() });
   localStorage.setItem("dad.ai.baseUrl", baseUrl.trim());
   localStorage.setItem("dad.ai.model", model.trim());
-  if (apiKey.trim()) {
-    await saveSecret("ai.apiKey", apiKey.trim());
-  }
+  // An empty key field means "forget it", not "keep the stored one": the
+  // settings form hydrates from this store, so skipping the write would
+  // resurrect the old key on next boot and it could never be cleared.
+  if (key) await saveSecret("ai.apiKey", key);
+  else await deleteSecret("ai.apiKey");
 }
