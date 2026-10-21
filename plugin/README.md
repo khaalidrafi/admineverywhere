@@ -39,8 +39,14 @@ Endpoints:
   `data:image/(png|jpeg|svg+xml);base64,...` uploads (magic-byte
   checked, 1 MB cap). Replaces the brand; every client that boots (or
   polls) picks it up and re-themes instantly.
-- `GET /admincraft/branding/asset/<file>` — serves the stored
-  logo/favicon.
+- `GET /admincraft/branding/asset/<relative-path>` — serves the stored
+  logo/favicon. The path is the one `brand.json` carries, directory
+  included (`assets/logo.svg`, exactly what `app/brands/*/brand.json`
+  ships), so the URL the client is handed always addresses the file that
+  exists. Names that climb out of the brand dir are refused: the view
+  rejects `.`/`..`/empty segments, absolute paths and backslashes, and
+  `realpath`+`commonpath` jail catches what a well-shaped name resolves to
+  (a symlinked asset).
 
 Everything is validated by the same closed schema as `build_admin`, and
 every file operation is jailed inside the brand dir. Hosts without DRF
