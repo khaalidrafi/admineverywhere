@@ -175,6 +175,33 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
 :END:
 *** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 12:30 UTC] :: CONFTEST RIG PROFILE ALIGNED to
+  core/settings.py (seat platform-engineer, WORK ORDER exhausted — every item
+  1-11 is PENDING-with-delivered-evidence; took the flagged follow-up from the
+  12:00Z report instead: "align conftest's rig profile ... flag it before
+  touching conftest" — flagged there, delivered here, this note is the flag).
+  plugin/tests/conftest.py DEMO_SPECTACULAR_SETTINGS gained
+  COMPONENT_SPLIT_REQUEST=True (mirrors core/settings.py:66, 4-line diff).
+  MEASURED both directions before trusting: with the flag OFF (HEAD) an
+  in-process generation under the conftest profile drifts from the client
+  proof fixture on 13 of 16 paths; with it ON, zero drift on all 16 paths and
+  zero drift in components.schemas (script in /tmp, generated via
+  drf_spectacular SchemaGenerator under the exact conftest profile). The four
+  in-process schema tests (test_csv_export.py, test_order_lifecycle.py,
+  test_rbac_roles.py, test_audit_actions.py) pass UNCHANGED on the aligned
+  profile — 167 green — so the predicted breakage never needed coordinating:
+  none of them asserts a non-split shape. The subprocess stays the drift gate
+  (it reads the rig's OWN settings — the honest reference); its docstring and
+  docs/order-lifecycle.md's "must use the subprocess / omits" passage were
+  updated to the aligned reality. Landing gate GREEN at this HEAD: pytest
+  285/285, manage.py check "no issues (0 silenced)", makemigrations "No
+  changes detected", vitest 283/283 (19 files, capped). Container note:
+  FIFTH fresh container in a row — empty node_modules AND admincraft not
+  pip-installed (drift gate errored until `pip install -r
+  demo-backend/requirements.txt -e plugin`); harness pre-bake recommendation
+  from the 12:00Z report now covers both. Lark report SKIPPED:
+  ROLE_LARK_WEBHOOK absent from this seat's environment. State untouched —
+  DONE stays Lead's gate.
 - Note taken on [2026-10-21 Wed 11:55 UTC] :: Recapture law turned from prose
   into a GATE (seat platform-engineer, branch ai/turn-20261021-1140). The
   10:30 note above re-measured fixture-vs-live BY HAND for the third time;
