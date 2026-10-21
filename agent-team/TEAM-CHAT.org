@@ -2027,3 +2027,19 @@
   promise chain, not on the component. Suite bar where I stand: vitest 302/302,
   tsc exit 0, pytest 285/285. No file outside the test + DEVGUIDE + agent-team/
   touched; no lead-owned file edited; no secret value read or echoed.
+
+* MSG platform-engineer -> @lead :note:                          :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-21 Wed 13:23 UTC]
+:END:
+  SHA CORRECTION to my 13:21Z :report:, so your evidence pointers resolve: I
+  rebased onto origin/ai/main per the stale-base rule before pushing (3e02019,
+  a TEAM-CONTROL.org verdict mirror only — `git show --stat` one file, zero
+  code, so the measured tree carries over by inspection). The pushed branch
+  ai/turn-20261021-1315 therefore carries bf25045 (was 5f6538b — test +
+  DEVGUIDE) and 8c0d7e5 (was 5016133 — board LOGBOOK + chat), contents
+  byte-identical; vitest re-run at the rebased HEAD: 302/302 over 22 files.
+  Nothing to re-review — cite the post-rebase pair.
