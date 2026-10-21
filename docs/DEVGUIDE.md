@@ -155,6 +155,10 @@ python3 scripts/csv_twin_diff.py            # 0 = identical, 1 = divergence, 2 =
 # (needs app/node_modules; the plugin is read from plugin/src, no venv required)
 python3 scripts/brand_twin_diff.py          # 0 = identical, 1 = divergence, 2 = rig not runnable
 
+# FR-R005 SHARED-TABLE diff — FLOAT_PARITY + the golden literal, pytest side vs vitest side
+# (parses both files; needs `node`, but NOT node_modules and NOT the rig venv)
+python3 scripts/parity_table_diff.py        # 0 = identical, 1 = divergence, 2 = cannot run
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
@@ -535,6 +539,53 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   byte-identical (`git status` clean on those paths). Like the CSV harness this is
   a re-verifier, not a suite member — it needs `app/node_modules` and exits 2 when
   the rig cannot run, so the landing gate never grows a toolchain dependency.
+- **SEVENTH harness law — a SHARED TEST TABLE is a twin too, and it must be
+  diffed by value identity, not by either language's rendering.** The FIFTH and
+  SIXTH laws both protect the *writers*; the FR-R005 proof has a third pair of
+  copies nobody could re-check: `FLOAT_PARITY` and the golden document literal
+  exist once in `plugin/tests/test_csv_export.py` and once in
+  `app/src/lib/__tests__/csv.test.ts`, and AGENTS.md calls them "a SHARED table".
+  Each side's suite is green against ITS OWN copy, so editing one copy — a value
+  added, an expectation retyped, a golden re-wrapped — leaves 299 pytest + 416
+  vitest green while the shared adjective silently dies, and the twin proof stops
+  covering the case the table was written for.
+  `python3 scripts/parity_table_diff.py` is the re-verifier: exit 0 identical /
+  1 divergence / 2 could not run. Three things it had to get right, all measured:
+  1. **Key a float by its bytes, not by its text.** `str(1e17)` is `"1e+17"` and
+     `String(1e17)` is `"100000000000000000"` — disagreeing *by design*, which is
+     the very claim under test. So the harness compares the IEEE-754 big-endian
+     bytes (`struct.pack(">d")` ↔ `Float64Array`+`Uint32Array`) alongside the
+     expectation string. `0.0` and `-0.0` stay distinct rows that way, as they
+     must (both expect `"0"`).
+  2. **Normalize only what is documented to differ — here, the ROWS, not the
+     document.** The Python golden passes `Decimal("19.99")` and an aware
+     `datetime`; the JS one passes the text and JSON number DRF actually sends
+     (both docstrings say so). The comparable artifact is the asserted BYTE STRING
+     both writers must produce, so that is what gets diffed and the row spellings
+     are deliberately not compared.
+  3. **Anchoring on a *substring* of a subject name is a false green.** Naming
+     `const FLOAT_PARITY` and searching for it as text still read BYTE-IDENTICAL
+     after the declaration was renamed `FLOAT_PARITY_RENAMED` — the prefix hit
+     pulled in the renamed array, i.e. the harness had silently changed subject.
+     The JS declaration is now matched with a word-boundary regex and the Python
+     golden must be the UNIQUE `csv_text(... csv_cell( ...) == <one literal>`
+     assert: the small unit asserts also call `csv_text`, and the first one
+     matched made the harness compare a 19-byte toy against the 226-byte golden
+     and confidently print `DIVERGENT`. An ambiguous subject now stops with exit 2
+     instead of guessing.
+  Exit codes are all proven, including the ones nobody had exercised on a
+  *launcher* before: node absent from PATH → 2 (not the 1 that means divergence);
+  subject renamed → 2; golden RHS no longer one literal → 2; a second
+  golden-shaped assert → 2 "subject is ambiguous"; an uncaught internal crash →
+  2 (the first run died on an `ast` attribute error and returned 1 — a false
+  DIVERGENT from a check that never completed, the same leak `csv_twin_diff.py`
+  lost last segment, so the script now wraps its own entry point). Divergence
+  controls that bit: JS expectation `-1e-9`→`-1e-8` names the python-only /
+  js-only pair; deleting one Python row reports 24 vs 25 and names the js-only
+  row; a golden byte `19.99`→`19.98` prints the two lines side by side. Both test
+  files came back byte-identical (`git status` clean). Still a re-verifier, not a
+  suite member — it needs `node` but NOT `node_modules` or the venv, because it
+  parses the two files instead of importing them.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
