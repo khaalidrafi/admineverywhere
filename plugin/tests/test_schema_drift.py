@@ -10,14 +10,15 @@ document the server no longer answers is not proof", but until this file that
 was only prose, and nothing in either suite could tell a faithful capture from
 a stale one.
 
-Why a SUBPROCESS with the rig's own ``core.settings`` and not the in-process
-pattern of test_csv_export.py's schema test: conftest scopes the rig to those
-modules with ``SPECTACULAR_SETTINGS`` lacking ``COMPONENT_SPLIT_REQUEST``
-(which ``core/settings.py`` sets), so an in-process generation there produces
-a materially different document (measured 2026-10-21: 12 of 13 paths differ
-from the fixture, the ``OrderRequest``/``Patched*`` components absent). The
-fixture mirrors the running rig, so the rig's real settings are the only
-honest reference.
+Why a SUBPROCESS with the rig's own ``core.settings``: it is the settings the
+deployed rig actually runs, so it is the honest reference for a fixture
+captured over HTTP against it. (Historical note: before 2026-10-21 the
+in-process profile in conftest.py omitted ``COMPONENT_SPLIT_REQUEST``, so an
+in-process generation produced a materially different document — measured
+2026-10-21: 12 of 13 paths differed, the ``OrderRequest``/``Patched*``
+components absent. conftest is now aligned to ``core/settings.py`` and
+re-measured at zero drift across all 16 paths, but the subprocess stays the
+gate: the fixture captures the rig's own settings, not a test mirror of them.)
 
 Skips only when the rig or the fixture is absent (a plugin-only or app-only
 checkout). A drift is a FAILURE, never a skip — that is the whole point.
