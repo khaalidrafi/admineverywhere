@@ -3,23 +3,20 @@
 # not into CI). Secrets are NEVER baked: keys are env-injected per run
 # from repo secrets.
 #
-# Bodies chosen BY FIT (Owner law 2026-10-21 17:47Z: for API-served
-# brains you pick the agent that fits and install the model brain —
-# "any agent can ride APIs, no surprise"):
-#   - qoder  — agentic coding CLI, PAT-auth (auto-detects CI, no
-#              browser); the ONE lane PROVEN on CI for this team
-#              (proof run 39477554903: real qoder JSON result, 72s of
-#              agentic work; budget artifact fixed --max-turns 100).
-#   - nodejs/npm — the repo's FE half (Svelte 5/Vite/Tauri) is real
-#              work; vitest runs at turn time with `npm ci`.
-# Python project deps (Django/DRF/drf-spectacular/cors + pytest) are
-# baked so the landing gate runs offline-fast inside segments too.
+# REFRESHED by agent-team.el setup (Owner order 2026-10-21 10:12Z): the
+# pkg's proven recipe merged in — OpenCode + Goose + CodeBuddy bodies
+# (the goose fallback lanes were DEAD before: the old image baked only
+# qoder), and the GLOBAL AGENTS.md CONFIG bakes verified per agent docs
+# (OpenCode ~/.config/opencode/AGENTS.md, Goose ~/.config/goose/.goosehints,
+# CodeBuddy ~/.codebuddy/CODEBUDDY.md; Qoder reads repo-root AGENTS.md).
+# Project deps (Django/DRF/drf-spectacular/cors + pytest) stay baked so
+# the landing gate runs offline-fast inside segments too.
 
 FROM python:3.12-slim
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      git curl ca-certificates jq procps nodejs npm \
+RUN apt-get update -qq \
+ && apt-get install -y -qq --no-install-recommends \
+      git curl ca-certificates bzip2 jq procps nodejs npm \
  && rm -rf /var/lib/apt/lists/*
 
 # --- Python project deps (baked; the plugin itself is EDITABLE-INSTALLED
@@ -31,6 +28,21 @@ RUN pip install --no-cache-dir \
       "drf-spectacular>=0.27" \
       "django-cors-headers>=4.3" \
       pytest
+
+# --- OpenCode body (preinstalled once, reused every turn) -------------------
+RUN export HOME=/usr/local/lib/opencode-home \
+ && curl -fsSL https://opencode.ai/install | bash \
+ && chmod -R a+rX /usr/local/lib/opencode-home \
+ && ln -sf /usr/local/lib/opencode-home/.opencode/bin/opencode /usr/local/bin/opencode
+
+# --- Goose body (direct tarball: the download_cli.sh installer opens
+#     /dev/tty and dies on headless runners — demo/01 turn 2 evidence) ------
+RUN mkdir -p /tmp/goose-dl \
+ && curl -fsSL -o /tmp/goose-dl/goose.tar.bz2 \
+      https://github.com/block/goose/releases/download/stable/goose-x86_64-unknown-linux-gnu.tar.bz2 \
+ && tar -xjf /tmp/goose-dl/goose.tar.bz2 -C /tmp/goose-dl \
+ && install -m 0755 /tmp/goose-dl/goose /usr/local/bin/goose \
+ && rm -rf /tmp/goose-dl
 
 # --- Qoder body (exact recipe proven in khaalidrafi/agent-team.el:
 #     install under /usr/local/lib/qoder-home, a+rwX, symlink the ENTRY
@@ -44,9 +56,40 @@ RUN export HOME=/usr/local/lib/qoder-home \
  && ln -sf /usr/local/lib/qoder-home/.qoder/entry/qoder /usr/local/bin/qoder \
  && timeout 60 env HOME=/usr/local/lib/qoder-home qoder --version
 
+# --- CodeBuddy body (baked and DORMANT until a CodeBuddy account
+#     credential exists; headless needs -y in -p mode for tool use) ----
+RUN npm install -g @tencent-ai/codebuddy-code \
+ && timeout 60 codebuddy --version
+
 # --- Non-root run user (matches the Actions runner uid 1001) -----------
 RUN useradd -m -u 1001 agent
 
-ENV HOME=/home/agent
+# --- Baked agent configs (Owner: "make agent configs, too, and reuse them").
+#     Keys are env-interpolated at run time; nothing secret is baked. -------
+COPY docker/harness/opencode.json     /home/agent/.config/opencode/opencode.json
+COPY docker/harness/goose-config.yaml /home/agent/.config/goose/config.yaml
+# Global AGENTS.md = agent law, CONFIGURED into memory (Owner 2026-10-21
+# 08:22Z "configure the agent to load global AGENTS.md"; 09:16Z "read docs
+# for each agent for how they configure global AGENTS.md"). Verified against
+# each agent's official docs on 2026-10-21:
+#   OpenCode  ~/.config/opencode/AGENTS.md — "applied across all opencode
+#             sessions" (opencode.ai/docs/rules); repo-root AGENTS.md also
+#             rides instructions[] in opencode.json.
+#   Goose     ~/.config/goose/.goosehints is the GLOBAL hints file (goose
+#             config dir, ~/.config/goose/); repo-root AGENTS.md/.goosehints
+#             are additionally read from CWD per session.
+#   CodeBuddy ~/.codebuddy/CODEBUDDY.md is the USER-LEVEL memory file,
+#             "takes effect in all projects"; repo-root AGENTS.md auto-loads
+#             when no CODEBUDDY.md exists (documented backward compat).
+#   Qoder     no global/user rules path documented — repo-root AGENTS.md is
+#             auto-recognized (docs.qoder.com/user-guide/rules); no bake.
+COPY AGENTS.md /home/agent/.config/opencode/AGENTS.md
+COPY AGENTS.md /home/agent/.config/goose/.goosehints
+COPY AGENTS.md /home/agent/.codebuddy/CODEBUDDY.md
+RUN chown -R agent:agent /home/agent
+
+ENV HOME=/home/agent \
+    GOOSE_PROVIDER=openrouter \
+    GOOSE_MODEL=nvidia/nemotron-3.5-lightning:free
 
 STOPSIGNAL SIGTERM
