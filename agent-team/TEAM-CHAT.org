@@ -2333,3 +2333,75 @@
   instead of quietly agreeing with a 3-page fixture. Three seds, zero survivors
   — vitest 336/336, tsc exit 0, pytest 285/285 where I stand. No lead-owned
   file edited; no secret value read or echoed.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 16:36 UTC]
+:END:
+  RESULT: DONE (segment work — board stays exhausted, no item flipped, no
+  completion claim, OBJECTIVE-STATE untouched.)
+  WHAT: the first line/branch-COVERAGE run on this seat found a concrete
+  disconnect: DataTable.test.ts:15 stubbed the ENTIRE ../lib/utils module
+  (formatCell → String(v ?? "")) while its own tests judged each-keys in
+  plain code — the stub never executed and the REAL display rules were never
+  executed either; csv.test.ts:61 even names the 60-char ellipsis rule no
+  test could exercise. utils.ts measured 60% statements.
+  DELIVERED (branch ai/turn-20261021-1626, commit e993ed4):
+  - app/src/lib/__tests__/utils.test.ts — 11 tests pinning formatCell,
+    toISOOrNull and debounce on the shipped module (em dash vs "0", Yes/No,
+    datetime trim, decimal never re-flowed, 60 whole / 61 ellipsis, circular
+    object caught; the 300 ms coalescing ModelPage.svelte:65 relies on).
+  - app/src/lib/__tests__/tableDisplay.test.ts — 5 tests mounting DataTable
+    UNMOCKED: DOM proves —, #42, enum pill, trimmed datetime, intact
+    "19.9900", ellipsis, and the json column refused.
+  - Dead-code sweep: utils.ts fromDateOrNull deleted (zero importers,
+    RecordForm.buildPayload:116-117 inlines the rule); unused DataTable
+    import deleted from actions.test.ts:16.
+  - docs/DEVGUIDE.md: contract bullet + counts 336 → 352.
+  EVIDENCE: vitest 352/352 over 26 files; tsc exit 0; pytest 285/285;
+  manage.py check clean; makemigrations --check no changes. MUTANTS: m2
+  datetime-trim, m3 ellipsis 57→50, m4 FK hash, m5 debounce no-cancel each
+  failed only their named tests. m1 (delete the json column filter) initially
+  SURVIVED — two reasons, both fixed: my first sed still excluded json, and
+  a json field LAST in the list hides behind the 6-column slice. json now
+    sits MID-list in the fixture, header assertion pins the EXACT column set,
+    and the corrected sed fails the named test. All sources restored from
+    /tmp copies; npm lockfile churn reverted, not committed.
+  NEXT: pixels still unproven (no browser/Tauri here); TWELFTH consecutive
+  self-install — app deps and `pip install -e ./plugin[test] --no-deps` still
+  absent from docker/harness boot, and coverage needs @vitest/coverage-v8
+  (installed --no-save this run).
+  BOARD: LOGBOOK appended to FR R-008 row. Lark: ROLE_LARK_WEBHOOK checked —
+  skipped if empty. SECRET LAW held; no lead-owned file edited.
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 16:36 UTC]
+:END:
+  A vi.mock of a helper module can hide in a test file that never mounts
+  anything — and then BOTH the stub and the real code run zero tests while
+  the file stays green. Found in DataTable.test.ts:15 (`../lib/utils` stubbed
+  to `String(v ?? "")`, tests only judged each-keys in plain code); the real
+  formatCell rules — em dash, Yes/No, datetime trim, the 57+… ellipsis,
+  decimals never re-flowed — had NO wire proof until now. Two checks worth
+  copying:
+  1. `npx vitest run --coverage --coverage.include='src/**'` (needs
+     @vitest/coverage-v8 — install it with `--no-save` so package.json and
+     the lockfile stay clean). Read the table for a SMALL pure module with
+     low stmts; that is where a stub or a dead export hides cheapest.
+     utils.ts at 60% pointed straight at this; the same sweep also answered
+     "which exports does nothing import" (fromDateOrNull — deleted).
+  2. When you mount a component to prove a helper's DOM output, do NOT mock
+     the helper. Mocking it re-creates the exact divergence class the
+     chatMount 16:11Z note calls out (disconnected builder + stripped legend
+     = green). Pin the helper directly in one file AND judge it THROUGH the
+     component in another, so stub and real can never both be fake.
+  Mutant bonus — a survivor taught me the fixture, not the sed: deleting the
+  json-column filter survived because my json field sat LAST in a 7-field
+  model and the 6-column slice hid it. Put the refused case MID-list and
+  assert the EXACT header set, not "does not contain". Five seds, zero
+  survivors afterwards; vitest 352/352, tsc 0, pytest 285/285 here.

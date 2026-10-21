@@ -979,6 +979,47 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 16:35 UTC] :: :DELIVERED: (display-layer
+  test gap closed + dead-code sweep — state untouched, DONE stays the Lead's
+  gate, no OBJECTIVE-STATE change, no completion claim.) Board still
+  exhausted (TODO/ONGOING/WAIT grep → zero hits), no unanswered
+  @platform-engineer ping. Scoped via line/branch COVERAGE (first run on
+  this seat): utils.ts 60% — and WHY: DataTable.test.ts:15 stubbed the whole
+  ../lib/utils module (formatCell → String(v ?? "")) while its own tests
+  judged each-keys in plain code, so the stub never ran AND the real display
+  rules never ran; csv.test.ts:61 even NAMES the 60-char ellipsis rule no
+  test could exercise. LANDED (branch ai/turn-20261021-1626, commit
+  e993ed4):
+  - app/src/lib/__tests__/utils.test.ts (11 tests): formatCell pinned on the
+    SHIPPED module (— for null/undefined but "0" for zero, Yes/No, datetime
+    trimmed to date+HH:MM, decimal string never re-flowed, 60 chars whole /
+    61 → 57+…, JSON objects + circular caught by the catch branch);
+    toISOOrNull (:00Z pad of the 16-char datetime-local value, pass-through,
+    null-not-empty); debounce burst coalescing + the 300 ms default
+    ModelPage.svelte:65-68 relies on (finite fake-timer scripts, per the
+    16:08Z harness law).
+  - app/src/lib/__tests__/tableDisplay.test.ts (5 tests): mounts DataTable
+    UNMOCKED — DOM-level proof of em dash, FK "#42", enum pill
+    (rounded-full), trimmed datetime, intact "19.9900", the ellipsis, and
+    the json column refused. json field placed MID-list: the first mutant
+    run's m1 SURVIVED because a trailing json field hides behind the
+    6-column slice; corrected sed (`.filter` deleted) now fails exactly the
+    named header test. m2 datetime-trim, m3 ellipsis 57→50, m4 FK hash,
+    m5 debounce no-cancel: each killed by its own named tests, zero other
+    casualties; all sources restored from /tmp copies before commit.
+  - Dead-code sweep: src/lib/utils.ts `fromDateOrNull` deleted (zero
+    importers; RecordForm.buildPayload inlines the same rule at :116-117);
+    unused `DataTable` import deleted from actions.test.ts:16.
+  MEASURED at e993ed4: vitest 352/352 over 26 files (336+16); tsc --noEmit
+  exit 0; pytest 285/285; manage.py check no issues; makemigrations --check
+  no changes. docs/DEVGUIDE.md: new contract bullet (a mount test that needs
+  a module stub must pin the same values through the real one) + 336→352.
+  HARNESS: TWELFTH consecutive self-install — both lanes again (npm install
+  in app/, plus `pip install -e ./plugin[test] --no-deps`; the boot script's
+  pip -e --no-deps left NO admincraft and coverage needed
+  @vitest/coverage-v8 installed --no-save; lockfile churn reverted).
+  Lark report SKIPPED if ROLE_LARK_WEBHOOK empty. SECRET LAW held: no
+  credential read/echoed/committed; no lead-owned file edited.
 - Note taken on [2026-10-21 Wed 16:20 UTC] :: :DELIVERED: (the two defects
   this seat flagged at 14:01Z and 16:08Z are now FIXED, not just pinned
   as-measured — state untouched, DONE stays the Lead's gate, no
