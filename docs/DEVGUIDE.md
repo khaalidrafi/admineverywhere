@@ -113,7 +113,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (375 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (391 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -141,7 +141,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 375 vitest
+cd app && npm test                          # 391 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
@@ -380,7 +380,34 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whitespace per spec (verified against happy-dom's readback), so that trim is
   redundant defensive code, not a live bug. Record an equivalent mutant as
   equivalent; do not bend a test to "kill" it.
-- Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
+- `app/src/lib/stores.ts` had a FOURTH mock-hides gap and one genuinely
+  USER-VISIBLE defect behind it. `saveAiSettings` skipped the secret write when
+  the key field was empty, while `ChatPanel.svelte:33` hydrates that field from
+  the store — so clearing the API key saved nothing and the old key came back on
+  next boot. Now an empty field means "forget it": `deleteSecret("ai.apiKey")`,
+  proven by a save-then-clear-then-reload round trip (`storesTauri.test.ts`),
+  both under the mocked keyring and in web fallback. Two harness laws learned
+  here, both worth copying:
+  1. **Proving a negative needs a macrotask, not microtasks.** The fire-and-
+     forget `void setNativeWindowTitle()` chain (`await import()` + `await
+     setTitle()`) survives an `expect(setTitle).not.toHaveBeenCalled()` that
+     waits only `await Promise.resolve()` twice — the guard under test looked
+     proven while a deleted guard still passed the whole file. A `setTimeout`
+     boundary drains the dynamic-import chain; the positive test in the same
+     file proves that budget is enough. Any "never called" assertion must be
+     re-run against a mutant that DOES call it.
+  2. **Tauri mode is a marker on the real happy-dom window**
+     (`window.__TAURI_INTERNALS__ = {}`), never a replacement — `document`,
+     `localStorage` and the CSS injection target must stay live while the
+     `@tauri-apps/api/{core,window}` entry points are mocked per case with
+     `vi.resetModules()` + `vi.doMock` + a dynamic `import("../stores")`.
+  stores.ts is 100% stmts / 93.3% branch; the surviving branches are the
+  `typeof localStorage/window === "undefined"` guards (unreachable under
+  happy-dom — equivalent, recorded as such). `loadSchema`'s in-flight guard and
+  its no-token read are pinned too: a second `loadSchema()` while one is pending
+  fires ZERO extra requests, and the anonymous read carries no Authorization
+  header, and the claims degradation (documented `mePath` vs none) is asserted
+  by the exact URL list, so a guessed `/api/me/` probe fails the file.- Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
   `app/src/lib/pages/index.ts` globs eagerly, validates, and hands
