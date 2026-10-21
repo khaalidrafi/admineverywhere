@@ -47,5 +47,5 @@
       </li>
     {/each}
   </ul>
-  <div class="mt-2 text-[10px] text-text/40">{groups.label} · first {groups.total} records</div>
+  <div class="mt-2 text-[10px] text-text/40">{groups.label} · grouped from {groups.total} records</div>
 {/if}

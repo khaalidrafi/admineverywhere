@@ -979,6 +979,76 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 16:20 UTC] :: :DELIVERED: (the two defects
+  this seat flagged at 14:01Z and 16:08Z are now FIXED, not just pinned
+  as-measured — state untouched, DONE stays the Lead's gate, no
+  OBJECTIVE-STATE change, no completion claim.) Board still exhausted
+  (`grep -nE '^\*+ (\S+ )?(TODO|ONGOING|WAIT)' agent-team/TODOS.org` → zero
+  hits), gap detector still returns nothing, no unanswered @platform-engineer
+  ping (chat tail was my own 16:08Z thread). Per instruction 2 the smallest
+  verifiable improvement was the two open findings in my own NEXT lists — both
+  are FR-R008 widget-contract violations, so they belong on this row.
+  WHAT LANDED (branch ai/turn-20261021-1613, commit 57e42e2, rebased onto
+  origin/ai/main c184d4a — upstream moved only TEAM-CONTROL.org, zero conflict):
+  - app/src/widgets/QuoteCard.svelte:18-21 — the 16:08Z finding, real: the
+    widget armed a 225 ms flip timer with NO cleanup, so click-then-unmount
+    fired `index = randomQuote(index); flipping = false` against a destroyed
+    component. Fixed with the FR-R008 law the poll feeds already obey:
+    `$effect(() => () => clearTimeout(flipTimer))`. Kept the timer imperative
+    rather than re-arming it from a `flipping`-dependent effect, because that
+    rewrite would move the 225 ms origin from the click to the effect flush and
+    silently re-base three existing timing tests.
+  - app/src/widgets/LeaderBars.svelte:50 — the 14:01Z caption bug: `first
+    {groups.total} records`, where `groups.total` is `rows.length`
+    (feed.ts:235) — however many rows the feed consumed, NOT a claim a cap was
+    applied. A 50-row API read "first 50 records". Now `grouped from
+    {groups.total} records`, honest whether or not `rowCap` bit.
+  - app/src/lib/__tests__/gapMount.test.ts (+1 test, 20 → 21) — NEW test
+    "unmounting mid-flip kills the pending swap": click, advance 100 ms,
+    unmount, advance 500 ms, assert the scripted Math.random CONSUMER stayed at
+    1 draw. Behavioral, not "was clearTimeout called" — it observes the swap
+    never ran.
+  - app/src/lib/__tests__/chartMount.test.ts (1 test → 2, 12 → 13) — caption
+    pinned BOTH ways: 50 rows → "grouped from 50 records" and `not.toContain
+    ("first")`; plus a server whose `next` NEVER ends → "grouped from 300
+    records" with the page COUNT asserted at 3 (pageSize 100 × 3 = the default
+    rowCap). My own 14:01Z rule applied — a well-behaved fixture would have
+    proved the server, not the cap.
+  - MUTANT RUN, 3 seds, every one failed BY NAME (no survivors, so no
+    compile-error false-negative this time): cleanup effect removed → only the
+    QuoteCard unmount test; caption reverted to "first" → only the two caption
+    tests (both directions catch the revert); `DEFAULT_ROW_CAP` 300 → 400 →
+    only the endless-server test, which is the proof that that test measures
+    the cap rather than the fixture. All three restored before commit
+    (`git diff --stat` clean of them; the npm-install lockfile churn was
+    reverted too, so the commit carries six files and nothing else).
+  - docs/widget-data.md — new "Caption law" section (a fetched count is not a
+    cap claim), checklist item 6 (a widget-owned timer obeys the same cleanup
+    law as the poll stop fn), mutant list extended with the two new seds.
+    docs/DEVGUIDE.md 334 → 336 (:116, :144).
+  MEASURED at 57e42e2 (landing gate): vitest 336/336 over 24 files
+  (NODE_OPTIONS=1024 --maxWorkers=1); `npx tsc --noEmit` exit 0; pytest
+  285/285 (-p no:cacheprovider, 19.28 s); manage.py check "no issues
+  (0 silenced)"; makemigrations --check "No changes detected". Gate was run
+  BEFORE the rebase and AGAIN after it, both green.
+  HARNESS: ELEVENTH consecutive self-install — bare container again (no
+  app/node_modules, no admincraft/pytest). Same two lines fix it, so the
+  boot line still needs both: `cd app && npm install` and `pip install -e
+  ./plugin -r demo-backend/requirements.txt` (plain `-r requirements.txt -e
+  ../plugin` does NOT bring pytest — it lives in plugin/pyproject.toml `test`
+  extra; use `admincraft[test]`). npm install rewrote app/package-lock.json
+  (85 lines) purely from the container's npm version — reverted, not committed.
+  NEXT / WHAT REMAINS: both findings I carried forward are now closed, so this
+  seat has no open thread of its own; pixels still unproven (no browser/Tauri
+  here — an actually-painted dashboard chart and a real sidebar click stay
+  yours/Owner's).
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK present but EMPTY in this seat's env
+  (checked with `[ -z ]`, not assumed).
+  SECRET LAW held: no credential value read, echoed or committed. No lead-owned
+  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/* — read and cited only; the QuoteCard/LeaderBars/feed.ts
+  files were sed-mutated for the mutant run and restored from a pre-mutation
+  copy, never committed mutated).
 - Note taken on [2026-10-21 Wed 16:07 UTC] :: :DELIVERED: (evidence
   strengthening — state untouched, DONE stays the Lead's gate, no
   OBJECTIVE-STATE change, no completion claim.) Board exhausted again:
