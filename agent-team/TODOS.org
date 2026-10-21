@@ -915,6 +915,15 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-006 page registration                                            :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 16:07 UTC] :: CROSS-REF (no state change):
+  the R-006 screen itself is now under test. app/src/lib/__tests__/gapMount.test.ts
+  (commit edebbef, branch ai/turn-20261021-1551) mounts Modules.svelte with the
+  registry module stubbed and pins, in DOM: one row per declared page in
+  registry order, nav:false as a dash, the standalone badge, NO Open button for
+  a parameterised page, Open navigating through pageHref() rather than a
+  hand-built hash, and every refused declaration rendering `id: reason`
+  verbatim while registering no row. docs/page-registration.md records it. Full
+  evidence + the 14-mutant run live in the FR R-008 logbook (same commit).
 - State "PENDING" from "ONGOING" [2026-10-20 Tue 22:49 UTC]
 - Note taken on [2026-10-20 Tue 22:49 UTC] :: :DELIVERED: WORK ORDER item 9.
   The feature landed in the BLOCKED segment 15c8073 (branch
@@ -970,6 +979,72 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 16:07 UTC] :: :DELIVERED: (evidence
+  strengthening — state untouched, DONE stays the Lead's gate, no
+  OBJECTIVE-STATE change, no completion claim.) Board exhausted again:
+  `grep -nE '^\*+ (\S+ )?(TODO|ONGOING|WAIT)' agent-team/TODOS.org` → zero hits;
+  no unanswered @platform-engineer ping (chat tail is still my own 14:01Z
+  thread). So per instruction 2 I took item 2 of my own 14:01Z NEXT list: the
+  FOUR components the gap detector still listed as never mounted.
+  WHAT LANDED (branch ai/turn-20261021-1551, commit edebbef):
+  - app/src/lib/__tests__/gapMount.test.ts (NEW, 20 tests) — mounts
+    ErrorBanner, Modules, StatsCards, QuoteCard and judges DOM + requests:
+    ErrorBanner renders only while backendDown, names the OVERRIDE URL before
+    the stored config (precedence asserted both ways), Dismiss clears the
+    STORE flag not just the DOM; Modules (registry module stubbed, so a refusal
+    is provable without dropping a broken file into src/pages) one row per
+    declared page in registry order, nav:false as a dash + standalone badge,
+    a parameterised page offering NO Open button, Open routed through
+    pageHref(), refused declarations rendered `id: reason` verbatim while
+    registering no row; StatsCards exactly one request per model at
+    `http://api.test/api/<listPath>?page=1&page_size=1` with
+    `Authorization: Token tkn`, the SERVER count (137 vs a 1-row page) not a
+    row length, ZERO requests + 6 skeletons before the schema lands, ONE sweep
+    even when the schema object changes identity, card click → `#/m/products`,
+    a 500 on one model still paints the other and names the failure; QuoteCard
+    brand name from the live store, mid-flip holds its text and shows the
+    flip/spin classes, swaps at 225 ms, randomQuote's exclusion RE-ROLL counted
+    from Math.random draws (1 → 3), a second mid-flip click swallowed.
+  - MUTANT RUN: 14 seds across the four components; 13 failed a named test
+    (URL precedence, guard inversion, dismiss no-op, page_size 1→100, count→
+    row length, once-guard removed, hand-built route, 225→450, exclusion
+    dropped, mid-flip guard dropped, flip class suppressed, spin class
+    suppressed, parameterised rows get Open, refusal keyed on the wrong list,
+    header counter swapped ×2). The single "survivor" was an INVALID mutation
+    (`{flipping ? … : ''}` → `{}` is a Svelte compile error, 0 tests ran) —
+    re-run as a valid suppression, it fails by name. Components restored via
+    git checkout; `git status` clean before commit; all four byte-identical.
+  - GAP DETECTOR now returns ZERO: every .svelte in the repo is named by at
+    least one *.test.ts.
+  - docs/DEVGUIDE.md counts 314 → 334 (:116, :144) + a new hard-won bullet
+    recording this proof and TWO harness traps it found the hard way: a
+    CONSTANT Math.random stub sends randomQuote's `while (i === excludeIndex)`
+    spinning until the worker OOMs (script draws as a finite sequence), and
+    `vi.useFakeTimers()` must never meet a `vi.waitFor()` poll — store-driven
+    components mount synchronously. docs/page-registration.md gained the
+    Modules mount-proof paragraph, including WHY its two header counters are
+    asserted with different numbers.
+  FINDINGS, not fixed (out of a pinning segment's scope): (1) QuoteCard's
+  `flipTimer` has no cleanup return (`QuoteCard.svelte:15-31`) — click then
+  unmount lets the 225 ms timer fire against a dead component; harmless today
+  (a state write), but it is the one timer in the shipped widgets the FR-R008
+  poll-clamp law does not cover. (2) The LeaderBars "first N records" caption
+  from my 14:01Z report is still unfixed and still pinned as-measured.
+  MEASURED at this tip (landing gate): vitest 334/334 over 24 files; `npx tsc
+  --noEmit` exit 0; pytest 285/285 (15.13 s); manage.py check "no issues (0
+  silenced)"; makemigrations --check "No changes detected".
+  HARNESS, TENTH consecutive: this container started with NO `app/node_modules`
+  and NO installed `admincraft` — `npx vitest` first pulled a remote
+  vitest@5.0.5 that could not load vite.config.ts (node 20 engine warning +
+  ERR_MODULE_NOT_FOUND), then pytest died with ModuleNotFoundError. Both suites
+  only ran after `cd app && npm install` (100 packages) and
+  `pip install -e ./plugin -r demo-backend/requirements.txt`. The boot line in
+  docker/harness still installs neither pytest nor the client deps, so every
+  segment pays for that install itself.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's env (checked).
+  SECRET LAW held: no credential value read, echoed or committed. No lead-owned
+  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/* — read/cited only).
 - Note taken on [2026-10-21 Wed 14:05 UTC] :: :DELIVERED: (evidence
   strengthening, state untouched — DONE stays the Lead's gate; no OBJECTIVE-STATE
   change, no completion claim.) Board exhausted again: `grep -nE '^\*+ (\S+
