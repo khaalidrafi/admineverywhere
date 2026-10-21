@@ -13,6 +13,7 @@ import ModelPage from "../../pages/ModelPage.svelte";
 import Toaster from "../../components/Toaster.svelte";
 import { normalizeOpenAPI } from "../openapi";
 import { lifecycleAvailable, lifecycleProblem } from "../statusTransitions";
+import { findAuditModel } from "../rbac";
 import { app, toasts } from "../stores";
 import fixture from "./fixtures/openapi.json";
 import type { AdminSchema } from "../types";
@@ -176,5 +177,61 @@ describe("mounted lifecycle renderer — the bytes on the wire", () => {
     // oldest first, as the contract pins it — the render order follows the body
     const trail = host.textContent ?? "";
     expect(trail.indexOf("created as pending")).toBeLessThan(trail.indexOf("pending → paid"));
+  });
+
+  it("the sub-view's audit half reads the DISCOVERED path, and a schema without it reads nothing", async () => {
+    // FR-R003/R-007 law, proven on the wire rather than in the builder: the
+    // log URL comes from findAuditModel().listPath. A backend with no audit
+    // model in its document has no log, so the page must not probe a guessed
+    // "/api/audit/" (some other app may own that segment) and must not raise
+    // a banner — it just shows the lifecycle half.
+    const openHistory = async (schema: AdminSchema, settledText: string) => {
+      mockFetch.mockClear();
+      const { host, toastHost } = render(schema);
+      await vi.waitFor(() => {
+        flushSync(() => {});
+        expect(host.textContent).toContain("pending");
+      });
+      host.querySelector<HTMLButtonElement>("button[title='History & audit']")!.click();
+      await vi.waitFor(() => {
+        flushSync(() => {});
+        expect(host.textContent).toContain(settledText);
+      });
+      return { host, toastHost };
+    };
+    const routes = () => mockFetch.mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes("/history/")) return reply(200, []);
+      if (u.includes("/audit/")) {
+        return reply(200, { count: 1, results: [{ id: 3, action: "order.flag", object_type: "order", object_id: "7", actor: "ops1", summary: "Flagged on the wire", created_at: "2026-10-20T10:00:00Z" }] });
+      }
+      if (u.includes("/orders/")) return reply(200, PAGE);
+      return reply(200, { count: 0, results: [] });
+    });
+
+    routes();
+    const withLog = await openHistory(LIVE, "Flagged on the wire");
+    expect(urls().filter((u) => u.includes("/audit/"))).toEqual([
+      "http://api.test/api/audit/?object_type=order&object_id=7",
+    ]);
+    expect(withLog.host.textContent).toContain("Flagged on the wire");
+
+    // Same rig, audit model deleted from the schema — no request, no toast.
+    const noAudit: AdminSchema = {
+      ...LIVE,
+      models: LIVE.models.filter((m) => m.id !== "audit"),
+      byId: Object.fromEntries(Object.entries(LIVE.byId).filter(([k]) => k !== "audit")),
+    };
+    expect(findAuditModel(noAudit)).toBeNull();
+    routes();
+    const withoutLog = await openHistory(noAudit, "No lifecycle history");
+    // A negative about the wire needs the window in which the guess WOULD
+    // land: the pre-fix fallback reached "/api/audit/?object_type=…" inside
+    // ~120 ms of the history render, so silence here is evidence, not timing.
+    await new Promise((r) => setTimeout(r, 150));
+    expect(urls().some((u) => u.includes("/audit/"))).toBe(false);
+    expect(withoutLog.toastHost.textContent).toBe("");
+    // the lifecycle half still renders — a missing log degrades, never breaks
+    expect(withoutLog.host.textContent).toContain("pending");
   });
 });

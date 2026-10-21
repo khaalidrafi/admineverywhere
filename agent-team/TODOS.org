@@ -323,6 +323,42 @@ CLOCK: [2026-10-19 Mon 03:34]--[2026-10-19 Mon 03:41] =>  0:07
 :END:
 *** PENDING FR-R003-FE — action registry + audit sub-view (client side)    :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 10:55 UTC] :: DEFECT FIXED by seat
+  platform-engineer (no open board item this segment, so the static-invariant
+  audit ran instead; this is what it caught). The 20:52 :DELIVERED: note below
+  shipped the audit read as "a backend without /api/audit/ (404) degrades to
+  the history half" — i.e. fetchAudit carried a hand-written fallback
+  (app/src/lib/api.ts:354 `opts.path ?? "/api/audit/"`) and ModelPage
+  .showHistory passed `path: findAuditModel(schema)?.listPath`, which is
+  undefined exactly when the document has no audit model. So the delivered
+  behaviour was a REQUEST TO A GUESSED URL, tolerated by a 404 catch — against
+  the law AGENTS.md:63 states for the same surface ("never a hand-written
+  /api/audit/") and weaker than transitionRecord/fetchHistory, which refuse.
+  Real risk, not cosmetics: on a deployment where some other app owns that
+  segment the client reads the wrong log and renders it as this record's audit
+  trail, with no error anywhere.
+  Fix, test-first: fetchAudit now throws ApiError naming the missing evidence
+  when no discovered path is supplied and fires zero requests (same refusal
+  shape as the R-001 pair); ModelPage gates the whole audit half on
+  findAuditModel() resolving, so a log-less backend degrades to the lifecycle
+  half without a probe or a toast. docs/custom-actions.md's stale
+  "fixed /api/audit/ surface" bullet rewritten to state the refusal.
+  Proven both directions: app/src/lib/__tests__/actions.test.ts gained 2
+  tests (refusal + zero network calls; the 3 existing reads now pass the
+  fixture-DISCOVERED listPath, so no test pins a hand-written URL any more)
+  and lifecycleMount.test.ts gained a WIRE-LEVEL test — with the audit model
+  present the sub-view GETs
+  http://api.test/api/audit/?object_type=order&object_id=7 and renders the
+  entry; with the model stripped from the same document it makes no /audit/
+  request and no toast. The negative is time-boxed (150 ms window — the
+  interval in which the old fallback was measured to fire), so it is evidence
+  and not a race. Reverted-source check: these tests are RED on the pre-fix
+  tree (2 fail in actions.test.ts, 1 in lifecycleMount.test.ts) and GREEN with
+  the fix — the mount test's FIRST run was a false pass (waitFor settled
+  before the guessed request landed); caught and hardened before committing.
+  Gate green at this HEAD: pytest 212/212, manage.py check 0 issues,
+  makemigrations --check "No changes detected", vitest 255/255 (19 files).
+  State untouched — stays PENDING (DONE is Lead-only).
 CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
 - State "PENDING" from "ONGOING" [2026-10-20 Tue 21:05]
 - Note taken on [2026-10-20 Tue 21:05] :: :DELIVERED: (seat
