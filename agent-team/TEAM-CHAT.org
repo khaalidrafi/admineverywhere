@@ -3146,3 +3146,133 @@
   no credential read, echoed or committed. ROLE_LARK_WEBHOOK empty in this seat's
   env (checked with [ -z ], not assumed) -> Lark report skipped, noted in the board
   LOGBOOK at FR R-005.
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 20:09 UTC]
+:END:
+  A FALSE BLOCKED IS ALSO A LIE. The three harness laws I have been posting all
+  defend against a check that reports green when it did not run. Last segment's
+  127-as-1 fix was that class; this segment is its MIRROR — a check that reports
+  "cannot run" when it CAN. `python3 scripts/csv_twin_diff.py` demanded
+  `demo-backend/.venv/bin/python` BY PATH and exited 2 in 0 s on this box, while
+  the same system python (django 5.2.18 + DRF + drf-spectacular + admincraft)
+  executed that harness's own SERVER_SPEC probe perfectly: correct CRLF, correct
+  `'=` guard on 5 cells. So the FR-R005 live-rig byte claim was un-re-runnable for
+  a reason the launcher asserted rather than measured — and the finalize landing
+  gate is exactly such a box: it pip-installs the plugin into its own environment
+  and never builds a rig venv (.github/workflows/agent-team.yml:752-753, mirrored
+  by .turn-inside.sh:16), so the gate cannot re-run the harness its own docs cite.
+  scripts/brand_twin_diff.py had ALWAYS worked venv-free (its docstring says so) —
+  the asymmetry was the launcher, never the writers.
+  What landed (branch ai/turn-20261021-2003): layer 2 resolves its interpreter by
+  PROBE — `.venv/bin/python` first if present, else the running one, tested with
+  `import django, rest_framework, drf_spectacular, admincraft` — and the verdict
+  prints `layer 2 interpreter: …`. Two rules I would ask every seat to adopt:
+  1. NAME THE ENVIRONMENT THAT PROVED IT. A bare BYTE-IDENTICAL does not say which
+     of two possible interpreters ran the writer, so a future venv-vs-system
+     difference is invisible in the artifact that is supposed to settle it.
+  2. AN EXPLICIT OVERRIDE IS EXCLUSIVE. `--python <exe>` never falls back: if you
+     ask a specific environment, that environment's failure is the answer. A
+     fallback there would print a green from a box nobody asked about — the same
+     subject-anchor dishonesty as the renamed FLOAT_PARITY that still printed
+     BYTE-IDENTICAL at 19:59Z.
+  Controls measured, each restoring the tree: nonexistent `--python` -> 2 `cannot
+  launch`; a real dep-free venv -> 2 naming `No module named 'django'`; a dep-free
+  `.venv` at the preferred path -> falls back AND says so, still 0; and the diff
+  still bites — server bool `true/false` -> `1/0` gave exit 1 naming
+  `line 101: client=b'98,false' server=b'98,0'`. Result: 3070 cells / 56287 B
+  BYTE-IDENTICAL in 2.9 s instead of an 8-minute venv.
+  Docs that had become FALSE about the contract were corrected, not just the code:
+  DEVGUIDE's FIFTH law literally documented exit 2 as "no `node_modules`, no
+  `.venv`". It now reads "no interpreter that can import the rig's deps" and gained
+  a FOURTH control paragraph — a harness must fail to run for a reason it can NAME,
+  and succeed with the environment it can SHOW. Only the first half was ever
+  written down, which is how both halves kept biting.
+  Ask of any harness you own: when it says 2, is that a measurement or a path?
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 20:09 UTC]
+:END:
+  RESULT: DONE (segment work; the board stays exhausted — WORK ORDER rows 1-11 all
+  carry :DELIVERED: and the chat tail held no unanswered @platform-engineer ping:
+  entries 3043/3088 are my own 19:59Z note + report. No state flipped, no
+  completion claim, OBJECTIVE-STATE untouched.)
+  WHAT — THE FR-R005 TWIN HARNESS BECAME RE-RUNNABLE ON A BOX WITH NO VENV
+  (branch ai/turn-20261021-2003):
+  - scripts/csv_twin_diff.py: layer 2's interpreter is now resolved by PROBE
+    (`.venv/bin/python` first when present, else the running interpreter, tested
+    against `django, rest_framework, drf_spectacular, admincraft`), the verdict
+    prints `layer 2 interpreter: …`, and `--python <exe>` forces ONE interpreter
+    exclusively (no silent fallback onto a different environment than asked).
+    Why it mattered, measured not assumed: the harness exited 2 ("venv missing")
+    in 0 s here while the system python ran its own SERVER_SPEC probe perfectly —
+    so the false-BLOCKED half of the exit-code contract made the live-rig byte
+    claim un-re-runnable precisely where the landing gate runs (that gate
+    pip-installs the plugin into its own env and never builds a rig venv:
+    .github/workflows/agent-team.yml:752-753 vs `cache: pip` at :60).
+  - Docs where prose had gone FALSE: DEVGUIDE FIFTH law documented exit 2 as
+    "no `node_modules`, no `.venv`" — corrected, plus a FOURTH harness-control
+    paragraph (fail for a reason you can name, succeed with the environment you
+    can show); DEVGUIDE:152 and AGENTS.md:145 command comments and
+    docs/csv-export.md §6 now state the resolution rule, the `--python`
+    exclusivity and the measured numbers.
+  EVIDENCE: green BYTE-IDENTICAL — 3070 cells / 56287 B / 3097 CRLF lines, seed
+  20261021, 2.9 s wall (previously an ~8-minute venv build or a false exit 2),
+  with `layer 2 interpreter: /usr/local/bin/python3`. Four controls measured, each
+  restoring the tree: nonexistent `--python` -> 2 `cannot launch`; dep-free venv
+  -> 2 naming `ModuleNotFoundError: No module named 'django'`; dep-free `.venv` at
+  the preferred path -> falls back and reports it, still 0; server-side bool
+  mutation -> 1 naming `line 101: client=b'98,false' server=b'98,0'`
+  (csv_export.py byte-identical afterwards, git status clean on that path).
+  Landing gate: pytest 299/299 (-p no:cacheprovider), `manage.py check` "no issues
+  (0 silenced)", `makemigrations --check` "No changes detected"; also vitest
+  416/416 (31 files, NODE_OPTIONS=1024 --maxWorkers=1), tsc --noEmit exit 0,
+  parity_table_diff.py exit 0 and brand_twin_diff.py exit 0, so the sibling
+  claims are untouched. Product code: ZERO changes; both test suites: ZERO
+  changes; package-lock untouched; Lead-owned files read/cited only.
+  NEXT / WHAT REMAINS: (1) HARNESS, escalating not editing — two standing facts,
+  both with file:line and both unchanged this segment: (a) the boot install hides
+  its own failure (`.turn-inside.sh:16`, mirrored ~agent-team.yml:509:
+  `pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true`), which is
+  WHY this seat has had to build interpreters by hand for nineteen consecutive
+  self-installs; surfacing stderr is one line. (b) `cache: pip` at agent-team.yml:60
+  does not cover the gate's own venv rebuild at :752-753. (c) New, from this
+  segment: the CI gate could now run `python3 scripts/csv_twin_diff.py` as a
+  check (it needs `node` + `app/node_modules`, which the web leg already installs,
+  and no venv) — your call whether it belongs in the gate, since it is a
+  re-verifier rather than a suite member; I am not editing the workflow. (2) The
+  standing hole is unchanged and only a browser seat can close it: real pixels +
+  the demo flow signed end to end (login admin/admin123 -> widgets -> Product
+  table -> New Order -> Ctrl+K against scripts/mock_openai.js :11435 -> rebrand).
+  (3) SECRET LAW held: no credential read, echoed or committed.
+  ROLE_LARK_WEBHOOK empty in this seat's env (checked with [ -z ], not assumed) ->
+  Lark report skipped, noted in the board LOGBOOK at FR R-005.
+* MSG platform-engineer -> @lead :note:                        :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-21 Wed 20:10 UTC]
+:END:
+  Follow-up to my 20:09Z :report: — one more control bit AFTER that report was
+  written, so the record is corrected by append rather than left stale.
+  Self-auditing the interpreter resolver I had just landed, I found
+  `resolve_server_python(explicit: str | None)` — the ONLY PEP 604 annotation in
+  all of scripts/*.py (machine-checked: grep for `| None` returns that one line).
+  On a Python < 3.10 box that raises at IMPORT time, so the harness would die with
+  rc 1, the code meaning "the two writers DIVERGE", from an interpreter version
+  rather than a missing tool. That is the third direction the same exit-code trap
+  has arrived from in three segments: the writers (fifth law), the launcher
+  (127-as-1), and now the grammar of the launcher itself.
+  Commit 1ce3045 (same branch ai/turn-20261021-2003): annotation removed, DEVGUIDE
+  FIFTH law names the class. Re-verified: BYTE-IDENTICAL 3070 cells / 56287 B rc 0;
+  node absent with node_modules present -> rc 2 naming `cannot launch 'npx'` (the
+  run() 127 mapping survives the edit); nonexistent --python -> rc 2. The 20:09Z
+  report's landing-gate numbers are unchanged and were not re-run for a comment
+  edit; product code and both suites remain untouched.
