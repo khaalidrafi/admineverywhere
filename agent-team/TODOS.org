@@ -815,6 +815,60 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 21:15 UTC] :: THE LANDING GATE LEARNED TO SEE
+  BETWEEN THE SUITES (branch ai/turn-20261021-2110; state untouched — PENDING
+  stands, :DELIVERED: rows above unchanged, DONE is the Lead's gate). Board
+  re-COUNTED with the same python pass: all 11 top-level PENDING items carry
+  :DELIVERED:, zero items are ONGOING, and the chat tail (3636 lines, last
+  headline 3570) held no unanswered @platform-engineer ping — every entry from
+  3256 on is my own. No work order item was open, so per instruction 2 this
+  segment took the smallest verifiable improvement: a real hole in the merge
+  gate, found in this repo's OWN prose.
+  THE HOLE: AGENTS.md:260-261 states that `app/src/lib/csv.ts` and
+  `demo-backend/shop/csv_export.py` are byte-identical, and AGENTS.md:343-344
+  that no per-side unit test can see a divergence because each writer is green
+  against its OWN fixture. The landing gate ran pytest + check +
+  migrations only — so a divergence that keeps both suites at 299/416 green
+  would merge silently. The three twin harnesses that detect it existed, but
+  only as commands a seat runs by grace and then asserts in a report line
+  ("siblings re-run green"). A claim repeated in prose is not a check.
+  WHAT LANDED: `leg_twin` + `TWINS` in scripts/landing_gate.py — the gate now
+  RUNS the harnesses instead of trusting the seat to. `--fe` adds all three
+  behind vitest (csv/brand/parity, +2s measured). The merge-gate default is
+  deliberately still three legs: the twins answer rc 2 where app/node_modules
+  is absent, and a tooling gap must not stall every merge. Mapping is the
+  FIFTH law, not a trust bump: harness rc 1 -> RED, rc 2 -> CANNOT RUN, any
+  OTHER code -> CANNOT RUN ("outside its documented 0/1/2 contract"), and rc 0
+  still has to print BYTE-IDENTICAL or the leg goes RED — a harness that exits
+  0 without printing its verdict has compared nothing.
+  FIVE CONTROLS, tree byte-restored after each (diff -q / git diff --quiet -- app):
+  tampered app/public/brand.css -> RED naming brand-twin + "the twins DIVERGE";
+  app/node_modules renamed away -> CANNOT RUN quoting the harness's own npm
+  line; rc 0 with no output -> RED "exit 0 alone never proved the compare
+  happened"; a stub exiting 3 -> CANNOT RUN naming the contract break; both
+  twins clean -> green. SELF-CAUGHT CONTROL, worth more than the four that
+  passed: my FIRST rc-2 control (hide app/brands/default/brand.json) FAILED —
+  brand-twin answered "BYTE-IDENTICAL — 300 accepted brands", a verdict with
+  its own input missing, because it enumerates brands/ and a 3-brand empty
+  directory still agrees with itself. So I did NOT wire that case as proof; I
+  used the real absence instead (renaming node_modules) and this hole is now
+  the lead's note to the browser seat: a rig that silently shrinks reports
+  SUCCESS, so count the population in the output, not just the word.
+  MEASURED GREEN: `python3 scripts/landing_gate.py --fe` rc 0 — env deps on
+  /usr/local/bin/python3 (django 5.2.18), pytest 299, System check identified
+  no issues, No changes detected, vitest 416 (31 files), csv-twin 3070 cells /
+  56287 B / 3097 CRLF lines, brand-twin 300 accepted brands, parity-twin golden
+  226 B BYTE-IDENTICAL. Default gate re-run separately: rc 0, three legs only,
+  so finalize's replay is unchanged. scripts/release_readiness.py rc 0 after the
+  doc edits (78 path citations, 54 line citations bounds-checked).
+  DOCS: AGENTS.md law 7 + Commands, docs/DEVGUIDE.md EIGHTH-law entry extended
+  with the merge-and-refuse rule and the node_modules rationale — both now state
+  that touching a twin pair means running `--fe`, because the per-side suites
+  cannot see a divergence BETWEEN them. scripts/landing_gate.py is mine
+  (scripts/ is not on the seat-boundary list); .github/*, TEAM-CONTROL.org,
+  .gitattributes untouched, and no Lead-owned file was edited to force the gate.
+  ROLE_LARK_WEBHOOK empty in this seat's env ([ -z ], not assumed) -> Lark
+  report skipped. Product code / tests / migrations / lockfiles: ZERO changes.
 - Note taken on [2026-10-21 Wed 21:04 UTC] :: A CITATION WITH A LINE NUMBER IS
   HALF A CLAIM (branch ai/turn-20261021-2053; state untouched — PENDING stands,
   :DELIVERED: rows above unchanged, DONE is the Lead's gate). Board re-COUNTED:
