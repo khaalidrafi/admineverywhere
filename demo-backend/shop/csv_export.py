@@ -10,14 +10,22 @@ want; the view only wraps it in an HttpResponse.
 
 The writer is the byte-identical twin of app/src/lib/csv.ts: QUOTE_MINIMAL,
 CRLF, empty for null, lowercase booleans, formula guard on text only, floats
-rendered with ECMAScript's `String()` form (`js_number_text`), UTF-8
+rendered with ECMAScript's `String()` form (`js_number_text`), datetimes
+rendered the way DRF's own JSON body renders them (`drf_datetime_text`), UTF-8
 BOM on the document. Keep the two in sync the same way ``brandToCss()``
 mirrors ``branding.render_css()``.
 """
 import csv
 import io
 import re
+from datetime import datetime
 from decimal import Decimal
+
+# Django's own timezone helpers (NOT DRF — the DRF-free rule above exists
+# because @extend_schema captures the schema class at decoration time). A plain
+# datetime.isoformat() would re-spell UTC as "+00:00" where the API's JSON body
+# writes "Z", which is divergence #2 in docs/csv-export.md §2.
+from django.utils import timezone
 
 # Parent columns, then child columns. Repeating the parent id on every child
 # row is what makes a flattened export re-groupable downstream — a reader
@@ -30,6 +38,7 @@ ORDER_EXPORT_HEADER = [
     "product",
     "status",
     "total",
+    "weight",
     "notes",
     "created_at",
     "history_id",
@@ -101,6 +110,29 @@ def js_number_text(value):
     return f"{sign}{mantissa}e{'+' if exponent >= 0 else '-'}{abs(exponent)}"
 
 
+def drf_datetime_text(value):
+    """datetime -> exactly the text DRF's JSON body carries for the same value.
+
+    Layer 1 has nothing to re-format: it receives a string and writes it. So the
+    server layer must emit that same string, which means mirroring DRF's
+    ``DateTimeField.to_representation`` rather than calling
+    ``datetime.isoformat()``: DRF reads a naive value as project-local, moves an
+    aware value into the project timezone, and writes UTC with a trailing ``Z``
+    where ``isoformat()`` spells the offset ``+00:00``. Getting it from
+    ``django.utils.timezone`` (not a hard-coded UTC) is what keeps the two layers
+    agreeing in a client project whose ``TIME_ZONE`` is not UTC — the same
+    divergence, one setting over. A project that overrides
+    ``REST_FRAMEWORK["DATETIME_FORMAT"]`` overrides this rule too: match it there
+    or the export stops being one byte format.
+    """
+    if timezone.is_naive(value):
+        value = timezone.make_aware(value)
+    else:
+        value = timezone.localtime(value)
+    text = value.isoformat()
+    return text[:-6] + "Z" if text.endswith("+00:00") else text
+
+
 def csv_cell(value):
     """One model value -> the text written to the file (never a display string)."""
     if value is None:
@@ -114,7 +146,13 @@ def csv_cell(value):
         # A float is rendered the way the client renders it, or the two export
         # layers of one API disagree on every FloatField column (js_number_text).
         text = js_number_text(value)
+    elif isinstance(value, datetime):
+        # Same law for a datetime: the client never re-formats DRF's text, so
+        # this side writes DRF's text (drf_datetime_text). Checked before the
+        # isoformat branch because a datetime IS a date subclass.
+        text = drf_datetime_text(value)
     elif hasattr(value, "isoformat"):
+        # a date (no time part) — nothing to re-spell.
         text = value.isoformat()
     else:
         text = str(value)
@@ -153,6 +191,10 @@ def order_export_rows(orders):
             csv_cell(order.product.name),
             csv_cell(order.status),
             csv_cell(order.total),
+            # The FR-R005 witness column: a float straight off the model, which
+            # is what the JSON body ALSO carries (as a number) — so this cell
+            # must equal the browser's String() byte for byte (js_number_text).
+            csv_cell(order.weight),
             csv_cell(order.notes),
             csv_cell(order.created_at),
         ]
