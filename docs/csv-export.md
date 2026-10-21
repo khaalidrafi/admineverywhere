@@ -133,7 +133,7 @@ regression in the rendering rule goes red on one side and names itself.
 - The call is `fetchCsv(cfg, token, model.exportPath, fallback)` — base URL +
   the **schema-discovered** path, never `apiUrl + "export"` (the bare-segment
   concatenation that once produced `http://hostapi…` and silently broke
-  R-001 calls; see AGENTS.md).
+  R-001 calls; see docs/DEVGUIDE.md).
 - `Accept: text/csv, */*;q=0.8` — text/csv preferred, but a proxy/plain-DRF
   JSON error body must stay readable instead of 406ing at negotiation.
 - The **server's filename wins** when `Content-Disposition` carries one

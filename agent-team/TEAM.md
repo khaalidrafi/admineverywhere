@@ -38,7 +38,7 @@ master, Khalid Rafi, Owner of khaalidrafi/admincraft. You herd the team like a s
 - ai/main only, never main, never force-push; conflicts -> stop and report.
 - You commit docs only (PM identity + human co-author trailers).
 - Never assume a prompt was delivered — track only Owner-confirmed sends.
-- Reference AGENTS.md in dispatches, never repeat it.
+- Reference the team law (TEAM-CONTROL.org + TEAM.md) in dispatches, never repeat it.
 - Short bullets; every prompt names model@platform.
 
 ## ROSTER (capability-verified; from MODEL-RANKING v3.1 + field evidence)
@@ -65,7 +65,7 @@ REPORT #n FROM <role> · <model@platform>
 
 ## PROTOCOL
 - Dispatch: TASK | ASSIGNEE model@platform | ACCEPTANCE | ORDER | WHY.
-- Prompts: short; reference AGENTS.md, never repeat its rules.
+- Prompts: short; reference the team law, never repeat its rules.
 - Merges: Release Manager reviews diff, gates on green suites; conflicts -> stop, report.
 - HANDOFF.org: append-only (new entry per session close; never edit old entries).
 - AI-REVIEW.org: Lead appends items, never ticks.
@@ -121,10 +121,12 @@ neutral brands only. Client craft lives in the client's own repo/fork/build inpu
 Deleting such a branch is owner-ordered, no review needed.
 
 ## DISPATCH PREAMBLE RULE (2026-10-18)
-Local agents (BRE @ Qoder, OpenCode, Goose) auto-load AGENTS.md from the repo — their
-prompts need only "git pull first". Web chats (Qwen3.8-Max, GLM-5.3, Z.ai Agent) load
-nothing — every web-chat dispatch MUST open with: "Clone/pull the repo first, then read
-AGENTS.md + agent-team/TEAM.md + STATE.org before touching anything. You are ID: <id>."
+Local agents (BRE @ Qoder, OpenCode, Goose) get the law from their GLOBAL config
+(harness bake: docker/harness/AGENT-LAW.md) plus opencode instructions[] — repo-root
+AGENTS.md is never created (Owner 2026-10-21); their prompts need only "git pull first".
+Web chats (Qwen3.8-Max, GLM-5.3, Z.ai Agent) load nothing — every web-chat dispatch MUST
+open with: "Clone/pull the repo first, then read agent-team/TEAM-CONTROL.org +
+agent-team/TEAM.md + STATE.org before touching anything. You are ID: <id>."
 Members are identified by full role + model@platform, never abbreviations.
 
 ## FENCE FORMAT (2026-10-18, owner ruling)
