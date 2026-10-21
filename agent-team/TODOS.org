@@ -868,7 +868,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   FIFTH TIME, and this time it fired on a WRONG TARGET, not a count: my first prose wrap
   put `leg_django()` on the line citing `:233` and release_readiness answered RED naming
   256 — the TENTH law's third door caught by the leg itself before shipping.
-  EXPECTED_CLAIMS 11 -> 13 (`scripts/release_readiness.py:133`), the remedy the leg
+  EXPECTED_CLAIMS 11 -> 13 (`scripts/release_readiness.py:137`), the remedy the leg
   printed, applied in this same commit. Stale pointers repaired in the same commit:
   landing_gate.py:66 -> :67, :85 -> :86, :135 -> :158, :153 -> :176, :182 -> :213 in
   AGENTS.md, DEVGUIDE and one release_readiness comment (my own insertions moved them;
