@@ -141,6 +141,9 @@ cd app && npm install && npm run dev        # http://localhost:5173
 cd app && npm test                          # 416 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
+# FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
+python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence / 2 rig not runnable
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 

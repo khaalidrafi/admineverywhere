@@ -148,6 +148,9 @@ cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
+# FR-R005 cross-twin CSV byte diff (needs app/node_modules + demo-backend/.venv)
+python3 scripts/csv_twin_diff.py            # 0 = identical, 1 = divergence, 2 = rig not runnable
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
@@ -451,6 +454,31 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
      the NEW row's path — then keep the identity-gate case (an equal re-spread
      must fire ZERO refetches), which is the mutant-killer for the `seen`
      comparison the effect opens with.
+- **FIFTH harness law — a byte-twin diff must compare the WHOLE writer, in
+  bytes.** `scripts/csv_twin_diff.py` now runs the FR-R005 cross-twin diff
+  (`docs/csv-export.md` §6) on one command, because that proof had been made
+  by hand twice and then lost with the segment that wrote it. Two false
+  `DIVERGENT` readings were paid for it (2026-10-21, 3082 + 870-cell runs, both
+  clean):
+  1. **Comparing the wrong pipeline stage.** Layer 2's `csv_cell()` applies the
+     formula guard and returns bare text; the QUOTING happens later inside
+     `csv_text()`'s `csv.writer`. Layer 1's `csvCell()` does BOTH at once.
+     Diffing `csv_cell` output against `csvCell` output reports the server as
+     "not quoting commas" and "not guarding formulas" — phantom divergences in
+     the unsafe direction. The only honest comparison is document vs document:
+     `csv_text(header + [[csv_cell(v) …]])` against
+     `buildCsv(header, rawValues)`.
+  2. **Reading the artifacts in text mode.** Python translates `\r\n` to `\n`
+     on read, so a CRLF document splits into one "line" and two byte-identical
+     files look divergent (`cmp` said 86952 B = 86952 B while the text-mode
+     compare printed `DIVERGENT`). Compare `read_bytes()`.
+  The harness proves itself before it is trusted: with the server guard
+  switched off (`if False and is_text and is_formula_text(text)`), it names
+  every apostrophe difference (`line 10: client=b"8,'=SUM(A1:A9)"
+  server=b'8,=SUM(A1:A9)'`); restored, it prints `BYTE-IDENTICAL`. Exit 0 =
+  equal, 1 = divergence, 2 = the rig could not run (no `node_modules`, no
+  `.venv`) — it is a re-verifier, not a suite member, so it never lands in
+  pytest/vitest where node or a venv would be assumed.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
