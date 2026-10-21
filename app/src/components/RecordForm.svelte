@@ -51,22 +51,47 @@
     errors = {};
   }
 
-  // initial values + FK option lists
-  initValues();
-  const fkTargets = [...new Set(editable.filter((f) => f.type === "fk" && f.fkModel)
-    .map((f) => f.fkModel!))];
-  for (const target of fkTargets) {
-    fkLoading[target] = true;
-    const targetModel = get(app).schema?.byId[target];
-    if (!targetModel) {
-      fkLoading[target] = false;
-      continue;
+  function loadFkOptions(targets: string[]) {
+    for (const target of targets) {
+      fkLoading[target] = true;
+      const targetModel = get(app).schema?.byId[target];
+      if (!targetModel) {
+        fkLoading[target] = false;
+        continue;
+      }
+      fetchAllRecords(effectiveConfig(), get(app).token || null, targetModel)
+        .then((rows) => {
+          fkOptions[target] = rows;
+        })
+        .catch((err) => handleApiError(err))
+        .finally(() => {
+          fkLoading[target] = false;
+        });
     }
-    fetchAllRecords(effectiveConfig(), get(app).token || null, targetModel)
-      .then((rows) => (fkOptions[target] = rows))
-      .catch((err) => handleApiError(err))
-      .finally(() => (fkLoading[target] = false));
   }
+
+  // Computed inside a function, not captured once at creation: `editable`
+  // follows `model`, and the model can change while this form is mounted.
+  function fkTargets() {
+    return [...new Set(editable.filter((f) => f.type === "fk" && f.fkModel).map((f) => f.fkModel!))];
+  }
+
+  initValues();
+  loadFkOptions(fkTargets());
+
+  // The page keeps this component mounted when it points `record` at another
+  // row (a deep link arriving while the modal is up) or `model` at another
+  // module (the shell spreads new params onto the SAME instance,
+  // Shell.svelte:54). The header and the submit target follow those props, so
+  // a one-time hydration would PUT the previous record's bytes onto the record
+  // the header now names — re-hydrate whenever the props move.
+  let seen = { model, record };
+  $effect(() => {
+    if (model === seen.model && record === seen.record) return;
+    seen = { model, record };
+    initValues();
+    loadFkOptions(fkTargets());
+  });
 
   function fieldPlaceholder(f: FieldSpec): string {
     switch (f.type) {

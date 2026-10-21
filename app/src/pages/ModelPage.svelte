@@ -105,6 +105,11 @@
     page = 1;
     searchInput = "";
     searchTerm = "";
+    // an open editor belongs to the module it was opened from: `editing` is a
+    // row of the OLD model while `model` is now the new one, so leaving the
+    // modal up would PUT old-model bytes onto a new-model detail path
+    formOpen = false;
+    editing = null;
   });
 
   // deep-link #/m/<model>/<recordId> -> open that record for editing
