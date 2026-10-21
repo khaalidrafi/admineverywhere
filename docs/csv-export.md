@@ -60,6 +60,41 @@ The byte-level pin is a shared table, not a claim: `FLOAT_PARITY` appears in
 in `app/src/lib/__tests__/csv.test.ts`, and the §5 golden document now carries a
 `weight` column of `1.0`, `-0.5`, `1e-7`.
 
+**Datetimes are the second divergence, and it is the same class.** A
+`DateTimeField` crosses the wire as a STRING, so `csv.ts` has nothing to
+format — it writes what it received. The server layer was re-rendering the
+model value with `datetime.isoformat()`, which spells UTC `+00:00` where DRF's
+own JSON spells it `Z`. Same instant, different bytes, on **every row of every
+export with a datetime column** — which the whole float episode never touched,
+because the golden document's `when` cell is a string on the JS side (a browser
+only ever receives text) and a datetime object on the Python side, so the two
+sides agreed by passing text through while the real rule went untested. The
+server now mirrors DRF: `drf_datetime_text()` reads a naive value as
+project-local, moves an aware one into the project timezone and writes UTC as
+`Z` — the same three steps as `DateTimeField.to_representation`. Two
+consequences for a client project:
+
+- get the text from `django.utils.timezone`, never from a hard-coded UTC. DRF
+  renders in the **project** timezone, so a project with `TIME_ZONE="Asia/Dhaka"`
+  sends `+06:00` in its JSON and its writer must too. Pinning UTC is the same
+  bug one setting over — `TestDatetimeOverTheWire` therefore runs its wire
+  assertion under both `UTC` and `America/Chicago`.
+- a project that overrides `REST_FRAMEWORK["DATETIME_FORMAT"]` overrides this
+  rule as well: match the format there or the two layers stop being one byte
+  format. A `DateField` is unaffected (no time part, no offset to re-spell).
+
+Because those literal expectations depend on `settings.TIME_ZONE`, the suites
+that assert literal bytes pin it (`utc_project_timezone` in
+`test_csv_export.py`): `plugin/tests/conftest.py` configures Django without a
+`TIME_ZONE`, so the ambient value is Django's own default `America/Chicago`
+while the demo rig declares `UTC` (`core/settings.py:76`). An unpinned literal
+there fails on the machine, not the code.
+
+`ISO_PARITY` (same shape as `FLOAT_PARITY`) is the Python side of that rule and
+the golden document now doubles the datetime column — one row an aware
+`datetime`, one row the same instant as the text a browser receives — so a
+regression in the rendering rule goes red on one side and names itself.
+
 ## 3. Server contract (layer 2)
 
 - Route: `GET <model.listPath>export/` — a DRF `@action(detail=False,
@@ -129,14 +164,34 @@ in `app/src/lib/__tests__/csv.test.ts`, and the §5 golden document now carries 
 
 - `plugin/tests/test_csv_export.py` — writer byte rules, formula guard both
   shapes, line-level ordering, childless parents, search honoured, no
-  pagination wrapper, 401 on anonymous, schema advertises the path.
+  pagination wrapper, 401 on anonymous, schema advertises the path, and the two
+  **over-the-wire** classes (`TestFloatOverTheWire`, `TestDatetimeOverTheWire`)
+  that drive the value through the model field and the endpoint instead of
+  handing it to the writer directly. The client mirrors the premise in
+  `openapi.test.ts` (the rig's `FloatField` must normalise to `type: number`,
+  never an FK or a string) and in `csv.test.ts` (a float exports exactly as
+  `JSON.parse` left it).
 - `app/src/lib/__tests__/csv.test.ts` + `api.test.ts` — the same §2 rules on
   the client twin, BOM idempotency, filename slug safety (a model named
   `../../etc/x` cannot steer a save path), and the live-schema
   discovery/`fetchCsv` contract against a mocked fetch.
 - Cross-layer diff: log into the demo rig, open Orders, export the table and
   the full export, and diff the parent columns of any overlapping row — they
-  are byte-identical.
+  are byte-identical. The rig is now the fixture for that claim rather than an
+  escape from it: `Order.weight` is a real `FloatField` (`shop/models.py`),
+  seeded with the values that used to disagree — `2.0`, `0.5`, `48.5`, `100.0`,
+  `1e-7`, `1e17`, `-0.00042` and `NULL` (`seed_demo.py`) — and `weight` is a
+  column of the line-level header, so the float path and the datetime path are
+  exercised by the same seeded data a reviewer exports by hand.
+- Live end-to-end proof (measured 2026-10-21 11:30 UTC, platform-engineer, rig
+  on `127.0.0.1:8042`): 60 seeded orders, both writers running real code — the
+  repo's own `csv.ts` bundled with esbuild against the JSON list body, and the
+  `export/` endpoint's own bytes off HTTP. Result: **60 rows × the 10-column
+  parent block, 0 cell mismatches**, weight renderings
+  `2 | 100 | 48.5 | 0.5 | 1e-7 | 100000000000000000 | -0.00042 | (null)`.
+  The same diff run before `drf_datetime_text` landed: **60 mismatches, all of
+  them `created_at`** — which is how divergence #2 was found at all, and why a
+  writer-only table could not have found it.
 - Randomised cross-twin diff (measured 2026-10-21, platform-engineer): the
   real `csv_cell`/`csv_text` from `shop/csv_export.py` and the real
   `buildCsv` from `csv.ts` were fed the SAME value matrix — 12 seeds × 250

