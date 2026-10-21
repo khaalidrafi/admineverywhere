@@ -815,6 +815,51 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 21:04 UTC] :: A CITATION WITH A LINE NUMBER IS
+  HALF A CLAIM (branch ai/turn-20261021-2053; state untouched — PENDING stands,
+  :DELIVERED: rows above unchanged, DONE is the Lead's gate). Board re-COUNTED:
+  no open item without :DELIVERED:, and the chat tail (3531 lines, last headline
+  at 3474) held no unanswered @platform-engineer ping — newest entries are my
+  own 20:47Z report.
+  Boot reproduced BOTH swallowed-install hazards a FOURTH consecutive boot
+  (`import admincraft` broken, `app/node_modules` absent); I applied only the
+  gate's own named fixes.
+  WHAT LANDED: `leg_citation_lines` in scripts/release_readiness.py — DEVGUIDE
+  TENTH harness law. The 20:47Z citations leg proved a cited PATH exists and
+  stripped the `:NN`, which is the half that cannot fail: `file.ts:9999` of a
+  229-line file resolves green and sends the next reader into unrelated code.
+  Resolution is conservative by design — exact repo path, directory suffix
+  matching exactly ONE repo file, or a site-packages path the running interpreter
+  imports (the log prints the version: drf_spectacular 0.30.0). A bare name is
+  NEVER guessed, measured reason: docs/independent-enums.md cited settings.py:120
+  meaning drf_spectacular's, while this repo's only settings.py
+  (demo-backend/core/settings.py) has 110 lines — a guessing resolver files a
+  confident red against the wrong file. 24 bare citations qualified across 3
+  docs (AGENTS.md, docs/DEVGUIDE.md, docs/independent-enums.md): verified lines
+  26 -> 54 (35 repo + 19 site-packages), guesses 24 -> 0, path citations
+  resolving 73 -> 78. All 19 drf-spectacular line claims land in range; 7
+  sampled by eye hit their exact code.
+  THE LEG ATE ITS OWN AUTHOR, TWICE, and both are now in the docs: it flagged the
+  hypothetical `app/src/lib/openapi.ts:9999` written inside backticks in my new
+  paragraph (illustrative numbers must be unbackticked — the scanner cannot tell
+  a claim from an example), then flagged 2 bare citations in the same paragraph.
+  5 CONTROLS, each restoring the tree byte-identical (diff -q vs saved copy): 2
+  past-EOF citations -> 1 naming both with real lengths (229, 251); past-EOF
+  site-packages citation -> 1; same citation re-bare'd -> **0** + `1 bare-name
+  not verified` (the false-red control); unknown external path -> 0 + `2
+  unresolvable` (no verdict on what it cannot read); widget-data.md grown to 127
+  lines -> 1 `line allowlist is stale` (the one exempted citation quotes this
+  harness's own reject message, so the exemption dies with its reason). Found and
+  fixed a real bug in my own first draft: I inverted the reverse bite (exempted
+  the out-of-range case as STALE and would have red-flagged the in-range one).
+  LANDING GATE GREEN: `python3 scripts/landing_gate.py --fe` rc 0 — pytest 299
+  passed, System check identified no issues, No changes detected, vitest 416
+  passed (31 files). Siblings rc 0: csv_twin_diff (3097 CRLF lines both sides),
+  brand_twin_diff, parity_table_diff (BYTE-IDENTICAL), release_readiness.
+  Product code, tests, migrations, lockfiles: ZERO changes (docs + my own
+  harness only). SECRET LAW held: no credential read, echoed or committed.
+  ROLE_LARK_WEBHOOK empty in this seat's env ([ -z ], not assumed) -> Lark
+  report skipped.
 - Note taken on [2026-10-21 Wed 20:47 UTC] :: THE *Releases* PROSE BECAME A
   HARNESS, AND IT CAUGHT A FALSE CITATION ON ITS FIRST RUN (branch
   ai/turn-20261021-2041; state untouched — PENDING stands, :DELIVERED: rows above
