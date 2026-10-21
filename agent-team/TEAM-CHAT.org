@@ -1471,3 +1471,124 @@
   FIRST PUSH. Lark report SKIPPED again: ROLE_LARK_WEBHOOK absent from this
   seat's environment (already noted in the LOGBOOK). No secret value read or
   echoed; no lead-owned file touched.
+
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 12:28 UTC]
+:END:
+  RESULT: DONE — the two residual rows my own seat filed on FR-R006 and
+  FR-R008 are closed on the client side: the widget GRID now has a rendered-DOM
+  test (it had none) and the last deprecated `<svelte:component>` in the repo is
+  gone. Landing gate green at this HEAD.
+  WHY THIS SEGMENT: WORK ORDER exhausted — items 1-11 all sit
+  PENDING-with-delivered-evidence (`grep -nE '^\*+ (\S+ )?(TODO|ONGOING|WAIT)'
+  agent-team/TODOS.org` → zero hits) and the chat tail held no unanswered
+  @platform-engineer ping. Per instruction 2, the smallest verifiable
+  improvement toward the objective, aimed at the gaps the board itself names:
+  R-006's logbook says the deprecated construct was left in place because "no
+  component test covers it", and R-008's closes with "UNVERIFIED: no
+  browser/Tauri session clicked the dashboard".
+  WHAT LANDED (branch ai/turn-20261021-1218; shas 85a8142 test, 9c32b69
+  product, 186671b docs):
+  - app/src/lib/__tests__/dashboardMount.test.ts (NEW, 3 tests) — the first test
+    to mount Dashboard itself, i.e. the only place `widgets[].component` is used
+    for real. Registry-driven like widgets.test.ts/pages.test.ts (no pinned
+    count): cells == registered widgets in order, each `h2` == that widget's
+    meta.title, `md:col-span-2` iff size lg, and every card holds a body
+    element besides its header div.
+  - Order of operations this time, deliberately: the test was committed GREEN ON
+    HEAD (85a8142) BEFORE the product file moved, then MUTATION-CHECKED both
+    directions — deleting the mount line takes the new file to 2 failed / 1
+    passed ("cell 0 rendered no widget body: expected 0 to be greater than 0"),
+    restoring it is 3/3. So this is a real guard, not the tautology class I
+    flagged at 10:53Z, and it also honours my own 12:13Z rule (commit before
+    mutation-checking with `git checkout`) — the restore threw away nothing.
+  - app/src/pages/Dashboard.svelte:22/27 — `<svelte:component this={w.component}
+    />` → runes `{@const Widget = w.component}` + `<Widget />`, the form
+    Shell.svelte:53 already used and docs/page-registration.md:52 already
+    documents as the rule. `grep -rn "svelte:component" app/src plugin/` is now
+    ZERO; the only mention left in the tree is that doc prose.
+  - LIVE DROP-IN PROOF, no browser needed: dropped a scratch
+    `src/widgets/ScratchProbe.svelte` exporting `meta{title:"Scratch Probe"}` and
+    touched nothing else — the grid test widened its domain automatically and
+    stayed 3/3 green, which proves the R-008 drop-in contract THROUGH the
+    renderer, not only through the registry. Scratch removed; `git status` clean.
+  - docs/DEVGUIDE.md: new "Hard-won contracts" bullet for the runes
+    dynamic-component form + the grid test; stale vitest counts 283 → 286 at
+    :116 and :144.
+  MEASURED AT 186671b: vitest 286/286 over 20 files (was 283/19 — +3 new, not
+  one existing assertion touched) under NODE_OPTIONS=--max-old-space-size=1024
+  --maxWorkers=1; `npx tsc --noEmit` exit 0, so the standing bar from 5834538
+  still holds; `npm run build` ✓ 2.03s; LANDING GATE GREEN — pytest 285/285
+  (-p no:cacheprovider, 19.6s), manage.py check "no issues (0 silenced)",
+  makemigrations --check "No changes detected". Base fresh at segment start
+  (HEAD == origin/ai/main aec85f4, merge-base --is-ancestor → BASE_FRESH), so no
+  rebase was needed before the first push — the 12:05Z stale-base rule applied.
+  NEXT / WHAT REMAINS (rows I can not close from this box, unchanged): (1) this
+  is rendered-DOM under happy-dom, not a real browser/Tauri window — live-schema
+  chart pixels and the responsive grid stay unclicked here, no browser installed
+  and installing one is a spend I am not authorised for; (2) the runner-side red
+  `test` job stays yours (no gh CLI, no GITHUB_TOKEN in this seat's env); (3) for
+  the harness, a SEVENTH fresh container where the gate could not run as
+  delivered — my first `python -c "import admincraft"` this segment raised
+  ModuleNotFoundError and `app/node_modules` was empty (0 entries). The seat-boot
+  script DOES try: .turn-inside.sh:16 (agent-team.yml:508-509) runs
+  `python -m pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true`
+  — stderr thrown away, failure forgiven, and there is no `import admincraft`
+  check after it, so the lane cannot tell "installed" from "silently failed" and
+  neither can I. What I can measure: after I installed it myself the editable
+  install is HOME-dependent — `stat` finds
+  /home/agent/.local/lib/python3.12/site-packages/__editable__.admincraft-0.1.2.pth
+  (12:18:34Z) AND
+  /usr/local/lib/qoder-home/.local/lib/python3.12/site-packages/…(12:19:15Z),
+  because Python's user site follows `$HOME` and this lane pins
+  HOME=/usr/local/lib/qoder-home (agent-team.yml:519) while `whoami` is still
+  `agent` with a live /home/agent. I am deliberately NOT claiming which of the
+  two writes was the boot install — I have not measured that, and an unproven
+  root cause is worse than none. Two one-liners retire the row either way: drop
+  the `2>/dev/null || true` so a failure is loud, or install into the shared
+  prefix (no user site, i.e. /usr/local/lib/python3.12/site-packages) so the
+  result stops depending on which HOME booted the seat; `npm ci` in app/ belongs
+  in the same boat. Both live in Lead-owned files, so I cite
+  agent-team.yml:508-509/519 and .turn-inside.sh:16 rather than touch them.
+  BOARD: :LOGBOOK: note appended under FR R-008 (that is the item's evidence
+  base); no state flipped anywhere, DONE stays your gate, OBJECTIVE-STATE not
+  touched, no completion claim from this seat.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's environment (noted
+  in the LOGBOOK per instruction 8).
+  SECRET LAW held: no credential value read, echoed or committed. No lead-owned
+  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/* — read and cited only).
+
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 12:31 UTC]
+:END:
+  ONE CONVENTION, now enforced by a test rather than by prose (branch
+  ai/turn-20261021-1218, shas 85a8142 + 9c32b69 + 186671b):
+  1. Dynamic components take the runes form — `{@const Widget = w.component}`
+     then `<Widget />`, never `<svelte:component this={…}>`. The last use in
+     the tree was Dashboard.svelte; it is gone, so
+     `grep -rn "svelte:component" app/src plugin/` is ZERO and the only mention
+     left anywhere is the doc prose at docs/page-registration.md:52. Nothing
+     greps for this, so please keep it zero in your own segments.
+  2. app/src/lib/__tests__/dashboardMount.test.ts is now the DOM proof for the
+     widget GRID (cells, order, size spans, and a body element besides the card
+     header) — the third mount test file alongside shell/widgetMount/
+     chatMount/lifecycleMount, all sharing the same harness (browser resolve
+     condition + manual flushSync). If you touch Dashboard.svelte or the widget
+     registry, this file is the one that will tell you. It is registry-driven:
+     dropping a new widget in widens its domain instead of breaking it (verified
+     live with a scratch ScratchProbe.svelte, then removed).
+  3. Suite counts moved: vitest 283/19 files -> 286/20 files. docs/DEVGUIDE.md
+     :116 and :144 updated to match, plus a Hard-won-contracts bullet. `npx tsc
+     --noEmit` is still exit 0 here — please keep the bar (my 12:13Z note).
+  No assertion of yours changed, no file outside Dashboard.svelte + the new
+  test + DEVGUIDE touched. No lead-owned file edited; no secret value read or
+  echoed.
