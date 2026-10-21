@@ -2929,3 +2929,114 @@
   read, echoed or committed; ROLE_LARK_WEBHOOK empty in this seat's env (checked
   with [ -z ], not assumed) -> Lark report skipped, noted in the board LOGBOOK at
   FR R-005.
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 19:44 UTC]
+:END:
+  The 19:29Z note said a proof you cannot re-run is a proof that expires. I applied
+  it to the OTHER cross-language twin pair in this repo — brandToCss()
+  (app/src/lib/branding.ts:37) <-> render_css()
+  (plugin/src/admincraft/branding.py:196) — and it turned up three things that
+  apply to ANY parity claim you are about to sign, so read them before you write
+  your own diff:
+  1. NORMALIZE ONLY WHAT IS DOCUMENTED TO DIFFER. The two brand artifacts carry
+     different banner comments ON PURPOSE ("GENERATED ... do not edit by hand" vs
+     "runtime brand — injected"). A raw byte compare prints a guaranteed false
+     DIVERGENT. My compare starts at the first @import — and prints both banners
+     rather than hiding them. The test to ask of any exclusion you make: can I
+     cite the intent, or did I just choose the cut that turns the diff green?
+  2. ONE SENTINEL PER AXIS IS NOT COVERAGE. render_css writes
+     font.replace(" ","+"), brandToCss writes
+     encodeURIComponent(font).replace(/%20/g,"+"). For every font name the schema
+     allows those AGREE, so a single "Inter" row proves nothing: I mutated the
+     server to write %20 and it diverged on 146 of 300 accepted brands — exactly
+     the multi-word ones. "Space  Grotesk" (double space), a 60-char name and
+     digits are what made that mutant visible. Pick the values where the two
+     implementations would part ways, then prove it with the mutant.
+  3. FILTER THROUGH THE VALIDATOR AND READ THE REFUSALS. "The twins agree" only
+     means something over the domain where both are contracted to run, so the
+     matrix goes through the server's own validate_brand(): 350 generated -> 300
+     accepted, 50 refused (counted, not dropped). Surprise worth knowing:
+     "\tTabbed Font\t" IS accepted (SAFE_FONT_RE matches after .strip(),
+     branding.py:190) and both writers strip it to the same output — so a value
+     that looks illegal is not automatically a divergence, and only running it
+     could tell you.
+  4. AND: PROVE EVERY EXIT CODE, NOT JUST THE GREEN ONE. While writing
+     scripts/brand_twin_diff.py I ran its sibling csv_twin_diff.py under a
+     stripped PATH. It died with a FileNotFoundError traceback and EXIT 1 — the
+     code that means "the two writers DIVERGE". A seat reading only the number
+     files a divergence that never happened. Fixed in both scripts (launch
+     failure -> exit 2, rig not runnable); csv harness re-measured: broken PATH
+     -> exit 2, real run -> BYTE-IDENTICAL 3070 cells, exit 0.
+  New harness: python3 scripts/brand_twin_diff.py (3 checks: twins over every
+  accepted brand; shipped app/public/brand.css == render_css of the brand.json
+  beside it; brandToCss of that same brand == the bundle — first paint and the
+  boot re-inject being the same CSS is the FOUC guarantee, and NO per-side unit
+  test can see it, because each writer is green against its own fixture).
+  Negative controls, all bit, all product files restored byte-identical: client
+  drops an @import weight -> TWIN DIVERGENCE 300/300; server writes %20 -> 146/300;
+  edit the shipped --brand-radius -> BUNDLE STALE line 8. Law written up as
+  DEVGUIDE "SIXTH harness law"; AGENTS.md runtime-branding bullet now cites the
+  command instead of the promise. Product code: ZERO changes.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 19:44 UTC]
+:END:
+  RESULT: DONE (segment work; the board stays exhausted and I re-counted it rather
+  than inheriting the tally — 14 PENDING headlines, zero TODO/ONGOING/WAIT, zero
+  PENDING rows without :DELIVER: between their headline and the next, machine
+  checked this segment; chat tail held no unanswered @platform-engineer ping — the
+  newest entries were my own 19:29/19:30Z. No state flipped, no completion claim,
+  OBJECTIVE-STATE untouched.)
+  WHAT — THE SECOND TWIN PAIR GOT ITS HARNESS, AND THE FIRST ONE GOT A BUG FIXED
+  (branch ai/turn-20261021-1933):
+  - scripts/brand_twin_diff.py (new, ~290 lines) makes AGENTS.md's brand-CSS
+    parity claim re-runnable in one command, across THREE surfaces instead of
+    two: the two writers (render_css <-> brandToCss) over every brand the server
+    accepts, AND the shipped app/public/brand.css + brand.json pair, AND the
+    boot handoff (bundle == injected) — which is the FOUC promise, invisible to
+    every existing per-side test.
+  - scripts/csv_twin_diff.py had a leaky exit-code contract: a missing `npx`
+    raised FileNotFoundError and the script exited 1, the documented code for
+    "the writers DIVERGE" (measured with a stripped PATH). Caught in a synthetic
+    rc 127 -> reported as exit 2 in both harnesses now
+    (scripts/csv_twin_diff.py:109 run(), brand_twin_diff.py run_client_probe()).
+    That is the false-positive class the FIFTH law exists to kill, arriving from
+    a direction neither of us had tested: not the writers, the launcher.
+  - Docs: DEVGUIDE gained the SIXTH harness law (normalize only what is
+    documented to differ; one sentinel per axis is not coverage; filter through
+    the validator and read the refusals) + the exit-code control under the FIFTH;
+    AGENTS.md runtime-branding bullet now points at the command instead of the
+    prose, Commands carries both harnesses, and the CSV twin bullet cross-refs the
+    brand one.
+  EVIDENCE: green `BYTE-IDENTICAL — 300 accepted brands; twins agree under the
+  @import marker; bundle == render_css == brandToCss` (exit 0), 350 -> 300
+  accepted / 50 refused; csv harness re-run BYTE-IDENTICAL 3070 cells / 56287 B
+  (exit 0). Three negative controls bit and all three product files came back
+  byte-identical (git status clean on those paths). Landing gate: pytest 299/299
+  (-p no:cacheprovider), manage.py check "no issues (0 silenced)", makemigrations
+  --check "No changes detected", vitest 416/416 (31 files, NODE_OPTIONS=1024
+  --maxWorkers=1), tsc --noEmit exit 0. Product code: ZERO changes; package-lock
+  untouched; Lead-owned files read/cited only.
+  NEXT / WHAT REMAINS: (1) HARNESS, escalating not editing: this was the
+  NINETEENTH consecutive self-install, and the venv I had to build is exactly the
+  one the finalize gate re-creates from scratch with no pip cache
+  (.github/workflows/agent-team.yml:752-753 vs `cache: pip` at :60) — one line,
+  still standing from last segment. (2) For your stall accounting: the third
+  check in the brand harness will go RED the moment any seat runs `build_admin`
+  with a non-default brand and commits app/public/ without re-running it — that is
+  intended (bundle must equal its own brand.json), but say the word if you would
+  rather it key off the default brand only, since CI never re-runs build_admin.
+  (3) The standing hole is unchanged and only a browser seat can close it: real
+  pixels + the demo flow signed end to end (login admin/admin123 -> widgets ->
+  Product table -> New Order -> Ctrl+K against scripts/mock_openai.js :11435 ->
+  rebrand). The brand harness proves the CSS bytes; it cannot prove the paint.
+  (4) SECRET LAW held: no credential read, echoed or committed.
+  ROLE_LARK_WEBHOOK empty in this seat's env (checked with [ -z ], not assumed) ->
+  Lark report skipped, noted in the board LOGBOOK at COOL-PREVIEW and FR R-005.
