@@ -113,7 +113,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (405 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (416 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -141,7 +141,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 405 vitest
+cd app && npm test                          # 416 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
@@ -431,6 +431,26 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `if (!configured)` guard inside `send()` — is UNREACHABLE through the UI: the
   composer renders only in the `{:else}` branch of `{#if showSettings}{:else if
   !configured}`, so it is recorded as dead-defensive, not bent into a test.
+- **FOURTH harness law — a props re-spread re-fires prop-reading `$effect`s
+  even when every value is identical.** Svelte 5 (probed 2026-10-21 against
+  `fixtures/ScratchPage` semantics, reproduced in `recordFormMount.test.ts`'s
+  "identical values" case): a parent that re-renders `<Child {...$writable}/>`
+  bumps the child's prop signals as ONE unit, so an effect reading only
+  `modelId` re-runs when an unrelated `recordId` — or nothing at all — arrives
+  in a new object. Consequences, both pinned by mutants:
+  1. `ModelPage`'s "model-switch" reset `$effect` actually fires on EVERY route
+     params change, which is why it must close the editor (`formOpen=false;
+     editing=null`) — a deep link to another record can only ever REMOUNT
+     `RecordForm`, never move its props through the page.
+  2. So a test that drives `ModelPage` props cannot exercise `RecordForm`'s own
+     re-hydration `$effect` — it passes with the effect deleted (surviving
+     mutant, caught only by mutation, not by reading). Contract-level code gets
+     a parent of its OWN (`fixtures/RecordFormHarness.svelte` +
+     `recordFormHarnessProps`): move `record`/`model` on the mounted instance,
+     assert the fields re-hydrate, the FK lists re-fetch, and the PUT lands on
+     the NEW row's path — then keep the identity-gate case (an equal re-spread
+     must fire ZERO refetches), which is the mutant-killer for the `seen`
+     comparison the effect opens with.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).

@@ -10,7 +10,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushSync, mount, unmount } from "svelte";
 import ModelPageHarness from "./fixtures/ModelPageHarness.svelte";
-import { harnessProps } from "./fixtures/harnessProps";
+import RecordFormHarness from "./fixtures/RecordFormHarness.svelte";
+import { harnessProps, recordFormHarnessProps } from "./fixtures/harnessProps";
 import Toaster from "../../components/Toaster.svelte";
 import { normalizeOpenAPI } from "../openapi";
 import { app, toasts } from "../stores";
@@ -29,6 +30,8 @@ afterEach(() => {
   mockFetch.mockReset();
   toasts.set([]);
   app.set({} as any);
+  harnessProps.set({});
+  recordFormHarnessProps.set({});
   while (hosts.length) hosts.pop()!.remove();
 });
 
@@ -367,5 +370,110 @@ describe("mounted RecordForm — the bytes the CRUD spec actually sends", () => 
     flushSync(() => {});
     expect(host.querySelector("form.card")).toBeNull();
     expect(mockFetch.mock.calls.some((c) => c[1]?.method === "PUT")).toBe(false);
+  });
+});
+
+describe("RecordForm's own props-move contract", () => {
+  // The deep-link case above proves the PAGE keeps the editor honest — but it
+  // passes without RecordForm.svelte's re-hydration effect, because in Svelte 5
+  // a spread-props re-render re-fires EVERY effect that reads a prop even when
+  // the value is identical (probed 2026-10-21: an equal re-spread ran the
+  // effect twice), so ModelPage's model-switch guard closes the modal on every
+  // route change and the form is REMOUNTED, not moved. The effect's real
+  // subject is a prop that moves on a mounted instance, and only a parent of
+  // RecordForm's own can deliver that transition. These cases pin the code the
+  // fix shipped, not the code the page happens to run.
+  let rfProps: Record<string, any> = {};
+
+  function renderRF(props: Record<string, any>) {
+    const host = document.createElement("div");
+    const toastHost = document.createElement("div");
+    hosts.push(host, toastHost);
+    document.body.append(host, toastHost);
+    rfProps = props;
+    recordFormHarnessProps.set(props);
+    app.update((a) => ({
+      ...a,
+      schema: LIVE,
+      token: "tok",
+      booted: true,
+      apiUrlOverride: "http://api.test",
+      config: { apiUrl: "http://api.test", authPath: "/api/auth/token/", schemaPath: "/api/schema/" },
+    }));
+    instances.push(mount(RecordFormHarness, { target: host }));
+    instances.push(mount(Toaster, { target: toastHost }));
+    return { host, toastHost };
+  }
+
+  function setRFProps(patch: Record<string, any>) {
+    rfProps = { ...rfProps, ...patch };
+    recordFormHarnessProps.set(rfProps);
+    flushSync(() => {});
+  }
+
+  const NOOP = () => {};
+
+  it("re-hydrates when the record prop moves on the mounted instance", async () => {
+    route({ detail: { "7": ROW7, "9": ROW9 } });
+    const { host } = renderRF({ model: LIVE.byId["products"], record: ROW7, onclose: NOOP, onsaved: NOOP });
+    await awaitFkLoaded(host);
+    expect(fieldValue(openForm(host), "name")).toBe("Cold Brew Kit");
+
+    setRFProps({ record: ROW9 });
+
+    await vi.waitFor(() => {
+      flushSync(() => {});
+      expect(fieldValue(openForm(host), "name")).toBe("Pour-Over Kettle");
+    });
+    expect(fieldValue(openForm(host), "price")).toBe("89.00");
+    expect(fieldValue(openForm(host), "description")).toBe("Gooseneck");
+    // the FK option lists are re-read for the new hydration, not inherited
+    expect(urls().filter((u) => u.includes("/api/categories/")).length).toBe(2);
+
+    submitForm(host);
+    await awaitWrite((u) => /\/api\/products\/9\/$/.test(u));
+    const sent = bodyOf((u) => /\/api\/products\/9\/$/.test(u));
+    expect(sent.name).toBe("Pour-Over Kettle");
+    expect(sent.price).toBe(89);
+    expect(sent.category).toBe(2); // values, not the DOM select — state is authoritative
+    expect(mockFetch.mock.calls.some((c) => c[1]?.method === "PUT" && /\/api\/products\/7\/$/.test(String(c[0])))).toBe(false);
+  });
+
+  it("re-hydrates the field set when the model prop moves on the mounted instance", async () => {
+    route();
+    const { host } = renderRF({ model: LIVE.byId["products"], record: ROW7, onclose: NOOP, onsaved: NOOP });
+    await awaitFkLoaded(host);
+    expect(host.querySelector("#f-price")).toBeTruthy();
+    expect(host.querySelector("#f-category")).toBeTruthy();
+
+    // record moves with the module (the page would never send a Product row to
+    // a Customer path; the form must simply stop wearing Product fields)
+    setRFProps({ model: LIVE.byId["customers"], record: null });
+
+    flushSync(() => {});
+    expect(openForm(host), "the instance was remounted, not moved").toBeTruthy();
+    await vi.waitFor(() => {
+      flushSync(() => {});
+      expect(host.querySelector("#f-price")).toBeNull();
+    });
+    expect(host.querySelector("#f-category")).toBeNull();
+    expect(host.querySelector("#f-email")).toBeTruthy();
+    expect(host.querySelector("#f-joined_on")).toBeTruthy();
+    expect(fieldValue(openForm(host), "name")).toBe("");
+  });
+
+  // An equal re-spread must not re-fetch: the effect's identity gate exists
+  // because Svelte 5 re-fires prop-reading effects on every parent re-render.
+  it("does not re-hydrate when props re-spread with identical values", async () => {
+    route();
+    const { host } = renderRF({ model: LIVE.byId["products"], record: ROW7, onclose: NOOP, onsaved: NOOP });
+    await awaitFkLoaded(host);
+    const before = urls().filter((u) => u.includes("/api/categories/")).length;
+
+    setRFProps({ model: LIVE.byId["products"], record: ROW7 }); // same identities, new object
+    flushSync(() => {});
+
+    expect(urls().filter((u) => u.includes("/api/categories/")).length).toBe(before);
+    expect(fieldValue(openForm(host), "name")).toBe("Cold Brew Kit");
   });
 });
