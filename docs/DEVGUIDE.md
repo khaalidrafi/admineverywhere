@@ -1,4 +1,7 @@
-# AGENTS.md — admincraft
+# admincraft dev guide
+
+(Moved from the repo-root AGENTS.md on 2026-10-21 per Owner order —
+a project-specific AGENTS.md must not be made. Content unchanged.)
 
 Repo-specific notes for AI agents working in this repository. Global agent
 instructions (authorship, commit hygiene, review-first workflow, reply
@@ -504,65 +507,3 @@ once (one-time signature change from the stable key).
   substitution; the per-instance-CSP idea remains open.)
 
 ---
-
-# AGENT-TEAM CHAIN (added 2026-10-21, Lead) — the automated layer
-
-This repo now ALSO runs the agent-team CI chain (`.github/workflows/
-agent-team.yml`, ported from khaalidrafi/agent-team.el): `test` ->
-`turn` (TG ingest owner-locked -> session restore -> one agent segment
-in the preinstalled harness container -> session scrub+upload -> branch
-push) -> `finalize` (auto-merge behind the landing gate -> stall
-accounting -> self-dispatch while the objective is open).
-
-Agent law (supersedes any conflicting instruction above for CI seats):
-
-1. SINGLE CHAT: `agent-team/TEAM-CHAT.org` — append-only, FORMAT LAW
-   headline grammar (headline carries FROM; `:PROPERTIES:` drawer;
-   Org inactive timestamps). Direct @pings, never mailbox relay.
-2. CONTROL: `agent-team/TEAM-CONTROL.org` is LEAD-OWNED — seats read and
-   cite, never edit. Same for `.github/workflows/*`, `.github/scripts/*`,
-   `.gitattributes`.
-3. BOARD: `agent-team/TODOS.org` is the source of truth for
-   work. Flip your item ONGOING at start; on delivery flip to PENDING
-   with `:DELIVERED:` evidence (branch, sha, gate output). DONE is
-   Lead-only.
-4. SECRET LAW: credentials travel as ENV VAR NAMES only (e.g.
-   QODER_PERSONAL_ACCESS_TOKEN). Never echo a value — a peer confirms
-   the NAME + has-it/absent; you read the value from your own
-   environment. `.github/scripts/secret-guard.sh` redacts leaks at
-   every commit, ingest, and session artifact.
-5. SESSION LAW: CLI session files are collected each turn, scrubbed,
-   uploaded (`sessions-<seat>-*`, 30d), restored before your next
-   segment — resume with context.
-6. OWNER LOCK: the Telegram bridge records ONLY the Owner's chat
-   (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
-   impossible.
-7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
-   (212 green baseline as of FR-R007-LIVE; vitest 252 as of FR-R001-FE) + `demo-backend manage.py check` +
-   `makemigrations --check`. Red work never lands.
-8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
-   in `docker/harness/` (Docker law). Rotation pointer lives in
-   TEAM-CONTROL.org `#+TURN`.
-
-## Global agent law — DISTRIBUTED (Owner order 2026-10-21 03:53Z #hq:
-## "don't forget to give global instructions' AGENTS.md to the team").
-## Canonical source: khaalidrafi/agent-team.el AGENTS.md.
-
-1. FORMAT LAW: TEAM-CHAT.org messages are Org headlines carrying FROM,
-   routing in tags, fields in a :PROPERTIES: drawer; append at EOF only.
-2. TELEGRAM LAW: TG-bound messages open with FROM:/TO: lines.
-3. SECRET LAW: credentials NEVER travel in chat/files/commits — only as
-   ENV VAR NAMES. A peer replies with the NAME + has-it/absent; the asker
-   reads the value from their OWN environment. SECRET GUARD
-   (.github/scripts/secret-guard.sh) redacts at every choke point.
-4. SESSION LAW: CLI session files collected at turn end, scrubbed,
-   uploaded as sessions-<seat>-* artifacts (30d), restored next turn.
-5. OWNER LOCK: the TG bridge ingests ONLY the Owner's chat.
-6. DOCKER LAW: agents PREINSTALLED in docker/harness; keys env-injected.
-7. SEAT BOUNDARIES: never edit .github/workflows/*, TEAM-CONTROL.org,
-   .gitattributes; never push to ai/main (finalize auto-merges).
-8. BOARD DISCIPLINE: ONGOING at start, evidence in :LOGBOOK:, DONE is
-   Lead-only.
-9. IDENTITY: commit as your seat identity.
-10. NO SPEND, no destructive actions; :escalation: @lead after 2 failed
-    self-attempts.
