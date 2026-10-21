@@ -801,3 +801,55 @@
     Discord channel the moment the Owner drops
     DISCORD_WEBHOOK_TEAM_ADMINCRAFT into secrets.
   - Global agent law now in AGENTS.md (distributed from agent-team.el).
+
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 10:15 UTC]
+:END:
+  RESULT: DONE — the WORK ORDER is now FULLY burned: every item on
+  agent-team/TODOS.org carries PENDING-with-delivered-evidence and
+  `grep '^\*+ \(TODO\|ONGOING\|WAIT\)'` returns ZERO open states.
+  WHAT WAS ACTUALLY LEFT (measured at ai/main 43067e0, your 04:45Z
+  dispatch): not features — two parent headlines. WORK ORDER items 3
+  and 5 pointed at the R-001/R-003 parents; their children were long
+  delivered (BE DONE 16c5a4fd + f5840aaf; FE PENDING :DELIVERED:
+  45fbe86->02e4e7e and ai/turn-20261020-2052) but the parents stayed
+  ONGOING/TODO, so the chain kept re-dispatching seats onto finished
+  work (this is the third segment item 5 re-triggered). I flipped BOTH
+  parents to PENDING with fresh :DELIVERED: LOGBOOK notes — flipping to
+  PENDING-with-evidence is the objective's own target state and the
+  member-legal one; DONE stays your gate, untouched.
+  INDEPENDENT RE-VERIFICATION this segment (nothing inherited):
+  - Landing gate re-measured at 43067e0: pytest 212/212
+    (-p no:cacheprovider, 13.1s), manage.py check "no issues
+    (0 silenced)", makemigrations --check "No changes detected",
+    vitest 252/252 (19 files, NODE_OPTIONS=1024 --maxWorkers=1).
+  - Deliverables audit: all 20 board-cited artifacts present on-tree
+    (chatMount/lifecycleMount/actions/csv/kanban/pages/rbac tests,
+    statusTransitions.ts, kanban.ts, rbac.ts, feed.ts, branding.ts,
+    actions/flag.ts + bulk_flag.ts, Activity.svelte,
+    shop/csv_export.py, all six docs/*.md).
+  - Wiring spot-checks: live chat prompt path
+    ChatPanel.svelte:69 systemPrompt(buildSchemaPrompt);
+    applyBrand/revertBrand branding.ts:71/:79; evidence-bound
+    transitionPath/historyPath openapi.ts:183-199; demo /api/me/
+    core/urls.py:15. No deliverable claim was falsified.
+  ONE ISSUE I CANNOT FIX (LEAD-OWNED FILE, citing only): ac90502
+  records "test job failing on runner while gate is 212-green locally"
+  after reverting agent-team.yml to last-green 86cf4ae. .github/
+  scripts/gate.sh runs exactly the commands that are green HERE, so
+  the red is runner-side (env/deps/cache), not tree-side. This harness
+  has no gh CLI and no way to read run logs — the runner-log triage
+  needs you or a seat with API access. Until then finalize may keep
+  refusing merges of green work on a red test job.
+  STILL-OPEN ROW (unchanged, cannot be closed on this box): nobody has
+  watched the live UI in a real browser/Tauri window (chat round-trip,
+  transition click, RBAC button vanish) — one human E2E pass, not
+  another unit test.
+  I have NOT touched OBJECTIVE-STATE, TEAM-CONTROL.org,
+  .github/workflows/*, .github/scripts/*; no completion claim from this
+  seat. Branch ai/turn-20261021-1011 carries the two parent flips +
+  this message.
