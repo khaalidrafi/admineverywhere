@@ -933,6 +933,65 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   twins still agree, over less than the proof claims — a proof regression, not a tooling
   gap), while a matrix that no longer matches its own pin is `CANNOT RUN` (the harness
   does not understand its own input, so it has no verdict to give).
+
+- **TWELFTH harness law — a verdict leg that reads the TRANSPORT, not the VERDICT, is
+  the EIGHTH law running backwards.** EIGHTH says `exit 0` alone never proved anything;
+  this is the mirror hole, and it is what let a segment whose work landed green be
+  reported as `result: BLOCKED (qoder+zai+minimax lanes all failed — check the harness)`.
+  The lane dispatch at
+  `.github/workflows/agent-team.yml:521` decides with a shell `if`, so it asks exactly
+  one question — did the process exit 0? — and collapses three different outcomes into
+  one: the agent finished, the agent was CUT OFF at its own turn cap mid-work, and the
+  CLI never started (bad argv, missing token, no network). A capped run is a REAL result
+  carried in the JSON the leg already produces and never parses: `subtype` and
+  `is_error`. Measured on this box, five controls, zero product-code changes:
+  1. `--max-turns 2` against a task needing four tool calls → **exit 1** with
+     `subtype: error_max_turns`, `is_error: true`, `num_turns: 2`,
+     `stop_reason: tool_use`. So the shell `if` calls it a lane FAILURE and falls
+     THROUGH — control 3 is what "through" means here.
+  2. The lane's exact argv (`--output-format json`, `--permission-mode bypassPermissions`,
+     `--max-turns 100`) on a one-turn task → **exit 0**, valid JSON. This is the control
+     that matters: it kills the tempting diagnosis. The CLI accepts camelCase
+     `bypassPermissions` and tolerates `--max-turns` even though neither appears in
+     `qoder --help`, so **the argv is not the bug** and an operator who greps `--help`,
+     sees no `--max-turns`, and "fixes" it changes nothing.
+  3. THE FALL-THROUGH IS NOT A FREE RETRY. `ZAI_API_KEY` and `OPENROUTER_API_KEY` are
+     both non-empty in this seat's container (tested with `[ -z ]` — NAMES + has-it only,
+     per SECRET LAW, values never read or echoed), so a false lane failure spends a SECOND
+     run of the same brief against the SAME workspace on a DIFFERENT model, and then a
+     third. Two bodies editing one tree in one segment is a corruption path, not a
+     resilience path — and the verdict can still land on "all lanes failed". Anything that
+     reads as a fallback must be proven to be one before it is trusted.
+  4. The architecture hid the outcome from every consumer: the work committed, the chat
+     report and board note for that segment say DONE, the landing gate is green, and the
+     mirrored control-file result still reads BLOCKED with `stall=1`. A verdict that
+     disagrees with all of its own evidence is a verdict nobody can act on — and a false
+     BLOCKED is worse than a true one, because it sends the next rotation to debug a
+     machine that is not broken while the real signal (the seat ran out of turns) is
+     discarded.
+  5. Same class, second victim: `/sessions-restore` mounted EMPTY this boot, although
+     SESSION LAW says it carries the seat's previous session. Under the pinned HOME only
+     the CURRENT session file exists — the prior segment's transcript never arrived — so
+     "resume with context instead of starting cold" has not happened for this seat, and
+     the boot install was swallowed again (`.github/workflows/agent-team.yml:509`), the
+     NINTH consecutive cold boot reported here. The restore leg prints its own verdict
+     (`.github/workflows/agent-team.yml:349`) and `exit 0`s on cold start, so the step is
+     green whether or not context arrived — EIGHTH law's "assert your own output phrase"
+     is missing exactly where a silent success is indistinguishable from a silent nothing.
+  FIX, one line class (LEAD-owned, so reported not edited): the lane parses its own
+  JSON — exit 0 with `is_error: false` → OK; exit 1 with `subtype: error_max_turns` → a
+  DISTINCT verdict (`PARTIAL: seat ran out of turns; work may still be on the branch`)
+  that must NOT fall through to another body; anything else → lane failure.
+  Then either raise `--max-turns` or drop it, since the cap is what converted a long
+  segment into a red verdict.
+  RE-RUN IT (no product code, one cheap call, ~2 turns):
+  `qoder -p "Call the Bash tool four separate times: echo one; echo two; echo three;
+  echo four." --output-format json --permission-mode bypassPermissions --max-turns 2`
+  → exit 1 and `{"subtype":"error_max_turns","is_error":true,"num_turns":2}`.
+  WRITER RULE for every seat: **the exit code tells you the process ended; the payload
+  tells you what happened.** A leg that collects a verdict must parse the verdict body,
+  never the transport status — otherwise a run that was cut off and a run that never
+  started are the same word in the log, and the next reader debugs the wrong machine.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).

@@ -815,6 +815,49 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 22:50 UTC] :: THE FALSE-BLOCKED CLASS MEASURED TO
+  ROOT CAUSE (branch ai/turn-20261021-2245; state untouched — PENDING stands, DONE is
+  the Lead's gate). Work order re-counted: 11 PENDING + 2 DONE, zero
+  TODO/ONGOING/WAIT, every PENDING row carries :DELIVERED:, newest chat entry is my own
+  22:02Z report, the only @platform-engineer ping (01:55Z dispatch, items 1-2) was
+  answered long ago. So this segment took the harness itself: HEAD 9dcdbc6 mirrors
+  `result: BLOCKED (qoder+zai+minimax lanes all failed — check the harness)` + stall=1
+  onto a segment whose work (25fc02d) landed green and reported DONE.
+  VERDICT: NOT a lost-work event, and NOT the argv. Five controls, all reproducible,
+  all restored (diff was doc-only):
+  - `--max-turns 2` vs a four-tool-call task → exit 1, `subtype: error_max_turns`,
+    `is_error: true`, `num_turns: 2`. The lane dispatch at
+    `.github/workflows/agent-team.yml:521` decides with a shell `if`, so a seat that ran
+    out of turns reads as LANE FAILURE.
+  - The lane's EXACT argv on a one-turn task → exit 0, valid JSON. `qoder --help` lists
+    neither `--max-turns` nor camelCase `bypassPermissions`, yet both are accepted — so
+    the tempting "invalid flag" diagnosis is dead and an operator who "fixes" the argv
+    changes nothing.
+  - `ZAI_API_KEY` and `OPENROUTER_API_KEY` are NON-EMPTY in this seat's container
+    (`[ -z ]` only — NAMES + has-it, values never read). So a false lane failure spends a
+    second run of the same brief against the same workspace on a different model, then a
+    third: a corruption path, not a resilience path.
+  - `/sessions-restore` mounted EMPTY; only the CURRENT session exists under the pinned
+    HOME, so SESSION LAW has never actually delivered context to this seat, and the boot
+    install at `.github/workflows/agent-team.yml:509` was swallowed again — NINTH
+    consecutive cold boot (self-installed: `pip install -e ./plugin --no-deps`, `cd app
+    && npm ci`). The cold-start branch at `.github/workflows/agent-team.yml:349` prints
+    its line and `exit 0`s, so the step is green with or without context.
+  SHIPPED: docs/DEVGUIDE.md gained the TWELFTH harness law (transport-vs-verdict, the
+  fall-through finding, the empty-restore second victim, the one-command REPRO, and the
+  writer rule "the exit code tells you the process ended; the payload tells you what
+  happened"). Lead-owned files READ and CITED only, never edited — the fix is a Lead
+  one-liner and is reported as such.
+  GATE: `python3 scripts/landing_gate.py --fe` rc 0 BEFORE the edit (pytest 299, vitest
+  416/31 files, csv-twin 3070 cells, brand-twin 302 over pinned 350, parity-twin 25 rows)
+  and the default three-leg merge gate rc 0 AFTER it, so finalize's replay is unchanged;
+  `release_readiness.py` rc 0, and the delta is measured not assumed: the same leg on the
+  stashed baseline reads 67 bounds-checked lines (46 repo) and 70 (49 repo) after the edit
+  — my three new agent-team.yml citations were re-read from the file first to confirm each
+  cited line is ON its target, not merely in range (the TENTH law's third door applies to
+  the sentence that describes it). Product code / tests / migrations / lockfiles: ZERO.
+  ROLE_LARK_WEBHOOK empty in this seat's env ([ -z ], not assumed) → Lark report skipped,
+  noted here. SECRET LAW held: no credential read, echoed or committed.
 - Note taken on [2026-10-21 Wed 21:58 UTC] :: THE SAME LAW APPLIED TO THE TWO
   SIBLING TWINS, AND BOTH WERE BLIND THE WAY THE BRAND TWIN WAS (branch
   ai/turn-20261021-2140; state untouched — PENDING stands, :DELIVERED: rows above
