@@ -815,6 +815,50 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 23:09 UTC] :: THE ELEVENTH LAW REACHED ITS OWN
+  AUTHOR'S FILE (branch ai/turn-20261021-2256; state untouched — PENDING stands, DONE
+  is the Lead's gate). Work order re-counted at boot: 11 PENDING + 2 DONE, zero
+  TODO/ONGOING/WAIT, every PENDING row carries :DELIVERED:, no unanswered
+  @platform-engineer ping (chat tail 4042+ all mine), so the segment took the harness
+  family again — and found the parent gate exempt from the population law the same
+  seat had just shipped to all three twins.
+  MEASURED BEFORE THE FIX, each control restored byte-identical: removing one 39-line
+  pytest file made `python3 scripts/landing_gate.py` answer `pytest 297 passed` and
+  GATE GREEN, rc 0; removing one vitest file answered 411 tests over 30 files, rc 0.
+  The merge gate every finalize replays was green over vanished coverage while its
+  own docstring claimed each leg asserts "the count it is supposed to produce" — it
+  asserted a count was PRINTED. The twins were fixed for exactly this sentence.
+  SHIPPED: scripts/landing_gate.py gained EXPECTED_PYTEST=299 / EXPECTED_VITEST=416 /
+  EXPECTED_VITEST_FILES=31 (scripts/landing_gate.py:66) graded by one shared
+  population() (scripts/landing_gate.py:112); mismatch is RED naming the direction —
+  SHRANK = coverage lost (restore, or bump in the same commit as a deliberate
+  deletion), GREW = stale pin (bump in the same commit as the added tests). No
+  CANNOT RUN tier here unlike the twins: the count comes from the runner's own
+  summary, so any disagreement is an undeclared tree, i.e. a verdict. Four controls:
+  honest rc 0 at 299/416/31; pytest file deleted → rc 1 SHRANK 297-vs-299; a 1-test
+  file ADDED → rc 1 GREW 300-vs-299 (the grew case matters: a downward-only pin is a
+  floor and lets the counts quoted in AGENTS.md drift upward unmarked); vitest file
+  deleted → rc 1 SHRANK 411-vs-416. Docs: DEVGUIDE ELEVENTH law extended ("the law's
+  author was the last unpinned leg" + seat rule to measure the file that runs the
+  family), AGENTS.md LANDING GATE bullet now states the pinned population and the
+  bump ritual.
+  THE PIN FIRED ON ITS OWN AUTHOR TWICE IN THIS SEGMENT, which is the design working:
+  my corrected GREW-remedy edit and doc citations added one legitimate symbol claim
+  (`population()` cited in DEVGUIDE), and release_readiness's EXPECTED_CLAIMS literal
+  answered `9 symbol claim(s) scanned against a pinned population of 8` CANNOT RUN —
+  resolved by the prescribed two-place edit (literal 8 -> 9,
+  scripts/release_readiness.py:129, same commit), and the self-caught class applied to
+  myself: my first DEVGUIDE draft cited landing_gate.py:60 for the constants while
+  they sit at :66 — in-range, wrong target, caught by re-grepping before shipping.
+  GATE: `landing_gate.py --fe` rc 0 on the delivered tree (pytest 299, vitest 416/31
+  files, csv-twin 3070 cells, brand-twin 302 over pinned 350, parity-twin 25 rows) and
+  the default three-leg merge gate rc 0, so finalize's replay is unchanged;
+  release_readiness rc 0 (82 path citations, 73 bounds-checked lines, 9/9 symbol
+  claims on target). Boot: TENTH consecutive swallowed install — `import admincraft`
+  failed and app/node_modules absent; self-healed with the gate's printed commands.
+  Product code / tests / migrations / lockfiles: ZERO changes. ROLE_LARK_WEBHOOK empty
+  in this seat's env ([ -z ], not assumed) → Lark report skipped, noted here. SECRET
+  LAW held: no credential read, echoed or committed.
 - Note taken on [2026-10-21 Wed 22:50 UTC] :: THE FALSE-BLOCKED CLASS MEASURED TO
   ROOT CAUSE (branch ai/turn-20261021-2245; state untouched — PENDING stands, DONE is
   the Lead's gate). Work order re-counted: 11 PENDING + 2 DONE, zero
