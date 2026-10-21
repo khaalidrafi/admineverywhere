@@ -67,6 +67,29 @@ EXPECTED_PYTEST = 299
 EXPECTED_VITEST = 416
 EXPECTED_VITEST_FILES = 31
 
+# THE SAME LAW, APPLIED TO THE ROSTER ITSELF. The pin above grades the COUNTS the
+# legs print; it said nothing about which LEGS run, so the parent gate could pass a
+# merge while silently not running one of the three checks AGENTS.md defines.
+# Measured pre-fix on the delivered tree, both rc 0 / GATE GREEN:
+#   * the `migrations` leg deleted from the roster -> the gate ran 2 verdict legs
+#     and closed with "every leg above asserted its own output" — a sentence that is
+#     true of the legs that ran and blind to the one that did not;
+#   * `parity-twin` deleted from TWINS -> `--fe` compared two of the three twin
+#     pairs and called the byte-identity claim proven.
+# So the roster is pinned by ORDERED LABELS (identity, population and order at once:
+# `env` must stay first because it exists to stop a swallowed install from wearing
+# pytest's exit 2 as a red tree). Edit the roster without editing the expectation and
+# the gate refuses to run — which, unlike the counts above, is CANNOT RUN and not RED:
+# a wrong roster means this file is no longer the gate finalize replays, so it has no
+# opinion about the diff in front of it.
+MERGE_ROSTER = ("env", "pytest", "check", "migrations")
+FE_ROSTER = ("vitest", "csv-twin", "brand-twin", "parity-twin")
+# Third, INDEPENDENT source for the twin legs: the harnesses that exist on disk. The
+# roster and a literal are two copies of one intent (the weakest pin the twins were
+# fixed for); the filesystem is not, so a 4th *_diff.py harness written and never
+# wired into the gate, or a roster naming a script that is gone, both fire here.
+EXPECTED_TWINS = 3
+
 
 class CannotRun(Exception):
     pass
@@ -125,6 +148,55 @@ def population(leg, got, want, carrier):
     raise LegRed("%s: %s. %s. A printed count with no expectation attached is "
                  "green over whatever coverage is left."
                  % (leg, verdict % (got, want, abs(got - want)), remedy))
+
+
+def pin_roster(labels, fe):
+    """Refuse to run if the leg roster is not the roster this gate advertises."""
+    owed = list(MERGE_ROSTER) + (list(FE_ROSTER) if fe else [])
+    if labels == owed:
+        return
+    missing = [l for l in owed if l not in labels]
+    extra = [l for l in labels if l not in owed]
+    detail = []
+    if missing:
+        detail.append("MISSING %s (coverage the merge/finalize replay would not get)"
+                      % ", ".join(missing))
+    if extra:
+        detail.append("UNDECLARED %s (a leg this file does not advertise)"
+                      % ", ".join(extra))
+    if not detail:
+        detail.append("ORDER changed: got %s, owes %s — the preflight must run first"
+                      % (", ".join(labels), ", ".join(owed)))
+    raise CannotRun(
+        "the leg roster does not match the pinned roster (%d legs). %s. "
+        "Fix the roster, or amend MERGE_ROSTER/FE_ROSTER in scripts/landing_gate.py "
+        "in the SAME commit — and if you amend it, AGENTS.md's LANDING GATE definition "
+        "and every report quoting \"%d legs\" go stale with it."
+        % (len(owed), "; ".join(detail), len(MERGE_ROSTER) - 1))
+
+
+def twin_roster_on_disk():
+    return sorted(p.name for p in (ROOT / "scripts").glob("*_diff.py"))
+
+
+def pin_twins():
+    """The TWINS roster vs the harnesses that actually exist — two independent views."""
+    on_disk = twin_roster_on_disk()
+    named = sorted(script for _, script in TWINS)
+    if len(TWINS) != EXPECTED_TWINS:
+        raise CannotRun("TWINS lists %d harness(es), EXPECTED_TWINS pins %d. A twin "
+                        "deleted from the roster still leaves its harness on disk and "
+                        "green on its own — the byte-identity claim would then cover "
+                        "less than it says. Fix the roster, or bump EXPECTED_TWINS in "
+                        "the SAME commit as the deliberate change." % (len(TWINS), EXPECTED_TWINS))
+    if named != on_disk:
+        raise CannotRun("the TWINS roster (%s) is not the set of twin harnesses on "
+                        "disk (%s) — an unwired harness is a comparison nobody runs, a "
+                        "roster naming a gone harness is a leg that cannot pass."
+                        % (", ".join(named), ", ".join(on_disk)))
+    if [name for name, _ in TWINS] != list(FE_ROSTER)[1:]:
+        raise CannotRun("the TWINS labels (%s) do not match FE_ROSTER's twin slots (%s)"
+                        % (", ".join(n for n, _ in TWINS), ", ".join(FE_ROSTER[1:])))
 
 
 def leg_pytest(py, log):
@@ -222,32 +294,49 @@ def main(argv):
     def log(line):
         print(line)
 
-    legs = [(leg_env, (py, log)), (leg_pytest, (py, log)),
-            (leg_django, (py, "check", ["check"],
-                          "System check identified no issues", log)),
-            (leg_django, (py, "migrations",
-                          ["makemigrations", "--check", "--dry-run"],
-                          "No changes detected", log))]
+    legs = [("env", leg_env, (py, log)),
+            ("pytest", leg_pytest, (py, log)),
+            ("check", leg_django, (py, "check", ["check"],
+                                   "System check identified no issues", log)),
+            ("migrations", leg_django, (py, "migrations",
+                                         ["makemigrations", "--check", "--dry-run"],
+                                         "No changes detected", log))]
     if opts.fe:
-        legs.append((leg_vitest, (log,)))
-        legs += [(leg_twin, (py, name, script, log))
+        legs.append(("vitest", leg_vitest, (log,)))
+        legs += [(name, leg_twin, (py, name, script, log))
                  for name, script in TWINS]
 
+    # Pinned before a single leg launches: a roster that drifted is not a verdict
+    # about the tree, and running the survivors first would print green lines for a
+    # gate that is no longer the gate finalize replays. The refusal is presented as
+    # the gate's own verdict, not as a crash — "harness failure" reads like a broken
+    # rig and invites a re-run of a decision that will not change (TWELFTH law).
+    try:
+        pin_twins()
+        pin_roster([label for label, _, _ in legs], opts.fe)
+    except CannotRun as exc:
+        print("CANNOT RUN [roster] — %s" % exc)
+        return CANNOT
+    log("legs       %d (%s), each graded against its own expectation"
+        % (len(legs), ", ".join(label for label, _, _ in legs)))
+
     failures = []
-    for fn, args in legs:
+    for label, fn, args in legs:
         try:
             fn(*args)
         except CannotRun as exc:
-            print("CANNOT RUN — %s" % exc)
+            print("CANNOT RUN [%s] — %s" % (label, exc))
             return CANNOT
         except LegRed as exc:
-            failures.append(str(exc))
+            failures.append("[%s] %s" % (label, exc))
     for f in failures:
         print("RED — %s" % f)
     if failures:
         print("GATE RED (%d leg(s))" % len(failures))
         return RED
-    print("GATE GREEN — every leg above asserted its own output, exit 0 was never enough")
+    print("GATE GREEN — %d leg(s) matched the pinned roster exactly (%s); every one "
+          "of them asserted its own output, exit 0 was never enough"
+          % (len(legs), "MERGE_ROSTER+FE_ROSTER" if opts.fe else "MERGE_ROSTER"))
     return GREEN
 
 
