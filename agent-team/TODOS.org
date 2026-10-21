@@ -815,6 +815,60 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 20:09 UTC] :: THE CSV TWIN HARNESS STOPPED
+  REQUIRING A VENV IT DOES NOT NEED (branch ai/turn-20261021-2003; state
+  untouched — PENDING stands, :DELIVERED: rows above unchanged; DONE is the
+  Lead's gate). Board re-COUNTED, not inherited: WORK ORDER rows 1-11 all carry
+  delivered evidence and the chat tail held no unanswered @platform-engineer
+  ping (newest entries 3043/3088 are my own 19:59Z note + report), so this
+  segment closed the exit-2 blocker I reported last turn.
+  - MEASURED before the change: `python3 scripts/csv_twin_diff.py` on this box
+    printed "…/.venv/bin/python missing" and exited 2 in 0 s — while the SAME
+    system python imports django 5.2.18 + DRF + drf-spectacular + admincraft and
+    ran the harness's own SERVER_SPEC probe perfectly (5-row document, correct
+    CRLF + `'=` guard). So "the rig could not run" was a PATH assertion, not a
+    measurement, and it lied: the finalize landing gate pip-installs the plugin
+    into its own environment and never builds demo-backend/.venv, so the gate
+    could not re-run the harness its own docs cite. brand_twin_diff.py had always
+    worked venv-free — the asymmetry was in the launcher, not the writers.
+  - scripts/csv_twin_diff.py: layer 2 now resolves its interpreter by PROBE
+    (`import django, rest_framework, drf_spectacular, admincraft`) —
+    `.venv/bin/python` first if present, else the running one — and the verdict
+    prints `layer 2 interpreter: …`, because a pass must name the environment
+    that proved it. `--python <exe>` is honoured EXCLUSIVELY: a seat that names
+    an interpreter gets that interpreter's failure as the answer, never a silent
+    fallback to someone else's green. Nothing else in the pipeline changed.
+  - Controls measured (all four, each restoring the tree): nonexistent
+    `--python` → 2 `cannot launch`; a real dep-free venv → 2 naming
+    `ModuleNotFoundError: No module named 'django'`; a dep-free `.venv` at the
+    preferred path → falls back, reports the fallback, still 0; server-side bool
+    mutation `true/false` → `1/0` → 1 naming
+    `line 101: client=b'98,false' server=b'98,0'` (csv_export.py byte-identical
+    after restore, `git status` clean).
+  - Docs corrected where they had become FALSE about the exit-code contract:
+    DEVGUIDE FIFTH law said exit 2 = "no `node_modules`, no `.venv`" — now
+    "(no `node`/`node_modules`, or no interpreter that can import the rig's
+    deps)" plus a FOURTH harness control paragraph ("a harness must fail to run
+    for a reason it can name, and succeed with the environment it can show": the
+    false-BLOCKED half of the exit-code contract, the mirror of the 127-as-1 leak
+    the FIFTH law already records); DEVGUIDE:152 and AGENTS.md:145 command
+    comments, and csv-export.md §6 gained the resolution rule, the exclusivity of
+    `--python`, and the measured numbers.
+  - EVIDENCE: green 3070 cells / 56287 B / 3097 CRLF lines, BYTE-IDENTICAL in
+    2.9 s (was an ~8-minute venv build or a false exit 2), run from the repo root
+    with `layer 2 interpreter: /usr/local/bin/python3`. Landing gate: pytest
+    299/299 (-p no:cacheprovider), `manage.py check` "no issues (0 silenced)",
+    `makemigrations --check` "No changes detected"; also vitest 416/416 (31
+    files, NODE_OPTIONS=1024 --maxWorkers=1), tsc --noEmit exit 0, and the
+    sibling harnesses untouched (parity_table_diff 0, brand_twin_diff 0).
+    Product code + both test suites: ZERO changes; package-lock untouched;
+    Lead-owned files (.github/*, TEAM-CONTROL.org, .gitattributes) read/cited only.
+  - NEXT: the standing hole is unchanged and only a browser seat can close it —
+    real pixels + the demo flow signed end to end (login admin/admin123 →
+    widgets → Product table → New Order → Ctrl+K against
+    scripts/mock_openai.js :11435 → rebrand). ROLE_LARK_WEBHOOK empty in this
+    seat's env (checked with `[ -z ]`, not assumed) → Lark report skipped, noted
+    here. SECRET LAW held: no credential read, echoed or committed.
 - Note taken on [2026-10-21 Wed 19:58 UTC] :: THE SHARED TABLE GOT ITS OWN
   RE-VERIFIER (branch ai/turn-20261021-1948, commit a0a13a6; state untouched —
   PENDING stands, :DELIVERED: rows above unchanged; DONE is the Lead's gate).
