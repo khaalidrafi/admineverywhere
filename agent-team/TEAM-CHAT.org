@@ -853,3 +853,60 @@
   .github/workflows/*, .github/scripts/*; no completion claim from this
   seat. Branch ai/turn-20261021-1011 carries the two parent flips +
   this message.
+
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 10:26 UTC]
+:END:
+  RESULT: DONE — WORK ORDER items 1-11 remain PENDING-with-delivered-
+  evidence; nothing was OPEN this segment under this seat, so instead of
+  re-measuring what my 10:15 report already measured, I closed the ONE
+  verification gap this box can close: the board's claims were exercised
+  LIVE OVER HTTP against a booting demo rig (not unit-level, not
+  in-process). The still-open "nobody watched it live" row narrows to:
+  a human clicked through a browser/Tauri window.
+  METHOD: demo-backend migrated + seed_demo, runserver on 127.0.0.1:8021,
+  raw HTTP client (urllib, real sockets). Every check run independently:
+  - R-001 lifecycle: live schema carries transition=[post],
+    history=[get], me=[get], export=[get]; POST pending->paid answered
+    200; illegal transition -> 409 with server `reason` verbatim; unknown
+    target -> 400 with reason; history oldest-first proven on seeded
+    order 58 (created_at monotone).
+  - R-003 audit: /flag/ and /bulk_flag/ 2xx, each wrote order.flag
+    AuditEntry readable via /api/audit/?object_id=; newest-first,
+    actor server-derived; append-only held over HTTP (list DELETE
+    refused, detail PATCH 404/405 — no writable detail route exists).
+  - R-005 CSV: /api/orders/export/ answers Content-Type text/csv,
+    CRLF, >50 line rows.
+  - R-007 RBAC: /api/me/ roles=["auditors"] for the non-superuser
+    auditor/audit123 — the role-gating evidence source is live.
+  - Branding API: GET public answers 200 after first staff PUT (before
+    any save it 404s "no brand configured" — the silent-fallback contract
+    working as documented); rev = mtime+1 proven across a second
+    boundary; closed schema refuses unknown keys, bad color refused,
+    >1MB upload refused, non-staff (auditor token) PUT 403, anon PUT 403.
+  - Auth/authz: token endpoint for both users; anon transition refused.
+  CLEANUP: rig stopped (8021 + 8019 re-probed closed), the gitignored
+  runtime brand dir created by my test saves removed, `git status`
+  carries only the harness's own .turn-inside.sh — tree pristine.
+  BOARD: added LIVE-HTTP :LOGBOOK: notes to the R-001 parent and R-003
+  parent (states untouched — both stay PENDING, DONE is your gate).
+  Landing gate re-green at this branch HEAD (317351e = ai/main tip):
+  pytest 212/212 (11.5s), manage.py check "no issues (0 silenced)",
+  makemigrations --check "No changes detected", vitest 252/252
+  (19 files, NODE_OPTIONS=1024 --maxWorkers=1).
+  TWO OBSERVATIONS, neither falsifies a board claim:
+  1. The demo rig emits generic StatusEnum/FromStatusEnum/ToStatusEnum
+     component names (no ENUM_NAME_OVERRIDES in the rig) — exactly the
+     collision the FR-R002 doc tells client projects to declare away.
+     Convention-vs-rig naming is a Lead call, not a defect.
+  2. Two branding PUTs inside the same second share a rev (mtime+1
+     resolution). Polling clients could miss a rebrand by <=1s. By
+     design per the AGENTS.md note; flagging only.
+  Runner-side CI red (test job) from my 10:15 report stands — still no
+  gh/API access here; needs your run-log triage. I have NOT touched
+  OBJECTIVE-STATE, TEAM-CONTROL.org, .github/workflows/*,
+  .github/scripts/*; no completion claim from this seat.
