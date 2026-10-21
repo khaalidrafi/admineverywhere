@@ -20,6 +20,19 @@ The Releases section is a list of claims no check used to enforce:
     which one a doc meant would produce a confident verdict about the wrong file
     (measured: `settings.py:120` resolves to demo-backend/core/settings.py, which
     has 110 lines, while the doc means drf_spectacular's). Write the directory.
+  * inside the file is not yet ON TARGET. A bounds check sees a number that
+    lands somewhere, never that it lands where the prose says: DEVGUIDE cited
+    `scripts/csv_twin_diff.py:109` for `run()` while 109 was the closing
+    triple-quote of `CLIENT_SPEC` and `run()` started at 126 — green, and wrong
+    (DEVGUIDE *TENTH
+    law*, third door). So a citation whose own doc line also spells a `name()`
+    claim must have that name inside the cited range. The claim class is
+    deliberately narrow: broadening it to any backticked identifier on the same
+    line was measured to produce three FALSE reds — `StatusEnum` is *data*
+    produced at `drf_spectacular/hooks.py:91`, never spelled there, and
+    `demo-backend/shop/models.py:87` is cited for `Order` by lexical
+    containment, not by line text. A leg that fires on a correct citation is
+    worse than no leg: it teaches the reader to ignore it.
   * "no PEP 604 annotations in scripts/*.py" (DEVGUIDE FIFTH law, commit
     1ce3045) — a harness that dies at import on a Python < 3.10 box exits 1,
     which in this family means "the two writers DIVERGE". `ast.parse` cannot
@@ -66,6 +79,59 @@ CITE_LINE_ALLOWLIST = {
                                "message from a control run — a quoted string, not "
                                "a location claim",
 }
+
+# The same reverse bite for the TARGET leg, from BOTH ends (each measured as a
+# control, and both doors were found BY the controls — the first version of this
+# leg had only the second and passed rc 0 over the first):
+#  * an exemption whose citation token is no longer scanned is RED: the historical
+#    quote it exempted has been rewritten, and an unused exemption reads as
+#    "handled" while silently covering whatever is written into its place
+#    (measured: retargeting the quoted `:109` to `:248` left a hits-only leg
+#    GREEN, rc 0);
+#  * an exemption whose token is still scanned but whose cited range NOW carries
+#    the symbol is RED, because the prose is a true live pointer and needs no
+#    exemption.
+# The token (path + line), not the path, because one file can carry both the
+# historical quote and a live pointer: exempting `csv_twin_diff.py` wholesale
+# would exempt the `:248` witness claim too and delete the leg's whole subject.
+CITE_TARGET_ALLOWLIST = {
+    "scripts/csv_twin_diff.py:109": "AGENTS.md *Releases* and docs/DEVGUIDE.md "
+                                    "*TENTH law* third door both quote the PRE-FIX "
+                                    "file, whose line 109 was the closing "
+                                    "triple-quote of CLIENT_SPEC — a historical "
+                                    "claim about a number that was wrong, not a "
+                                    "pointer to today's code",
+}
+
+# The witness. This leg exists because of one measured wrong-target citation, so
+# that claim is pinned by identity: if the doc ever stops spelling `run()` about
+# this file, the leg silently loses the only case it was proven on and would stay
+# green over a reintroduced drift (DEVGUIDE *ELEVENTH law* — a comparison cannot
+# see its own coverage). Path + symbol, deliberately NOT the line number: the
+# number is the thing under test, and a witness keyed by it would fire on every
+# wrong-target mutation and mask the very verdict it is there to report
+# (measured: control 1 reported "lost witness" instead of "wrong target" until
+# the key dropped the number).
+REQUIRED_CLAIMS = {
+    ("scripts/csv_twin_diff.py", "run"): "the citation this leg was written for: "
+                                         "DEVGUIDE points at run() and must keep "
+                                         "pointing at run()",
+}
+
+# This leg's own population, pinned twice like every other harness in the
+# family: the literal below must agree with the number of symbol claims the scan
+# actually derived, or the harness does not understand its own input (a regex
+# that silently matched nothing would otherwise report a vacuous GREEN). Measured
+# the moment it was written: adding the AGENTS.md *Releases* paragraph, which
+# quotes the same historical `:109` claim, moved this literal 7 -> 8 — the pin
+# fires on its own doc edits, so a deliberate change is a two-place edit and an
+# accidental one is a RED.
+EXPECTED_CLAIMS = 8
+
+# `name()` spellings only. Control words that are commonly written with parens in
+# prose (`if (x)`, `for (let i)`) are not claims about the cited code.
+SYM_CLAIM = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]{2,})\s*\(\)")
+SYM_STOPWORDS = {"if", "for", "while", "switch", "catch", "return", "await"}
 
 # Third-party families whose citations CAN be verified when the package is
 # installed in the interpreter running this check (docs/independent-enums.md
@@ -226,12 +292,15 @@ def line_count(absolute):
 
 
 def citations():
-    """One scanner, two assertions: every backticked citation in CITE_DOCS.
+    """One scanner, three assertions: every backticked citation in CITE_DOCS.
 
-    Yields (path, lo, hi, token, where). The noise filters are the reason this
-    can be strict at all — `+00:00`, `:11435`, `127.0.0.1:8042` and `StatusEnum`
-    must never reach the checks, so a token only counts when its last segment
-    carries a plausible (non-numeric, short) extension.
+    Yields (path, lo, hi, token, where, line). The noise filters are the reason
+    this can be strict at all — `+00:00`, `:11435`, `127.0.0.1:8042` and
+    `StatusEnum` must never reach the checks, so a token only counts when its
+    last segment carries a plausible (non-numeric, short) extension. `line` is
+    the doc's own text because the target leg must read the claim the citation
+    travels with; a second scan of the docs would be a second opinion, not the
+    same one, and the two could drift apart.
     """
     for rel in CITE_DOCS:
         p = ROOT / rel
@@ -250,7 +319,7 @@ def citations():
                 if not ext or len(ext) > 6 or ext.isdigit():
                     continue
                 yield (path, m.group("lo"), m.group("hi"), tok.strip(),
-                       "%s:%d" % (rel, n))
+                       "%s:%d" % (rel, n), line)
 
 
 def leg_citations(log):
@@ -259,7 +328,7 @@ def leg_citations(log):
     for rel in CITE_DOCS:
         if (ROOT / rel).is_file():
             scanned.append(rel)
-    for path, lo, hi, tok, where in citations():
+    for path, lo, hi, tok, where, line in citations():
         if path.split("/")[0] not in TOP_DIRS:
             continue
         if not CITE_SHAPE.match(path):
@@ -284,6 +353,41 @@ def leg_citations(log):
         % (len(scanned), len(resolved), len(CITE_ALLOWLIST)))
 
 
+def resolve_target(path, files):
+    """Where a cited path actually IS, or why it cannot be known.
+
+    One resolver, shared by the bounds leg and the target leg on purpose: two
+    implementations of "which file did the doc mean" would be free to disagree,
+    and a leg that checks a number against a different file than the leg that
+    reads the number is a verdict about nothing.
+
+    Returns (absolute, kind, state, version) with kind in ("repo", "site", None),
+    state one of "ok", "bare", "ambiguous", "absent", "not-installed",
+    "not-in-package". A bare filename is NEVER guessed: the same basename exists
+    in this repo and in site-packages, so the resolver reports it and stops.
+    """
+    if (ROOT / path).is_file():
+        return str(ROOT / path), "repo", "ok", None
+    if "/" in path:
+        suffix = [f for f in files if f.endswith("/" + path)]
+        if len(suffix) == 1:
+            return str(ROOT / suffix[0]), "repo", "ok", None
+        cand, ver, state = site_file(path)
+        if state == "ok":
+            return cand, "site", "ok", ver
+        if state in ("not-installed", "not-in-package"):
+            return None, None, state, ver
+        return None, None, "ambiguous" if len(suffix) > 1 else "absent", ver
+    return None, None, "bare", None
+
+
+def cited_window(absolute, lo, hi):
+    """The text the citation points at: lo..hi, or lo..lo+2 for a single line."""
+    text = Path(absolute).read_text(errors="replace").split("\n")
+    upper = int(hi) if hi else int(lo) + 2
+    return "\n".join(text[max(0, int(lo) - 1):upper])
+
+
 def leg_citation_lines(log):
     """Every citation that names a line must land inside that file.
 
@@ -298,34 +402,19 @@ def leg_citation_lines(log):
     bare, unresolved, allowed = [], [], []
     past = []
     stale_allow = []
-    for path, lo, hi, tok, where in citations():
+    for path, lo, hi, tok, where, line in citations():
         if lo is None:
             continue
-        absolute, kind = None, None
-        if (ROOT / path).is_file():
-            absolute, kind = str(ROOT / path), "repo"
-        elif "/" in path:
-            suffix = [f for f in files if f.endswith("/" + path)]
-            if len(suffix) == 1:
-                absolute, kind = str(ROOT / suffix[0]), "repo"
-            else:
-                cand, ver, state = site_file(path)
-                if state == "ok":
-                    absolute, kind = cand, "site"
-                    site_versions.add("%s %s" % (path.split("/")[0], ver))
-                elif state in ("not-installed", "not-in-package"):
-                    unresolved.append((tok, where, state))
-                    continue
-                else:
-                    unresolved.append((tok, where, "ambiguous" if len(suffix) > 1
-                                       else "absent"))
-                    continue
-        else:
+        absolute, kind, state, ver = resolve_target(path, files)
+        if state == "bare":
             hits = [f for f in files if f.rsplit("/", 1)[-1] == path]
             bare.append((tok, where, len(hits)))
             continue
-        if absolute is None:
+        if state != "ok":
+            unresolved.append((tok, where, state))
             continue
+        if kind == "site":
+            site_versions.add("%s %s" % (path.split("/")[0], ver))
         total = line_count(absolute)
         upper = int(hi or lo)
         verified += 1
@@ -355,6 +444,124 @@ def leg_citation_lines(log):
         % (verified, repo_ok, site_ok,
            " against " + ", ".join(sorted(site_versions)) if site_versions else "",
            len(bare), len(unresolved), len(allowed)))
+
+
+def symbol_claims(files):
+    """Every (citation token, symbol) claim the docs make, with its resolution.
+
+    Yields dicts so each caller reads the same derived population — the count
+    check, the witness check and the verdict check must never scan differently.
+    A claim exists only when the citation and a `name()` spelling sit on the SAME
+    doc line: prose that names the symbol on the following wrapped line would
+    cross-attribute claims between two citations on that line, and a leg that
+    fires on a correct citation is worse than no leg.
+    """
+    for path, lo, hi, tok, where, line in citations():
+        if lo is None:
+            continue
+        syms = sorted({s for s in SYM_CLAIM.findall(line)
+                       if s not in SYM_STOPWORDS})
+        if not syms:
+            continue
+        absolute, kind, state, _ver = resolve_target(path, files)
+        for sym in syms:
+            yield {"path": path, "tok": tok, "where": where, "sym": sym,
+                   "lo": lo, "hi": hi, "absolute": absolute, "state": state}
+
+
+def leg_citation_targets(log):
+    """In range is not on target: a cited line must carry the symbol its prose names.
+
+    This is the class the bounds leg structurally cannot see — the number is
+    inside the file, so the citation is green while it sends the reader to
+    unrelated code. Measured on this repo's own DEVGUIDE, which cited
+    `scripts/csv_twin_diff.py:109` for `run()` while that line was the closing
+    triple-quote of `CLIENT_SPEC`.
+    """
+    files = repo_files()
+    claims = list(symbol_claims(files))
+    if len(claims) != EXPECTED_CLAIMS:
+        raise CannotRun("this leg does not understand its own input: %d symbol "
+                        "claim(s) scanned against a pinned population of %d — a "
+                        "claim that vanished silently would make the leg green "
+                        "over less coverage, so a deliberate change is a two-place "
+                        "edit (release_readiness.py:EXPECTED_CLAIMS)"
+                        % (len(claims), EXPECTED_CLAIMS))
+    seen = set()
+    claim_toks = set()
+    off, unverified, exempt, stale_exempt = [], [], [], []
+    for c in claims:
+        claim_toks.add(c["tok"])
+        if c["state"] != "ok":
+            unverified.append("%s %s (%s)" % (c["tok"], c["sym"], c["state"]))
+            continue
+        total = line_count(c["absolute"])
+        upper = int(c["hi"] or c["lo"])
+        if upper > total:
+            unverified.append("%s %s (past end of %d lines)"
+                              % (c["tok"], c["sym"], total))
+            continue
+        hits = c["sym"] in cited_window(c["absolute"], c["lo"], c["hi"])
+        if c["tok"] in CITE_TARGET_ALLOWLIST:
+            # An exempted claim never enters `seen`: the witness is the claim this
+            # leg PROVES, and a historical quote the leg refuses to judge cannot
+            # count as proof that the live pointer is still there (measured — a
+            # doc that dropped the live `run()` claim stayed GREEN rc 0 while the
+            # historical quote beside it still spelled the symbol).
+            if hits:
+                stale_exempt.append(
+                    "%s — %s: the cited range NOW carries `%s`, so the "
+                    "historical-quote exemption has outlived its reason and the "
+                    "prose reads as a live pointer (%s)"
+                    % (c["tok"], c["where"], c["sym"], CITE_TARGET_ALLOWLIST[c["tok"]]))
+            else:
+                exempt.append(c["tok"])
+            continue
+        seen.add((c["path"], c["sym"]))
+        if not hits:
+            found = [i + 1 for i, ln in
+                     enumerate(Path(c["absolute"]).read_text(errors="replace")
+                              .split("\n")) if c["sym"] in ln]
+            off.append("%s cites %s for `%s()`, but line %s of that file is not "
+                       "it — the name appears at %s (in-range, WRONG target: a "
+                       "bounds check cannot see this)"
+                       % (c["where"], c["tok"], c["sym"], c["lo"],
+                          ", ".join(str(n) for n in found[:4]) or "nowhere"))
+    # Every finding is reported, not just the first. A leg that raises on one door
+    # hides the others and has to be run again to see them (measured: with
+    # first-failure raises, the wrong-target verdict masked the lost witness, and
+    # the lost witness masked the wrong target, depending on which mutation the
+    # control applied) — so each door appends, and the leg's one verdict lists all.
+    findings = []
+    if off:
+        findings.append("%d citation(s) land inside the file but NOT on the symbol "
+                        "the prose names: %s"
+                        % (len(off), "; ".join(sorted(set(off)))))
+    lost = ["(%s, `%s()`) — %s" % (path, sym, REQUIRED_CLAIMS[(path, sym)])
+            for (path, sym) in sorted(REQUIRED_CLAIMS) if (path, sym) not in seen]
+    if lost:
+        findings.append("the target leg lost its witness — the claim it was proven "
+                        "on is no longer verifiably scanned, so the leg would stay "
+                        "green over a reintroduced drift: %s" % "; ".join(lost))
+    # An exemption that matches nothing is as dangerous as one that matches too
+    # much: it reads as "handled" while covering a claim that no longer exists,
+    # and would silently cover whatever is written into its place.
+    unused = sorted(set(CITE_TARGET_ALLOWLIST) - claim_toks)
+    if unused:
+        findings.append("target exemption(s) match no scanned claim — %s: the "
+                        "historical quote they exempted is gone, so the exemption "
+                        "covers nothing the leg reads (%s)"
+                        % (", ".join(unused),
+                           "; ".join(sorted(CITE_TARGET_ALLOWLIST[k] for k in unused))))
+    if stale_exempt:
+        findings.append("target exemption is stale — %s" % "; ".join(sorted(stale_exempt)))
+    if findings:
+        raise LegRed("; ".join(findings))
+    log("targets   %d symbol claim(s) over %d citation(s): every cited range "
+        "carries the name its own doc line spells (%d exempted as a historical "
+        "quote, %d not verifiable), population pinned against a literal of %d"
+        % (len(claims), len(set(c["tok"] for c in claims)), len(exempt),
+           len(unverified), EXPECTED_CLAIMS))
 
 
 def leg_scripts_ast(log):
@@ -411,6 +618,7 @@ def main(argv):
 
     legs = [(leg_carriers, (opts.expect, log)), (leg_tag, (log,)),
             (leg_citations, (log,)), (leg_citation_lines, (log,)),
+            (leg_citation_targets, (log,)),
             (leg_scripts_ast, (log,)), (leg_inputs, (log,))]
     failures = []
     for fn, args in legs:
@@ -426,9 +634,9 @@ def main(argv):
     if failures:
         print("RELEASE READINESS RED (%d leg(s))" % len(failures))
         return RED
-    print("RELEASE READINESS GREEN — carriers, tag, citations (paths and line "
-          "numbers), harness grammar and release inputs each asserted their own "
-          "fact")
+    print("RELEASE READINESS GREEN — carriers, tag, citations (paths, line "
+          "numbers and targets), harness grammar and release inputs each asserted "
+          "their own fact")
     return GREEN
 
 
