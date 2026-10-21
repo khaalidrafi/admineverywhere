@@ -103,7 +103,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (212 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (238 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (252 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -131,7 +131,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 238 vitest
+cd app && npm test                          # 252 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 212 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
@@ -192,6 +192,21 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `model.listPath`, NEVER from `apiUrl + model.id` (`apiUrl` is only the base
   origin; concatenating a bare segment produced `http://hostapi…` and silently
   broke the R-001 transition/history calls).
+- Lifecycle (FR-R001) is a TWO-SIDED proof, never a client-side assertion: the
+  registry (`statusTransitions.ts`, keyed by model id) declares the machine,
+  `normalizeOpenAPI` binds `model.transitionPath` only from a documented
+  `POST …/transition/` and `model.historyPath` only from a `get && !post`
+  `…/history/` — the same evidence law as `exportPath`/`mePath`. A machine the
+  server does not document is **refused**: `lifecycleProblem()` names the
+  reason, `lifecycleAvailable()` gates the DataTable buttons, `showHistory()`
+  reads only a discovered path, and `transitionRecord`/`fetchHistory` throw
+  rather than re-guess a URL that 404s. Proof is wire-level —
+  `app/src/lib/__tests__/lifecycleMount.test.ts` mounts the real page against
+  `fixtures/openapi.json` (recaptured from the running rig's `/api/schema/`, so
+  it carries the endpoints the renderer calls) and asserts the POST body, the
+  URL the client believed in and a 409 `reason` surfacing verbatim. Recapture
+  that fixture whenever the rig gains an endpoint. Contract + checklist:
+  `docs/order-lifecycle.md`.
 - Kanban (FR-R004) groups a model by a **declared** axis in
   `app/src/lib/kanban.ts` (`kanbanAxes`, keyed by model id like
   `statusTransitions`), never by "the field named status" or "the first enum
@@ -200,7 +215,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   axis with no R-001 entry, or a `patch` axis on a lifecycle field, or a
   non-enum field) is **refused** — no board, with `axisProblem()` naming the
   reason — rather than rendered optimistically. A drop on a lifecycle axis
-  fires `POST <listPath><id>/transition/` only for a state the registry allows;
+  fires `POST <model.transitionPath>` only for a state the registry allows;
   a drop on a free enum is `patchRecord` with a **one-key body** (never a
   whole-row PUT). Drag-and-drop is mouse-only by nature, so every column a drop
   would accept is also offered by a per-card "Move to" `<select>` — keyboard and
@@ -493,7 +508,7 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    (TELEGRAM_OWNER_ID secret); other chats are dropped — impersonation
    impossible.
 7. LANDING GATE: `python -m pytest plugin/tests -p no:cacheprovider -q`
-   (212 green baseline as of FR-R007-LIVE; vitest 238) + `demo-backend manage.py check` +
+   (212 green baseline as of FR-R007-LIVE; vitest 252 as of FR-R001-FE) + `demo-backend manage.py check` +
    `makemigrations --check`. Red work never lands.
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
