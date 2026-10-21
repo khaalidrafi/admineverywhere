@@ -78,3 +78,89 @@ describe("localStorage operations", () => {
     expect(loaded).toBeNull();
   });
 });
+
+/** The Tauri branches (secrets.ts:32-35, 42-48, 55-60) ran ZERO tests until
+ *  now: the web fallback covered 3 of 4 paths and the coverage sweep named
+ *  the rest. Those lines are the packaged product's whole secret store, and
+ *  the invoke() argument names are a BOUNDARY contract with the Rust side —
+ *  src-tauri/src/lib.rs:10 keeps `DEFAULT_SERVICE: "admincraft"` and the
+ *  commands take (service, key, value). A renamed or dropped argument fails
+ *  silently on the Rust signature or buries the key under a different
+ *  keychain bucket, invisible in web mode. Each test re-imports the module
+ *  fresh so `webWarned` and the dynamic @tauri-apps/api/core mock cannot leak
+ *  between cases or into the web-fallback describes above.
+ */
+describe("Tauri keyring branches — the invoke() boundary contract", () => {
+  const invoke = vi.fn();
+
+  beforeEach(() => {
+    vi.resetModules();
+    invoke.mockReset();
+    vi.doMock("@tauri-apps/api/core", () => ({ invoke }));
+    (globalThis as any).window = { __TAURI_INTERNALS__: {} };
+  });
+
+  afterEach(() => {
+    vi.doUnmock("@tauri-apps/api/core");
+    (globalThis as any).window = undefined;
+  });
+
+  const fresh = () => import("../secrets");
+
+  it("save_secret rides service/key/value with the shipped SERVICE name", async () => {
+    invoke.mockResolvedValue(undefined);
+    const { saveSecret, SERVICE } = await fresh();
+    await saveSecret("ai.apiKey", "sk-test");
+    expect(SERVICE).toBe("admincraft");
+    expect(invoke).toHaveBeenCalledTimes(1);
+    expect(invoke.mock.calls[0]).toEqual([
+      "save_secret",
+      { service: "admincraft", key: "ai.apiKey", value: "sk-test" },
+    ]);
+    // the Tauri path never touches localStorage
+    expect(localStorage.getItem("dad.secret.ai.apiKey")).toBeNull();
+  });
+
+  it("load_secret returns the value and reads nothing when the keychain throws", async () => {
+    invoke.mockResolvedValue("sk-from-keychain");
+    const { loadSecret } = await fresh();
+    expect(await loadSecret("ai.apiKey")).toBe("sk-from-keychain");
+    expect(invoke.mock.calls[0]).toEqual([
+      "load_secret",
+      { service: "admincraft", key: "ai.apiKey" },
+    ]);
+
+    // Rust answers NoEntry as Ok(None); a keychain that is unavailable at all
+    // arrives as a rejected invoke — both must degrade to null, never a throw
+    // that would kill loadAiSettings and leave the chat panel unconfigured.
+    invoke.mockRejectedValue(new Error("keychain unavailable"));
+    expect(await loadSecret("ai.apiKey")).toBeNull();
+  });
+
+  it("delete_secret swallows an already-gone entry and still returns", async () => {
+    invoke.mockResolvedValue(undefined);
+    const { deleteSecret } = await fresh();
+    await deleteSecret("ai.apiKey");
+    expect(invoke.mock.calls[0]).toEqual([
+      "delete_secret",
+      { service: "admincraft", key: "ai.apiKey" },
+    ]);
+
+    invoke.mockRejectedValue(new Error("NoEntry"));
+    await expect(deleteSecret("ai.apiKey")).resolves.toBeUndefined();
+    expect(invoke).toHaveBeenCalledTimes(2);
+  });
+
+  it("the web-fallback warning stays a one-time warning across all three ops", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    (globalThis as any).window = {};
+    vi.resetModules();
+    vi.doUnmock("@tauri-apps/api/core");
+    const { saveSecret, loadSecret, deleteSecret } = await fresh();
+    await saveSecret("k", "v");
+    await loadSecret("k");
+    await deleteSecret("k");
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
+  });
+});
