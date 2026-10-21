@@ -1862,3 +1862,77 @@
   `python -m pip install -e plugin --no-deps -q` then `cd app && npm ci`. Do NOT
   use `PYTHONPATH=/workspace/plugin/src` — measured insufficient (5 failed /
   276 passed / 4 errors).
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 13:11 UTC]
+:END:
+  RESULT: DONE — the one surviving mutant my own 12:59Z report disclosed on
+  FR R-004 is now caught by a test, so the kanban item's evidence row no longer
+  carries a named hole.
+  WHY THIS SEGMENT: board exhausted again (zero TODO/ONGOING/WAIT headlines,
+  `grep -nE '^\*+ .*(TODO|ONGOING|WAIT)' agent-team/TODOS.org` no hits) and no
+  unanswered @platform-engineer ping in the tail — the newest entries are still
+  my own thread, and the 12:42Z harness :request: has no verdict yet.
+  FINDING (measured, not inferred): the mutant survived because through
+  ModelPage an illegal drop is refused TWICE — KanbanBoard.drop()'s own
+  `!allowed` guard (KanbanBoard.svelte:77) and `planMove`
+  (ModelPage.svelte:236) — so a wire-level page test cannot tell which gate
+  fired; removing the first leaves all five tests green. My 12:59Z wording
+  ("gating lives upstream in the drag-time canDrop") was half right: canDrop
+  feeds the guard, but planMove is what actually absorbed the mutation on the
+  wire.
+  WHAT LANDED (branch ai/turn-20261021-1305, commit a85c15c):
+  - app/src/lib/__tests__/kanbanMount.test.ts — new describe mounting
+    KanbanBoard ALONE with a spy onmove (3 tests): forbidden column + active
+    drag -> onmove never called (the catcher); legal column -> exactly one
+    call with (row 7, "paid") and a repeat drop inert (drop() endDrags);
+    dragover preventDefaults only on allowed columns. Existing five tests and
+    every assertion unchanged; KanbanBoard.svelte byte-identical to HEAD.
+  - MUTANT RUN LIVE: sed :77 to `if (!row) return;` -> "1 failed | 7 passed"
+    (test 1 fails by name), guard restored verbatim and re-grepped before the
+    commit. The disclosure line is now a negative control.
+  - docs/DEVGUIDE.md — counts 291 -> 294 (:116, :144) + kanban contract row
+    names the isolated-board proof and why the page mount could not pin :77.
+  MEASURED at 7de79fd (landing gate): vitest 294/294 over 21 files;
+  `npx tsc --noEmit` exit 0; pytest 285/285 (-p no:cacheprovider, 19.72 s);
+  manage.py check "no issues (0 silenced)"; makemigrations --check "No changes
+  detected".
+  NEXT / WHAT REMAINS: (1) the browser/Tauri "nobody clicked it" rows stay
+  yours/Owner's — no window on this box, happy-dom only. (2) Harness: the
+  12:42Z :request: one-liner is still unlanded — for the THIRD consecutive
+  segment this seat had to self-install (`python -m pip install -e plugin
+  --no-deps -q` + `cd app && npm ci`) before the gate could run. (3) BOARD: no
+  state flipped, nothing ONGOING, DONE stays your gate, OBJECTIVE-STATE
+  untouched, no completion claim.
+  Lark report SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's env (checked,
+  noted in the LOGBOOK per instruction 8).
+  SECRET LAW held: no credential value read, echoed or committed. No lead-owned
+  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/* — read/cited only; KanbanBoard.svelte restored via git
+  checkout, never committed).
+
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 13:11 UTC]
+:END:
+  ONE GENERALIZATION from killing my own surviving mutant: when TWO layers
+  enforce the same rule (a component guard + a pure planner downstream), a
+  wire-level test through the outer layer cannot pin the inner one — remove
+  the inner guard and every assertion still passes, because the outer layer
+  absorbs it. If you want both guards proven, mount the inner component alone
+  with a spy prop and judge it on its own contract (pattern: the new second
+  describe in app/src/lib/__tests__/kanbanMount.test.ts — KanbanBoard with a
+  spy onmove, ModelPage untouched). And the standing rule from 12:59Z again,
+  now for the second time: a mutant you merely SUSPECT survived is worth one
+  `sed` + one vitest run — it costs seconds and turns a hedge into evidence.
+  Suite bar where I stand: vitest 294/294, tsc exit 0, pytest 285/285,
+  check + makemigrations --check clean. Keep `npx tsc --noEmit` exit 0 and
+  both counts honest in your own segments. No file outside the test +
+  DEVGUIDE + agent-team/ touched; no lead-owned file edited; no secret value
+  read or echoed.
