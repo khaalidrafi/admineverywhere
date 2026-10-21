@@ -19,7 +19,11 @@ seat's work being red, both measured on real turns of this repo:
   * Exit code 0 is not the claim. ``manage.py check`` answers 0 for a settings
     module that never booted the rig, and ``-q`` prints a summary line this
     script parses rather than trusts, so every leg asserts the phrase or the
-    count it is supposed to produce.
+    count it is supposed to produce — and since the population pin below, the
+    count is compared against a literal, not merely printed. That pin exists
+    because the sentence was a lie until it was measured: one test file removed
+    made this gate answer ``297 passed`` and GATE GREEN, rc 0 (measured on the
+    delivered tree; DEVGUIDE ELEVENTH law).
 
 Exit codes follow docs/DEVGUIDE.md FIFTH law: 0 = gate green, 1 = a gate leg
 is genuinely RED, 2 = the gate could not be RUN (missing interpreter deps,
@@ -44,6 +48,24 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 GREEN, RED, CANNOT = 0, 1, 2
+
+# POPULATION PIN (DEVGUIDE ELEVENTH law). A leg that prints a count must be
+# graded against the count it OWES, not against "a count was printed". Measured
+# pre-fix on this very file, on the delivered tree: one pytest test file removed
+# answered `pytest 297 passed` and GATE GREEN rc 0; one vitest file removed
+# answered 411 tests over 30 files, rc 0. Neither writer was asked about the
+# coverage that had vanished — the same hole the three twin harnesses were fixed
+# for, surviving in the one parent gate every merge replays, while the docstring
+# above already promised "the count it is supposed to produce".
+# When a suite legitimately changes, bump these literals IN THE SAME COMMIT as
+# the diff — the ritual, not an obstacle: these numbers are also quoted in
+# AGENTS.md and the CI header, and an unpinned drift silently rewrites every
+# report that cites them. The direction of the mismatch is named in the verdict:
+# shrank = coverage lost, grew = the pin went stale, both must be red until the
+# tree and its claimed population agree.
+EXPECTED_PYTEST = 299
+EXPECTED_VITEST = 416
+EXPECTED_VITEST_FILES = 31
 
 
 class CannotRun(Exception):
@@ -87,6 +109,24 @@ def leg_env(py, log):
         % (py, proc.stdout.strip()))
 
 
+def population(leg, got, want, carrier):
+    """Grade a printed count against the count the leg owes (ELEVENTH law)."""
+    got = int(got)
+    if got == want:
+        return
+    if got < want:
+        verdict = "SHRANK — coverage lost: printed %s, owes %s (delta %d)"
+        remedy = ("restore the vanished tests, or bump %s in scripts/landing_gate.py "
+                  "in the SAME commit as a deliberate deletion" % carrier)
+    else:
+        verdict = "GREW — the pin is stale: printed %s, owes %s (delta %d)"
+        remedy = ("bump %s in scripts/landing_gate.py in the SAME commit as the "
+                  "added tests" % carrier)
+    raise LegRed("%s: %s. %s. A printed count with no expectation attached is "
+                 "green over whatever coverage is left."
+                 % (leg, verdict % (got, want, abs(got - want)), remedy))
+
+
 def leg_pytest(py, log):
     proc = launch([py, "-m", "pytest", "plugin/tests",
                    "-p", "no:cacheprovider", "-q"], ROOT)
@@ -106,6 +146,7 @@ def leg_pytest(py, log):
     if collected and int(collected.group(1)) < int(passed.group(1)):
         raise LegRed("pytest collected %s but passed %s"
                      % (collected.group(1), passed.group(1)))
+    population("pytest", passed.group(1), EXPECTED_PYTEST, "EXPECTED_PYTEST")
     log("pytest     %s passed (plugin/tests)" % passed.group(1))
 
 
@@ -133,6 +174,9 @@ def leg_vitest(log):
     if not tests or not files:
         raise LegRed("vitest rc 0 but its passed-counts are not in the summary "
                      "- the leg did not run what it claims: %s" % tail(proc.stdout))
+    population("vitest tests", tests.group(1), EXPECTED_VITEST, "EXPECTED_VITEST")
+    population("vitest files", files.group(1), EXPECTED_VITEST_FILES,
+               "EXPECTED_VITEST_FILES")
     log("vitest     %s passed (%s files)" % (tests.group(1), files.group(1)))
 
 
