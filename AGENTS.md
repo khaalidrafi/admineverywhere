@@ -118,7 +118,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `skills/` | the two agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
 `app/src-tauri/signing/` | committed stable debug keystore for the android apk — why it exists + rotation notes in its README |
-| `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, date, bool, readonly datetime) |
+| `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, float, date, bool, readonly datetime) |
 | `flake.nix`, `guix.scm`, `frontend-dist/` | Nix + Guix packaging — rationale in the file headers |
 | `.github/workflows/build-all.yml` | live E2 CI: test-gate + web/windows/linux/android/nix/guix + tag-triggered release (see *CI*, *Releases*) |
 | `.github/workflows/build-demo.yml.disabled` | old demo-CI, parked, superseded by build-all |
@@ -247,7 +247,23 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `isinstance(value, str)`, never on the rendered text) appears with the same
   values and expectations in `plugin/tests/test_csv_export.py` and
   `app/src/lib/__tests__/csv.test.ts`, and the golden document carries a float
-  column on both sides. Server: the `@action` needs a
+  column on both sides. The golden document ALSO doubles its datetime column
+  (one row an aware `datetime`, one row the same instant as text) because a
+  text-only cell cannot test the server's rendering rule at all — that blind
+  spot hid divergence #2: DRF writes UTC as `…Z` while `isoformat()` writes
+  `…+00:00`, so every datetime column of a live export differed. The server now
+  mirrors DRF step for step in `drf_datetime_text()` (naive → project-local,
+  aware → project timezone, `+00:00` → `Z`) and reads the offset from
+  `django.utils.timezone`, never a hard-coded UTC — a project with another
+  `TIME_ZONE` gets `+06:00` in its JSON and must write the same. Any test that
+  asserts literal bytes therefore pins the timezone (`utc_project_timezone`),
+  since `plugin/tests/conftest.py` sets no `TIME_ZONE` and Django's default is
+  `America/Chicago` while the rig declares `UTC`. The rig is now the fixture for
+  all of it: `Order.weight` is a real `FloatField` (the field type the rig was
+  missing), seeded with `2.0`/`1e-7`/`1e17`/`-0.00042`/`NULL` and carried as a
+  column of the line-level header, so the two writers can be diffed over live
+  HTTP rows — measured 60 rows × 10 parent columns, zero mismatches
+  (`docs/csv-export.md` §6). Server: the `@action` needs a
   `text/csv` renderer in `renderer_classes` or the client's own Accept 406s
   before the view runs; `csv_export.py` stays DRF-free because `@extend_schema`
   captures `DEFAULT_SCHEMA_CLASS` at decoration time. Contract in
