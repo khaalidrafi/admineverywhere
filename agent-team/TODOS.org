@@ -815,6 +815,23 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 19:43 UTC] :: THIRD CONTROL FOR THE CSV HARNESS —
+  its OWN exit-code contract was leaky (branch ai/turn-20261021-1933; state
+  untouched, :DELIVERED: rows above unchanged). While writing the brand twin
+  harness (see COOL-PREVIEW) I ran the sibling under a stripped PATH and it died
+  with a Python traceback and EXIT 1 — the code the script documents as "the two
+  writers DIVERGE". Measured:
+  `PATH=/nonexistent python3 scripts/csv_twin_diff.py` → FileNotFoundError on
+  `npx`, exit 1. A seat reading only the number files a divergence that never
+  happened, which is precisely the false-POSITIVE class the FIFTH law exists to
+  kill. Fix: `run()` (scripts/csv_twin_diff.py:109) catches OSError into a
+  synthetic rc 127 so the caller reports exit 2 (rig not runnable); the same guard
+  went into scripts/brand_twin_diff.py `run_client_probe()`. Re-measured:
+  broken PATH → "client probe failed: cannot launch 'npx'" + exit 2; real run →
+  BYTE-IDENTICAL, 3070 cells / 56287 B, exit 0. DEVGUIDE FIFTH law gained the
+  control. Product writers: ZERO changes. Landing gate green at this HEAD: pytest
+  299/299, manage.py check 0 issues, makemigrations --check no changes, vitest
+  416/416, tsc exit 0.
 - Note taken on [2026-10-21 Wed 19:40 UTC] :: RE-VERIFIED THE TWIN CONTRACT and
   made its proof RE-RUNNABLE (branch ai/turn-20261021-1918; state untouched —
   PENDING stands, :DELIVERED: evidence above unchanged; DONE is the Lead's gate).
@@ -1641,6 +1658,63 @@ superuser, so a live smoke could never show a gated surface hidden.
 
 ** PENDING COOL-PREVIEW — live rebrand preview (apply/revert pure module) :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 19:43 UTC] :: THE BRAND CSS TWIN CLAIM BECAME A
+  TOOL (branch ai/turn-20261021-1933; state untouched — PENDING stands, the two
+  :DELIVERED: rows above unchanged; DONE is the Lead's gate). Board was exhausted
+  and re-COUNTED rather than inherited: 14 PENDING headlines, zero TODO/ONGOING/WAIT,
+  and zero PENDING rows without a :DELIVERED: between their own headline and the
+  next (machine-checked over agent-team/TODOS.org this segment, not assumed from
+  the previous seat's tally). The chat tail held no unanswered
+  @platform-engineer ping, so I applied last segment's harness law (19:29Z @all
+  note: "a proof you cannot re-run is a proof that expires") to the OTHER
+  cross-language twin pair AGENTS.md promises: `brandToCss()`
+  (app/src/lib/branding.ts:37) mirrors `render_css()`
+  (plugin/src/admincraft/branding.py:196), and `injectBrandCss()` writes "a
+  <style> with the same --brand-* variables". Both were prose; neither had ever
+  been diffed across the language boundary in a command anyone could re-run.
+  WHAT LANDED: scripts/brand_twin_diff.py — ONE generated matrix (350 brands:
+  sentinel rows one axis at a time + 300 random) filtered through the SERVER's
+  own `validate_brand()`, then fed through both writers for real (runtime side
+  runs the actual branding.ts under a per-run vitest probe spec, unlinked in the
+  same breath — same no-suite-pollution trick as the CSV harness; the plugin is
+  read from plugin/src so NO venv is needed) and compared as bytes. Three checks,
+  because there are two writers AND the artifact that bridges them: (1) twins over
+  the 300 accepted brands, (2) shipped app/public/brand.css == render_css of the
+  brand.json beside it, (3) brandToCss of that same brand == the bundle — i.e.
+  first paint and the boot re-inject are the same CSS, the FOUC the static bundle
+  exists to prevent, which NO per-side unit test can see because each writer is
+  green against its own fixture.
+  NEW HAZARD CLASS vs the CSV twins (DEVGUIDE SIXTH harness law): here the two
+  documents differ BY DESIGN (build-time banner "GENERATED … do not edit" vs
+  runtime "injected"), so a raw byte compare prints a guaranteed false DIVERGENT.
+  The compare therefore starts at the first `@import`, and both banners are
+  PRINTED rather than hidden — normalization justified by a documented intent
+  difference, not chosen to make the diff pass.
+  MEASURED, not reasoned about: a single "Inter" row proves nothing on the font
+  axis, because `font.replace(" ","+")` and
+  `encodeURIComponent(f).replace(/%20/g,"+")` agree for EVERY name the schema
+  allows — mutating the server to write `%20` diverged on 146 of 300 accepted
+  brands, exactly the multi-word ones, so the double-space / 60-char / digit
+  sentinels are what make the harness able to see that refactor. Also learned:
+  `"\tTabbed Font\t"` is in the ACCEPTED set (SAFE_FONT_RE matches after
+  `.strip()`, branding.py:190) and both writers strip to the same output — a
+  brand that looks illegal is not automatically a divergence, and only running it
+  could say.
+  NEGATIVE CONTROLS, all three bit and all three product files restored
+  byte-identical (`git status` clean on those paths): client drops one @import
+  weight → TWIN DIVERGENCE 300/300 with line 0 quoted per side; server writes
+  %20 → 146/300; edit the shipped `--brand-radius` → BUNDLE STALE, line 8.
+  EVIDENCE: green = `BYTE-IDENTICAL — 300 accepted brands; twins agree under the
+  @import marker; bundle == render_css == brandToCss`, exit 0; unrunnable rig →
+  exit 2 (guard measured under a stripped PATH); 50 refused brands counted, not
+  dropped. Landing gate at this HEAD: pytest 299/299 (-p no:cacheprovider),
+  manage.py check "no issues (0 silenced)", makemigrations --check "No changes
+  detected", vitest 416/416 (31 files, NODE_OPTIONS=1024 --maxWorkers=1), tsc
+  --noEmit exit 0. Docs: AGENTS.md runtime-branding bullet + Commands + the CSV
+  twin bullet (cross-ref), DEVGUIDE SIXTH harness law + Commands. Product code:
+  ZERO changes (the only code edit this segment is the CSV harness's exit-code
+  guard — see FR R-005's 19:45Z note). ROLE_LARK_WEBHOOK empty in this seat's env
+  (checked with [ -z ], not assumed) → Lark report skipped, noted in chat.
 CLOCK: [2026-10-18 Sun 02:30]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 02:30]
 - Note taken on [2026-10-17 Sat 20:09] :: COOL-PREVIEW complete. Branch ai/cool-preview @ 2a7746d, 1 commit ahead of origin/ai/main (7c58651). Implementation:
