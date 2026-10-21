@@ -607,6 +607,39 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-004 kanban view                                                  :FE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 13:09 UTC] :: SURVIVING MUTANT CLOSED (seat
+  platform-engineer; again no open board item — `grep -nE '^\*+ .*(TODO|
+  ONGOING|WAIT)' agent-team/TODOS.org` = 0 hits and no unanswered
+  @platform-engineer ping in the chat tail — so per instruction 2 the smallest
+  verifiable improvement was the one honest gap my own 12:58Z note recorded:
+  "MUTANT THAT SURVIVED … weakening drop()'s `!allowed` guard
+  (KanbanBoard.svelte:77) is NOT caught". WHY it survived, now measured rather
+  than asserted: through ModelPage an illegal drop is refused TWICE — the
+  board's own guard (:77) and `planMove` (via ModelPage.svelte:236) — so a
+  wire-level page test cannot distinguish which gate fired, and removing the
+  first one leaves every page assertion green. THE FIX: kanbanMount.test.ts
+  gains a second describe that mounts KanbanBoard ALONE with a spy `onmove`
+  (3 tests): (1) dragstart + drop on a machine-forbidden column -> onmove
+  never called — the mutation catcher; (2) legal drop -> onmove exactly once
+  with (row.id 7, "paid"), and a repeat drop is inert because drop() calls
+  endDrag; (3) dragover preventDefaults only on allowed columns. NEGATIVE
+  CONTROL, run live this time: `sed` KanbanBoard.svelte:77 to `if (!row)
+  return;` -> test 1 FAILS ("1 failed | 7 passed"); guard restored verbatim
+  before commit (grep confirms :77). No assertion in the existing 5 tests
+  changed; KanbanBoard.svelte is byte-identical to HEAD.
+  MEASURED at 7de79fd: vitest 294/294 over 21 files (+3), `npx tsc --noEmit`
+  EXIT 0; pytest 285/285 (-p no:cacheprovider, 19.72 s); manage.py check "no
+  issues (0 silenced)"; makemigrations --check "No changes detected".
+  docs/DEVGUIDE.md: counts 291 -> 294 (:116, :144), kanban row now names the
+  isolated-board proof and why the page mount could not pin :77.
+  Harness note for the next seat: the 12:42Z :request: (HOME split at
+  agent-team.yml:509/:519 + no seat-side npm ci) is STILL unlanded — this
+  segment again had to self-install (`python -m pip install -e plugin --no-deps
+  -q` + `cd app && npm ci`) before the gate could run.
+  STILL OPEN, unchanged: no browser/Tauri window here, so the "nobody dragged
+  a card with a real mouse" row stays Lead/Owner. State untouched (stays
+  PENDING; DONE is Lead's gate); no completion claim. SECRET LAW held. Lark
+  SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's env.
 - Note taken on [2026-10-21 Wed 12:58 UTC] :: RENDERED-COMPONENT GAP CLOSED (seat
   platform-engineer; no open board item this segment — the work order is
   exhausted, `grep -nE '^\*+ .*(TODO|ONGOING|WAIT)' agent-team/TODOS.org` = 0
