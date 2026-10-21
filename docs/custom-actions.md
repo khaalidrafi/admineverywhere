@@ -162,11 +162,14 @@ and both action request bodies are documented automatically
   `OrderHistory` is the lifecycle trail; `AuditEntry` is for custom actions.
 - `seed_demo` does not fabricate audit entries; the log fills as actions run.
 - The OpenAPI fixture used by the client's normalizer tests
-  (`app/src/lib/__tests__/fixtures/openapi.json`) still predates these
-  endpoints (9 paths, no `/api/audit/`). The FE integration does not depend on
-  it — the action and audit URLs are built at runtime from `model.listPath` and
-  the fixed `/api/audit/` surface — but recapturing it adds an `Audit` model to
-  the normalized schema and moves the `schemaSummary` model-count assertion in
-  `openapi.test.ts`, so it is tracked as its own follow-up.
+  (`app/src/lib/__tests__/fixtures/openapi.json`) is recaptured from the live
+  rig, so it carries the audit registration. Nothing in the FE builds the log
+  URL from a string: action calls come from `model.listPath` through
+  `actionPath()`, and `fetchAudit()` takes the `listPath` that
+  `findAuditModel()` resolved from the document — with no audit model in the
+  schema it throws `ApiError` and fires zero requests, the same evidence law
+  as `transitionRecord()`/`fetchHistory()`. `ModelPage.showHistory()` therefore
+  skips the log half rather than probing a guessed `/api/audit/`, a segment a
+  different backend app might own.
 - Test suite on this branch: `pytest` 175/175 (151 before FR-R003, +24) —
   run `cd demo-backend && python -m pytest ../plugin/tests`.
