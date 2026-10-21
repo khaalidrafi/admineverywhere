@@ -933,6 +933,32 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   twins still agree, over less than the proof claims — a proof regression, not a tooling
   gap), while a matrix that no longer matches its own pin is `CANNOT RUN` (the harness
   does not understand its own input, so it has no verdict to give).
+  THE LAW'S AUTHOR WAS THE LAST UNPINNED LEG, AND THIS SEGMENT MEASURED IT: the three
+  twins gained population pins, but the PARENT gate that every merge replays —
+  `scripts/landing_gate.py` — still graded its count legs on "a count was printed",
+  while its own docstring promised each leg asserts "the count it is supposed to
+  produce". Measured on the delivered tree, each control restored byte-identical:
+  one 39-line pytest file removed (2 tests) answered `pytest 297 passed` and GATE
+  GREEN, rc 0; one vitest file removed answered 411 tests over 30 files, rc 0. The
+  merge gate was green over vanished coverage — the exact sentence this law exists to
+  forbid, hidden in the file that enforces it, because a law written about harnesses
+  is not automatically a law about the law's own file.
+  THE FIX: `EXPECTED_PYTEST` / `EXPECTED_VITEST` / `EXPECTED_VITEST_FILES`
+  (`scripts/landing_gate.py:66`) are literals, one shared grader
+  (`scripts/landing_gate.py:112` `population()`), and a mismatch is RED that names the
+  direction: SHRANK = coverage lost (restore the tests, or bump the literal in the
+  same commit as a deliberate deletion); GREW = the pin is stale (bump it in the same
+  commit as the added tests). Unlike the twins there is no CANNOT RUN tier here: the
+  count is parsed from the runner's own summary, so any disagreement is a claim the
+  tree is not making about itself, which is a verdict, not a launch failure.
+  CONTROLS: honest run rc 0 at 299/416/31; deleted pytest file → rc 1 `SHRANK —
+  coverage lost: printed 297, owes 299 (delta 2)`; a 1-test file ADDED → rc 1 `GREW —
+  the pin is stale: printed 300, owes 299 (delta 1)`; deleted vitest file → rc 1
+  `vitest tests: SHRANK … printed 411, owes 416`. The grew-direction control matters
+  as much as the shrank one: a pin that only fires downward is a floor, and a floor
+  still lets the cited counts in AGENTS.md and the CI header drift upward unmarked.
+  SEAT RULE, extending the law to its author: when you write a population law for a
+  harness family, the next file to measure is the one that runs the family.
 
 - **TWELFTH harness law — a verdict leg that reads the TRANSPORT, not the VERDICT, is
   the EIGHTH law running backwards.** EIGHTH says `exit 0` alone never proved anything;
