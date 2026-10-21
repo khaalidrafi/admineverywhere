@@ -142,6 +142,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
 cd app && npm test                          # 283 vitest
+cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 285 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
@@ -167,6 +168,14 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   - Decimals arrive as `type: string, format: decimal` — coerced to number.
   - Enum choices are hoisted to `$ref` components;
     `COMPONENT_SPLIT_REQUEST` yields `<Model>Request` schemas for forms.
+- The client typechecks CLEAN: `cd app && npx tsc --noEmit` exits 0 (it was 7
+  errors until 2026-10-21 — one in shipped code, `listRecords` returned
+  `Promise<Page>` while `types.ts:92` declares `Page<T>` with no default, so
+  every `build`/`vitest` run silently stripped an unmet type). `vite build`
+  uses esbuild and does NOT typecheck, so nothing gated it; keep the command
+  green by hand. Edge-case tests that pass values the contract forbids but the
+  runtime tolerates (`sanitizeFont` takes `string | undefined`) ride one
+  explicit `as unknown as Brand` cast rather than a widened type.
 - Demo-rig token route is `POST /api/auth/token/` (`core/urls.py:10`), **not**
   Django's default `/api-token-auth/` — that 404s here. `plugin/tests/test_demo_boot.py`
   boots the real `core.settings` in a subprocess, runs Django's system checks and

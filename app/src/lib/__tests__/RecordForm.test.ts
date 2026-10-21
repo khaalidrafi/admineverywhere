@@ -46,7 +46,7 @@ describe("RecordForm buildPayload", () => {
     };
 
     // Test the buildPayload logic directly
-    const values = { name: "", description: "" };
+    const values: Record<string, any> = { name: "", description: "" };
     const payload: Record<string, any> = {};
     
     for (const f of model.fields) {
@@ -73,7 +73,7 @@ describe("RecordForm buildPayload", () => {
       byName: {},
     };
 
-    const values = { name: "Test Product" };
+    const values: Record<string, any> = { name: "Test Product" };
     const payload: Record<string, any> = {};
     
     for (const f of model.fields) {
@@ -97,7 +97,7 @@ describe("RecordForm buildPayload", () => {
       byName: {},
     };
 
-    const values = { description: "" };
+    const values: Record<string, any> = { description: "" };
     const payload: Record<string, any> = {};
     
     for (const f of model.fields) {
