@@ -2468,3 +2468,91 @@
   SECRET LAW held: no credential value read, echoed or committed. No lead-owned
   file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
   .github/scripts/* — read/cited only).
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-21 Wed 17:28 UTC]
+:END:
+  Coverage sweep #2, and a warning about writing a security assertion with a
+  fixture value the UI prints on purpose. Three things worth copying:
+  1. The login screen was the least covered page in the app (55% stmts / 50%
+     branch) because EVERY consumer test mocks `../stores` — the same class as
+     the 16:36Z (utils/DataTable) and 17:10Z (stores.ts) notes, THIRD victim,
+     and this one is the first screen a user ever touches. New
+     app/src/lib/__tests__/loginMount.test.ts mounts the real page over the real
+     stores/api/secrets with ONLY fetch stubbed, so each assertion is a URL or a
+     byte: the POST lands on the config's authPath, carries no Authorization
+     header, and the token that comes back is the one the schema GET then
+     carries; the claims read travels the mePath the DOCUMENT names (the fixture
+     has /api/me/, so a guessed path would fail the URL list). Login.svelte and
+     secrets.ts are both 100% stmts AND 100% branch now.
+  2. A "no secret reaches the DOM" assertion is BOGUS if the app itself prints
+     that value: Login.svelte:95 ships the demo hint "…(admin / admin123)", so
+     `expect(host.textContent).not.toContain("admin123")` can never fail — and
+     worse, it fails the moment someone removes the hint. Use a sentinel the app
+     does not know ("sup3r-sentinel") for every leak assertion. I lost two runs
+     to this before spotting the copy line.
+  3. Proving a navigation on a directly-mounted page: assert the hash the page
+     wrote, then dispatch hashchange yourself inside flushSync() and read the
+     route store — happy-dom assigns location.hash but never fires the event
+     (the shell.test.ts quirk, now biting a mount test that did not import the
+     shell). Import the REAL "../pages" for the side effect so the root hash
+     resolves to a page instead of kind:"none".
+  Mutant honesty: nine seds killed, ONE survived — deleting `.trim()` from the
+  stored apiUrlOverride. That is an EQUIVALENT mutant, not a weak test: an
+  <input type="url"> strips surrounding whitespace per spec (I probed the
+  readback: "  http://api.test/  " comes back "http://api.test/"), so the trim
+  in Login.svelte:38-39 is dead defensive code. Say so in the report instead of
+  bending a test to make the mutant die.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-21 Wed 17:28 UTC]
+:END:
+  RESULT: DONE (segment work; board stays exhausted — WORK ORDER rows 1-11 all
+  carry :DELIVERED:, no @platform-engineer ping was open, newest entry was my
+  own 17:10Z report — so per instruction 2 I closed the gap my last report
+  named. No item flipped, no completion claim, OBJECTIVE-STATE untouched.)
+  WHAT (branch ai/turn-20261021-1714):
+  - app/src/lib/__tests__/loginMount.test.ts — 7 tests, the golden path of the
+    demo flow at wire level: auth POST URL+body, no Authorization on login,
+    token reused on the schema + claims GETs, claims fetched at the DOCUMENTED
+    mePath, normalized schema landed (byId/listPath), token/username/apiUrl
+    persisted to localStorage, override wins over config apiUrl, empty
+    credentials = zero requests, 400 = "Invalid credentials" with NO token kept,
+    network failure = "Backend unreachable at <url>" + backendDown flag, other
+    status = message surfaces and the sentinel password appears nowhere, busy
+    guard blocks a double POST, brand logo + tagline render on the gate.
+  - app/src/lib/__tests__/secrets.test.ts — +4 tests for the Tauri keyring
+    branches (previously zero): each invoke() tuple pinned against the Rust
+    signature (src-tauri/src/lib.rs:10 DEFAULT_SERVICE "admincraft", args
+    service/key/value), NoEntry and an unavailable keychain both degrade to
+    null instead of throwing through loadAiSettings, delete swallows a missing
+    entry, web warning fires once across all three ops. Uses vi.resetModules()
+    + vi.doMock per case so the dynamic @tauri-apps/api/core import and the
+    module-owned webWarned cannot leak into the web-fallback describes above.
+  - docs/DEVGUIDE.md: two new hard-won bullets + counts 364 -> 375.
+  EVIDENCE: vitest 375/375 (28 files, NODE_OPTIONS=1024 --maxWorkers=1); tsc
+  --noEmit exit 0; pytest 299/299 (-p no:cacheprovider); manage.py check "no
+  issues (0 silenced)"; makemigrations --check "No changes detected". Coverage:
+  Login.svelte 55%/50% -> 100%/100%, secrets.ts 64.6%/70% -> 100%/100% (v8,
+  --coverage.include on the two files). MUTANTS: 9 of 10 seds killed; the one
+  survivor (dropping .trim() on apiUrlOverride) is EQUIVALENT — HTML
+  type="url" strips surrounding whitespace, verified by a DOM readback probe —
+  so Login.svelte:38-39's trim is dead defensive code, reported not "fixed" to
+  keep the test honest. All sources restored byte-identical from /tmp; git diff
+  shows zero product-code change; npm lockfile stayed clean.
+  NEXT / WHAT REMAINS: (1) pixels still unproven — no browser/Tauri on this
+  box, so a real window never showed the login form. (2) stores.ts remaining
+  uncovered lines are saveAiSettings + the native window-title call (the last
+  two Tauri seams). (3) HARNESS: FOURTEENTH consecutive self-install —
+  docker/harness boot still lacks `cd app && npm install` and
+  `pip install -e '../plugin[test]'` (the [test] extra is required for pytest),
+  and coverage needs @vitest/coverage-v8@3.2.7 --no-save. Lead-owned files
+  untouched; SECRET LAW held (no value read, echoed or committed);
+  ROLE_LARK_WEBHOOK empty in this seat's env -> Lark report skipped (checked
+  with [ -z ], not assumed), noted in the board LOGBOOK at FR R-007.
