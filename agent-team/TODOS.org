@@ -815,6 +815,68 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-21 Wed 19:58 UTC] :: THE SHARED TABLE GOT ITS OWN
+  RE-VERIFIER (branch ai/turn-20261021-1948, commit a0a13a6; state untouched —
+  PENDING stands, :DELIVERED: rows above unchanged; DONE is the Lead's gate).
+  AGENTS.md:255 asserts `FLOAT_PARITY` "appears with the same values and
+  expectations in `plugin/tests/test_csv_export.py` and
+  `app/src/lib/__tests__/csv.test.ts`" and docs/csv-export.md §6 asserts the
+  golden document is "one document, asserted twice". Both were prose: each suite
+  is green against ITS OWN copy, so a one-sided edit — value added, expectation
+  retyped, golden re-wrapped — leaves 299 pytest + 416 vitest green while the
+  shared adjective dies, and the twin proof quietly stops covering the case the
+  table exists for.
+  - scripts/parity_table_diff.py (new, ~330 lines): parses both files (ast on the
+    Python, a string/comment-aware bracket scanner + `node` on the TS — nothing is
+    imported, so no venv and no node_modules are needed, unlike the two twin
+    harnesses). Diffs FLOAT_PARITY row-by-row and the golden as BYTES. Floats are
+    keyed by their IEEE-754 big-endian bytes (`struct.pack(">d")` ↔
+    Float64Array/Uint32Array), never by `str()`/`String()` — those disagree on
+    purpose (`1e17`) and that disagreement is the claim under test. The golden
+    ROWS are deliberately not compared (`Decimal("19.99")` server-side vs the text
+    DRF sent, aware `datetime` vs its `Z` string: both docstrings say so); the
+    asserted byte string is the comparable artifact (DEVGUIDE SIXTH law applied).
+  - Exit codes, all measured, not assumed: 0 green; 1 divergence — three mutants
+    bit (JS `-1e-9`→`-1e-8` names the python-only/js-only pair; deleting one Python
+    row reports 24 vs 25 and names it; golden byte `19.99`→`19.98` prints both
+    lines); 2 cannot-run — node absent from PATH, JS declaration renamed away,
+    golden RHS no longer one literal, a second golden-shaped assert ("subject is
+    ambiguous"). Both mutated files restored byte-identical (git status clean).
+  - TWO real false results, caught by my own controls, both worth the team:
+    (a) anchoring on the substring `const FLOAT_PARITY` read BYTE-IDENTICAL after
+    I renamed the declaration to `FLOAT_PARITY_RENAMED` — a prefix hit had quietly
+    changed the subject; now a word-boundary regex. (b) the first `csv_text(` match
+    in the pytest file is a 19-byte unit assert (`csv_text([['id','name'],…])`),
+    not the 226-byte golden, so the very first run printed a confident FALSE
+    DIVERGENT; the golden is now selected by `csv_cell(` in the LHS and must be
+    UNIQUE or the harness stops with exit 2.
+  - Also fixed on the way: an uncaught internal crash exited 1 — the divergence
+    code — the exact leak I patched in csv_twin_diff.py last segment, arriving in
+    my own brand-new script on its first run (an `ast` attribute error). The entry
+    point is wrapped now: any crash is exit 2.
+  EVIDENCE: `python3 scripts/parity_table_diff.py` → "FLOAT_PARITY: 25 rows,
+  identical values AND expectations / golden document: 226 B, 4 CRLF lines,
+  identical bytes / BYTE-IDENTICAL" exit 0, from the repo root AND from /tmp
+  (paths are ROOT-anchored). Landing gate green at this HEAD: pytest 299/299
+  (-p no:cacheprovider), manage.py check "no issues (0 silenced)",
+  makemigrations --check "No changes detected"; plus vitest 416/416 (31 files),
+  tsc --noEmit exit 0 and scripts/brand_twin_diff.py exit 0 (the sibling claim is
+  untouched). Product code: ZERO changes — one new script + docs (DEVGUIDE SEVENTH
+  harness law, csv-export.md §6, AGENTS.md Commands + the CSV bullet).
+  HARNESS FACTS for the Lead (escalating, not editing): (1) TWENTIETH consecutive
+  self-install; this box shipped django 5.2 + drf + drf-spectacular system-wide but
+  NOT the plugin — the boot line (`python -m pip install -e /workspace/plugin
+  --no-deps -q 2>/dev/null || true`, .turn-inside.sh:16 ≈ agent-team.yml:509)
+  failed silently and `python3 -m pytest plugin/tests` died with INTERNALERROR
+  `No module named 'admincraft'` until I re-ran it without the redirection. Suggest
+  dropping `2>/dev/null || true` there so the seat sees WHY. (2) The Grep tool
+  failed this segment with "Executable not found in $PATH: rg"; `command -v rg`
+  resolves only to a shell alias, so no rg binary — every seat's fastest search is
+  down. (3) scripts/csv_twin_diff.py still exits 2 on a box whose system python has
+  every rig dependency, because it demands `.venv/bin/python` by path; a
+  `--python <interpreter>` flag would let it run here.
+  SECRET LAW held: no credential read, echoed or committed. ROLE_LARK_WEBHOOK empty
+  in this seat's env (checked with [ -z ], not assumed) -> Lark report skipped.
 - Note taken on [2026-10-21 Wed 19:43 UTC] :: THIRD CONTROL FOR THE CSV HARNESS —
   its OWN exit-code contract was leaky (branch ai/turn-20261021-1933; state
   untouched, :DELIVERED: rows above unchanged). While writing the brand twin
