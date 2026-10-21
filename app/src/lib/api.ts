@@ -332,18 +332,23 @@ function toEntries(data: any): AuditEntry[] {
   return [];
 }
 
-/** GET /api/audit/ — the append-only log, newest first (the R-003 ordering
- *  ruling: triage wants the latest event on top). Filters back the record
- *  sub-view and the R-007 activity screen; object_type is the model's
- *  singular name, object_id the record pk. `opts.path` overrides the
- *  default with a schema-discovered listPath (FR-R007 law: bind to the
- *  document, not to a hand-written URL) — the fallback only serves
- *  backends whose schema the caller has not resolved. */
+/** GET <discovered audit listPath> — the append-only log, newest first (the
+ *  R-003 ordering ruling: triage wants the latest event on top). Filters back
+ *  the record sub-view and the R-007 activity screen; object_type is the
+ *  model's singular name, object_id the record pk.
+ *
+ *  `opts.path` is the schema-discovered listPath (FR-R007 law, same evidence
+ *  rule as transitionRecord/fetchHistory): a backend whose document carries
+ *  no audit model has no log to read, so this throws rather than guessing
+ *  "/api/audit/" — a segment some other app may own. */
 export async function fetchAudit(
   cfg: AppConfig,
   token: string | null,
   opts: { objectType?: string; objectId?: string | number; page?: number; path?: string } = {},
 ): Promise<Page<AuditEntry>> {
+  if (!opts.path) {
+    throw new ApiError("the API documents no audit log endpoint — refusing to guess its path");
+  }
   const params = new URLSearchParams();
   if (opts.objectType) params.set("object_type", opts.objectType);
   if (opts.objectId !== undefined && opts.objectId !== null && opts.objectId !== "") {
@@ -351,8 +356,7 @@ export async function fetchAudit(
   }
   if (opts.page) params.set("page", String(opts.page));
   const qs = params.toString();
-  const base = opts.path ?? "/api/audit/";
-  return toPage<AuditEntry>(await request<any>(cfg, token, `${base}${qs ? `?${qs}` : ""}`));
+  return toPage<AuditEntry>(await request<any>(cfg, token, `${opts.path}${qs ? `?${qs}` : ""}`));
 }
 
 /** GET the schema-discovered role-claims path (FR-R007 phase a). Answers

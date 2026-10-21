@@ -26,6 +26,10 @@ const CFG = { apiUrl: "http://localhost:8000", authPath: "/api/auth/token/", sch
  *  calls below must hit the URLs the schema actually proves, so a hand-made
  *  spec could not detect a renderer wired to a guessed path. */
 const ORDERS = normalizeOpenAPI(fixture).byId.orders;
+/** Same provenance rule for the R-003 audit read: the log's path is the
+ *  schema-discovered listPath of the audit model, never a hand-written
+ *  "/api/audit/" segment. */
+const AUDIT = normalizeOpenAPI(fixture).byId.audit;
 
 const ENTRY = {
   id: 9,
@@ -184,7 +188,11 @@ describe("callRecordAction / callBulkAction", () => {
 describe("fetchAudit — append-only log read", () => {
   it("unwraps the paginated shape and filters by object_type/object_id", async () => {
     mockFetch.mockResolvedValueOnce(jsonReply({ count: 1, next: null, previous: null, results: [ENTRY] }, 200));
-    const page = await fetchAudit(CFG, "tok", { objectType: "order", objectId: 42 });
+    const page = await fetchAudit(CFG, "tok", {
+      path: AUDIT.listPath,
+      objectType: "order",
+      objectId: 42,
+    });
 
     expect(lastUrl()).toBe("http://localhost:8000/api/audit/?object_type=order&object_id=42");
     expect(page.count).toBe(1);
@@ -193,15 +201,30 @@ describe("fetchAudit — append-only log read", () => {
 
   it("reads the whole log unfiltered", async () => {
     mockFetch.mockResolvedValueOnce(jsonReply({ count: 0, results: [] }, 200));
-    await fetchAudit(CFG, "tok");
+    await fetchAudit(CFG, "tok", { path: AUDIT.listPath });
     expect(lastUrl()).toBe("http://localhost:8000/api/audit/");
   });
 
   it("tolerates a bare list response (a backend without pagination)", async () => {
     mockFetch.mockResolvedValueOnce(jsonReply([ENTRY], 200));
-    const page = await fetchAudit(CFG, "tok", { objectType: "order" });
+    const page = await fetchAudit(CFG, "tok", { path: AUDIT.listPath, objectType: "order" });
     expect(page.results).toEqual([ENTRY]);
     expect(page.count).toBe(1);
+  });
+
+  it("a backend that documents no audit model is refused with zero network calls", async () => {
+    // findAuditModel() answers null there, so the caller has no discovered
+    // path. Inventing "/api/audit/" would fire a request at whatever the
+    // deployment happens to mount at that segment — the evidence law forbids
+    // it (same refusal as transitionRecord/fetchHistory above).
+    mockFetch.mockClear();
+    await expect(fetchAudit(CFG, "tok", { objectType: "order" })).rejects.toThrowError(ApiError);
+    await expect(fetchAudit(CFG, "tok")).rejects.toThrowError(ApiError);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("the refusal names the missing evidence", async () => {
+    await expect(fetchAudit(CFG, "tok", { path: "" })).rejects.toThrow(/audit/);
   });
 });
 
