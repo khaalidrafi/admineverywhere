@@ -815,6 +815,66 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 00:06 UTC] :: THE LAST LINK OF THE COUNT CHAIN WAS THE
+  DOC A READER FOLLOWS (branch ai/turn-20261021-2355; state untouched — PENDING stands,
+  DONE is the Lead's gate, no completion claim). Work order re-counted at boot: 11
+  PENDING + 2 DONE, zero TODO/ONGOING/WAIT, every PENDING row carries :DELIVERED:, no
+  unanswered @platform-engineer ping in the chat tail (last entries are my own 23:58Z /
+  23:59Z), so the segment took the candidate named in my own 23:59Z report — with one
+  correction: that candidate was gate.sh's ENVIRONMENT, and measuring it first showed it
+  is NOT measurable from the seat side (cwd + argv + interpreter are exactly what
+  gate_roster_diff already reads; anything else would need the machine's env, which is
+  the Lead's file to expose). The next real hole was found in my own comment instead.
+  MEASURED BEFORE THE FIX: three segments pinned counts and rosters INSIDE
+  `scripts/landing_gate.py`, and that file's own comment says the literals "are also
+  quoted in AGENTS.md and the CI header". Nothing compared the quotes to the literals.
+  Control on the delivered tree: the `cd app && npm test` line in AGENTS.md retyped from
+  416 to 300 — `python3 scripts/release_readiness.py` answered RELEASE READINESS GREEN,
+  rc 0 (the pin, the runner and every narrative record still agreed with each other; only
+  the INSTRUCTION a reader copies had moved). Restored byte-identical, md5 verified.
+  SHIPPED: `leg_doc_counts()` (`scripts/release_readiness.py:686`) grades the docs' LIVE
+  count claims against the pins, and `gate_pins()` (`scripts/release_readiness.py:650`)
+  reads each pin TWO ways — the gate's source text AND the imported module — so the
+  harness holds no copy of any number and refuses a pin that has stopped being a plain
+  literal. Domain is STRUCTURAL, not semantic: `## Layout` + `## Commands` of AGENTS.md
+  and docs/DEVGUIDE.md are instructions and every count inside them must be in the table
+  and equal the pin; counts anywhere else are dated records and stay out of domain,
+  because a regex cannot tell "75 pytest / 58 vitest landed" from a live promise and a
+  leg that fires on a correct sentence is worse than no leg (TENTH law's ruling). The
+  Lead-owned CI header is cited, not graded. Doors: doc behind pin / doc ahead of pin /
+  live number deleted / ungraded count inside a live section = RED; ambiguous anchor,
+  duplicated section header, table shorter than `EXPECTED_DOC_CLAIMS`
+  (`scripts/release_readiness.py:173`), a kind that stopped being covered, pin whose two
+  views disagree = CANNOT RUN.
+  CONTROLS: 12, every file restored byte-identical (md5 verified) — honest rc 0; 416->300
+  RED naming doc:line and direction; 299->305 RED "the doc is ahead"; number deleted RED
+  "states no vitest count"; a new `# 500 vitest` line added inside ## Commands RED naming
+  the ungraded claim; Layout row duplicated CANNOT RUN "matched 2 line(s)"; table row
+  deleted CANNOT RUN "lists 7 live claim(s), pins 8"; pin rewritten `250 + 49` CANNOT RUN;
+  second assignment below the literal CANNOT RUN "reads 416 from the source text but 417
+  from the imported module"; pin bumped alone RED on all four doc rows (the proof it reads
+  the LIVE pin); both vitest rows retyped CANNOT RUN "grades pytest but not vitest";
+  duplicated `## Commands` header CANNOT RUN.
+  THE LEG FIRED ON ME TWICE, which is the pair of self-catches seats should copy. (1) My
+  first cut wrote the new citations in plain parens — `citations()` only reads BACKTICKED
+  tokens, so the doc-count paragraph's claims were invisible and EXPECTED_CLAIMS stayed
+  13; fixing the style moved it 13 -> 15, and the leg printed the number it owed. (2) The
+  comment I added to the EXPECTED_CLAIMS block shifted `gate_pins()`/`leg_doc_counts()`
+  four lines down, turning my own fresh citations into in-range-wrong-target claims —
+  repaired in this same commit by re-grepping every line number I cite (last segment's
+  rule, applied to my own edit within one session). One new bare-name citation
+  (`build-all.yml:4`) was caught by the lines leg and given its directory.
+  GATES ON THE DELIVERED TREE: `landing_gate.py` rc 0 — 4 legs, pytest 299, System check
+  no issues, No changes detected; `gate_roster_diff.py` rc 0 — ROSTER-IDENTICAL 3/3
+  (gate.sh opened read-only, untouched); `release_readiness.py` rc 0 — 15/15 symbol
+  claims on target, 87 citations bounds-checked, 8 live doc claims == the pins. `--fe`
+  deliberately NOT run: app/node_modules is absent on this boot and the diff touches no
+  FE code and no twin pair (files: scripts/release_readiness.py, AGENTS.md,
+  docs/DEVGUIDE.md, this board) — the exact tradeoff AGENTS.md's LANDING GATE bullet
+  states. Product code / tests / migrations / lockfiles: ZERO. THIRTEENTH consecutive
+  swallowed boot install, self-healed with the gate's printed command; standing Lead asks
+  unchanged. SECRET LAW held — no credential read, echoed or committed;
+  ROLE_LARK_WEBHOOK empty (`[ -z ]`, not assumed) -> Lark report skipped, noted here.
 - Note taken on [2026-10-21 Wed 23:55 UTC] :: THE OTHER GATE WAS THE UNPINNED ONE —
   `gate.sh` vs `MERGE_COMMANDS` is now the FOURTH twin (branch ai/turn-20261021-2336;
   state untouched — PENDING stands, DONE is the Lead's gate). Work order re-counted at
