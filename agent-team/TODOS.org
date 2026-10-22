@@ -1775,6 +1775,48 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-006 page registration                                            :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 01:00 UTC] :: CROSS-REF, no state change (board
+  still exhausted — every WORK ORDER row carries :DELIVERED:, zero
+  TODO/ONGOING/WAIT, no unanswered @platform-engineer ping in the chat tail). The
+  00:38Z note above shipped its harness as a CANDIDATE leg "until a boot has
+  app/node_modules"; this boot had one — `cd app && npm install` finished in 4s
+  and 100 packages, and `--fe` measured green — so the caveat is closed the way it
+  should be: the harness is now a GATE LEG. commit 390dced on
+  ai/turn-20261022-0046: `scripts/registry_roster_check.py` ->
+  `scripts/registry_roster_diff.py` (the `*_diff.py` NAME is the wiring —
+  `pin_twins()` at `scripts/landing_gate.py:213` cross-checks the twin roster
+  against that glob), `FE_ROSTER += registry-twin`, `EXPECTED_TWINS 4 -> 5`,
+  `TWINS += ("registry-twin", "registry_roster_diff.py", "REGISTRY ROSTER OK")`.
+  EVIDENCE on the delivered tree: `landing_gate.py --fe` = 10 legs, `registry-twin
+  REGISTRY ROSTER OK — 3 registries, 16 declared drop-ins`, GATE GREEN rc 0;
+  `landing_gate.py` (merge) rc 0, 4 legs; `gate_roster_diff.py` rc 0
+  (ROSTER-IDENTICAL 3/3 — gate.sh opened read-only, `git status` clean for
+  .github/, and the new leg is deliberately NOT a merge leg because gate.sh is
+  Lead-owned and a fourth merge leg here would only read as machine-gate drift);
+  `release_readiness.py` rc 0 (84 path citations, 87 line citations bounds-checked,
+  15/15 symbol claims on target, 8 doc counts == the pins). CONTROLS for the wiring
+  itself, every mutation on a copy — a `/tmp` ROOT for the roster doors, `leg_twin()`
+  called directly for the leg doors, so no shipped file was ever mutated: harness
+  under a non-`_diff` name -> CANNOT RUN `roster … is not the set of twin harnesses
+  on disk`; an extra `*_diff.py` never added to the roster -> CANNOT RUN the same
+  door from the other side; `EXPECTED_TWINS` left at 4 -> CANNOT RUN `TWINS lists 5
+  harness(es), EXPECTED_TWINS pins 4`; `TWINS` label renamed out of `FE_ROSTER` ->
+  CANNOT RUN; leg probe repointed at a phrase the script never prints -> RED `rc 0
+  but printed no REGISTRY ROSTER-OK verdict line`; a widget deleted in a COPY -> RED
+  `POPULATION widgets … pinned floor is 8` rc 1; and the rename itself re-measured
+  honest rc 0 plus the dead-twin control still CANNOT RUN `UNDECLARED=
+  ['lib/widgets/index.ts'] disk=4 pins=3`. Docs mirrored: AGENTS.md registries
+  bullet + *Commands* + the LANDING GATE paragraph (five twins; the merge gate stays
+  three legs for the gate.sh reason, not the node_modules reason, which the fifth
+  twin disproves), docs/DEVGUIDE.md *THIRTEENTH harness law* WIRED block with the
+  seven controls, *Commands* mirror. Product code: ZERO changes; no suite count
+  moved, so no `EXPECTED_PYTEST`/`EXPECTED_VITEST` pin and no graded doc row drifted.
+  SEAT FINDING worth repeating to the team: the "no app/node_modules on this boot"
+  line that has appeared in reports for days is NOT a box limit — the registry is
+  reachable from CI containers, `npm install` is seconds, and `--fe` then runs. A
+  constraint inherited as prose and never re-tested is a candidate for exactly this.
+  ROLE_LARK_WEBHOOK empty in this seat's env (checked with [ -z ], not assumed) ->
+  Lark report skipped, noted here per instruction 8.
 - Note taken on [2026-10-22 Thu 00:43 UTC] :: SHA ADDENDUM to the 00:38Z note: the
   work landed as commit eaada97 on ai/turn-20261022-0027 (`git log --oneline -1` after
   the commit; the harness still answers rc 0 on the committed tree).
