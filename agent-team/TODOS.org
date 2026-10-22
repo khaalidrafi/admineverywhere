@@ -539,6 +539,81 @@ CLOCK: [2026-10-19 Mon 03:34]--[2026-10-19 Mon 03:41] =>  0:07
 :END:
 *** PENDING FR-R003-FE — action registry + audit sub-view (client side)    :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 19:25 UTC] :: :DELIVERED: (seat
+  quality-assurance-engineer, FEATURE-ORDER entry 5 — R-003 FE. Branch
+  ai/turn-20261022-1904 @ a064f50; lane deepseek-v4.1-flash@qoder (the seat's
+  first arm, .turn-inside.sh qoder branch — the model flag the hiring note called
+  UNVERIFIED answered, so no fallback lane was needed this segment).
+  THE ROW CLOSED: this item's own 20:52 note still reads "[ ] UNVERIFIED: ... the
+  buttons/dialog were never clicked". Measured first: no test file on the tree
+  clicks an action — `grep -rn "action" app/src/lib/__tests__/DataTable.test.ts
+  app/src/lib/__tests__/tableDisplay.test.ts` = 0 hits, and ModelPage is mounted
+  only by lifecycleMount (audit sub-view), kanbanMount, recordFormMount,
+  pages.test, shell.test, utils.test. actions.test.ts grades the helpers as
+  FUNCTIONS, so the registry, the dialog guard and the rendered buttons were
+  asserted nowhere.
+  SHIPPED: app/src/lib/__tests__/actionMount.test.ts (7 tests) mounting the REAL
+  ModelPage + Toaster against fixtures/openapi.json with the REAL globbed
+  registry (flag.ts + bulk_flag.ts), stubbed fetch routed BY URL. Wire claims: the
+  record POST goes to http://api.test/api/orders/7/flag/ with exactly
+  {"reason": "<typed>"} and `Authorization: Token …`; the dialog blocks a
+  whitespace-only meta.input and Cancel fires zero action requests; a 400
+  {"reason": …} surfaces verbatim ("Flag rejected: …", never "API 400"); the table
+  RE-READS after a written entry — witnessed by a second list page carrying a row
+  the first read never had, not by a request count; the batch POST goes to
+  /api/orders/bulk_flag/ with the selected IDS; a model with no registered action
+  renders no button and no checkbox column (meta.model scoping is graded at the
+  DOM); FR-R007 — an `auditors`-only claim loses the managers-gated "Flag batch"
+  while keeping the record button.
+  TWO FALSE PASSES CAUGHT AND FIXED INSIDE THE SEGMENT, both reported so nobody
+  re-adds them: (1) the first version typed into `host.querySelector("input.input")`
+  — that is DataTable's SEARCH box (ModelPage renders it above the table), so the
+  guard was graded on the wrong field; every dialog read is now scoped to the
+  dialog card. (2) the first reload claim counted URLs containing "/orders/", which
+  the ACTION POST itself satisfies — measured with `await load()` deleted: 2 urls
+  (list + flag) and the assertion still GREEN. The witness is now the rendered
+  second page.
+  MUTATION BATTERY (8 mutants, each applied to one file, full witness run after
+  each, restored from a COPY and verified byte-identical — never `git checkout`):
+  ALL 8 KILLED, by name — input-guard -> false: 2 tests; toast drops the reason:
+  1; `await load()` deleted: 1; meta.model filter replaced by `true`: 1
+  (the products test); actionPath base taken off model.listPath: 2 (record + bulk
+  URLs); bulk ids -> rows.length: 1; bulk_flag's `roles: ["managers"]` deleted: 1;
+  dialog's `{#if meta.input}` -> false: 5. No mutant survived, so no claim here is
+  prose-only.
+  PINS, same commit (ELEVENTH law): EXPECTED_VITEST 418 -> 425 and
+  EXPECTED_VITEST_FILES 32 -> 33 (scripts/landing_gate.py:68-69) plus the four
+  published count sites (AGENTS.md ## Layout + ## Commands, docs/DEVGUIDE.md
+  mirrors); AGENTS.md + DEVGUIDE FR-R003 bullets and docs/custom-actions.md now
+  NAME the new proof instead of leaving the click-path undocumented.
+  GATE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN, 11/11 legs
+  (env django 5.2.18, pytest 299 passed, System check 0 issues, No changes
+  detected, vitest 425 passed / 33 files, csv/brand/parity/gate/registry/doc twins
+  all IDENTICAL); `npx tsc --noEmit` rc 0; `python3 scripts/release_readiness.py`
+  rc 0 (doc-quoted counts equal the gate's own pins: pytest=299, vitest=425).
+  REVIEWER DUTY (SEGREGATION LAW): nothing to review this run — #+PENDING-REVIEW is
+  empty (agent-team/TEAM-CONTROL.org:13) and the review phase printed "no pending
+  branch this run", leaving /workspace/.turn-review.txt at 0 bytes (measured).
+  Chain state observed while at it: the previous two segments authored ZERO commits
+  (ai/turn-20261022-1851 vs ai/main differs only in Lead-owned TEAM-CONTROL churn),
+  so STALL-COUNT is 2 and ba00442's slot-bootstrap fix is still UNVERIFIED
+  end-to-end — it can only be exercised by a segment that authors, which is what
+  this branch now is. Not a seat's file to touch; filed for the Lead.
+  STILL UNVERIFIED, honestly: pixels. No display, no browser and no playwright in
+  this container, so nothing has LOOKED at a re-painted screen or a real Tauri
+  window; what closed today is the DOM-and-bytes claim (dialog state, request
+  bodies, response-driven re-render), which is the strongest witness this box can
+  make. That row stays yours/Owner's.
+  STATE: item unchanged PENDING — DONE is the Lead's gate. No completion claim, no
+  #+OBJECTIVE-STATE touch. FEATURE-ORDER entry 4 (COOL-PREVIEW) was NOT taken this
+  segment: measured against the tree, every headless-closeable row of it is already
+  landed (applyBrand/revertBrand in branding.ts, the $effect preview and the
+  empty-radius guard in Branding.svelte, brandingMount.test.ts for the DOM, and the
+  favicon swap + Tauri setTitle already asserted in
+  app/src/lib/__tests__/storesTauri.test.ts:178) — its only open row is the same
+  pixels row as here.
+  LARK: ROLE_LARK_WEBHOOK empty in this seat's env (length 0, measured — not
+  assumed) — the Lark copy of this report is SKIPPED, no URL invented.
 - Note taken on [2026-10-21 Wed 12:58 UTC] :: CORRECTION from seat
   platform-engineer, so the harness row in the 10:55 note below is not read as
   current: "DOM-level component tests are blocked by a harness limitation" was
