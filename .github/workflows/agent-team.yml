@@ -240,19 +240,27 @@ jobs:
           echo "objective=$OBJECTIVE" >> "$GITHUB_OUTPUT"
           # Seat pointer -> seat id. The case grammar is extensible: one
           # line per rotation entry ("model@body ... role" pointer forms).
-          # MEMBER ID FORMAT LAW (Owner 2026-10-22 13:22Z #admincraft):
-          # member IDs are PROVIDER/MODEL@PLATFORM. Legacy arms kept for
-          # one rotation cycle so pointers written by runs still on the
-          # old code land on the right seat instead of BLOCKED.
+          # MEMBER ID FORMAT LAW v2 (Owner 2026-10-22 16:54Z #admincraft:
+          # "PROVIDER/ should only be included with API models!"):
+          # key-served API lanes on goose keep the PROVIDER/ prefix
+          # (zai/ groq/ openrouter/ gomodel/ ...); platform-native
+          # bundled brains are BARE model@platform (qoder, codebuddy).
+          # Legacy arms (format-law v1 prefixed + rotation-v1) kept so
+          # pointers written by runs still on the old code land on the
+          # right seat instead of BLOCKED.
           case "$TURN" in
-            qwen3.8-flash@qoder*)                      NEXT_SEAT=platform-engineer ;;            # legacy pre-2026-10-22
-            qoder/qwen3.8-flash@qoder*)                NEXT_SEAT=platform-engineer ;;
+            qwen3.8-flash@qoder*)                      NEXT_SEAT=platform-engineer ;;            # v2 PRIMARY: bare platform-native
+            deepseek-v4.1-flash@codebuddy*)            NEXT_SEAT=software-engineer ;;            # v2 PRIMARY
+            deepseek-v4.1-flash@qoder*)                NEXT_SEAT=quality-assurance-engineer ;;   # v2 PRIMARY
+            glm-5.3@codebuddy*)                        NEXT_SEAT=visiting-engineer ;;            # v2 PRIMARY — PAID visiting burn (Owner ~16:08Z)
+            zai/glm-4.7-flash@goose*)                  NEXT_SEAT=relief-engineer ;;              # API lane: prefix stays
+            openrouter/minimax-m3.1-flash:free@goose*) NEXT_SEAT=relief-engineer ;;              # API lane: prefix stays
+            groq/qwen3.8-27b@goose*)                   NEXT_SEAT=relief-engineer ;;              # API lane: prefix stays
             glm-4.7-flash@goose*)                      NEXT_SEAT=relief-engineer ;;              # legacy rotation-v1
-            zai/glm-4.7-flash@goose*)                  NEXT_SEAT=relief-engineer ;;
-            openrouter/minimax-m3.1-flash:free@goose*) NEXT_SEAT=relief-engineer ;;
-            codebuddy/deepseek-v4.1-flash@codebuddy*)  NEXT_SEAT=software-engineer ;;
-            qoder/deepseek-v4.1-flash@qoder*)          NEXT_SEAT=quality-assurance-engineer ;;
-            codebuddy/glm-5.3@codebuddy*)              NEXT_SEAT=visiting-engineer ;;        # PAID visiting burn (Owner 2026-10-22 ~16:08Z)
+            qoder/qwen3.8-flash@qoder*)                NEXT_SEAT=platform-engineer ;;            # v1 alias
+            codebuddy/deepseek-v4.1-flash@codebuddy*)  NEXT_SEAT=software-engineer ;;            # v1 alias
+            qoder/deepseek-v4.1-flash@qoder*)          NEXT_SEAT=quality-assurance-engineer ;;   # v1 alias
+            codebuddy/glm-5.3@codebuddy*)              NEXT_SEAT=visiting-engineer ;;            # v1 alias
             *)                                         NEXT_SEAT=unknown ;;
           esac
           echo "seat=$NEXT_SEAT" >> "$GITHUB_OUTPUT"
@@ -764,18 +772,18 @@ jobs:
               fi
               ;;
             software-engineer)
-              # codebuddy/deepseek-v4.1-flash@codebuddy — free-offer hire
+              # deepseek-v4.1-flash@codebuddy — free-offer hire
               # (Owner order 2026-10-22 #admincraft). Headless: -y in -p
               # mode for tool use (harness Dockerfile note). The default
               # bundled brain is the Owner-specified deepseek-v4.1-flash
               # free offer. Fallback: the proven lanes take the segment.
               if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
                    codebuddy -p "$BRIEF" -y; then
-                echo "TURN_RESULT=codebuddy run OK (lane: codebuddy/deepseek-v4.1-flash@codebuddy)"
+                echo "TURN_RESULT=codebuddy run OK (lane: deepseek-v4.1-flash@codebuddy)"
               elif env HOME=/usr/local/lib/qoder-home \
                    qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
                    --permission-mode bypassPermissions --max-turns 100; then
-                echo "TURN_RESULT=qoder run OK (lane: qoder/deepseek-v4.1-flash@qoder)"
+                echo "TURN_RESULT=qoder run OK (lane: deepseek-v4.1-flash@qoder)"
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
                    OPENAI_API_KEY="$ZAI_API_KEY" \
                    OPENAI_HOST="https://api.z.ai" \
@@ -793,17 +801,17 @@ jobs:
               fi
               ;;
             quality-assurance-engineer)
-              # qoder/deepseek-v4.1-flash@qoder — free-offer hire (Owner
+              # deepseek-v4.1-flash@qoder — free-offer hire (Owner
               # order 2026-10-22 #admincraft). The qoder model flag is
               # UNVERIFIED — if the CLI rejects it the chain self-heals to
               # the next lane; never blocks the segment.
               if env HOME=/usr/local/lib/qoder-home \
                    qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
                    --permission-mode bypassPermissions --max-turns 100; then
-                echo "TURN_RESULT=qoder run OK (lane: qoder/deepseek-v4.1-flash@qoder)"
+                echo "TURN_RESULT=qoder run OK (lane: deepseek-v4.1-flash@qoder)"
               elif env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
                    codebuddy -p "$BRIEF" -y; then
-                echo "TURN_RESULT=codebuddy run OK (lane: codebuddy/deepseek-v4.1-flash@codebuddy)"
+                echo "TURN_RESULT=codebuddy run OK (lane: deepseek-v4.1-flash@codebuddy)"
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
                    OPENAI_API_KEY="$GROQ_API_KEY" \
                    OPENAI_HOST="https://api.groq.com" \
@@ -813,13 +821,13 @@ jobs:
               elif env HOME=/usr/local/lib/qoder-home \
                    qoder -p "$BRIEF" --output-format json \
                    --permission-mode bypassPermissions --max-turns 100; then
-                echo "TURN_RESULT=qoder run OK (lane: qoder/qwen3.8-flash@qoder — default brain)"
+                echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder — default brain)"
               else
                 echo "TURN_RESULT=BLOCKED (qoder-ds+codebuddy+groq+qoder lanes all failed — check the harness)"
               fi
               ;;
             visiting-engineer)
-              # codebuddy/glm-5.3@codebuddy — PAID VISITING MEMBER (Owner
+              # glm-5.3@codebuddy — PAID VISITING MEMBER (Owner
               # order 2026-10-22 ~16:08Z: burn the 250 expiring CodeBuddy
               # credits at 50/day until 2026-10-27). --model glm-5.3
               # verified against the codebuddy CLI's own --help (supported
@@ -832,11 +840,11 @@ jobs:
               # the burn did not happen — a visit is never faked.
               if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
                    codebuddy -p "$BRIEF" -y --model glm-5.3; then
-                echo "TURN_RESULT=codebuddy PAID run OK (lane: codebuddy/glm-5.3@codebuddy — visiting burn)"
+                echo "TURN_RESULT=codebuddy PAID run OK (lane: glm-5.3@codebuddy — visiting burn)"
               elif env HOME=/usr/local/lib/qoder-home \
                    qoder -p "$BRIEF" --output-format json \
                    --permission-mode bypassPermissions --max-turns 100; then
-                echo "TURN_RESULT=PAID LANE FAILED — fell back to qoder (lane: qoder/qwen3.8-flash@qoder); visiting burn did NOT happen"
+                echo "TURN_RESULT=PAID LANE FAILED — fell back to qoder (lane: qwen3.8-flash@qoder); visiting burn did NOT happen"
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
                    OPENAI_API_KEY="$ZAI_API_KEY" \
                    OPENAI_HOST="https://api.z.ai" \
@@ -982,10 +990,10 @@ jobs:
           # — platform -> relief -> software -> QA -> platform).
           case "${{ steps.control.outputs.seat }}" in
             platform-engineer)          NEXT="zai/glm-4.7-flash@goose (Relief Engineer)" ;;
-            relief-engineer)            NEXT="codebuddy/deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;
-            software-engineer)          NEXT="qoder/deepseek-v4.1-flash@qoder (QA Engineer)" ;;
-            quality-assurance-engineer) NEXT="qoder/qwen3.8-flash@qoder (Platform Engineer)" ;;
-            visiting-engineer)          NEXT="codebuddy/deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;  # visiting rejoins rotation; free burn continues
+            relief-engineer)            NEXT="deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;
+            software-engineer)          NEXT="deepseek-v4.1-flash@qoder (QA Engineer)" ;;
+            quality-assurance-engineer) NEXT="qwen3.8-flash@qoder (Platform Engineer)" ;;
+            visiting-engineer)          NEXT="deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;  # visiting rejoins rotation; free burn continues
             *)                          NEXT="unknown (Lead: fix #+TURN in agent-team/TEAM-CONTROL.org)" ;;
           esac
           git checkout -f ai/main

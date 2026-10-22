@@ -13,6 +13,17 @@
 
 * Notes
 
+- MEMBER ID FORMAT LAW v2 (Owner order 2026-10-22 16:54Z #admincraft:
+  "PROVIDER/ should only be included with API models!"): key-served
+  API lanes on goose KEEP the prefix (zai/ groq/ openrouter/ gomodel/
+  gmi/ tokenharbor/ navyai/ bai/ aa/ ollama-cloud/); platform-native
+  bundled brains are BARE model@platform. Renamed atomically this
+  commit: qwen3.8-flash@qoder (platform), deepseek-v4.1-flash@codebuddy
+  (software), deepseek-v4.1-flash@qoder (QA), glm-5.3@codebuddy
+  (visiting). Workflow keeps v1-prefixed arms as aliases so pointers
+  written by the in-flight run (old code) still resolve instead of
+  BLOCKED; the next advance writes v2 pointers. Historical records
+  (PAUSE-REVIEW 1, TEAM-CHAT) keep the IDs as they were then.
 - PAUSE-REVIEW 1 (Lead, 2026-10-22 16:28Z): COOL-CHAT-SEND-BACK-2
   DELIVERED by the relief seat (ai/turn-20261022-1602 @ f2fdd7d,
   merged c9198fe) — dead prompt builder deleted, its return refused;
@@ -23,7 +34,7 @@
   at software-engineer.
 - VISITING LAW (Owner order 2026-10-22 ~16:08Z: burn the 250 expiring
   CodeBuddy paid credits): budget 250 / 5 days = 50/day until
-  2026-10-27. The VISITING SENIOR ENGINEER = codebuddy/glm-5.3@codebuddy
+  2026-10-27. The VISITING SENIOR ENGINEER = glm-5.3@codebuddy
   (model id verified against the codebuddy CLI --help) is NOT in the
   standing rotation — the Lead points #+TURN at it once per day for
   the paid burn; its advance rejoins the rotation at software-engineer.
@@ -51,12 +62,14 @@
   the wrong lane.
 - HIRING VERDICT v2 (Lead, 2026-10-22 13:35Z, evidence in ROSTER.org;
   supersedes the 11:50Z verdict after the Owner's orders 13:22Z):
-  member ID FORMAT LAW = PROVIDER/MODEL@PLATFORM (Owner 13:22Z).
-  Roster: platform-engineer = qoder/qwen3.8-flash@qoder [PROVEN];
+  member ID FORMAT LAW = PROVIDER/MODEL@PLATFORM (Owner 13:22Z;
+  refined v2 16:54Z — PROVIDER/ only for API models, platform-native
+  brains bare). Roster: platform-engineer = qwen3.8-flash@qoder
+  [PROVEN];
   relief-engineer = openrouter/minimax-m3.1-flash:free@goose [PROVEN],
   zai/glm-4.7-flash@goose [ARMED], groq/qwen3.8-27b@goose [ARMED];
-  software-engineer = codebuddy/deepseek-v4.1-flash@codebuddy [NEW —
-  activating]; quality-assurance-engineer = qoder/deepseek-v4.1-flash@qoder
+  software-engineer = deepseek-v4.1-flash@codebuddy [NEW —
+  activating]; quality-assurance-engineer = deepseek-v4.1-flash@qoder
   [NEW — activating, model flag unverified]. Rotation cycles all four
   seats; every seat keeps a fallback chain into the proven lanes.
   MiniMax M3.1 Flash free offers: OpenRouter active; GoModel gateway
