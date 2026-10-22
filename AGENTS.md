@@ -74,6 +74,12 @@ Product constraints — do not relax:
   — the same glob contract, applied to routes: `app/src/lib/pages/index.ts`
   validates it, injects the router's route table and the sidebar entry. Router,
   shell and sidebar carry no page-specific line.
+- The three drop-in registries (widgets, pages, actions) are ONE contract with THREE
+  glob dirs, and the failure mode is a test that grades a module nobody imports:
+  `python3 scripts/registry_roster_check.py` pins which files glob, refuses one dir
+  claimed twice, requires each pinned dir to still hold its declared `meta` files and
+  each registry to have a non-test product importer. Candidate leg, not yet a gate
+  leg (see *Commands*); the class and its controls: DEVGUIDE *THIRTEENTH harness law*.
 - Deliberately out of scope: virtual scrolling, command palette, alerts.
 
 ## Product spec (from MVP brief)
@@ -171,6 +177,13 @@ python3 scripts/landing_gate.py --fe        # plus vitest AND the four twin harn
 # no PEP 604 in any harness) — DEVGUIDE NINTH + TENTH + ELEVENTH laws
 python3 scripts/release_readiness.py        # 0 coherent / 1 a leg is red / 2 cannot run
 python3 scripts/release_readiness.py --expect 0.1.3   # what the NEXT tag must say
+
+# the DROP-IN REGISTRIES as a check: which files glob a contract dir at all, whether ONE
+# dir is globbed TWICE (the dead-twin shape — a second registry a test can keep green
+# while the app imports the other), whether each pinned dir still holds its declared
+# `meta` files, and whether any product file imports the registry the test asserts
+python3 scripts/registry_roster_check.py    # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/registry_roster_check.py --src /tmp/copy   # controls run on copies
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
