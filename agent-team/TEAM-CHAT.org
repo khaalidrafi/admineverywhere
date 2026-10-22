@@ -5187,3 +5187,98 @@
   TEST-T1 check-in — the brain/lane that ran this turn for me: minimax-m3.1-flash:free @ goose (GOOSE_MODEL=minimax/minimax-m3.1-flash:free, GOOSE_PROVIDER=openai, OPENAI_HOST=openrouter.ai); the two lanes ahead of it in .turn-inside.sh — qwen3.8-flash@qoder and glm-4.7-flash@goose — exited non-zero first, so the elif chain reached the minimax relief lane. RESULT: DONE.
   EVIDENCE (T1 scope: this one check-in + one docs/CHAIN-TEST.md line, nothing else): (1) this message is appended at EOF of agent-team/TEAM-CHAT.org, append-only, zero edits to any existing entry; (2) docs/CHAIN-TEST.md:4 logs run id e489738@ai/turn-20261022-0942 | platform-engineer | minimax-m3.1-flash:free@goose | 2026-10-22 — run id is the base commit of this turn's branch because GITHUB_RUN_ID is not exposed inside the seat container (measured: GITHUB_RUN_ID unset); (3) landing gate GREEN before the commit — `python3 scripts/landing_gate.py` rc 0, 4/4 pinned legs: env (django 5.2.18), pytest 299 passed, System check identified no issues, No changes detected; (4) the work lands on branch ai/turn-20261022-0942 — a commit cannot quote its own sha, so the Lead reads it with `git log -1 --oneline ai/turn-20261022-0942`; (5) the Lark copy of this report is SKIPPED, not lost: ROLE_LARK_WEBHOOK is empty in this seat's env (measured), and the board is deliberately untouched because T1 says NOTHING else and the board carries no TEST-CHAIN item (grep: TEST-CHAIN appears only in TEAM-CONTROL.org, TEAM-CHAT.org and the workflow).
   ONE HONESTY NOTE about this turn's tree: a PRIOR partial attempt inside the SAME turn (the qoder lane) left an uncommitted 09:43Z check-in in this chat and an uncommitted docs/CHAIN-TEST.md line that put the SEAT in the lane column. I did not touch that chat entry (append-only law); I corrected only the lane column of the uncommitted log line, which is why this turn logs ONE line and not two.
+
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 10:06 UTC]
+:END:
+  TEST-T2 — ONE concrete improvement in the harness/dispatch flow, named and MEASURED:
+  CLOSE THE SESSION COLLECT->RESTORE LOOP (SESSION LAW is currently a no-op in BOTH
+  directions). The chain's own inner script collects TWO session stores — the seat's
+  $HOME/.config/goose/sessions and the qoder lane's pinned home
+  usr/local/lib/qoder-home/.qoder (.turn-inside.sh:69-75 = agent-team.yml:581-588) — but
+  the restore block copies only the FIRST (.turn-inside.sh:9-10 = agent-team.yml:521-522:
+  `if [ -d /sessions-restore/home/agent ]` then `cp -a /sessions-restore/home/agent/. "$HOME/"`),
+  so the qoder store stays behind in the read-only mount (agent-team.yml:600,
+  `-v "$PWD/.sessions-restore":/sessions-restore:ro`) while the qoder lane reads a
+  DIFFERENT path entirely: `env HOME=/usr/local/lib/qoder-home qoder ...`
+  (.turn-inside.sh:26 = agent-team.yml:538) resolves to /usr/local/lib/qoder-home/.qoder.
+  And the lane that actually RUNS this chain writes nothing to restore in the first place:
+  all three goose lanes are `goose run --no-session` (.turn-inside.sh:34/45/54 =
+  agent-team.yml:546/557/566), so the goose store the collect block tars (line 71) is never
+  written. Collect captures, restore drops; the goose lane never captures.
+  CONTROL (replayed the three real code paths, on COPIES in /tmp — no shipped file was
+  ever touched, no workflow edit): (1) collect `tar czf "$SESS" -C / <abs paths>` -> the
+  tgz holds BOTH stores (`home/agent/.config/goose/sessions/prev.jsonl` AND
+  `usr/local/lib/qoder-home/.qoder/session-1.json`); (2) host restore (agent-team.yml:
+  356-362: unzip the artifact zip, untar the sessions-*.tgz, mv it over .sessions-restore)
+  -> the mounted tree still holds both; (3) container restore (the verbatim `cp -a` of the
+  first branch) -> ONLY `home/agent/.config/goose/sessions/prev.jsonl` lands under $HOME,
+  and the qoder lane's home stays EMPTY (measured: 0 entries where session-1.json belongs).
+  A context the chain paid to collect and upload is dropped by the very step that exists
+  to deliver it.
+  THE FIX (one line each side — LEAD-OWNED files, so I NAME them and did NOT edit them):
+  make the restore mirror the collect's path list — after the home/agent copy also
+  `cp -a /sessions-restore/usr/local/lib/qoder-home/.qoder/. /usr/local/lib/qoder-home/.qoder/`
+  (guarded by `[ -d ]`) — and drop `--no-session` from the goose lanes so the store the
+  collect block ALREADY tars exists to be collected. That turns SESSION LAW into the
+  two-sided contract the rest of this repo already holds (collect <-> restore), instead of
+  a one-sided capture; same shape as the repo's own twin law — a comparison cannot see its
+  own coverage.
+  HONEST LIMIT OF THE MEASUREMENT: this turn's mount was EMPTY — /sessions-restore had 0
+  entries (measured) and $HOME/.config/goose/sessions is ABSENT (measured) — so I could NOT
+  watch the drop happen live; I replayed the code paths instead. Whether the empty mount
+  is a cold start (no previous artifact) or an artifact that never landed, I cannot tell
+  from inside the seat: GH_TOKEN and GITHUB_TOKEN are empty in this seat's env (measured,
+  names only), so the artifact list is not reachable from here. The defect does not depend
+  on that question — with an artifact present the qoder store is dropped, and with none
+  present the restore cannot deliver anything either way.
+  THIS TURN'S SCOPE (T2): this chat entry + ONE line in docs/CHAIN-TEST.md, nothing else.
+  The board is deliberately untouched: the board carries no TEST-CHAIN item (grep:
+  TEST-CHAIN appears only in TEAM-CONTROL.org, TEAM-CHAT.org and agent-team.yml) and T2
+  says NOTHING else. No feature item was started. Landing gate GREEN before this commit —
+  `python3 scripts/landing_gate.py` rc 0 over the 4 pinned legs (env django 5.2.18, pytest
+  299 passed, System check identified no issues, No changes detected).
+  NEXT (the Lead's call, not mine): the two fixes are edits to LEAD-OWNED files
+  (.github/workflows/agent-team.yml), so I only cite them with evidence and never touch
+  them; I do not claim the objective complete. The Lark copy of this report is SKIPPED,
+  not lost: ROLE_LARK_WEBHOOK is empty in this seat's env (measured).
+
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 10:09 UTC]
+:END:
+  TEST-T2 report line, completing the entry above (it carried the improvement and
+  the evidence but no explicit RESULT line — the segment law wants RESULT spelled out,
+  so I add it here rather than editing an entry that is already committed).
+  RESULT: DONE (TEST-T2 scope: one chat entry naming ONE harness improvement + one
+  docs/CHAIN-TEST.md line. No board flip, no feature item started, no completion
+  claim, OBJECTIVE-STATE untouched — that is the Lead's gate.)
+  WHAT — the improvement named: CLOSE THE SESSION COLLECT->RESTORE LOOP. The inner
+  script collects two session stores (.turn-inside.sh:69-75 = agent-team.yml:581-588)
+  but the restore copies only the first (.turn-inside.sh:9-10 = agent-team.yml:521-522),
+  so the qoder lane's own store (usr/local/lib/qoder-home/.qoder) is dropped, while all
+  three goose lanes run `goose run --no-session` (.turn-inside.sh:34/45/54 =
+  agent-team.yml:546/557/566) and therefore never write one. Control on copies in /tmp:
+  the tgz holds both stores, the mounted tree holds both, and after the container's
+  restore only the goose store lands under $HOME while the qoder lane's home stays
+  EMPTY. Fix named, NOT applied (Lead-owned workflow): mirror the collect's path list
+  in the restore and drop `--no-session` from the goose lanes.
+  EVIDENCE — work commit 33300da on branch ai/turn-20261022-0958; append-only verified
+  (git diff on the chat file shows 0 deleted lines); the log line is
+  docs/CHAIN-TEST.md:6 "3bb34bc@ai/turn-20261022-0958 | platform-engineer |
+  minimax-m3.1-flash:free@goose | 2026-10-22 | improvement: close the SESSION
+  collect->restore loop ...". Landing gate GREEN on the delivered tree —
+  `python3 scripts/landing_gate.py` rc 0, 4/4 pinned legs (env django 5.2.18, pytest
+  299 passed, System check identified no issues, No changes detected);
+  `python3 scripts/release_readiness.py` rc 0.
+  The Lark copy of this report is SKIPPED, not lost: ROLE_LARK_WEBHOOK is empty in this
+  seat's env (measured) — and since the board is deliberately untouched under T2's
+  "NOTHING else", that skip is recorded here in the chat instead of in the board
+  LOGBOOK.
