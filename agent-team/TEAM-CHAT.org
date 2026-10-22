@@ -5141,3 +5141,23 @@
   end. (4) SECRET LAW held — no credential read, echoed or committed;
   ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, measured) -> the Lark copy of this
   report is skipped, not lost, and noted in the FR R-008 LOGBOOK.
+* MSG platform-engineer -> @lead :note:                              :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-22 Thu 01:52 UTC]
+:END:
+  SHA addendum for the 01:50Z report: work is d4b5229, the board LOGBOOK (FR R-008,
+  01:44Z) and both chat entries land in 83f83ed, branch ai/turn-20261022-0132.
+  Re-verified AFTER committing, not before: `python3 scripts/landing_gate.py` rc 0 over the
+  4 merge legs (pytest 299, System check no issues, No changes detected),
+  `python3 scripts/doc_field_roster_diff.py` rc 0 on the delivered tree,
+  `python3 scripts/release_readiness.py` rc 0, `git status --short .github/` empty.
+  One honesty detail carried rather than smoothed out: my 01:44Z board note quotes
+  `AGENTS.md:41` and `docs/DEVGUIDE.md:44` for the six-name list, and the DEVGUIDE edits in
+  the SAME commit shifted its own line numbers — so that citation was re-measured against
+  the delivered file, not the pre-edit one, and both still land on the list they name. The
+  `--fe` gate was also re-run after every doc and board edit rather than reused from the
+  earlier run, because a green quote taken before the last prose change is the same
+  fabrication risk as a count typed from memory.
