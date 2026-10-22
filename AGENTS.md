@@ -166,8 +166,9 @@ python3 scripts/landing_gate.py --fe        # plus vitest AND the four twin harn
                                             # three need app/node_modules)
 
 # the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
-# doc-citation rot AND every cited line landing inside its file, release inputs,
-# no PEP 604 in any harness) — DEVGUIDE NINTH + TENTH laws
+# doc-citation rot AND every cited line landing inside its file, the suite counts the
+# docs publish as instructions graded against the gate's own pins, release inputs,
+# no PEP 604 in any harness) — DEVGUIDE NINTH + TENTH + ELEVENTH laws
 python3 scripts/release_readiness.py        # 0 coherent / 1 a leg is red / 2 cannot run
 python3 scripts/release_readiness.py --expect 0.1.3   # what the NEXT tag must say
 
@@ -427,7 +428,16 @@ citation whose number is past the end of that file — a path check cannot see t
 second half of the claim — AND any citation whose line is inside the file but not
 on the `name()` the prose beside it names (the third door: DEVGUIDE once cited
 `scripts/csv_twin_diff.py:109` for `run()` while that line was the closing
-triple-quote of `CLIENT_SPEC`, green the whole time). The claim class is a same-line
+triple-quote of `CLIENT_SPEC`, green the whole time). It refuses a fourth class, and it
+is the class a reader FOLLOWS: a suite count published as an INSTRUCTION — every count
+claim inside `## Layout` and `## Commands` of this file and of `docs/DEVGUIDE.md` — must
+equal the pin `scripts/landing_gate.py` enforces, read from that file's source AND from
+its imported value so this harness never re-spells the number. The pins' own comment
+claimed those doc quotes track the literals; nothing measured the claim until a retyped
+`npm test` line answered GREEN. Counts OUTSIDE those two sections are historical records
+(a state log's suite size, a control run's printed-vs-owed pair) and stay out of domain,
+by the same ruling that keeps the citation leg off correct prose — and so does the
+Lead-owned CI header, which is cited here rather than graded or edited. The claim class is a same-line
 `name()` spelling only, measured on the delivered tree (the pair moves with every doc
 edit, so it is re-measured by the DEVGUIDE control rather than trusted as prose):
 widening it to any identifier word on the line scanned 576 claims and fired on 425 of
@@ -665,7 +675,15 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    changed` / `FAILURE NOT CAPTURED` (a leg that runs but whose `|| FAIL=1` is gone can
    print a red and still exit 0); a gate parsing to zero commands is `CANNOT RUN`.
    `python3 scripts/gate_roster_diff.py` runs it alone, and gate.sh is only ever opened
-   read-only — controls go to copies via its `--gate` flag.
+   read-only — controls go to copies via its `--gate` flag. THE NUMBER ITSELF IS NOW
+   GRADED WHERE A READER PICKS IT UP: `scripts/release_readiness.py` reads
+   `EXPECTED_PYTEST`/`EXPECTED_VITEST` out of `scripts/landing_gate.py` (from its source
+   AND from the imported module, so the harness never re-spells a count) and refuses any
+   suite count published as an instruction inside `## Layout` / `## Commands` of
+   `AGENTS.md` or `docs/DEVGUIDE.md` that differs from it — a pin bumped without its docs
+   is RED, and so is a doc retyped without the pin (DEVGUIDE *ELEVENTH law*, last link;
+   narrative counts elsewhere are dated records and out of domain, the Lead-owned CI
+   header included).
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.
