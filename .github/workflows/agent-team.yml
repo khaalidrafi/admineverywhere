@@ -195,6 +195,8 @@ jobs:
       pending_author: ${{ steps.seg.outputs.pending_author }}   # who authored it (merger refuses same-member reviews)
       pending_sha: ${{ steps.seg.outputs.pending_sha }}
       review_verdict: ${{ steps.seg.outputs.review_verdict }}   # APPROVED | REJECTED | empty (review-missing)
+      review_seat: ${{ steps.seg.outputs.review_seat }}         # duty reviewer that ran (quality-assurance-engineer | visiting-engineer)
+      review_member: ${{ steps.seg.outputs.review_member }}     # duty reviewer's member ID (merger enforces the duty-role law)
     runs-on: ubuntu-latest
     timeout-minutes: 35
     continue-on-error: true
@@ -614,12 +616,15 @@ jobs:
           echo "branch=${TURN_BRANCH:-}" >> "$GITHUB_OUTPUT"
           CTL=agent-team/TEAM-CONTROL.org
           # REAL rotation (Owner 2026-10-22: member IDs are
-          # PROVIDER/MODEL@PLATFORM; the pointer cycles all four CI seats
-          # — platform -> relief -> software -> QA -> platform).
+          # PROVIDER/MODEL@PLATFORM; DUTY-ROLE LAW 18:55Z: QA is the
+          # dedicated REVIEWER — OUT of the author rotation. Authors
+          # cycle platform -> relief -> software -> platform; QA
+          # segments happen only on Lead dispatch (audits), visiting
+          # rejoins at software.
           case "${{ steps.control.outputs.seat }}" in
             platform-engineer)          NEXT="zai/glm-4.7-flash@goose (Relief Engineer)" ;;
             relief-engineer)            NEXT="deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;
-            software-engineer)          NEXT="deepseek-v4.1-flash@qoder (QA Engineer)" ;;
+            software-engineer)          NEXT="qwen3.8-flash@qoder (Platform Engineer)" ;;
             quality-assurance-engineer) NEXT="qwen3.8-flash@qoder (Platform Engineer)" ;;
             visiting-engineer)          NEXT="deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;  # visiting rejoins rotation; free burn continues
             *)                          NEXT="unknown (Lead: fix #+TURN in agent-team/TEAM-CONTROL.org)" ;;
@@ -693,14 +698,21 @@ jobs:
             "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
           # SEGREGATION LAW (Owner 18:14Z): the merger NEVER merges this
           # run's own author branch — it merges the PREVIOUS run's pending
-          # branch ONLY on the reviewer's APPROVED verdict, and refuses a
-          # reviewer who is the author. Author branch -> next pending.
+          # branch ONLY on the duty reviewer's APPROVED verdict, and
+          # refuses a reviewer who is the author or not the duty
+          # reviewer (DUTY-ROLE LAW, Owner 18:55Z: the review duty
+          # belongs to the QA ENGINEER role — or the VISITING SENIOR
+          # when QA authored the branch; merge authority is the LEAD's,
+          # this gate is its execution arm).
           AUTHOR_BRANCH="${{ needs.turn.outputs.turn_branch }}"
           PENDING_BRANCH="${{ needs.turn.outputs.pending_branch }}"
           PENDING_AUTHOR="${{ needs.turn.outputs.pending_author }}"
           VERDICT="${{ needs.turn.outputs.review_verdict }}"
-          REVIEWER_SEAT="${{ needs.turn.outputs.seat }}"
-          REVIEWER_ID=$(printf '%s' "$REVIEWER_SEAT" | cut -d' ' -f1)
+          REVIEW_MEMBER="${{ needs.turn.outputs.review_member }}"
+          QA_MEMBER="deepseek-v4.1-flash@qoder"
+          VISITING_MEMBER="glm-5.3@codebuddy"
+          # Expected duty reviewer by law, given who authored:
+          if [ "${PENDING_AUTHOR:-x}" = "$QA_MEMBER" ]; then EXPECTED_REVIEWER="$VISITING_MEMBER"; else EXPECTED_REVIEWER="$QA_MEMBER"; fi
           OUTCOME="no-pending"
           MERGE_TARGET=""
           if [ -n "$PENDING_BRANCH" ] && git ls-remote --exit-code --heads origin "$PENDING_BRANCH" >/dev/null 2>&1; then
@@ -718,9 +730,12 @@ jobs:
             elif [ "$VERDICT" != "APPROVED" ]; then
               OUTCOME="rejected"
               echo "MERGER: reviewer REJECTED the branch — it does not land"
-            elif [ "${PENDING_AUTHOR:-x}" = "$REVIEWER_ID" ]; then
+            elif [ "${PENDING_AUTHOR:-x}" = "${REVIEW_MEMBER:-y}" ]; then
               OUTCOME="refused-same-member"
-              echo "MERGER: reviewer equals author (${REVIEWER_ID}) — refuse by law"
+              echo "MERGER: reviewer equals author (${REVIEW_MEMBER}) — refuse by law"
+            elif [ "${REVIEW_MEMBER:-}" != "$EXPECTED_REVIEWER" ]; then
+              OUTCOME="refused-wrong-reviewer"
+              echo "MERGER: verdict from ${REVIEW_MEMBER:-none} but duty reviewer is ${EXPECTED_REVIEWER} — refuse by law"
             else
               OUTCOME="approved"
               MERGE_TARGET="$PENDING_BRANCH"
@@ -729,7 +744,7 @@ jobs:
           echo "branch=${MERGE_TARGET}" >> "$GITHUB_OUTPUT"
           echo "author_branch=${AUTHOR_BRANCH}" >> "$GITHUB_OUTPUT"
           echo "outcome=$OUTCOME" >> "$GITHUB_OUTPUT"
-          echo "MERGER: pending=${PENDING_BRANCH:-none} verdict=${VERDICT:-none} reviewer=${REVIEWER_ID:-none} -> $OUTCOME"
+          echo "MERGER: pending=${PENDING_BRANCH:-none} verdict=${VERDICT:-none} reviewer=${REVIEW_MEMBER:-none} (duty: ${EXPECTED_REVIEWER}) -> $OUTCOME"
 
       - name: Landing gate, land the approved merge (race-proof vs moved main)
         id: gate
@@ -792,6 +807,7 @@ jobs:
           PENDING_AUTHOR="${{ needs.turn.outputs.pending_author }}"
           PENDING_SHA="${{ needs.turn.outputs.pending_sha }}"
           VERDICT="${{ needs.turn.outputs.review_verdict }}"
+          REVIEW_MEMBER="${{ needs.turn.outputs.review_member }}"
           SEAT="${{ needs.turn.outputs.seat }}"
           AUTHOR_BRANCH="${{ steps.merge.outputs.author_branch }}"
           AUTHOR_ID=$(printf '%s' "$SEAT" | cut -d' ' -f1)
@@ -804,18 +820,18 @@ jobs:
           # empty forever and no turn branch could ever be queued,
           # reviewed or landed). The park now keys on whether the OLD
           # pending is being RETAINED: retain-outcomes (review-missing /
-          # refused-same-member) keep the SAME branch queued for re-
-          # review; every resolved-or-empty slot (no-pending, empty-
-          # segment, approved, rejected) takes THIS run's author branch.
-          # Parked is NOT merged — the merger still demands a different
-          # member's APPROVED verdict behind the green landing gate.
-          # Single slot by design; overflow branches are Lead-merged on
-          # audit.
+          # refused-same-member / refused-wrong-reviewer) keep the SAME
+          # branch queued for re-review; every resolved-or-empty slot
+          # (no-pending, empty-segment, approved, rejected) takes THIS
+          # run's author branch. Parked is NOT merged — the merger still
+          # demands the duty reviewer's APPROVED verdict behind the
+          # green landing gate. Single slot by design; overflow branches
+          # are Lead-merged on audit.
           NEWPENDING=""
           if [ -n "$AUTHOR_BRANCH" ] && git ls-remote --exit-code --heads origin "$AUTHOR_BRANCH" >/dev/null 2>&1; then
             git fetch origin "$AUTHOR_BRANCH" >/dev/null 2>&1 || true
             AHEAD=$(git rev-list --count "origin/ai/main..origin/$AUTHOR_BRANCH" 2>/dev/null || echo 0)
-            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" != "review-missing" ] && [ "$OUTCOME" != "refused-same-member" ]; then
+            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" != "review-missing" ] && [ "$OUTCOME" != "refused-same-member" ] && [ "$OUTCOME" != "refused-wrong-reviewer" ]; then
               SHA=$(git rev-parse "origin/$AUTHOR_BRANCH")
               NEWPENDING="branch=${AUTHOR_BRANCH} | author=${AUTHOR_ID} | sha=${SHA}"
             fi
@@ -823,7 +839,7 @@ jobs:
           if [ "$OUTCOME" = "approved" ] && [ "$GATE" != "green" ]; then
             NEWPENDING="branch=${PENDING_BRANCH} | author=${PENDING_AUTHOR} | sha=${PENDING_SHA}"
           fi
-          if [ "$OUTCOME" = "review-missing" ] || [ "$OUTCOME" = "refused-same-member" ] || [ "$OUTCOME" = "rejected" ]; then
+          if [ "$OUTCOME" = "review-missing" ] || [ "$OUTCOME" = "refused-same-member" ] || [ "$OUTCOME" = "refused-wrong-reviewer" ] || [ "$OUTCOME" = "rejected" ]; then
             # REJECTED branches stay queued for re-review / Lead audit —
             # REVIEW-LOG.org law 4 promised this; the code now honors it.
             NEWPENDING="branch=${PENDING_BRANCH} | author=${PENDING_AUTHOR} | sha=${PENDING_SHA}"
@@ -840,12 +856,12 @@ jobs:
                 echo "* REVIEW ${PENDING_BRANCH} :${OUT}:"
                 echo ":PROPERTIES:"
                 echo ":AUTHOR: ${PENDING_AUTHOR:-unknown}"
-                echo ":REVIEWER: ${AUTHOR_ID:-unknown}"
+                echo ":REVIEWER: ${REVIEW_MEMBER:-unknown}"
                 echo ":VERDICT: ${VERDICT:-none}"
                 echo ":OUTCOME: ${OUT}"
                 echo ":WHEN: [${WHEN}]"
                 echo ":END:"
-                echo "  Merger outcome: ${OUT} (reviewer=${AUTHOR_ID:-unknown}, verdict=${VERDICT:-none})."
+                echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}; merge authority: Lead, executed by this gate)."
               } >> "$RLOG"
             fi
             sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"
