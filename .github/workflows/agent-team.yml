@@ -797,16 +797,25 @@ jobs:
           AUTHOR_ID=$(printf '%s' "$SEAT" | cut -d' ' -f1)
           OUT="$OUTCOME"
           [ "$OUTCOME" = "approved" ] && OUT="approved+gate-${GATE:-n/a}"
-          # Which branch is pending NEXT? Author branch takes the slot
-          # unless it is empty OR the old pending is still unresolved
-          # (review-missing / refused / gate-red keeps the old slot so the
-          # SAME branch gets re-reviewed — overflow branches are Lead-
-          # merged on audit, single-slot by design tonight).
+          # Which branch is pending NEXT? BOOTSTRAP LAW (platform-seat
+          # TEST-T2, measured live 18:41Z — the slot could NEVER fill
+          # from empty: the old write keyed on OUTCOME=approved, but
+          # approved requires a pre-existing pending, so empty stayed
+          # empty forever and no turn branch could ever be queued,
+          # reviewed or landed). The park now keys on whether the OLD
+          # pending is being RETAINED: retain-outcomes (review-missing /
+          # refused-same-member) keep the SAME branch queued for re-
+          # review; every resolved-or-empty slot (no-pending, empty-
+          # segment, approved, rejected) takes THIS run's author branch.
+          # Parked is NOT merged — the merger still demands a different
+          # member's APPROVED verdict behind the green landing gate.
+          # Single slot by design; overflow branches are Lead-merged on
+          # audit.
           NEWPENDING=""
           if [ -n "$AUTHOR_BRANCH" ] && git ls-remote --exit-code --heads origin "$AUTHOR_BRANCH" >/dev/null 2>&1; then
             git fetch origin "$AUTHOR_BRANCH" >/dev/null 2>&1 || true
             AHEAD=$(git rev-list --count "origin/ai/main..origin/$AUTHOR_BRANCH" 2>/dev/null || echo 0)
-            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" = "approved" ] && [ "$GATE" = "green" ]; then
+            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" != "review-missing" ] && [ "$OUTCOME" != "refused-same-member" ]; then
               SHA=$(git rev-parse "origin/$AUTHOR_BRANCH")
               NEWPENDING="branch=${AUTHOR_BRANCH} | author=${AUTHOR_ID} | sha=${SHA}"
             fi
@@ -814,7 +823,9 @@ jobs:
           if [ "$OUTCOME" = "approved" ] && [ "$GATE" != "green" ]; then
             NEWPENDING="branch=${PENDING_BRANCH} | author=${PENDING_AUTHOR} | sha=${PENDING_SHA}"
           fi
-          if [ "$OUTCOME" = "review-missing" ] || [ "$OUTCOME" = "refused-same-member" ]; then
+          if [ "$OUTCOME" = "review-missing" ] || [ "$OUTCOME" = "refused-same-member" ] || [ "$OUTCOME" = "rejected" ]; then
+            # REJECTED branches stay queued for re-review / Lead audit —
+            # REVIEW-LOG.org law 4 promised this; the code now honors it.
             NEWPENDING="branch=${PENDING_BRANCH} | author=${PENDING_AUTHOR} | sha=${PENDING_SHA}"
           fi
           # Race-proof control write (same fetch-reset-reapply flow as the
