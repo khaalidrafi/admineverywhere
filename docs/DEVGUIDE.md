@@ -120,7 +120,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (418 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (425 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -148,7 +148,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 418 vitest
+cd app && npm test                          # 425 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
 
@@ -296,6 +296,13 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `model.listPath`, NEVER from `apiUrl + model.id` (`apiUrl` is only the base
   origin; concatenating a bare segment produced `http://hostapi…` and silently
   broke the R-001 transition/history calls).
+  The RENDERED half is wire-pinned too:
+  `app/src/lib/__tests__/actionMount.test.ts` mounts the real page with the real
+  globbed registry and asserts the dialog blocks an empty `meta.input`, the POST
+  lands on the discovered `<listPath><id>/<slug>/`, a bulk selection posts the
+  selected **ids**, a 400 guard `reason` surfaces verbatim, the table re-reads
+  after a write (witnessed by a row the first page never carried), `meta.model`
+  scopes the button away from other models and `meta.roles` hides the batch one.
 - Lifecycle (FR-R001) is a TWO-SIDED proof, never a client-side assertion: the
   registry (`statusTransitions.ts`, keyed by model id) declares the machine,
   `normalizeOpenAPI` binds `model.transitionPath` only from a documented

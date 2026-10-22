@@ -44,6 +44,16 @@ R-003 mirrors the widget contract: the FE registers one `.ts` file exporting
   registered), then reloads the list and refreshes the open record sub-view.
   A rejected action surfaces the server `reason` (400/409 shape), never a bare
   status code.
+  That rendered behaviour is pinned at the wire, not described:
+  `app/src/lib/__tests__/actionMount.test.ts` mounts the real page against the
+  captured `fixtures/openapi.json` with the real globbed registry and asserts
+  the captured request bodies — the dialog refuses an empty `meta.input`, the
+  record POST goes to `<listPath><pk>/flag/`, the batch POST to
+  `<listPath>bulk_flag/` carrying the selected **ids**, the 400 `reason`
+  surfacing verbatim in the toast, the table re-reading after a write (proved by
+  a second list page the first read never carried), `meta.model` scoping the
+  buttons away from an unregistered model and `meta.roles` hiding the batch
+  button for a user without that Group.
 * The record sub-view (history icon, now available for every model) shows the
   R-001 lifecycle trail oldest-first and, below it, this record's audit entries
   newest-first — `GET /api/audit/?object_type=<model singular>&object_id=<pk>`.
