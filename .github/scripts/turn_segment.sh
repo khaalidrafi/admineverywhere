@@ -341,11 +341,26 @@ case "$SEAT" in
     # --help + DE analysis (TEAM-CHAT 3b00d4f):
     # --permission-mode bypassPermissions + CODEBUDDY_IS_SANDBOX=1
     # full pass (sanctioned: the job IS an isolated container).
-    if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
+    # HONEST LANE VERDICT (run 39834624187 evidence): the CLI can
+    # exit 0 over a DEAD SOCKET — "502 网络请求超时 ... connect
+    # ETIMEDOUT 0.0.0.1:443 (target: https://www.codebuddy.ai)" —
+    # and the old code recorded "run OK" over zero work. A lane
+    # that printed a network failure marker is a FAILED lane: the
+    # fallback chain fires and the result line says so.
+    CB_LOG=/tmp/cb-lane.log
+    CB_RC=0
+    env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
          codebuddy -p "$BRIEF" -y --permission-mode bypassPermissions \
-         --max-turns 100 --model deepseek-v4.1-flash; then
+         --max-turns 100 --model deepseek-v4.1-flash >"$CB_LOG" 2>&1 || CB_RC=$?
+    CB_BAD=0
+    grep -qE 'ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|网络请求超时|502 Bad Gateway' "$CB_LOG" 2>/dev/null && CB_BAD=1
+    if [ "$CB_RC" = 0 ] && [ "$CB_BAD" = 0 ]; then
+      tail -n 3 "$CB_LOG"
       echo "TURN_RESULT=codebuddy run OK (lane: deepseek-v4.1-flash@codebuddy)"
-    elif env HOME=/usr/local/lib/qoder-home \
+    else
+      echo "codebuddy lane FAILED rc=$CB_RC network_marker=$CB_BAD: $(head -c 300 "$CB_LOG" | tr '\n' ' ')"
+      echo "TURN_RESULT=codebuddy lane failed — trying fallback lanes"
+    if env HOME=/usr/local/lib/qoder-home \
          qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
          --permission-mode bypassPermissions --max-turns 100; then
       echo "TURN_RESULT=qoder run OK (lane: deepseek-v4.1-flash@qoder)"
@@ -364,19 +379,23 @@ case "$SEAT" in
     else
       echo "TURN_RESULT=BLOCKED (codebuddy+qoder-ds+zai+minimax lanes all failed — check the harness)"
     fi
+    fi
     ;;
   quality-assurance-engineer)
     # deepseek-v4.1-flash@qoder — free-offer hire (Owner
     # order 2026-10-22 #admincraft). The qoder model flag is
     # UNVERIFIED — if the CLI rejects it the chain self-heals to
     # the next lane; never blocks the segment.
+    CB_LOG=/tmp/cb-lane.log
     if env HOME=/usr/local/lib/qoder-home \
          qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
          --permission-mode bypassPermissions --max-turns 100; then
       echo "TURN_RESULT=qoder run OK (lane: deepseek-v4.1-flash@qoder)"
     elif env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
          codebuddy -p "$BRIEF" -y --permission-mode bypassPermissions \
-         --max-turns 100 --model deepseek-v4.1-flash; then
+         --max-turns 100 --model deepseek-v4.1-flash >"$CB_LOG" 2>&1 \
+         && ! grep -qE 'ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|网络请求超时|502 Bad Gateway' "$CB_LOG"; then
+      tail -n 3 "$CB_LOG"
       echo "TURN_RESULT=codebuddy run OK (lane: deepseek-v4.1-flash@codebuddy)"
     elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
          OPENAI_API_KEY="$GROQ_API_KEY" \
@@ -404,9 +423,17 @@ case "$SEAT" in
     # at software-engineer. If the paid lane fails, the segment
     # still runs on the proven free lanes but the result SAYS
     # the burn did not happen — a visit is never faked.
-    if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
+    # Honest-verdict guard: a network-marker exit-0 is a DEAD lane
+    # (www.codebuddy.ai ETIMEDOUT evidence, run 39834624187).
+    CB_LOG=/tmp/cb-lane.log
+    CB_RC=0
+    env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
          codebuddy -p "$BRIEF" -y --permission-mode bypassPermissions \
-         --max-turns 100 --model glm-5.3; then
+         --max-turns 100 --model glm-5.3 >"$CB_LOG" 2>&1 || CB_RC=$?
+    CB_BAD=0
+    grep -qE 'ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|网络请求超时|502 Bad Gateway' "$CB_LOG" 2>/dev/null && CB_BAD=1
+    if [ "$CB_RC" = 0 ] && [ "$CB_BAD" = 0 ]; then
+      tail -n 3 "$CB_LOG"
       echo "TURN_RESULT=codebuddy PAID run OK (lane: glm-5.3@codebuddy — visiting burn)"
     elif env HOME=/usr/local/lib/qoder-home \
          qoder -p "$BRIEF" --output-format json \
