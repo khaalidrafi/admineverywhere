@@ -1775,6 +1775,9 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-006 page registration                                            :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 00:43 UTC] :: SHA ADDENDUM to the 00:38Z note: the
+  work landed as commit eaada97 on ai/turn-20261022-0027 (`git log --oneline -1` after
+  the commit; the harness still answers rc 0 on the committed tree).
 - Note taken on [2026-10-22 Thu 00:38 UTC] :: CROSS-REF (no state change; board
   stays exhausted — every WORK ORDER row still carries :DELIVERED:): the
   registry-side hole the 00:22Z widget-twin finding exposed is now a machine
