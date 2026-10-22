@@ -9,7 +9,7 @@
 #+TURN: glm-4.7-flash@goose (Relief Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: ON
-#+CHAIN-PAUSE:
+#+CHAIN-PAUSE: armed 2026-10-22 12:04Z — a TODO was delivered; the Lead clears this line to resume
 
 * Notes
 
