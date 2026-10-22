@@ -1986,6 +1986,59 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 01:44 UTC] :: :DELIVERED: (the FR-R008 feed
+  contract is now a machine-checked artifact; cross-ref only, no state change,
+  DONE stays the Lead's gate, no OBJECTIVE-STATE change, no completion claim.
+  Board re-measured this boot: 14 PENDING + 4 DONE, zero TODO/ONGOING/WAIT, every
+  WORK ORDER row carries :DELIVERED:, no unanswered @platform-engineer ping in the
+  chat tail. ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, measured) ->
+  the Lark copy of the report is skipped, not lost, and noted here.)
+  WHAT — branch ai/turn-20261022-0132, work commit d4b5229:
+  `scripts/doc_field_roster_diff.py` gained a FOURTH contract: the nested FR-R008
+  feed block — `WidgetDataSpec` in `app/src/lib/widgets/feed.ts` (6 fields) against
+  the six-name list both mirror docs publish in the widget bullet (`AGENTS.md:41`,
+  `docs/DEVGUIDE.md:44`). Pins moved `EXPECTED_REGISTRIES 3 -> 4`,
+  `EXPECTED_LISTS 12 -> 14`; per-registry lists 3+2+1+1, code fields 7+7+3+6.
+  MEASURED BEFORE WIRING: the two AGREE — `feed: 6 fields, 2 doc list(s), 12 field
+  claim(s)` — so this leg ships green, exactly as my 01:27Z report predicted ("a leg
+  waiting to be wired, not a bug"). The reason to wire a green leg:
+  `validateWidgetData` IGNORES a key the interface lacks and defaults the rest, so a
+  doc field that drifts off `WidgetDataSpec` is invisible to the user and visible
+  only to a doc-vs-code diff. No new twin leg: the file already ran as `doc-twin`,
+  so `EXPECTED_TWINS` stays 6, the merge roster stays 3 legs + env, and gate.sh was
+  never opened.
+  ATTRIBUTION HAD TO CHANGE — the feed list and the widget `meta` list live in the
+  SAME paragraph, so any paragraph dir token answers "names 2 registries"; the entry
+  carries its own literal (a brace body opening with the source field name) and is
+  attributed by construction, and a list claimed by BOTH the generic and the own read
+  is CANNOT RUN instead of silently grading one sentence twice.
+  CONTROLS — eleven, every mutation on a COPY under /tmp (`--root`, shipped tree read
+  only; `git status` clean for `.github/`): COVERAGE RED (`rowCap` stripped from both
+  docs); DOC-NAMED RED at both mirror lines; OPTIONAL RED (`endpoint?` against a
+  required interface field); MIRROR RED and nothing else (list reordered in AGENTS.md
+  only — the doors are independent for this contract too); population RED -> CANNOT
+  RUN `the docs carry 12 contract list(s), EXPECTED_LISTS pins 14`; a second copy
+  added -> CANNOT RUN on the same total pin; the list deleted in AGENTS.md while one
+  is added in DEVGUIDE so the TOTAL stays 14 -> CANNOT RUN `feed in AGENTS.md: 0
+  contract list(s), this harness owes 1` (the per-registry door fires on its own);
+  CODE pin RED (`rowCap` -> `maxRows` in a copy of feed.ts); interface renamed away ->
+  CANNOT RUN; the widget list re-spelled to open with the source field -> CANNOT RUN
+  on the overlap door.
+  GATES, re-run AFTER the doc edits: `landing_gate.py --fe` rc 0 over 11 legs (pytest
+  299, System check no issues, No changes detected, vitest 416/31 files, csv-twin 3070
+  cells, brand-twin 302/350, parity-twin identical, gate-twin 3/3, registry-twin 3
+  registries/16 drop-ins, doc-twin 4 registries / 23 contract fields / 14 doc lists /
+  88 field claims graded); `registry_roster_diff.py` rc 0; `gate_roster_diff.py` rc 0;
+  `release_readiness.py` rc 0 (doc-counts 8 live claims == the pins, no PEP 604).
+  AGENTS.md edits are line-neutral (739 lines before and after, so the cited
+  `AGENTS.md:73/190/450` still land on their symbols); DEVGUIDE grew, and no doc cites
+  a DEVGUIDE line number. No suite count moved, so no `EXPECTED_PYTEST`/`EXPECTED_VITEST`
+  pin and no graded doc row could drift.
+  COLD-BOOT COST (18th consecutive): `/sessions-restore` mounted ZERO entries again, so
+  this seat hand-ran the venv install AND `python3 -m pip install -e ./plugin --no-deps`
+  — the env leg answered CANNOT RUN until then, which is precisely the swallowed boot
+  install at `.github/workflows/agent-team.yml:509`.
+  SECRET LAW held — no credential read, echoed or committed.
 - Note taken on [2026-10-22 Thu 00:22 UTC] :: :DELIVERED: (the widget contract
   test was grading a module the product never imports — cross-ref, no state
   change, DONE stays the Lead's gate, no OBJECTIVE-STATE change, no completion
