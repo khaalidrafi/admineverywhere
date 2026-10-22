@@ -29,10 +29,16 @@ workflow by hand:
      unconditionally. A race-proof WRITE is only race-proof for the lines it
      re-reads.
 
-Findings 1-3 are fixed; #4 is open and its fix lives in a Lead-owned file
-(.github/workflows/* — a seat may not edit it), so this harness hands over what
-a seat CAN: the defect as a command, and a ready-to-apply patch
-(docs/pending-slot-fix.patch) that the Lead can land in one commit.
+Findings 1-3 are fixed; #4 was hardened by the Lead in place (ed378d4 non-clobber
+slot guard), which differs from the delivered proposal patch (docs/pending-slot-fix.patch
+no longer `git apply`-clean against the shipped shape) and, while re-indenting the sed
+into the new guard, DROPPED the trailing `"$CTL"` file operand. The shipped writer is now
+`sed -i "s%...%...% "` with no file: GNU sed 4.9 errors "no input files" (rc 4) and
+edits NOTHING, the step runs without `set -e`, and the commit message still prints
+"next pending: ${NEWPENDING}" — so the slot's whole durability story is silently
+unenforced going forward. That fix lives in a Lead-owned file (.github/workflows/*,
+a seat may not edit), so this harness hands over what a seat CAN: the defect as a
+command, with file:line evidence and the one-token repair (add `"$CTL"`).
 
 This harness grades the shipped workflow READ-ONLY. Four legs, one per claim
 above that the machinery is supposed to honor:
@@ -45,9 +51,10 @@ above that the machinery is supposed to honor:
                   (agent-team/REVIEW-LOG.org review law 4), not just refused or
                   review-missing.
   blank-guard     the control write inside the race-proof loop re-reads the slot
-                  AFTER its own `git reset --hard` and refuses to blank a slot it
-                  did not read, resolve or park. This is the leg the 20:47Z loss
-                  trips, and the shipped tree is RED on it.
+                  AFTER its own `git reset --hard`, refuses to blank a slot it did
+                  not read/resolve/park, and ACTUALLY WRITES — the write must carry
+                  a file operand, or "no clobber" becomes "never write at all".
+                  The shipped tree is RED on this leg (the dropped `"$CTL"`).
 
 Verdicts follow the house convention (docs/DEVGUIDE.md *EIGHTH* + *ELEVENTH*
 harness laws): 0 = OK, 1 = RED (a claim is false), 2 = CANNOT RUN (the harness no
@@ -58,7 +65,7 @@ quieter green.
   python3 scripts/chain_slot_check.py                  # grade this tree (RED by design)
   python3 scripts/chain_slot_check.py --root /tmp/copy # grade another tree
   python3 scripts/chain_slot_check.py --live           # also list dropped author branches
-  python3 scripts/chain_slot_check.py --selftest       # 8 controls, every leg able to fail
+  python3 scripts/chain_slot_check.py --selftest       # 9 controls, every leg able to fail
 
 Deliberately NOT named `*_diff.py`: that glob IS the landing gate's twin roster
 (`scripts/landing_gate.py` EXPECTED_TWINS cross-checks every `scripts/*_diff.py`
@@ -80,7 +87,6 @@ import tempfile
 # tree it grades proves nothing.
 WORKFLOW_REL = ".github/workflows/agent-team.yml"
 CTL_REL = "agent-team/TEAM-CONTROL.org"
-PATCH_REL = "docs/pending-slot-fix.patch"
 
 MERGE_STEP = "Merger — resolve the pending branch"
 SEGREGATE_STEP = "SEGREGATION bookkeeping"
@@ -105,7 +111,14 @@ RUN_RE = re.compile(r"^\s*run:\s*\|\s*$")
 LOOP_RE = re.compile(r"^\s*for i in 1 2 3; do\s*$")
 DONE_RE = re.compile(r"^\s*done\s*$")
 ASSIGN_VAR_RE = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)="\$\(grep .*PENDING-REVIEW')
-SED_WRITE_RE = re.compile(r'^\s*sed -i .*PENDING-REVIEW.*"\$CTL"')
+# The slot write. The hardened writer (Lead ed378d4) re-indented the sed into a
+# non-clobber guard and, in doing so, DROPPED the trailing "$CTL" file operand, so
+# the matcher may no longer require it on the line — otherwise the slot's only
+# writer is invisible and every leg refuses. A `sed -i` with no operand is a defect
+# in its own right (blank-guard names it), so recognition and grading are split:
+# this regex FINDS the write, CTL_OPERAND_RE checks that it TARGETS the control file.
+SED_WRITE_RE = re.compile(r'^\s*sed -i .*PENDING-REVIEW')
+CTL_OPERAND_RE = re.compile(r'"\$CTL"')
 
 
 class CannotRun(Exception):
@@ -339,9 +352,21 @@ def leg_blank_guard(seg_body):
                     "loop line %d (indent %d vs %d) - the comparison runs and is thrown "
                     "away" % (write_at + 1, guard_at + 1, indent_of(loop[write_at]),
                               indent_of(loop[guard_at]))]
-    return ["blank-guard: the loop re-reads $%s after its reset (loop line %d) and the "
-            "write at loop line %d is guarded by the comparison at loop line %d"
-            % (reread_var, reread_at + 1, write_at + 1, guard_at + 1)], []
+    if not CTL_OPERAND_RE.search(loop[write_at]):
+        return [], ["blank-guard: the slot write at loop line %d runs `sed -i` with NO file "
+                    "operand - GNU sed errors \"no input files\" (rc 4, measured on sed 4.9) "
+                    "and edits NOTHING, and this step runs without `set -e`, so the "
+                    "non-clobber guard computes the park/retain/clear decision and prints it "
+                    "in the commit message (\"next pending: ${NEWPENDING}\") but never writes "
+                    "it to %s. Every slot law this harness grades is silently unenforced: an "
+                    "author branch never parks, a rejected pending never retains, and a "
+                    "resolved branch is never cleared. Fix (Lead-owned): add `\"$CTL\"` as "
+                    "the sed operand - the pre-hardening writer carried it and ed378d4 "
+                    "dropped it while re-indenting the guard into the write."
+                    % (write_at + 1, CTL_REL)]
+    return ["blank-guard: the loop re-reads $%s after its reset (loop line %d), the write "
+            "at loop line %d is guarded by the comparison at loop line %d and carries its "
+            "%s operand" % (reread_var, reread_at + 1, write_at + 1, guard_at + 1, CTL_REL)], []
 
 
 # -------------------------------------------------------------------- grading
@@ -449,10 +474,12 @@ def live_note(root):
 
 # ------------------------------------------------------------------ selftest
 # A check that cannot FAIL is not a check (DEVGUIDE *EIGHTH harness law*, applied
-# to the harness itself). The shipped tree is RED on blank-guard, so a GREEN
-# baseline has to be BUILT - by applying the delivered proposal patch to a COPY -
-# before a control can prove that a leg can go red. The shipped tree is never
-# written to and no Lead-owned file is ever touched.
+# to the harness itself). The Lead hardened the writer in place (ed378d4) with a
+# guard that differs from the delivered proposal patch (docs/pending-slot-fix.patch
+# no longer `git apply`-clean), and in re-indenting the sed dropped its `"$CTL"`
+# operand - so the shipped tree is RED on blank-guard and the green baseline is
+# BUILT by restoring that operand to a COPY, not by applying the stale patch. The
+# shipped tree is never written to and no Lead-owned file is ever touched.
 def _read_file(root, rel):
     with open(os.path.join(root, rel), encoding="utf-8") as fh:
         return fh.read()
@@ -470,31 +497,26 @@ def _replace_once(root, rel, old, new):
     _write_file(root, rel, text.replace(old, new, 1))
 
 
-def apply_patch(root):
-    """Apply the delivered proposal patch to a COPY (never to the shipped tree)."""
-    patch = os.path.join(root, PATCH_REL)
-    if not os.path.exists(patch):
-        raise CannotRun("the delivered patch %s is not in this tree - the green baseline "
-                        "cannot be built" % PATCH_REL)
-    check = subprocess.run(("git", "apply", "--check", patch), cwd=root,
-                           capture_output=True, text=True)
-    if check.returncode != 0:
-        raise CannotRun("the delivered patch does not apply to this tree: %s"
-                        % check.stderr.strip()[:200])
-    done = subprocess.run(("git", "apply", patch), cwd=root, capture_output=True, text=True)
-    if done.returncode != 0:
-        raise CannotRun("the delivered patch failed to apply: %s" % done.stderr.strip()[:200])
+# The shipped (hardened) slot-write exactly as it sits on ai/main, and the
+# one-token fix: GNU sed needs a file operand, the landed line has none.
+SED_WRITE_LINE = ('              sed -i "s%^\\#+PENDING-REVIEW:.*%'
+                  '\\#+PENDING-REVIEW: ${NEWPENDING}%"\n')
+SED_WRITE_FIXED = ('              sed -i "s%^\\#+PENDING-REVIEW:.*%'
+                   '\\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"\n')
+LANDED_REREAD = ('            CURSLOT="$(grep -E \'^\\#+PENDING-REVIEW:\' "$CTL" | head -1 | '
+                 'sed \'s/^#+PENDING-REVIEW:[[:space:]]*//\' | xargs || true)"\n')
+LANDED_GUARD = ('            if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || '
+                '{ [ -n "${PENDING_BRANCH:-}" ] && [ "$SLOTISOURS" = "1" ]; }; then\n')
 
 
-GUARDED_WRITE = (
-    '            if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || [ "$CURSLOT" = '
-    '"$NEWPENDING" ]; then\n'
-    '              sed -i "s%^\\#+PENDING-REVIEW:.*%\\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"\n'
-    '            else\n'
-)
+def build_green(root):
+    """Restore the dropped sed operand on a COPY — the fix the Lead must ship.
 
-REREAD_LINE = ('            CURSLOT="$(grep -E \'^\\#+PENDING-REVIEW:\' "$CTL" | head -1 | '
-               'sed \'s/^#+PENDING-REVIEW:[[:space:]]*//\' | xargs || true)"\n')
+    This is the green baseline: the non-clobber guard already re-reads $CURSLOT
+    after the reset and gates the write, so once the write actually targets "$CTL"
+    all four slot laws hold.
+    """
+    _replace_once(root, WORKFLOW_REL, SED_WRITE_LINE, SED_WRITE_FIXED)
 
 
 def control_no_change(root):
@@ -529,36 +551,29 @@ def control_drop_merger_reread(root):
 
 
 def control_drop_loop_reread(root):
-    """The patched guard, minus its re-read: the write trusts its stale value."""
-    _replace_once(root, WORKFLOW_REL, REREAD_LINE, "")
+    """The hardened guard, minus its re-read: the write trusts its stale value."""
+    _replace_once(root, WORKFLOW_REL, LANDED_REREAD, "")
 
 
 def control_unguard_write(root):
-    """The patched guard, minus the guard: the write is unconditional again."""
-    _replace_once(root, WORKFLOW_REL,
-                  GUARDED_WRITE + '              echo "SEGREGATION: ${CURSLOT} changed '
-                  'under this run — slot retained, an empty write does not blank it"\n'
-                  '            fi\n',
-                  '            sed -i "s%^\\#+PENDING-REVIEW:.*%\\#+PENDING-REVIEW: '
-                  '${NEWPENDING}%" "$CTL"\n')
+    """The hardened write, minus the guard: nothing judges it, so an empty value blanks."""
+    _replace_once(root, WORKFLOW_REL, LANDED_GUARD, '            if true; then\n')
 
 
 def control_drop_write_site(root):
     """No slot write at all: the harness cannot understand its own input."""
-    _replace_once(root, WORKFLOW_REL,
-                  '            sed -i "s%^\\#+PENDING-REVIEW:.*%\\#+PENDING-REVIEW: '
-                  '${NEWPENDING}%" "$CTL"\n',
-                  '            sed -i "s%^\\#+STALL-COUNT:.*%\\#+STALL-COUNT: ${NEWPENDING}%" '
-                  '"$CTL"\n')
+    _replace_once(root, WORKFLOW_REL, SED_WRITE_FIXED,
+                  '              sed -i "s%^\\#+STALL-COUNT:.*%\\#+STALL-COUNT: '
+                  '${NEWPENDING}%" "$CTL"\n')
 
 
 def control_missing_workflow(root):
     os.remove(os.path.join(root, WORKFLOW_REL))
 
 
-# (name, mutation, expected rc, expected text, apply the patch first?)
+# (name, mutation, expected rc, expected text, build the green baseline first?)
 CONTROLS = (
-    ("patched baseline is green", control_no_change, 0, "SLOT CHECK OK", True),
+    ("operand fix is green", control_no_change, 0, "SLOT CHECK OK", True),
     ("shipped tree is red", control_no_change, 1, "blank-guard", False),
     ("approved+green park gate back", control_reintroduce_approved_gate, 1, "park-bootstrap", True),
     ("rejected dropped from retain", control_drop_rejected_retain, 1, "verdict-retain", True),
@@ -578,15 +593,15 @@ def selftest(root):
                         % (len(CONTROLS), EXPECTED_CONTROLS))
     script = os.path.join(root, "scripts", "chain_slot_check.py")
     failures = []
-    for name, mutation, expected_rc, expected_text, patched in CONTROLS:
+    for name, mutation, expected_rc, expected_text, green_base in CONTROLS:
         tmp = tempfile.mkdtemp(prefix="chain-slot-control-")
         target = os.path.join(tmp, "tree")
         try:
             shutil.copytree(root, target, symlinks=True,
                             ignore=shutil.ignore_patterns("node_modules", "__pycache__",
                                                           ".pytest_cache", "dist", "build"))
-            if patched:
-                apply_patch(target)
+            if green_base:
+                build_green(target)
             mutation(target)
             proc = subprocess.run([sys.executable, script, "--root", target],
                                   capture_output=True, text=True)

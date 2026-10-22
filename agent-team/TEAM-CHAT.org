@@ -6186,3 +6186,76 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   NEXT (your call): (1) apply docs/pending-slot-fix.patch in one commit; (2) re-park or
   audit-merge the five dropped branches — 1904 first, it is the re-queue you already
   ordered; (3) re-probe this seat's goose arms, or repoint #+TURN at the lane that works.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 21:59 UTC]
+:END:
+  THE HARDENED SLOT WRITER LOST ITS FILE OPERAND — AND THE CHECK THAT WAS SUPPOSED
+  TO CATCH IT HAD GONE BLIND (rc 2). I made the check see it again (rc 1, RED, with
+  the one-token fix), which is the seat-lane half of this; the writer itself is
+  Lead-owned and stays untouched.
+  WHAT I GRADED (read-only, .github/workflows/agent-team.yml:921): the SEGREGATION
+  bookkeeping step now runs
+    sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%"
+  with NO file operand. `git show ed378d4` shows the regression: the pre-hardening
+  line ended `...% "$CTL"`; ed378d4 re-indented the sed into the new non-clobber
+  guard and dropped `"$CTL"`. Measured on this box (GNU sed 4.9): `sed -i "EXPR"`
+  with no file prints "sed: no input files" rc 4 and edits NOTHING; the step carries
+  no `set -e`, so git add/commit run anyway and the commit message still prints
+  "next pending: ${NEWPENDING}". Net: every ci-review bookkeeping run computes the
+  park/retain/clear decision and advertises it in the message, but the slot line is
+  never written — the bootstrap fix, the rejected-retain law and the post-merge clear
+  are all silently unenforced, wearing a healthy-looking commit message. This is the
+  NEXT run's deadlock, masked.
+  WHY THE CHAIN DID NOT SEE IT: scripts/chain_slot_check.py (the relief seat's
+  re-runnable slot law, now on ai/main) matched the writer only when `"$CTL"` was on
+  the sed line. The hardened line lacks it, so the harness reported CANNOT RUN
+  "writes #+PENDING-REVIEW: in 0 place(s)" — it had stopped understanding its own
+  input at the exact moment the input changed. Its --selftest was CANNOT RUN too: it
+  built its green baseline by `git apply`-ing docs/pending-slot-fix.patch, which no
+  longer applies, because the Lead hardened the writer in place with a DIFFERENT
+  guard than that patch.
+  WHAT LANDED (scripts/chain_slot_check.py only — no Lead-owned file touched):
+  - the slot-write matcher now FINDS the write whether or not the operand is present;
+  - blank-guard gained the missing half it was always supposed to grade: a "no clobber"
+    guard means nothing if the write never lands, so the leg now REFUSES a `sed -i`
+    with no file operand and names the fix;
+  - the green baseline is now BUILT by restoring the operand on a COPY (the fix), not
+    by applying the obsolete patch;
+  - the other three legs and the whole control roster were re-anchored to the shipped
+    hardened shape.
+  VERDICTS: `python3 scripts/chain_slot_check.py` -> rc 1, "3 of 4 green, red:
+  blank-guard" — merger-reread / park-bootstrap / verdict-retain GREEN, blank-guard RED
+  naming the dropped operand at loop line 35 with the repair.
+  `python3 scripts/chain_slot_check.py --selftest` -> rc 0 over 9 controls: operand fix
+  is green, shipped tree is red, and each of the four legs proved able to fail (two
+  CANNOT RUN controls). `--live` re-lists the 5 author branches still outside the slot
+  with unmerged work (1904, 1931, 1950, 2039, ai/turn-20261021-0011).
+  GATE: `python3 scripts/landing_gate.py` rc 0 — GATE GREEN 4/4 (env django 5.2.18,
+  pytest 299 passed, System check 0 issues, No changes detected). NOT run --fe/vitest:
+  this segment edits one chain harness (a `*_check.py`, not a `*_diff.py` twin), zero
+  app/ or plugin/ file, and app/node_modules is absent at boot (the self-install is
+  still owed to docker/harness). `python3 scripts/release_readiness.py` rc 0 and
+  `python3 scripts/chain_test_check.py` rc 0 also re-run green.
+  FIX (your commit, one token): append ` "$CTL"` to the sed at
+  .github/workflows/agent-team.yml:921 — inside the guard, at the deeper indent. The
+  harness will then read SLOT CHECK OK on the shipped tree with no code change to it.
+  SCOPE: board untouched (no chain-machinery headline; the four FEATURE-ORDER entries —
+  verify-cool-chat-2, COOL-CHAT-SEND-BACK-2, FR-R001-FE, COOL-PREVIEW — are all already
+  :DELIVERED: and PENDING, so the next real feature move is a Lead resume/DONE, not a
+  new author segment). Chat append-only, #+OBJECTIVE-STATE untouched, no completion
+  claimed, no secret read/echoed/committed.
+  LANE: the qoder lane ran for this seat (rotation pointer TEAM-CONTROL.org:9 =
+  qwen3.8-flash@qoder); GITHUB_RUN_ID unset in the container (measured), so the run id
+  is this branch's base 3462960. ROLE_LARK_WEBHOOK empty in this env (measured) — the
+  Lark copy of this report is SKIPPED, not lost, no URL invented.
+  RESULT: DONE — one Lead-owned defect named and measured at file:line, and the seat's
+  own check for it repaired from blind (rc 2) to red-with-the-fix (rc 1), 9/9 controls
+  and the landing gate green.
+  NEXT (your call): (1) the one-token operand fix at :921 before the next bookkeeping
+  run makes the deadlock live again; (2) resume/DONE the four delivered FEATURE-ORDER
+  entries so the rotation has a real next item; (3) the 5 dropped branches still want an
+  audit-merge.
