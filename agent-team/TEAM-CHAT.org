@@ -6111,3 +6111,49 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   Read your turn brief as usual — nothing changes for how you author;
   what changed is WHO reviews (QA, not the next seat) and who the
   merger answers to (the Lead).
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 20:44 UTC]
+:END:
+  TEST-T3 — the chain's own state, read off this tree (third cycle: T1 docs/CHAIN-TEST.md:66,
+  T2 :67, T3 this entry). RESULT: DONE.
+  CHAT: 128 `* MSG` headlines = 128 `:PROPERTIES:` = 128 `:FROM:` = 128 `:END:`, so every
+  entry carries its FROM in the headline and a complete drawer; append-only held — the 23
+  commits that touched the chat inside the objective's window (base 490ffa03) are each a
+  BYTE PREFIX of the current file and 0 of the 128 entries ever disappeared (2 historical
+  bodies were reworded, at line 645 and 704 — rewording is allowed, removal is not).
+  BOARD: untouched — 0 ONGOING headlines, no TEST-CHAIN item, and all 14 parked feature
+  items are still headlines (agent-team/TODOS.org:9 :176 :489 :540 :663 :719 :887 :1847
+  :2058 :2539 :2690 :2743 :3079 :3332), so the restored FEATURE-ORDER is intact underneath.
+  LEAD-OWNED FILES read only, never edited: agent-team/TEAM-CONTROL.org:7 OBJECTIVE-STATE
+  OPEN, :9 TURN qwen3.8-flash@qoder (Platform Engineer), :10 STALL-COUNT 1, :13
+  PENDING-REVIEW empty; .github/* untouched; .gitattributes untouched.
+  MACHINERY CHECK RE-RUNNABLE: `python3 scripts/chain_test_check.py` rc 0 on this tree
+  (10 run lines, every run id resolves to a real commit, 9 summary lines); the landing gate
+  is GREEN before this commit — `python3 scripts/landing_gate.py` rc 0 over the 4 pinned
+  legs (pytest 299 passed, manage.py check 0 issues, no migration drift).
+  ONE MEASUREMENT THE LEAD SHOULD SEE: my first gate call answered
+  `CANNOT RUN [env] — /usr/local/bin/python3 cannot import 'admincraft'` (rc 2) and only
+  went green after `python3 -m pip install -e ./plugin --no-deps`. The boot script runs that
+  install with `2>/dev/null || true` (.turn-inside.sh:14), so in my lane the preflight was
+  the ONLY thing that surfaced a swallowed install — which is exactly what the preflight
+  exists for (AGENTS.md, *EIGHTH harness law*), but it means a seat can reach the gate
+  without its deps and still read a plausible red. Note also T2's finding is no longer
+  invisible: STALL-COUNT is 1 (:10, raised by e846f89 "segment no-pending, result none")
+  while PENDING-REVIEW is still empty (:13) and REVIEW-LOG.org carries only the two pre-fix
+  REJECTED records (:32 19:46Z, :44 20:10Z) — nothing has landed through the segregation
+  path since the Lead's manual audit-merge 765dbd91. Fix stays Lead-owned, NOT applied here.
+  SCOPE: board verification + this report + the 3-line summary closing docs/CHAIN-TEST.md —
+  nothing else. No workflow edit, no patch, no board flip, no completion claim;
+  #+OBJECTIVE-STATE is the Lead's gate.
+  LANE: the qoder arm ran for this seat (first arm, .turn-inside.sh:61-64; rotation pointer
+  TEAM-CONTROL.org:9). GITHUB_RUN_ID is unset inside the container (measured, empty), so the
+  run id logged is this branch's base e846f89. ROLE_LARK_WEBHOOK is empty in this env
+  (length 0, measured) — the Lark copy of this report is SKIPPED, not lost; no URL invented.
+  NEXT: TEST-CHAIN third cycle is complete (T1+T2+T3). The chain cannot advance on its own —
+  the pending-slot bootstrap fix from T2 is a two-line edit to .github/workflows/agent-team.yml
+  (:809 write condition, :817 retain clause) which no seat may touch, so it needs a Lead
+  commit before any turn branch can land again; only then restore the FEATURE-ORDER dispatch.
