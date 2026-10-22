@@ -3260,6 +3260,75 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
 :END:
 ** PENDING COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend       :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 16:16 UTC] :: :DELIVERED: (branch
+  ai/turn-20261022-1602 @ f2fdd7d — the SECOND entry of the FEATURE-ORDER the
+  Lead restored at 11:55Z, taken after the Lead cleared the pause for
+  verify-cool-chat-2's PASSED review (71f423c). The wiring, the legend and the
+  wire-level proof were already merged (a5c45f7, re-derived green on the merged
+  tree by the previous item at 6141e26); what this segment closes is the half
+  of the item's own root cause that was still standing on the tree.)
+  MEASURED FIRST: the defect this item exists to kill was still reproducible.
+  app/src/lib/openapi.ts:220-229 shipped `schemaSummary` before this note — a
+  line-for-line legend-less clone of the live buildSchemaPrompt, ZERO product
+  callers (grep "schemaSummary" across the repo: openapi.ts + its own test +
+  cool_chat_check's prohibition of it), kept green by
+  openapi.test.ts:128-137. That is the exact
+  shape the item's first finding names ("buildSchemaPrompt ships with 5 tests
+  and no caller, while the live prompt path stays schemaSummary"); a second
+  builder that compiles and passes is what a future edit re-imports, so the
+  item was not structurally closed.
+  CHANGED: `schemaSummary` deleted (openapi.ts now ends at :217 with
+  normalizeOpenAPI). Its fixture-backed assertions — legend, "- Product
+  [/api/products/]:", "category(fk->categories)", one line per model and the
+  population pin — moved onto the LIVE builder in
+  app/src/lib/__tests__/chat.test.ts:152-166, graded against
+  normalizeOpenAPI(real fixture) rather than a hand-shaped object. COVERAGE
+  SWAPPED, NOT LOST: one test deleted, one added, vitest still 417 passed / 32
+  files — so landing_gate's EXPECTED_VITEST/EXPECTED_VITEST_FILES pins
+  (:68-69) needed no bump and no doc count went stale.
+  GUARD (so the twin cannot return silently): scripts/cool_chat_check.py gained
+  a FIFTH leg, one-builder — exactly one product file under app/src writes the
+  `name(fk->model)` prompt line, and it must be chat.ts (test dirs out of
+  domain: the wire proof asserts that literal on purpose). RED was observed
+  BEFORE the deletion: "one-builder RED — 2 builder(s): app/src/lib/chat.ts,
+  app/src/lib/openapi.ts" rc 1; GREEN after. A live-path grep alone could never
+  have fired, which is why the clone survived four reviewed turns.
+  --selftest gained control 12 (control_second_builder: re-adds the clone to
+  openapi.ts IN A COPY, expects rc 1 naming one-builder) — 12 controls, rc 0,
+  every leg proved able to fail.
+  GATE: python3 scripts/landing_gate.py --fe rc 0 — GATE GREEN, 11/11 legs on
+  the pinned roster (env django 5.2.18, pytest 299 passed, System check
+  identified no issues, No changes detected, vitest 417 passed / 32 files,
+  csv/brand/parity/gate/registry/doc twins all IDENTICAL);
+  python3 scripts/cool_chat_check.py rc 0 (5 legs) and --selftest rc 0 (12
+  controls); python3 scripts/release_readiness.py rc 0 (88 citations bounded,
+  doc-quoted counts equal the gate's own pins); tsc --noEmit rc 0. Deps were
+  NOT on this box at boot (no app/node_modules, plugin not installed) — the
+  merge gate answered CANNOT RUN rc 2 first, so `pip install -e ./plugin
+  --no-deps` + `npm install` ran before any verdict was recorded (the EIGHTH
+  law: a swallowed install wears pytest's exit 2 as a red tree).
+  REPORTED, NOT FIXED (Lead's call, and NOT mine to edit): the chain's own
+  evidence harness is RED on HEAD, one turn before mine —
+  python3 scripts/chain_test_check.py rc 1, "CHAT-FORMAT line 5715: headline
+  does not carry the FROM". Cause: agent-team/TEAM-CHAT.org:5715 is the Lead's
+  13:35Z `:hiring-consult:` entry, and the grammar at
+  scripts/chain_test_check.py:124 admits `:(?P<kind>\w+):` — a HYPHEN is not
+  `\w`, so a hyphenated KIND can never parse, and the template's legal kinds
+  (dispatch|report|request|escalation|review|note) never needed one. The fix is
+  the Lead's (post with a legal kind, or widen the grammar + the format law in
+  the same commit); append-only law forbids me touching another seat's entry,
+  so nothing was edited here. Not gate-blocking: gate.sh runs the three merge
+  legs only and chain_test_check is a hand-run harness (grep in .github/ -> 0
+  hits).
+  STATE: unchanged PENDING (it already was; DONE stays the Lead's gate). LARK:
+  ROLE_LARK_WEBHOOK empty in this seat's env (measured) — report skipped, no
+  URL invented. Lane: qwen3.8-flash@qoder (the relief-engineer seat's fourth
+  arm — zai/glm-4.7-flash@goose, minimax@goose and groq@goose each failed ahead
+  of it; the same shape that painted stall=4 BLOCKED last segment, so the
+  Lead may want the lane itself re-probed).
+  NEXT: the chain PAUSES here for Lead review (PAUSE-AFTER-TODO); the next
+  FEATURE-ORDER entry is FR-R001-FE. I claim no completion and touch no
+  #+OBJECTIVE-STATE.
 - Note taken on [2026-10-20 Tue 23:45] :: :DELIVERED: (ai/turn-20261020-2338
   @ a5c45f7 — the WIRING and the LEGEND were already merged and verified at
   ChatPanel.svelte:9/:69 + chat.ts:48-49; what this segment added is the
