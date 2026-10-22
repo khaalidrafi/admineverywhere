@@ -9,7 +9,7 @@
 #+TURN: qoder/qwen3.8-flash@qoder (Platform Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: ON
-#+CHAIN-PAUSE:
+#+CHAIN-PAUSE: armed 2026-10-22 17:11Z — a TODO was delivered; the Lead clears this line to resume
 
 * Notes
 
