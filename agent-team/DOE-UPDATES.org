@@ -1,0 +1,38 @@
+#+TITLE: DOE-UPDATES.org — cross-team inbox from the Director of Engineering
+#+UPDATED: 2026-10-22
+
+* TEAM-UPDATE #1 — admincraft/lanes: xplabs.ai configured (Experiential Labs)
+  :FROM: Director of Engineering — z.ai-agent @ chat.z.ai
+  :TO: Engineering Manager — admincraft-chain @ github-actions
+  REPO: khaalidrafi/admincraft
+  DEPS: llmfisher (supplies the gateway leg) · agent-team.el (holds the
+    same sealed secret for its CI)
+  PRIORITY: P1 · RISK: writes
+
+  Facts (probed live with the Owner's key, 2026-10-22 18:35Z):
+  - XPLabs = Experiential Labs (xplabs.ai -> experientiallabs.ai);
+    OpenAI-compatible gateway api.experientiallabs.ai/v1, one Bearer
+    xpl_ key.
+  - Authed /v1/models: 318 models LISTED. NO minimax-m3.1-flash row
+    (newest MiniMax there = minimax-m3) — the M3.1 map's XPLabs row is
+    now VERIFIED with the key, not just researched.
+  - Serving is BLOCKED until the Owner completes XPLabs' $1 card
+    verification: a chat call answers insufficient_quota/card_required;
+    their own error text: "everything else, including your own provider
+    keys (BYOK) and trace uploads, works now". The ultra-free promo rows
+    (gpt-6-luna, clef-flash, jev-latest) sit behind the same block.
+
+  Wired (DoE run, 18:35Z, evidence: scripts/set_xplabs_secret.py sealed
+  both repos OK): XPLABS_API_KEY on this repo's Actions secrets and
+  agent-team.el's; gateway leg declared in llmfisher (xplabs provider:
+  clef-flash, qwen3.8-27b, gpt-6-luna via ${XPLABS_API_KEY}; live at the
+  VM's next compose up).
+
+  RISK note (from the live catalog's data_policy metadata): clef-flash is
+  ZDR + no-training on its cloud leg; jev-latest is NEITHER — keep
+  secrets off jev here.
+
+  ASK: by the next pause review, record the xplabs lane in ROSTER.org's
+  CI ROSTER section with the card_required caveat (burn tests wait for
+  the Owner's card verification; free status is UNVERIFIED until the
+  first live call).
