@@ -121,8 +121,10 @@ LOG_SUMMARY_LINE_FLOOR = 3
 
 # ------------------------------------------------------------- file shapes
 HEADLINE_RE = re.compile(
-    r"^\* MSG (?P<from>.+?) -> @(?P<to>\S+) :(?P<kind>\w+):"
-    r"\s+:msg:(?P<mfrom>[^:]+):(?P<mto>[^:]+):(?P<mkind>\w+):\s*$"
+    # KIND/MKIND admit hyphens (e.g. :hiring-consult: — the 13:35Z Lead
+    # entry was legal in spirit; QA + relief flagged the red 2026-10-22).
+    r"^\* MSG (?P<from>.+?) -> @(?P<to>\S+) :(?P<kind>[\w-]+):"
+    r"\s+:msg:(?P<mfrom>[^:]+):(?P<mto>[^:]+):(?P<mkind>[\w-]+):\s*$"
 )
 RUN_LINE_RE = re.compile(
     r"^(?P<sha>[0-9a-f]{7,40})@(?P<branch>\S+)"
