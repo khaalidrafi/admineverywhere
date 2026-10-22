@@ -1,0 +1,47 @@
+#+TITLE: ROSTER.org — admincraft hiring ledger (proven vs armed vs refused)
+# Lead-owned. Hiring law (prompt.org TEAMIFY): a body earns a seat only by
+# landing real work behind the landing gate; a probe row is evidence of the
+# RUNTIME, never of quality. Update on every hiring event.
+
+* HIRING VERDICT — 2026-10-22 11:50Z (Owner question: "Have you completed hiring?")
+
+ANSWER: CI-chain hiring is DONE for the seats the machine needs today.
+2 PROVEN, 2 ARMED, rest of the candidate file staged on ai/teamify.
+
+* PROVEN (landed real work behind the green gate)
+
+| seat / pair                          | role              | evidence                                              |
+|--------------------------------------+-------------------+-------------------------------------------------------|
+| qwen3.8-flash@qoder                  | platform-engineer | proof run 39477554903; TEST-T1..T3 cycle 2026-10-22   |
+| minimax-m3.1-flash:free@goose        | relief engineer   | TEST-T1 de44031 + TEST-T2 d655571 landed 2026-10-22   |
+
+* ARMED (key landed, first live proof pending)
+
+| seat / pair                          | role              | note                                                  |
+|--------------------------------------+-------------------+-------------------------------------------------------|
+| zai/glm-4.7-flash@goose              | relief engineer   | ZAI_API_KEY landed 2026-10-22; rotation seat T-next   |
+| qwen3.8-27b@groq                     | relief engineer   | relief hire 2026-10-22; probed every run              |
+
+* REFUSED / CLOSED (failure classes, kept so nobody re-hires into them)
+
+| lane                                 | cause                                            | fix                    |
+|--------------------------------------+--------------------------------------------------+------------------------|
+| minimax via OPENAI_HOST=.../api/v1   | goose doubled /v1 -> 404 on every call           | HOST+BASE_PATH split   |
+| qoder bypassPermissions=accept_edits | denied ALL Bash (git/pytest) — seat could not run| escalated, run 39488529938 |
+| empty-husk segments                  | lane exited 0 with 0 commits, counted as progress| empty-segment law 3428567 |
+
+* PROBE (liveness only — not hiring evidence)
+
+The probe job liveness-tests 4 lanes every run (openrouter/poolside,
+groq/qwen3.8-27b, zai/glm-4.7-flash, openrouter/minimax) and prints the
+table to the run summary. Gate law: a probe row proves the runtime, never
+the quality of work.
+
+* STAGED (awaiting Owner review-merge of ai/teamify 3d9606d)
+
+- agent-team/CANDIDATES.org — full candidate file, verbatim from
+  khaalidrafi/agent-team.el templates.
+- Further bodies (gemini, opencode, ollama-cloud, tokenharbor, ...) keep
+  their keys in khaalidrafi/agent-team.el repo secrets. GitHub secret
+  values are write-only and cannot be copied cross-repo: a body activates
+  the moment its key lands in THIS repo's secrets.

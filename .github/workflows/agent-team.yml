@@ -151,6 +151,7 @@ jobs:
       seg_result: ${{ steps.seg.outputs.result }}
       tg_chat: ${{ steps.ingest.outputs.chat_id }}   # owner-locked chat id (secret TELEGRAM_OWNER_ID)
       base_sha: ${{ steps.control.outputs.base_sha }} # ai/main before this segment — the Discord chat-mirror diff base
+      seat: ${{ steps.control.outputs.seat }}        # which seat ran — surfaced in the Telegram verdict
     runs-on: ubuntu-latest
     timeout-minutes: 35
     continue-on-error: true
@@ -186,6 +187,15 @@ jobs:
             echo "mode=complete" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # PAUSE LAW (Owner order 2026-10-22 #admincraft: "After completing
+          # a TODO, pause and summarize which role did what"): finalize arms
+          # #+CHAIN-PAUSE when a segment delivers a TODO. Turns stay halted
+          # until the Lead clears the line after reviewing the roles' work.
+          CHAINPAUSE=$(grep -oP '^\#\+CHAIN-PAUSE:\s*\K.*' "$CTL" | head -1 | xargs || true)
+          if [ -n "$CHAINPAUSE" ]; then
+            echo "mode=paused" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           # Placeholder objective = nothing specified by the Owner yet.
           if [ -z "$OBJECTIVE" ] || echo "$OBJECTIVE" | grep -q "the Owner writes"; then
             echo "mode=no-objective" >> "$GITHUB_OUTPUT"
@@ -195,9 +205,15 @@ jobs:
           echo "objective=$OBJECTIVE" >> "$GITHUB_OUTPUT"
           # Seat pointer -> seat id. The case grammar is extensible: one
           # line per rotation entry ("model@body ... role" pointer forms).
+          # T2 finding (turn 2026-10-22, chat evidence): the catch-all used
+          # to map EVERY pointer to platform-engineer, masking typos and
+          # freezing the rotation. Now: one arm per roster seat, and an
+          # unknown pointer REFUSES (BLOCKED path below) instead of silently
+          # running the wrong lane.
           case "$TURN" in
             qwen3.8-flash@qoder*) NEXT_SEAT=platform-engineer ;;
-            *)                    NEXT_SEAT=platform-engineer ;;
+            glm-4.7-flash@goose*) NEXT_SEAT=relief-engineer ;;
+            *)                    NEXT_SEAT=unknown ;;
           esac
           echo "seat=$NEXT_SEAT" >> "$GITHUB_OUTPUT"
 
@@ -209,6 +225,7 @@ jobs:
           case "$MODE" in
             killed)       MSG="TEAM STOPPED BY KILL SWITCH — no turns run until #+KILL-SWITCH: OFF" ;;
             complete)     MSG="OBJECTIVE COMPLETE — team standing down (set #+OBJECTIVE-STATE: OPEN with a new objective to restart)" ;;
+            paused)       MSG="CHAIN PAUSED — a TODO was delivered and the pause law is ON; the Lead reviews, then clears #+CHAIN-PAUSE in agent-team/TEAM-CONTROL.org to resume" ;;
             no-objective) MSG="NO OBJECTIVE SET — write one line into #+OBJECTIVE in agent-team/TEAM-CONTROL.org; rotation idle until then" ;;
           esac
           echo "$MSG" >> "$SUMMARY"
@@ -569,6 +586,37 @@ jobs:
                 echo "TURN_RESULT=BLOCKED (qoder+zai+minimax+groq lanes all failed — check the harness)"
               fi
               ;;
+            relief-engineer)
+              # glm-4.7-flash@goose — second CI seat (rotation arm, Lead fix
+              # 2026-10-22 from the T2 finding). ZAI_API_KEY landed in repo
+              # secrets 2026-10-22. Same fallback law: independent brains
+              # lead, proven lanes cover.
+              if env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
+                   OPENAI_API_KEY="$ZAI_API_KEY" \
+                   OPENAI_HOST="https://api.z.ai" \
+                   OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
+                   OPENAI_API_KEY="$OPENROUTER_API_KEY" \
+                   OPENAI_HOST="https://openrouter.ai" \
+                   OPENAI_BASE_PATH="/api/v1/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose)"
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
+                   OPENAI_API_KEY="$GROQ_API_KEY" \
+                   OPENAI_HOST="https://api.groq.com" \
+                   OPENAI_BASE_PATH="/openai/v1/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: qwen3.8-27b@groq)"
+              elif env HOME=/usr/local/lib/qoder-home \
+                   qoder -p "$BRIEF" --output-format json \
+                   --permission-mode bypassPermissions --max-turns 100; then
+                echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder)"
+              else
+                echo "TURN_RESULT=BLOCKED (zai+minimax+groq+qoder lanes all failed — check the harness)"
+              fi
+              ;;
             *)
               echo "TURN_RESULT=BLOCKED (unknown seat ${SEAT} — rotation case gap)"
               ;;
@@ -699,9 +747,13 @@ jobs:
           git push origin "${TURN_BRANCH:-ai/turn-orphan}" || echo "::notice::no work branch to push"
           echo "branch=${TURN_BRANCH:-}" >> "$GITHUB_OUTPUT"
           CTL=agent-team/TEAM-CONTROL.org
+          # REAL rotation (T2 finding fixed 2026-10-22): the pointer now
+          # alternates between the two CI seats; an unknown seat writes an
+          # honest marker instead of silently parking on one lane.
           case "${{ steps.control.outputs.seat }}" in
-            platform-engineer) NEXT="qwen3.8-flash@qoder (Acting Platform Engineer)" ;;
-            *)                 NEXT="qwen3.8-flash@qoder (Acting Platform Engineer)" ;;
+            platform-engineer) NEXT="glm-4.7-flash@goose (Relief Engineer)" ;;
+            relief-engineer)   NEXT="qwen3.8-flash@qoder (Acting Platform Engineer)" ;;
+            *)                 NEXT="unknown (Lead: fix #+TURN in agent-team/TEAM-CONTROL.org)" ;;
           esac
           git checkout -f ai/main
           # Race-proof the control commit: the Lead's pushes or another
@@ -914,9 +966,37 @@ jobs:
           if [ "$NEW" -ge 4 ] && [ "$DECISION" = "dispatch" ]; then
             DECISION="backoff-dispatch"   # slow-poll: transient dead lanes recover on their own
           fi
+          # PAUSE-AFTER-TODO (Owner order 2026-10-22 #admincraft: "After
+          # completing a TODO, pause and summarize which role did what"):
+          # a segment that DELIVERS a TODO (a :DELIVERED: evidence line
+          # landed on the board) halts the chain — no self-dispatch — and
+          # arms #+CHAIN-PAUSE. The seat's role report already reached the
+          # Owner via the chat mirror below; the Lead reviews, then clears
+          # the marker to resume. Tests-red / kill-switch always win first.
+          PAUSELAW=$(grep -oP '^\#\+PAUSE-AFTER-TODO:\s*\K\w+' "$CTL" | head -1 || true)
+          if [ "${PAUSELAW:-OFF}" = "ON" ] && [ "$PROGRESS" = "yes" ] && [ "$DECISION" = "dispatch" ]; then
+            BASE="${{ needs.turn.outputs.base_sha }}"
+            if [ -n "$BASE" ] && git cat-file -e "$BASE" 2>/dev/null; then
+              DELIV=$(git diff "$BASE" HEAD -- agent-team/TODOS.org 2>/dev/null | grep -c '^+.*:DELIVERED:' || true)
+              if [ "${DELIV:-0}" -gt 0 ]; then
+                DECISION="paused-todo-review"
+              fi
+            fi
+          fi
           # Export for the Telegram mirror step below (same job, later step).
           echo "CHAIN_DECISION=$DECISION" >> "$GITHUB_ENV"
           echo "CHAIN_STALL=$NEW" >> "$GITHUB_ENV"
+          # Arm the pause marker on a delivered TODO (race-proof: same
+          # fetch-reset-reapply flow as the stall commit above).
+          if [ "$DECISION" = "paused-todo-review" ]; then
+            git fetch origin ai/main
+            git reset --hard origin/ai/main
+            grep -q '^#+CHAIN-PAUSE:' "$CTL" || printf '#+CHAIN-PAUSE:\n' >> "$CTL"
+            sed -i "s|^#+CHAIN-PAUSE:.*|#+CHAIN-PAUSE: armed $(date -u '+%Y-%m-%d %H:%M')Z — a TODO was delivered; the Lead clears this line to resume|" "$CTL"
+            git add "$CTL"
+            git commit -m "ci-chain: pause-after-TODO armed (Owner order 2026-10-22)" || true
+            git push origin "ai/main" || echo "::warning::pause marker push failed — the Lead arms it manually"
+          fi
           DISPATCH_CODE="n/a"
           if [ "$DECISION" = "dispatch" ] || [ "$DECISION" = "backoff-dispatch" ]; then
             if [ "$DECISION" = "backoff-dispatch" ]; then
@@ -1027,8 +1107,9 @@ jobs:
           VH=$(printf '%s' "$SEG" | sha256sum | cut -c1-12)
           # TELEGRAM LAW (Owner order 17:55Z): every message to the TG bot
           # MUST contain FROM and TO — they open the text.
-          TXT="$(printf 'FROM: team-lead (glm-5.3-flash, Agent Team @khaalidrafi/admincraft)\nTO: @owner\n\n[admincraft] segment done\nbranch: %s\nresult: %s\nmerge: %s\ngate: %s\nstall: %s\ndecision: %s' \
+          TXT="$(printf 'FROM: team-lead (glm-5.3-flash, Agent Team @khaalidrafi/admincraft)\nTO: @owner\n\n[admincraft] segment done\nbranch: %s\nseat: %s\nresult: %s\nmerge: %s\ngate: %s\nstall: %s\ndecision: %s' \
             "${{ needs.turn.outputs.turn_branch }}" \
+            "${{ needs.turn.outputs.seat }}" \
             "$SEG" \
             "${{ steps.merge.outputs.outcome }}" \
             "${{ steps.gate.outputs.gate }}" \
