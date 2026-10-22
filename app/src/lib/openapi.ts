@@ -31,8 +31,41 @@ function deref(doc: any, node: any): [string, any] {
   return [null as any, node ?? {}];
 }
 
-function fieldTypeOf(doc: any, propName: string, prop: any,
-                     names: Map<string, string>): FieldSpec["type"] {
+/** drf-spectacular splits a `blank=True`/`null=True` field into a
+ * oneOf/anyOf/allof union with BlankEnum/NullEnum ($refs or inline
+ * `{enum:[""]}`/`{enum:[null]}` sentinels). Those sentinels carry no type
+ * information, and reading through the union is what keeps such a field an
+ * enum (or anything else) instead of falling to the schemaless "text". */
+function isBlankNullSentinel(name: string | null, schema: any): boolean {
+  if (name && (name === "BlankEnum" || name === "NullEnum" || name.endsWith("BlankEnum") || name.endsWith("NullEnum"))) return true;
+  const values = schema?.enum;
+  return Array.isArray(values) && values.every((v: any) => v === "" || v === null);
+}
+
+function unionMembers(doc: any, prop: any): { name: string | null; schema: any }[] | null {
+  for (const key of ["oneOf", "anyOf", "allOf"] as const) {
+    const members = prop?.[key];
+    if (Array.isArray(members) && members.length > 0) {
+      return members.map((m: any) => {
+        const [name, schema] = deref(doc, m);
+        return { name, schema };
+      });
+    }
+  }
+  return null;
+}
+
+/** The property with its top-level $ref followed and its union read through. */
+function effectiveSchema(doc: any, prop: any): any {
+  const [, resolved] = deref(doc, prop);
+  const members = unionMembers(doc, resolved);
+  if (!members) return resolved;
+  return members.find((m) => !isBlankNullSentinel(m.name, m.schema))?.schema ?? resolved;
+}
+
+function fieldTypeOf(doc: any, propName: string, rawProp: any,
+                    names: Map<string, string>): FieldSpec["type"] {
+  const prop = effectiveSchema(doc, rawProp);
   const [refName, resolved] = deref(doc, prop);
 
   // enum via $ref (drf-spectacular hoists TextChoices into components)
@@ -73,20 +106,29 @@ function fieldTypeOf(doc: any, propName: string, prop: any,
   }
 }
 
-function propToField(doc: any, propName: string, prop: any, requiredSet: Set<string>,
+function propToField(doc: any, propName: string, rawProp: any, requiredSet: Set<string>,
                      names: Map<string, string>, readOnly: boolean): FieldSpec {
+  const prop = effectiveSchema(doc, rawProp);
   const [refName, resolved] = deref(doc, prop);
-  let type = fieldTypeOf(doc, propName, prop, names);
+  let type = fieldTypeOf(doc, propName, rawProp, names);
   let choices: string[] | undefined;
   if (type === "enum") {
-    choices = ((prop as any).enum ?? resolved?.enum ?? []).map(String);
+    const members = unionMembers(doc, prop);
+    if (members) {
+      const union = members
+        .filter((m) => !isBlankNullSentinel(m.name, m.schema))
+        .flatMap((m) => (Array.isArray(m.schema?.enum) ? m.schema.enum : Array.isArray(m.schema) ? m.schema : []));
+      choices = union.length ? union.map(String) : (resolved?.enum ?? []).map(String);
+    } else {
+      choices = ((prop as any).enum ?? resolved?.enum ?? []).map(String);
+    }
   }
   const field: FieldSpec = {
     name: propName,
     type,
     required: !readOnly && requiredSet.has(propName),
     readOnly,
-    nullable: Boolean(prop.nullable),
+    nullable: Boolean(rawProp?.nullable ?? prop?.nullable),
     format: prop.format,
   };
   if (choices) field.choices = choices;
