@@ -80,6 +80,7 @@ class Command(BaseCommand):
             cats[name] = Category.objects.create(name=name, created_at=now - timedelta(days=30 - i))
 
         products = []
+        packagings = ["box", "crate", "pallet", ""]  # "" = the real blank state (FR-R002 case C)
         for cat, names in PRODUCTS.items():
             for j, p in enumerate(names):
                 products.append(Product.objects.create(
@@ -90,6 +91,7 @@ class Command(BaseCommand):
                     stock=random.randint(0, 120),
                     is_active=random.random() > 0.15,
                     launch_date=(now - timedelta(days=random.randint(1, 400))).date(),
+                    packaging=random.choice(packagings),
                 ))
         # ensure deterministic non-random pk ordering isn't relied on anywhere
         products = list(Product.objects.order_by("id"))

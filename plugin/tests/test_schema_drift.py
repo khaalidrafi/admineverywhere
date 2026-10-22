@@ -127,6 +127,22 @@ class TestProofFixtureDrift:
                 "contract (docs/independent-enums.md, RecordForm) broke server-side"
             )
 
+    def test_blank_choices_union_documented(self, live_schema):
+        """FR-R002 case C stays REAL on the rig: a blank=True choices field is
+        emitted as a oneOf union of its own enum component plus BlankEnum. The
+        client's normalizer resolves that shape into a select; if the rig ever
+        stops emitting it, the fixture and the vitest witnesses go stale
+        together and this leg says so here."""
+        comps = live_schema["components"]["schemas"]
+        for name in ("Product", "ProductRequest"):
+            refs = comps[name]["properties"]["packaging"]["oneOf"]
+            assert refs == [{"$ref": "#/components/schemas/PackagingEnum"},
+                            {"$ref": "#/components/schemas/BlankEnum"}], (
+                f"{name}.packaging no longer carries the case-C union"
+            )
+        assert comps["PackagingEnum"]["enum"] == ["box", "crate", "pallet"]
+        assert comps["BlankEnum"]["enum"] == [""]
+
     def test_evidence_law_endpoints_documented(self, live_schema):
         """The four discovery bindings the client refuses to guess: POST
         transition, GET-only history, GET-only export, GET-only me."""
