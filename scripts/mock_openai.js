@@ -5,12 +5,16 @@ Endpoints:
   GET  /v1/models
   POST /v1/chat/completions   (stream: true -> SSE deltas)
 
-Run: node scripts/mock_openai.js  (port 11435)
+Run: node scripts/mock_openai.js  (port 11435, or MOCK_OPENAI_PORT; 0 = any free port)
 Point the chat panel Base URL at http://localhost:11435/v1
+
+MOCK_OPENAI_PORT=0 makes the server pick a free port and print
+`MOCK_OPENAI_LISTENING <port>` — that line is what app/src/lib/__tests__/chat.test.ts
+waits for, so the wire test of this rig never collides with a dev's running mock.
 */
 const http = require("http");
 
-const PORT = 11435;
+const PORT = Number(process.env.MOCK_OPENAI_PORT ?? 11435);
 
 const MODELS = [
   { id: "mock-gpt-4o-mini", object: "model" },
@@ -120,6 +124,8 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`mock OpenAI-compatible server on http://localhost:${PORT}/v1`);
-  console.log("chat panel Base URL -> http://localhost:11434-style: http://localhost:11435/v1");
+  const bound = server.address().port;
+  console.log(`mock OpenAI-compatible server on http://localhost:${bound}/v1`);
+  console.log(`chat panel Base URL -> http://localhost:${bound}/v1`);
+  console.log(`MOCK_OPENAI_LISTENING ${bound}`);
 });
