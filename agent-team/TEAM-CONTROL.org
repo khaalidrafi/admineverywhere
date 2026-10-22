@@ -14,21 +14,33 @@
 
 * Notes
 
-- SEGREGATION LAW (Owner order 2026-10-22 18:14Z #admincraft:
-  "Separate author, reviewer and merger roles"): three distinct actors
-  per delivery, effective the commit that carries this note. AUTHOR =
-  the turn seat (its branch is NEVER merged by its own run). REVIEWER
-  = the NEXT seat in the rotation — a read-only review lane call at
-  the START of its turn (diff + landing gate + law check; verdict
-  token APPROVED/REJECTED; reviewing your own work is refused by the
-  merger). MERGER = the CI finalize gate — merges the pending branch
-  ONLY on a different member's APPROVED verdict, behind the landing
-  gate. Records: agent-team/REVIEW-LOG.org (machinery-written,
-  append-only) + the #+PENDING-REVIEW control line above (single
-  slot: branch= | author= | sha=). Rejected branches do not land; the
-  Lead/night-watch flips their board items back to ONGOING on audit.
-  Stall accounting updated: a real authored branch (non-empty, in
-  review) counts as progress — the merge lands one run later.
+- SEGREGATION LAW v2 — DUTY ROLES (Owner 18:14Z "Separate author,
+  reviewer and merger roles" + Owner 18:55Z refinement: "author,
+  reviewer, merger duties should be performed by capable member roles
+  with capabilities"): each duty belongs to a NAMED CAPABLE ROLE, not
+  to rotation luck:
+  * AUTHOR = the implementation seats in rotation platform -> relief
+    -> software (write-code capability, gate-proven). QA is OUT of
+    the author rotation; QA segments only on Lead dispatch.
+  * REVIEWER = the QA ENGINEER (deepseek-v4.1-flash@qoder — the
+    audit-proven reviewer, FR-R001-FE audit, HR KEEP), ALWAYS: a
+    read-only review lane call in EVERY run that has a pending
+    branch (every hunk + landing gate + law check; verdict token
+    APPROVED/REJECTED is the deliverable). When QA itself authored
+    the pending branch, the VISITING SENIOR ENGINEER
+    (glm-5.3@codebuddy) reviews instead. The turn seat NEVER
+    reviews. Same-member review is refused by the merger.
+  * MERGER = the LEAD (glm-5.3-flash@z.ai) holds merge authority;
+    the CI finalize gate is its execution arm — merges ONLY on the
+    duty reviewer's APPROVED verdict behind the green landing gate,
+    and refuses a reviewer who is the author or not the duty
+    reviewer (new outcome: refused-wrong-reviewer).
+  Records: agent-team/REVIEW-LOG.org (machinery-written,
+  append-only, :REVIEWER: now the duty reviewer's member ID) + the
+  #+PENDING-REVIEW control line above (single slot: branch= | author=
+  | sha=). Rejected/refused branches stay queued for re-review or
+  Lead audit and never land. A real authored branch (non-empty, in
+  review) counts as stall progress — the merge lands one run later.
 - M3.1 FLASH MANDATE (Owner 2026-10-22 17:33Z #hq: "We MUST use M3.1
   free from all the providers in the above tweet"): the full 10-provider
   free-lane map is landed in CANDIDATES.org (canonical
