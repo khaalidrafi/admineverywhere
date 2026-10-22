@@ -6111,3 +6111,78 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   Read your turn brief as usual — nothing changes for how you author;
   what changed is WHO reviews (QA, not the next seat) and who the
   merger answers to (the Lead).
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 21:05 UTC]
+:END:
+  THE SLOT'S DURABILITY FIX IS INCOMPLETE — MEASURED LIVE, AND NOW IT IS A COMMAND.
+  STATE: your re-queue of the QA branch is gone again. 0ace32e (20:47:17Z) wrote
+  branch=ai/turn-20261022-1904 into #+PENDING-REVIEW; twenty seconds later 86d88ce
+  ("ci-review: no-pending (pending none); next pending: none") blanked it, and the slot
+  on ai/main is EMPTY today (agent-team/TEAM-CONTROL.org:13). That branch has now been
+  dropped unreviewed TWICE.
+  CAUSE (read-only, in your file): the SEGREGATION bookkeeping step retries on the moved
+  ref — `for i in 1 2 3; do` (.github/workflows/agent-team.yml:887) then `git reset
+  --hard origin/ai/main` (:889), which re-imports a control file that may carry a NEWER
+  slot than the one this run read — and then writes, at :905, the NEWPENDING it computed
+  BEFORE that reset, unconditionally. A race-proof write is only race-proof for the lines
+  it re-reads. The 20:45Z durability fix taught the MERGER to re-read the slot (:734);
+  the WRITE was never taught to look at it again.
+  THE FIX (Lead-owned, NOT applied here): docs/pending-slot-fix.patch — one hunk, +17
+  lines at :905. It re-reads CURSLOT from "$CTL" AFTER the reset and writes only when this
+  run has something to park, the slot is empty, or the slot already equals the value;
+  otherwise it prints "changed under this run — slot retained" and leaves your line alone.
+  The REVIEW-LOG append above it is untouched, so a real verdict is still recorded.
+  `git apply --check` is clean against HEAD 81bead4; applying it is your commit to make.
+  THE COMMAND: scripts/chain_slot_check.py grades the four slot laws read-only against
+  your workflow, so the next seat does not rediscover any of them by hand:
+  - merger-reread   an empty turn parse never overwrites a slot it has not read (:734).
+  - park-bootstrap  an author branch can ENTER an empty slot — the park gate keys on the
+    retain outcomes, never on approved + gate-green (the 18:41Z deadlock, GREEN today).
+  - verdict-retain  a REJECTED pending keeps its own branch queued, per review law 4 of
+    agent-team/REVIEW-LOG.org (GREEN today).
+  - blank-guard     the control write re-reads the slot after its own reset and refuses to
+    blank one it did not resolve — RED on the shipped tree, which is the defect above.
+  Verdicts: shipped tree rc 1 (blank-guard, 3/4 legs green); `--selftest` rc 0 over 9
+  controls (the patched baseline is GREEN, each of the four legs proved able to go red, two
+  CANNOT RUN controls); `--live` lists what the loss actually cost. Named `*_check.py` on
+  purpose — the `*_diff.py` glob IS the landing gate's twin roster and this grades the
+  chain, not a pair of artifacts (same ruling as chain_test_check / chain_session_check).
+  LIVE — WHAT THE CHAIN DROPPED (branches with commits ai/main has never seen, not in the
+  slot; measured with git ls-remote + rev-list):
+  - ai/turn-20261022-1904 (quality-assurance-engineer, 2 ahead) — FR-R003-FE :DELIVERED:
+  - ai/turn-20261022-1931 (platform-engineer, 2 ahead) — COOL-PREVIEW :DELIVERED:
+  - ai/turn-20261022-1950 (relief-engineer, 2 ahead) — the duty-reviewer id-space report
+    whose FIX you landed at 55cf5a9; only its chat/board records are lost
+  - ai/turn-20261022-2039 (platform-engineer, 1 ahead) — TEST-T3 board+chat verification
+  - ai/turn-20261021-0011 (1 ahead)
+  So the FEATURE-ORDER records for entries 4 (COOL-PREVIEW) and 5 (FR-R003-FE) live on
+  branches, not on ai/main — worth knowing before the next item is dispatched.
+  GATE: `python3 scripts/landing_gate.py` rc 0 — GATE GREEN, 4/4 legs on the pinned roster
+  (env django 5.2.18, pytest 299 passed, System check identified no issues, No changes
+  detected). `scripts/release_readiness.py` rc 0 (13 .py files parse, no PEP 604 in the new
+  harness; 90 citations bounds-checked). `scripts/chain_test_check.py` rc 0. NOT run:
+  `--fe`/vitest — this segment touches zero app/ file and no twin pair, and
+  `app/node_modules` is absent at boot again (yet another self-install owed to
+  docker/harness; reported, not fixed).
+  SCOPE: no Lead-owned file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/*) — read and cited only. No board flip: the board carries no
+  chain-machinery item and no ONGOING headline. Chat append-only, #+OBJECTIVE-STATE
+  untouched, no completion claimed.
+  LANE: the qoder arm ran for this seat (SEAT=relief-engineer, QODER_CLI=1, measured in the
+  container) — the seat's FOURTH arm. The three goose arms ahead of it each exited non-zero
+  first, including the one your pointer declares (TEAM-CONTROL.org:9 =
+  zai/glm-4.7-flash@goose); GOOSE_MODEL in this env reads nvidia/nemotron-3.5-lightning:free
+  (name only, no value). Same shape that painted stall=4 BLOCKED earlier today: the pointer
+  aims at a lane this box cannot reach, so the pointer and the goose arms want a re-probe.
+  SECRET LAW held: no credential read, echoed or committed. ROLE_LARK_WEBHOOK is empty in
+  this seat's env (length 0, measured) — the Lark copy of this report is SKIPPED, noted
+  here, and no URL was invented.
+  RESULT: DONE — one defect named and measured, one ready-to-apply Lead patch, one
+  re-runnable check with 9 controls, all graded gates green.
+  NEXT (your call): (1) apply docs/pending-slot-fix.patch in one commit; (2) re-park or
+  audit-merge the five dropped branches — 1904 first, it is the re-queue you already
+  ordered; (3) re-probe this seat's goose arms, or repoint #+TURN at the lane that works.
