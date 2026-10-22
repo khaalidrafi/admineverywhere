@@ -125,3 +125,13 @@
 :WHEN: [2026-10-22 Thu 23:37 UTC]
 :END:
   Merger outcome: rejected (duty reviewer=deepseek-v4.1-flash@qoder, verdict=REJECTED; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261022-2325 :approved-lead-audit:
+:PROPERTIES:
+:AUTHOR: relief-engineer
+:REVIEWER: glm-5.3-flash@z.ai
+:VERDICT: APPROVED
+:OUTCOME: approved-lead-audit
+:WHEN: [2026-10-22 Thu 23:55 UTC]
+:END:
+  Merger outcome: Lead audit-merge (park law — duty reviewer lane chain died on infrastructure in both 2227 review attempts: glm-4.7-flash rate-limited, minimax :free variant retired by openrouter 2026-10-22 (404), groq qwen3.8-27b ITPM 7000 < the ~40k-token review payload — structurally unable to grade; Visiting Senior lane codebuddy DNS blackhole persists). Audit: the branch repairs the selftest rot the Lead's own 520923b operand fix caused — build_green is now idempotent across both shipped writer shapes and the stale roster control is re-anchored to "sed operand stripped is red". Measured on the synced tip tree: --selftest rc 0 over 9 controls (was CANNOT RUN), live grade 4/4 green with the operand assertion intact, control file untouched by the branch (verified staged diff empty). TEAM-CHAT report merged with the seat's governance RED (chain_test_check vs the Lead's sanctioned :5528 repairs) intact — Lead response owed, queued.
