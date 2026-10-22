@@ -1,7 +1,7 @@
 /** openapi.ts tests — run against the REAL drf-spectacular fixture. */
 import { describe, expect, it } from "vitest";
 import fixture from "./fixtures/openapi.json";
-import { normalizeOpenAPI, schemaSummary, singularize, titleCase } from "../openapi";
+import { normalizeOpenAPI, singularize, titleCase } from "../openapi";
 
 const schema = normalizeOpenAPI(fixture);
 
@@ -122,17 +122,6 @@ describe("label field heuristics", () => {
   it("falls back gracefully", () => {
     // Order has no label-ish field -> id
     expect(schema.byId.orders.labelField).toBe("id");
-  });
-});
-
-describe("schemaSummary (AI system prompt)", () => {
-  it("lists every model with its fields on one line each", () => {
-    const s = schemaSummary(schema);
-    expect(s).toContain("- Product [/api/products/]:");
-    expect(s).toContain("category(fk->categories)");
-    // one line per discovered model — actions never add a line
-    expect(s.split("\n")).toHaveLength(schema.models.length);
-    expect(s.split("\n")).toHaveLength(5);
   });
 });
 

@@ -215,15 +215,3 @@ export function normalizeOpenAPI(doc: any): AdminSchema {
 
   return { models, byId: Object.fromEntries(models.map((m) => [m.id, m])), ...(mePath ? { mePath } : {}) };
 }
-
-/** Short schema summary for the AI system prompt ("data-aware" answers). */
-export function schemaSummary(schema: AdminSchema): string {
-  return schema.models
-    .map((m) => {
-      const fields = m.fields
-        .map((f) => (f.type === "fk" ? `${f.name}(fk->${f.fkModel})` : `${f.name}(${f.type})`))
-        .join(", ");
-      return `- ${m.name} [${m.listPath}]: ${fields}`;
-    })
-    .join("\n");
-}
