@@ -902,7 +902,26 @@ jobs:
                 echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}; merge authority: Lead, executed by this gate)."
               } >> "$RLOG"
             fi
-            sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"
+            # NON-CLOBBER SLOT GUARD (Lead hardening of relief-seat patch
+            # docs/pending-slot-fix.patch on ai/turn-20261022-2051; diagnosis
+            # measured LIVE by the relief seat: the Lead's 0ace32e re-queue
+            # of ai/turn-20261022-1904 (20:47:17Z) was blanked 20 seconds
+            # later by this sed in 86d88ce — NEWPENDING was computed BEFORE
+            # the reset --hard above re-imported a control file carrying the
+            # Lead's newer slot). Judge the write against the slot as it is
+            # NOW: a NON-EMPTY write is this run's earned park/retain and
+            # writes (single-slot park law; overflow goes to Lead audit); an
+            # EMPTY write clears only an EMPTY slot (no-op) or a slot still
+            # holding the branch THIS RUN resolved (legit post-merge clear)
+            # — it must never blank a slot a Lead re-queued under this run.
+            CURSLOT="$(grep -E '^\#+PENDING-REVIEW:' "$CTL" | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
+            SLOTISOURS=0
+            case "$CURSLOT" in "branch=${PENDING_BRANCH:-} |"*) SLOTISOURS=1 ;; esac
+            if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || { [ -n "${PENDING_BRANCH:-}" ] && [ "$SLOTISOURS" = "1" ]; }; then
+              sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%"
+            else
+              echo "SEGREGATION: slot '${CURSLOT}' changed under this run — empty write retained it"
+            fi
             git add "$CTL" "$RLOG"
             if git commit -m "ci-review: ${OUT} (pending ${PENDING_BRANCH:-none}); next pending: ${NEWPENDING:-none}" 2>/dev/null; then
               if git push origin "ai/main"; then break; fi
