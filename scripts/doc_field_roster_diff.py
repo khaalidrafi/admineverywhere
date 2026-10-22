@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Machine check for the DROP-IN CONTRACT FIELD LISTS: what the two mirror docs
-promise a `meta` export must carry, against what the three registries read.
+promise a `meta` export must carry, against what the registries and feed parse read.
 
 Why this exists (measured, not assumed): the three drop-in registries are ONE
 contract with THREE glob dirs, and `registry_roster_diff.py` proves WHICH files
@@ -32,6 +32,22 @@ So this harness grades four claims a per-side test cannot see:
                 delivered twice; a one-sided contract edit leaves one reader
                 with a stale shape, and neither file can see it from inside.
 
+FOUR CONTRACTS, not three: the drop-in `meta` shape, and INSIDE the widget one,
+the FR-R008 feed block — the `{endpoint, field, aggregate, pollInterval, days,
+rowCap}` list published in both mirror docs against `WidgetDataSpec` in
+`app/src/lib/widgets/feed.ts`. Measured before wiring (my 01:27Z report's own
+prediction): the two AGREE, so this fourth entry ships green — the point is the
+door, not a find. A nested contract needs a different read than the three
+`meta{...}` lists, because both live in the SAME doc paragraph: the widget bullet
+says `meta = { title, size, data? }` and three lines later names the fields of
+`data`, so paragraph-token attribution cannot tell them apart (it answers
+"names 2 registries" for any token in that paragraph). The `feed` entry is
+therefore matched by its OWN literal — a brace body that opens with `endpoint` —
+and attributed by construction. That buys specificity and costs the paragraph
+check, so the per-registry list pins (1 per doc) and the total pin (14) are what
+prove the feed list is still there and still one per side; a list claimed by both
+the generic and the own regex is CANNOT RUN rather than silently graded twice.
+
 The code side is PARSED from source, never restated here, and pinned twice: the
 widget contract comes from the registry's own `mod.meta.X` reads and must agree
 with the shipped `Widget` interface minus the two keys the registry injects
@@ -51,7 +67,8 @@ same ruling `release_readiness.py` applies to suite counts.
 
 Controls run against copies via --root, so the shipped tree is only ever read:
   mkdir -p /tmp/r && cp --parents AGENTS.md docs/DEVGUIDE.md \
-    app/src/lib/pages/index.ts app/src/lib/actions/index.ts app/src/widgets/index.ts /tmp/r
+    app/src/lib/pages/index.ts app/src/lib/actions/index.ts app/src/widgets/index.ts \
+    app/src/lib/widgets/feed.ts /tmp/r
   python3 scripts/doc_field_roster_diff.py --root /tmp/r
 
 It is the sixth FE leg of the landing gate (`python3 scripts/landing_gate.py --fe`
@@ -97,12 +114,29 @@ REGISTRIES = (
         "fields": ("data", "size", "title"),
         "lists": {"AGENTS.md": 1, "docs/DEVGUIDE.md": 1},
     },
+    {
+        # The FR-R008 feed contract, nested INSIDE the widget `data` block. It is
+        # graded as its own contract because `data` is one field of `widgets` but
+        # six fields of the feed engine — and the docs publish BOTH shapes.
+        # No `dir_token`: this list sits in the same paragraph as the widget
+        # `meta = { title, size, data? }` list, so paragraph attribution is
+        # ambiguous by construction and the entry carries its own literal instead.
+        "name": "feed",
+        "src": os.path.join("app", "src", "lib", "widgets", "feed.ts"),
+        "iface": "WidgetDataSpec",
+        "own_res": (re.compile(r"\{\s*(endpoint\b[^{}]*)\}"),),
+        "fields": ("aggregate", "days", "endpoint", "field", "pollInterval", "rowCap"),
+        "lists": {"AGENTS.md": 1, "docs/DEVGUIDE.md": 1},
+    },
 )
-EXPECTED_REGISTRIES = 3
-EXPECTED_LISTS = 12
+EXPECTED_REGISTRIES = 4
+EXPECTED_LISTS = 14
 DOCS = ("AGENTS.md", "docs/DEVGUIDE.md")
 STATE_HEADING = "## State as of"
 
+# The generic read: a `meta{...}` / `meta = {...}` list, attributed to a registry
+# by the directory its paragraph names. An entry with its own `own_res` below is
+# matched and attributed by its own literal instead (see the feed rationale).
 LIST_RES = (re.compile(r"\bmeta\{([^{}]*)\}"),
             re.compile(r"\bmeta\s*=\s*\{\s*([^{}]*)\}"))
 IFACE_RE = r"export interface %s \{(.*?)\n\}"
@@ -265,20 +299,35 @@ def attribute(lines, index, reg_by_token, rel):
 
 
 def collect_lists(root):
-    reg_by_token = dict((r["dir_token"], r["name"]) for r in REGISTRIES)
+    reg_by_token = dict((r["dir_token"], r["name"]) for r in REGISTRIES if r.get("dir_token"))
+    own_res = [(r["name"], res) for r in REGISTRIES for res in r.get("own_res", ())]
     lists = []
     for rel in DOCS:
         lines = doc_body(root, rel)
         for i, line in enumerate(lines):
+            where = "%s:%d" % (rel, i + 1)
+            generic_spans = []
             for res in LIST_RES:
                 for m in res.finditer(line):
-                    inner = m.group(1)
-                    fields = parse_fields(inner, "%s:%d" % (rel, i + 1))
+                    generic_spans.append((m.start(), m.end()))
+                    fields = parse_fields(m.group(1), where)
                     if not fields:
                         continue
                     name = attribute(lines, i, reg_by_token, rel)
                     lists.append({"doc": rel, "line": i + 1, "registry": name,
-                                  "inner": inner.strip(), "fields": fields})
+                                  "inner": m.group(1).strip(), "fields": fields})
+            for name, res in own_res:
+                for m in res.finditer(line):
+                    if any(s < m.end() and m.start() < e for s, e in generic_spans):
+                        raise CannotRun("%s: a contract list claimed by BOTH the generic "
+                                        "`meta{...}` read and the %r own read — grading it "
+                                        "twice would let one sentence satisfy two "
+                                        "contracts" % (where, name))
+                    fields = parse_fields(m.group(1), where)
+                    if not fields:
+                        continue
+                    lists.append({"doc": rel, "line": i + 1, "registry": name,
+                                  "inner": m.group(1).strip(), "fields": fields})
     unknown = [l for l in lists if l["registry"] is None]
     if unknown:
         raise CannotRun("%d contract list(s) name no registry dir in their paragraph "
@@ -287,9 +336,9 @@ def collect_lists(root):
                            ", ".join("%s:%d" % (l["doc"], l["line"]) for l in unknown)))
     if len(lists) != EXPECTED_LISTS:
         raise CannotRun("the docs carry %d contract list(s), EXPECTED_LISTS pins %d — "
-                        "a list that vanished silently shrinks every door below to the "
-                        "fields that are left. Bump the literal in the SAME commit as a "
-                        "deliberate change." % (len(lists), EXPECTED_LISTS))
+                        "a list that vanished OR appeared silently changes every door "
+                        "below to the fields that are left. Bump the literal in the SAME "
+                        "commit as a deliberate change." % (len(lists), EXPECTED_LISTS))
     for reg in REGISTRIES:
         for doc in DOCS:
             got = len([l for l in lists if l["registry"] == reg["name"] and l["doc"] == doc])
