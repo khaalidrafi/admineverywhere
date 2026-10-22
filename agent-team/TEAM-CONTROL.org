@@ -13,6 +13,19 @@
 
 * Notes
 
+- M3.1 FLASH MANDATE (Owner 2026-10-22 17:33Z #hq: "We MUST use M3.1
+  free from all the providers in the above tweet"): the full 10-provider
+  free-lane map is landed in CANDIDATES.org (canonical
+  templates/CANDIDATES.org, section "M3.1 Flash free-lane map —
+  2026-10-22"). Operational reads for the chain: (1) mcode lane
+  minimax-m3.1-flash is PROVEN + LIVE (M Plan Free) — token-heavy
+  rotation work burns it FIRST; (2) MiniMax Agent lane free through
+  2026-10-25 — RE-HIRE DATE, carry an independent fallback; (3) Cline /
+  CommandCode / ZenMux free lanes need Owner signups — never fake a
+  key, never stall on them; (4) OpenRouter :free + GMI Cloud are DEAD/
+  paid — do NOT re-add. EXPIRY LAW binds every row; M3.1 hallucination
+  weak spot -> pair with verification (CANDIDATES map, MODEL FACTS).
+
 - NIGHT-CONTINUOUS (Owner order 2026-10-22 17:20Z #admincraft: no
   pauses at night, KEEP going until 8am, complete ALL remaining
   TODOs) + OWNER REFINEMENT 17:19Z (pause is opt-in — the chain runs
