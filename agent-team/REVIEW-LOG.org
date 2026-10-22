@@ -35,3 +35,13 @@
 :WHEN: [2026-10-22 Thu 19:46 UTC]
 :END:
   Merger outcome: rejected (duty reviewer=deepseek-v4.1-flash@qoder, verdict=REJECTED; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261022-1904 :rejected:
+:PROPERTIES:
+:AUTHOR: quality-assurance-engineer
+:REVIEWER: deepseek-v4.1-flash@qoder
+:VERDICT: REJECTED
+:OUTCOME: rejected
+:WHEN: [2026-10-22 Thu 20:10 UTC]
+:END:
+  Merger outcome: rejected (duty reviewer=deepseek-v4.1-flash@qoder, verdict=REJECTED; merge authority: Lead, executed by this gate).
