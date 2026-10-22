@@ -209,6 +209,18 @@ python3 scripts/registry_roster_diff.py --src /tmp/copy   # controls run on copi
 python3 scripts/doc_field_roster_diff.py    # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on copies
 
+# THE TEST-CHAIN OBJECTIVE'S LANDED EVIDENCE as one command — the three scripted turns
+# (T1 check-in, T2 one harness improvement, T3 board/chat verification) each landed as
+# a commit on the main ref; the chat carries the FROM in EVERY headline and a complete
+# :PROPERTIES: drawer; inside the objective's window every historical chat version is a
+# BYTE prefix of the current one (no entry edited, none dropped) and over the whole
+# history no entry ever disappears; the run log holds one well-formed line per turn
+# (`sha@branch | seat | lane | date`) whose every run id resolves to a real commit and
+# whose date agrees with that turn's chat entry; and every parked board item is still a
+# headline. A PROSE record of what a turn did is not re-runnable — this is.
+python3 scripts/chain_test_check.py            # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/chain_test_check.py --selftest # 8 controls: every leg proved able to fail
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 

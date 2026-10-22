@@ -1,0 +1,616 @@
+#!/usr/bin/env python3
+"""Re-runnable check of the TEST-CHAIN objective's landed evidence.
+
+WHY this exists (measured, not assumed). The Owner ordered a 3-turn
+machinery test on 2026-10-22 09:22Z (TEST-T1 check-in, TEST-T2 one
+harness improvement, TEST-T3 board/chat verification). Each turn left a
+PROSE record: a chat entry and a line in docs/CHAIN-TEST.md. Prose is not
+re-runnable. The Lead's next move is to flip #+OBJECTIVE-STATE in
+agent-team/TEAM-CONTROL.org and restore the parked feature order, and the
+evidence that move rests on was, until now, readable only by trusting a
+seat's own summary — the exact shape this repo's harness laws keep
+forbidding (EIGHTH: a GATE that lives as prose is a check nobody can
+re-run).
+
+So this harness grades the objective's claims against the tree, the way the
+other six harnesses grade their pairs:
+
+  TURNS        the three scripted turns each landed as a commit whose
+               subject names the turn, and every one of them is an ancestor
+               of the main ref (a turn that exists only on a side branch
+               never reached the trunk is not a landed turn).
+  CHAT-TURN    each turn left a chat entry carrying its marker.
+  CHAT-FORMAT  EVERY message in the chat carries the FROM in its headline
+               and a complete :PROPERTIES: drawer (:FROM: :TO: :KIND:
+               :WHEN: :END:) — the FORMAT LAW, graded over the whole file
+               and not over the handful of entries a reader happens to
+               scroll to.
+  APPEND-ONLY  in the objective's own window (the commit that switched
+               the chain to TEST-CHAIN and everything after it), every
+               historical version of the chat is a BYTE prefix of the
+               current one: no entry was edited and none was dropped.
+  NO-DROP      over the WHOLE history, the sequence of message identities
+               (routing + timestamp) never loses a member: an entry can
+               be reworded, but it can never be removed. (A body edit is
+               reported as a note, not a red — the Lead's own file-rename
+               propagation reworded two historical bodies on 2026-10-21.)
+  LOG          docs/CHAIN-TEST.md holds one well-formed run line per turn
+               (`sha@branch | seat | lane | date [| note]`), every run id
+               resolves to a real commit, each turn's line carries that
+               turn's marker AND the same date as its chat entry, and the
+               log ends with the closed 3-line summary.
+  BOARD        every parked feature item is still a headline on
+               agent-team/TODOS.org: the Lead restores an ORDER, and an
+               order cannot be restored over a deleted item.
+
+Verdicts follow the house convention: 0 = OK, 1 = RED (a claim is false),
+2 = CANNOT RUN (the harness no longer understands its own input — never a
+false red for a tree it has not measured).
+
+Controls run against copies via --root, so the shipped tree is only read:
+  cp -r . /tmp/x && python3 scripts/chain_test_check.py --root /tmp/x
+
+And the harness proves it can FAIL, against a copy, with no hand-holding:
+  python3 scripts/chain_test_check.py --selftest
+
+It is deliberately NOT named `*_diff.py`: that glob is the landing gate's
+twin roster (scripts/landing_gate.py: EXPECTED_TWINS), and a harness that
+is not in that roster is not a twin. This one grades the CHAIN, not a pair
+of artifacts, so it stands beside the gate and is run by hand — but it is
+also the FIRST harness in this repo whose verdict a reader can reproduce
+with one command and no setup.
+"""
+
+import argparse
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
+# ------------------------------------------------------------ pinned inputs
+# These are the PROMISE, not the disk: they are what the objective said it
+# would do, and the tree is measured against them. A harness that derives
+# its expectations from the tree it grades proves nothing.
+TURNS = ("T1", "T2", "T3")
+EXPECTED_TURNS = 3
+
+# The note phrases each turn's run line carries in the delivered log. A
+# reworded log line must edit THIS table — a visible, deliberate change,
+# instead of a silent drift that turns the check into a no-op.
+LOG_MARKERS = {
+    "T1": ("TEST-T1",),
+    "T2": ("TEST-T2", "improvement:"),
+    "T3": ("TEST-T3",),
+}
+
+MAIN_REF = "ai/main"
+CHAT_REL = "agent-team/TEAM-CHAT.org"
+LOG_REL = "docs/CHAIN-TEST.md"
+BOARD_REL = "agent-team/TODOS.org"
+CONTROL_REL = "agent-team/TEAM-CONTROL.org"
+
+# The parked feature order the Lead restores after the test. Every fragment
+# must still be a headline on the board: an order cannot be restored over a
+# deleted item.
+BOARD_ITEMS = (
+    "FR R-001 lifecycle state machine",
+    "FR-R001-FE",
+    "FR R-003 custom actions + audit",
+    "FR-R003-FE",
+    "FR R-002 document independent-enum pattern",
+    "FR R-004 kanban view",
+    "FR R-005 canonical CSV export",
+    "FR R-006 page registration",
+    "FR R-008 widget data sources + new charts",
+    "FR-R007-LIVE",
+    "FR R-007 RBAC phased",
+    "COOL-PREVIEW",
+    "verify-cool-chat-2",
+    "COOL-CHAT-SEND-BACK-2",
+)
+EXPECTED_BOARD_ITEMS = 14
+
+# Floors (the chat and the board only GROW, so an exact count would rot
+# every turn; the floors are the population promise: the evidence this
+# harness grades must still be THERE).
+CHAT_MESSAGE_FLOOR = 50
+LOG_RUN_LINE_FLOOR = 3
+LOG_SUMMARY_LINE_FLOOR = 3
+
+# ------------------------------------------------------------- file shapes
+HEADLINE_RE = re.compile(
+    r"^\* MSG (?P<from>.+?) -> @(?P<to>\S+) :(?P<kind>\w+):"
+    r"\s+:msg:(?P<mfrom>[^:]+):(?P<mto>[^:]+):(?P<mkind>\w+):\s*$"
+)
+RUN_LINE_RE = re.compile(
+    r"^(?P<sha>[0-9a-f]{7,40})@(?P<branch>\S+)"
+    r" \| (?P<seat>[^|]+?) \| (?P<lane>[^|]+?) \| (?P<date>\d{4}-\d{2}-\d{2})"
+    r"(?: \| (?P<note>.*))?$"
+)
+# A line that STARTS like a run line (`<hex-sha>@`) is INTENDED to be one; if
+# it does not match the full shape it is a malformed run line, not prose.
+# The log's header prose ("One line per turn: run id | seat | lane | date.")
+# does not start like a run line, so it is prose and stays prose.
+RUN_LINE_INTENT_RE = re.compile(r"^[0-9a-f]{4,40}@")
+WHEN_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+DRAWER_KEYS = ("FROM", "TO", "KIND", "WHEN")
+HEADLINE_LINE = re.compile(r"^\* MSG ")
+
+
+class CannotRun(Exception):
+    pass
+
+
+class Red(Exception):
+    pass
+
+
+def git(root, *args):
+    out = subprocess.run(("git",) + args, cwd=root, capture_output=True, text=True)
+    if out.returncode != 0:
+        raise CannotRun("git %s failed: %s" % (" ".join(args), out.stderr.strip()[:200]))
+    return out.stdout
+
+
+def read(root, rel):
+    path = os.path.join(root, rel)
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    except OSError as exc:
+        raise CannotRun("cannot read %s: %s" % (rel, exc))
+
+
+# ------------------------------------------------------------------- chat
+def parse_messages(text):
+    """Split the chat into messages.
+
+    A message is a `* MSG ...` headline, its :PROPERTIES: drawer (ending
+    at :END:), and its body. The identity of a message is its ROUTING
+    (from/to/kind) plus its timestamp — the part the FORMAT LAW fixes —
+    so a body can be reworded without the entry ever ceasing to exist.
+    """
+    lines = text.splitlines()
+    messages = []
+    idx = 0
+    while idx < len(lines):
+        line = lines[idx]
+        if not HEADLINE_LINE.match(line):
+            idx += 1
+            continue
+        start = idx
+        head = HEADLINE_RE.match(line)
+        drawer = {}
+        cursor = idx + 1
+        ended = False
+        body = []
+        while cursor < len(lines):
+            cur = lines[cursor]
+            if HEADLINE_LINE.match(cur):
+                break
+            if cur.startswith(":") and not cur.startswith(":PROPERTIES:"):
+                key = cur[1:].split(":", 1)[0].strip()
+                drawer[key] = cur.split(":", 1)[1].strip() if ":" in cur else ""
+            if cur.startswith(":END:"):
+                ended = True
+                cursor += 1
+                break
+            cursor += 1
+        while cursor < len(lines) and not HEADLINE_LINE.match(lines[cursor]):
+            body.append(lines[cursor])
+            cursor += 1
+        identity = None
+        if head:
+            identity = (head.group("mfrom"), head.group("mto"), head.group("mkind"),
+                        drawer.get("WHEN", ""))
+        messages.append({
+            "line": start + 1,
+            "headline": line,
+            "head_ok": head is not None,
+            "drawer": drawer,
+            "ended": ended,
+            "identity": identity,
+            "body": "\n".join(body).strip("\n"),
+        })
+        idx = cursor
+    return messages
+
+
+def message_ids(messages):
+    return [m["identity"] for m in messages]
+
+
+# -------------------------------------------------------------------- log
+def parse_log(text):
+    """Split docs/CHAIN-TEST.md into its run lines and its prose sections."""
+    lines = text.splitlines()
+    run_lines = []
+    summary = []
+    section = "runs"
+    for number, line in enumerate(lines, start=1):
+        if line.startswith("## "):
+            section = line[3:].strip()
+            continue
+        if section == "runs":
+            if not line.strip():
+                continue
+            if line.startswith("#"):
+                continue
+            if RUN_LINE_INTENT_RE.match(line):
+                run_lines.append((number, line))
+        elif section.startswith("Summary"):
+            if line.strip():
+                summary.append((number, line))
+    return run_lines, summary
+
+
+# ------------------------------------------------------------------ board
+def board_headlines(text):
+    out = []
+    for number, line in enumerate(text.splitlines(), start=1):
+        stripped = line.lstrip()
+        if stripped.startswith("*") and stripped.lstrip("*").startswith(" "):
+            out.append((number, stripped))
+    return out
+
+
+# ------------------------------------------------------------------- main
+def main(argv):
+    parser = argparse.ArgumentParser(description="grade the TEST-CHAIN objective's landed evidence")
+    parser.add_argument("--root", default=None,
+                        help="run against another tree (control); default: this repo")
+    parser.add_argument("--main", default=MAIN_REF, help="the ref the turns must have landed on")
+    parser.add_argument("--selftest", action="store_true",
+                        help="prove every leg can fail, against copies of this tree")
+    args = parser.parse_args(argv)
+    root = os.path.abspath(args.root) if args.root else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    if args.selftest:
+        return selftest(root)
+
+    if len(TURNS) != EXPECTED_TURNS:
+        raise CannotRun("TURNS lists %d turn(s), EXPECTED_TURNS pins %d — the harness "
+                        "does not understand its own promise" % (len(TURNS), EXPECTED_TURNS))
+    if len(BOARD_ITEMS) != EXPECTED_BOARD_ITEMS:
+        raise CannotRun("BOARD_ITEMS lists %d item(s), EXPECTED_BOARD_ITEMS pins %d — "
+                        "the harness does not understand its own promise"
+                        % (len(BOARD_ITEMS), EXPECTED_BOARD_ITEMS))
+
+    problems = []
+    notes = []
+
+    chat_text = read(root, CHAT_REL)
+    log_text = read(root, LOG_REL)
+    board_text = read(root, BOARD_REL)
+    control_text = read(root, CONTROL_REL)
+
+    messages = parse_messages(chat_text)
+    if len(messages) < CHAT_MESSAGE_FLOOR:
+        problems.append("POPULATION chat: %d message(s), floor is %d — the evidence this "
+                        "harness grades is no longer there" % (len(messages), CHAT_MESSAGE_FLOOR))
+    if not messages:
+        raise CannotRun("agent-team/TEAM-CHAT.org holds no `* MSG` entry — there is no chat "
+                        "to grade (a rename or a wipe is not a failure of the objective)")
+
+    # ---- 1. TURNS: a landed commit per scripted turn
+    subjects = {}
+    for line in git(root, "log", "--format=%H%x09%s").splitlines():
+        sha, _, subject = line.partition("\t")
+        subjects[sha] = subject
+    for turn in TURNS:
+        marker = "TEST-%s" % turn
+        candidates = [sha for sha, subject in subjects.items() if marker in subject]
+        if not candidates:
+            problems.append("TURN %s: no commit anywhere in the history names %s — the "
+                            "scripted turn never landed" % (turn, marker))
+            continue
+        landed = []
+        for sha in candidates:
+            if subprocess.run(("git", "merge-base", "--is-ancestor", sha, args.main),
+                              cwd=root, capture_output=True).returncode == 0:
+                landed.append(sha)
+        if not landed:
+            problems.append("TURN %s: %d commit(s) name %s but none is an ancestor of %s — "
+                            "the turn exists only on a side branch"
+                            % (turn, len(candidates), marker, args.main))
+        else:
+            notes.append("TURN %s: %d commit(s) name %s, %d landed on %s (newest %s)"
+                         % (turn, len(candidates), marker, len(landed), args.main, landed[0][:8]))
+
+    # ---- 2. CHAT-TURN: a chat entry per scripted turn
+    turn_dates = {}
+    for turn in TURNS:
+        marker = "TEST-%s" % turn
+        hits = [m for m in messages if marker in m["body"]]
+        if not hits:
+            problems.append("CHAT-TURN %s: no chat entry mentions %s — the turn left no "
+                            "record in the single chat buffer" % (turn, marker))
+            continue
+        dates = set()
+        for hit in hits:
+            when = hit["drawer"].get("WHEN", "")
+            match = WHEN_RE.match(when)
+            if match:
+                dates.add(match.group(0))
+        turn_dates[turn] = dates
+        notes.append("CHAT-TURN %s: %d entr(y/ies) carry %s (line %s)"
+                     % (turn, len(hits), marker, ", ".join(str(h["line"]) for h in hits[:4])))
+
+    # ---- 3. CHAT-FORMAT: the FORMAT LAW over EVERY entry
+    for message in messages:
+        if not message["head_ok"]:
+            problems.append("CHAT-FORMAT line %d: headline does not carry the FROM "
+                            "(expected `* MSG <from> -> @<to> :<kind>:  :msg:<from>:<to>:<kind>:`)"
+                            % message["line"])
+            continue
+        missing = [key for key in DRAWER_KEYS if key not in message["drawer"]]
+        if missing:
+            problems.append("CHAT-FORMAT line %d: drawer is missing %s"
+                            % (message["line"], ", ".join(":" + key + ":" for key in missing)))
+        if not message["ended"]:
+            problems.append("CHAT-FORMAT line %d: the drawer never closes with :END:"
+                            % message["line"])
+
+    # ---- 4. APPEND-ONLY: the objective's own window, byte for byte
+    base = objective_base(root, control_text)
+    if base is None:
+        raise CannotRun("agent-team/TEAM-CONTROL.org never carried the TEST-CHAIN objective "
+                        "(`#+OBJECTIVE: TEST-CHAIN`) — this harness grades THAT objective")
+    touched = [sha for sha in git(root, "log", "--format=%H", "--", CHAT_REL).split()
+               if subprocess.run(("git", "merge-base", "--is-ancestor", base, sha),
+                                 cwd=root, capture_output=True).returncode == 0]
+    for sha in touched:
+        old = git(root, "show", "%s:%s" % (sha, CHAT_REL))
+        if not chat_text.startswith(old):
+            problems.append("APPEND-ONLY %s: the chat as of this commit is NOT a prefix of the "
+                            "current file — an entry was edited or dropped inside the "
+                            "objective's window" % sha[:8])
+    notes.append("APPEND-ONLY: %d commit(s) touched the chat inside the objective's window "
+                 "(base %s), every version is a byte prefix of the current file"
+                 % (len(touched), base[:8]))
+
+    # ---- 5. NO-DROP: over the whole history, no entry ever disappears
+    current_ids = message_ids(messages)
+    edited = []
+    for sha in git(root, "log", "--format=%H", "--", CHAT_REL).split():
+        old_text = git(root, "show", "%s:%s" % (sha, CHAT_REL))
+        old_ids = message_ids(parse_messages(old_text))
+        if len(old_ids) > len(current_ids) or old_ids != current_ids[:len(old_ids)]:
+            problems.append("NO-DROP %s: the chat's message sequence at this commit is not a "
+                            "prefix of today's — an entry was removed or reordered" % sha[:8])
+            continue
+        for index, old_message in enumerate(parse_messages(old_text)):
+            if old_message["body"] != messages[index]["body"]:
+                edited.append((sha, messages[index]["line"]))
+    if edited:
+        seen = sorted({line for _sha, line in edited})
+        notes.append("NO-DROP: %d historical bod(y/ies) were reworded after the fact "
+                     "(line(s) %s) — an entry may be reworded, never removed"
+                     % (len(seen), ", ".join(str(line) for line in seen)))
+    notes.append("NO-DROP: %d message(s) over the whole history, none ever dropped"
+                 % len(messages))
+
+    # ---- 6. LOG: the run log is well-formed, complete and cross-linked
+    run_lines, summary = parse_log(log_text)
+    if len(run_lines) < LOG_RUN_LINE_FLOOR:
+        problems.append("LOG: %d run line(s), floor is %d — the log no longer holds one line "
+                        "per turn" % (len(run_lines), LOG_RUN_LINE_FLOOR))
+    if not any(section.startswith("Summary") for section in summary_sections(log_text)):
+        problems.append("LOG: the closed `## Summary` section is missing — the log was never closed")
+    if len(summary) < LOG_SUMMARY_LINE_FLOOR:
+        problems.append("LOG: the summary holds %d line(s), floor is %d"
+                        % (len(summary), LOG_SUMMARY_LINE_FLOOR))
+    for number, line in run_lines:
+        match = RUN_LINE_RE.match(line)
+        if not match:
+            problems.append("LOG line %d: not a run line (`<sha>@<branch> | <seat> | <lane> | "
+                            "<date> [| <note>]`): %s" % (number, line[:90]))
+            continue
+        sha = match.group("sha")
+        if subprocess.run(("git", "cat-file", "-e", "%s^{commit}" % sha),
+                          cwd=root, capture_output=True).returncode != 0:
+            problems.append("LOG line %d: run id %s does not resolve to a commit in this repo"
+                            % (number, sha))
+    for turn in TURNS:
+        markers = LOG_MARKERS[turn]
+        hits = []
+        for number, line in run_lines:
+            match = RUN_LINE_RE.match(line)
+            if not match:
+                continue
+            note = match.group("note") or ""
+            if any(marker in note for marker in markers):
+                hits.append((number, match))
+        if not hits:
+            problems.append("LOG-TURN %s: no run line carries %s — the turn is not in the log"
+                            % (turn, " or ".join(repr(m) for m in markers)))
+            continue
+        dates = {match.group("date") for _number, match in hits}
+        chat_dates = turn_dates.get(turn) or set()
+        if chat_dates and not (chat_dates & dates):
+            problems.append("LOG-TURN %s: the log's date(s) %s disagree with the chat entry's "
+                            "date(s) %s — the two records of the turn are not the same turn"
+                            % (turn, sorted(dates), sorted(chat_dates)))
+    notes.append("LOG: %d run line(s), every run id resolves to a commit; %d summary line(s)"
+                 % (len(run_lines), len(summary)))
+
+    # ---- 7. BOARD: the parked order is still restorable
+    headlines = board_headlines(board_text)
+    headline_text = "\n".join(text for _number, text in headlines)
+    for item in BOARD_ITEMS:
+        if item not in headline_text:
+            problems.append("BOARD: `%s` is no longer a headline on the board — the Lead's "
+                            "parked order cannot be restored over a deleted item" % item)
+    ongoing = [text for _number, text in headlines if " ONGOING " in text or text.startswith("* ONGOING")]
+    notes.append("BOARD: %d parked item(s) present, %d headline(s) total, %d ONGOING, "
+                 "TEST-CHAIN item on the board: %s"
+                 % (len(BOARD_ITEMS), len(headlines), len(ongoing),
+                    "yes" if "TEST-CHAIN" in headline_text else "no"))
+
+    if problems:
+        raise Red("\n".join(problems))
+
+    print("CHAIN-TEST CHECK OK — %d turns landed, %d chat messages, %d run lines"
+          % (len(TURNS), len(messages), len(run_lines)))
+    for note in notes:
+        print("  " + note)
+    return 0
+
+
+def summary_sections(text):
+    out = []
+    for line in text.splitlines():
+        if line.startswith("## "):
+            out.append(line[3:].strip())
+    return out
+
+
+def objective_base(root, control_text):
+    """The commit that switched the chain to the TEST-CHAIN objective.
+
+    Derived from the tree (not pinned to a sha): the first commit whose
+    TEAM-CONTROL.org carries `#+OBJECTIVE: TEST-CHAIN`. A hard-coded sha
+    would rot on the first rebase; the objective's own words cannot.
+    """
+    marker = "#+OBJECTIVE: TEST-CHAIN"
+    for sha in git(root, "log", "--format=%H", "--reverse", "--", CONTROL_REL).split():
+        try:
+            old = git(root, "show", "%s:%s" % (sha, CONTROL_REL))
+        except CannotRun:
+            continue
+        if marker in old:
+            return sha
+    return None
+
+
+
+# ------------------------------------------------------------------ selftest
+# A check that cannot FAIL is not a check (ELEVENTH harness law, applied to
+# the harness itself). Every control below mutates a COPY of the tree and
+# asserts that the leg owning the mutated fact goes RED — or, for a missing
+# input, CANNOT RUN. The shipped tree is never written to.
+def _read_file(root, rel):
+    with open(os.path.join(root, rel), encoding="utf-8") as fh:
+        return fh.read()
+
+
+def _write_file(root, rel, text):
+    with open(os.path.join(root, rel), "w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
+def _replace_once(root, rel, old, new):
+    text = _read_file(root, rel)
+    if old not in text:
+        raise CannotRun("control: the text to mutate is not in %s" % rel)
+    _write_file(root, rel, text.replace(old, new, 1))
+
+
+def control_dropped_entry(root):
+    text = _read_file(root, CHAT_REL)
+    cut = text.rfind("\n* MSG ")
+    if cut < 0:
+        raise CannotRun("control dropped-entry: there is no chat entry to drop")
+    _write_file(root, CHAT_REL, text[:cut] + "\n")
+
+
+def control_edited_entry(root):
+    _replace_once(root, CHAT_REL, "TEST-T3 — the chain's own state",
+                  "TEST-T3 — the chain's own stat")
+
+
+def control_broken_drawer(root):
+    _replace_once(root, CHAT_REL, ":KIND: report\n", "")
+
+
+def control_deleted_board_item(root):
+    text = _read_file(root, BOARD_REL)
+    kept = [line for line in text.splitlines(True) if "FR R-006 page registration" not in line]
+    if len(kept) == len(text.splitlines(True)):
+        raise CannotRun("control deleted-board-item: the FR-R006 headline is not on the board")
+    _write_file(root, BOARD_REL, "".join(kept))
+
+
+def control_broken_run_id(root):
+    text = _read_file(root, LOG_REL)
+    lines = text.splitlines(True)
+    for index, line in enumerate(lines):
+        if RUN_LINE_INTENT_RE.match(line):
+            lines[index] = re.sub(r"^[0-9a-f]{7,40}", "deadbee", line)
+            break
+    else:
+        raise CannotRun("control broken-run-id: the log holds no run line")
+    _write_file(root, LOG_REL, "".join(lines))
+
+
+def control_missing_summary(root):
+    _replace_once(root, LOG_REL, "## Summary (TEST-CHAIN, 3 turns)", "## Notes (not closed)")
+
+
+def control_missing_control_file(root):
+    os.remove(os.path.join(root, CONTROL_REL))
+
+
+def control_no_change(root):
+    return None
+
+
+# (name, mutation, expected exit code, expected text in the output, extra argv)
+CONTROLS = (
+    ("dropped chat entry", control_dropped_entry, 1, "NO-DROP", ()),
+    ("edited chat entry", control_edited_entry, 1, "APPEND-ONLY", ()),
+    ("broken drawer", control_broken_drawer, 1, "CHAT-FORMAT", ()),
+    ("deleted board item", control_deleted_board_item, 1, "is no longer a headline", ()),
+    ("broken run id", control_broken_run_id, 1, "does not resolve to a commit", ()),
+    ("unclosed log summary", control_missing_summary, 1, "section is missing", ()),
+    ("missing control file", control_missing_control_file, 2, "CANNOT RUN", ()),
+    ("turns never landed", control_no_change, 1, "none is an ancestor of", "--main",),
+)
+
+
+def selftest(root):
+    """Prove each leg can fire, against copies. Returns 0 or raises Red."""
+    script = os.path.join(root, "scripts", "chain_test_check.py")
+    base = objective_base(root, read(root, CONTROL_REL))
+    failures = []
+    for name, mutation, expected_rc, expected_text, extra in CONTROLS:
+        tmp = tempfile.mkdtemp(prefix="chain-test-control-")
+        target = os.path.join(tmp, "tree")
+        try:
+            shutil.copytree(root, target, symlinks=True,
+                            ignore=shutil.ignore_patterns("node_modules", "__pycache__",
+                                                          ".pytest_cache", "dist", "build"))
+            mutation(target)
+            argv = [sys.executable, script, "--root", target]
+            if extra == "--main":
+                # point the harness at a ref that predates the turns: the
+                # turns are real commits, they simply never landed THERE.
+                argv += ["--main", base or "ai/main"]
+            proc = subprocess.run(argv, capture_output=True, text=True)
+            out = proc.stdout + proc.stderr
+            if proc.returncode == expected_rc and expected_text in out:
+                print("  control %-24s -> rc %d as expected (%s)" % (name, proc.returncode, expected_text))
+            else:
+                failures.append("%s: expected rc %d containing %r, got rc %d: %s"
+                                % (name, expected_rc, expected_text, proc.returncode, out.strip()[:300]))
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+    if failures:
+        raise Red("\n".join(failures))
+    print("SELFTEST OK — %d control(s), every leg proved able to fail" % len(CONTROLS))
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except CannotRun as exc:
+        print("CANNOT RUN — %s" % exc)
+        sys.exit(2)
+    except Red as exc:
+        print("RED —")
+        for line in str(exc).strip().splitlines():
+            print("    " + line.strip())
+        sys.exit(1)
