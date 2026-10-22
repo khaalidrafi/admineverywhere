@@ -6020,3 +6020,70 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
      start; the board rule "DONE is Lead-only" is unchanged.
   Quality floor unchanged: landing gate still gates every merge; the
   reviewer is a second, human-order check ON TOP of the gate.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 18:41 UTC]
+:END:
+  TEST-T2 — ONE concrete improvement in the harness/dispatch flow, named and MEASURED:
+  THE SEGREGATION-LAW PENDING SLOT CANNOT BOOTSTRAP FROM EMPTY, so since the law landed
+  NO turn branch can ever be merged. The reviewer's deliverable is the slot
+  #+PENDING-REVIEW; the merger acts only on a non-empty slot; and the ONLY code that
+  WRITES a new branch into that slot is .github/workflows/agent-team.yml:809 —
+  `if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" = "approved" ] && [ "$GATE" = "green" ]`
+  — so an author branch takes the slot only when the PREVIOUS pending was approved and
+  landed (:815). But OUTCOME can only be "approved" if a pending branch already existed
+  to merge: with an empty slot the merger is initialised to "no-pending" (:704) and its
+  whole body is guarded by `[ -n "$PENDING_BRANCH" ]` (:706), so OUTCOME stays
+  "no-pending", :809 is false, :816/:818 do not fire, and NEWPENDING is written back
+  EMPTY at :840. Empty slot -> empty slot, forever: a closed lock with no key on the
+  outside. Every segment after 58eb342 authors work that the pipeline is now unable to
+  queue, review or land.
+  LIVE STATE (this run, read-only): #+PENDING-REVIEW is empty (agent-team/
+  TEAM-CONTROL.org:13, verbatim `#+PENDING-REVIEW:` with no value); agent-team/
+  REVIEW-LOG.org holds 0 `* REVIEW` entries (grep -c '^\* REVIEW' -> 0) — the merger has
+  never recorded one; the review phase of THIS seat's segment printed "REVIEW: no pending
+  branch this run" and left /workspace/.turn-review.txt at 0 bytes (.github/scripts/
+  turn_segment.sh:213/:244-246); and ai/main carries no turn merge after 58eb342 — its
+  five newest commits are Lead ci-fixes (26c690f, eaf34bd, a26aab1, 58eb342, 3ad2b98).
+  CONTROL (replayed the step's own logic on a COPY in /tmp — no shipped file touched):
+  inputs as measured (slot empty -> OUTCOME=no-pending; author branch non-empty, AHEAD=5)
+  print `next #+PENDING-REVIEW: []`; the same script with OUTCOME=approved/GATE=green
+  prints `branch=ai/turn-20261022-1838 | author=platform-engineer | sha=…` — i.e. the leg
+  works only in the state that the leg itself is required to produce first.
+  WHY THE CHAIN DOES NOT SEE IT: stall accounting counts a non-empty author branch as
+  PROGRESS (`if [ "${AUTHOR_AHEAD:-0}" -gt 0 ]; then PROGRESS=yes`, agent-team.yml:1011),
+  so #+STALL-COUNT stays 0 (TEAM-CONTROL.org:10) and finalize self-dispatches the next
+  run: the chain burns lane minutes, keeps delivering commits to branches, and lands
+  nothing, while every health indicator reads healthy.
+  THE FIX (LEAD-OWNED files — named, not edited): key the slot-write on whether the OLD
+  pending is being RETAINED, not on whether it was approved. One condition at :809 —
+  `if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" != "review-missing" ] && [ "$OUTCOME" != "refused-same-member" ]`
+  — the retain clauses at :816-819 run after it and still win, so gate-red /
+  review-missing / refused keep the same branch re-reviewed exactly as today, and an
+  empty or resolved slot lets THIS run's branch in. That also makes REVIEW-LOG law 4
+  enforceable (agent-team/REVIEW-LOG.org:17-18 promises "Rejected / refused /
+  review-missing: the pending slot keeps the branch for re-review", but :817 retains only
+  for review-missing and refused-same-member — a REJECTED branch currently drops out of
+  the slot and can never be re-reviewed; adding `|| [ "$OUTCOME" = "rejected" ]` to :817
+  closes that half too, at the cost of holding the slot for the rejected branch instead of
+  the new author branch, which is what "single-slot by design" (the :802-804 comment)
+  already says it wants).
+  THIS TURN'S SCOPE (T2): this chat entry + ONE line in docs/CHAIN-TEST.md, nothing else.
+  No workflow edit, no patch file, no board flip (the board carries no TEST-CHAIN item and
+  no ONGOING headline), no completion claim, #+OBJECTIVE-STATE untouched — the Lead's
+  gate. TEST-T1 landed on this branch as 18cfdab. Landing gate GREEN before this commit:
+  `python3 scripts/landing_gate.py` rc 0 over the 4 pinned legs.
+  LANE: the qoder arm ran for this seat (first arm, .turn-inside.sh:65-70; the rotation
+  pointer declares qoder/qwen3.8-flash@qoder at TEAM-CONTROL.org:9). GITHUB_RUN_ID is
+  unset inside the seat container (measured), so the run id below is this branch's base.
+  ROLE_LARK_WEBHOOK is empty in this env (length 0, measured) — the Lark copy of this
+  report is SKIPPED, not lost, and no URL was invented.
+  RESULT: DONE (TEST-T2 scope: one chat entry naming ONE harness improvement + one
+  docs/CHAIN-TEST.md line; nothing else).
+  NEXT (the Lead's call): this slot-deadlock blocks EVERY delivery under the new
+  segregation law, including the FEATURE-ORDER item this seat is queued for — it is a
+  two-line edit to .github/workflows/agent-team.yml, which no seat may touch, so it needs
+  a Lead commit before the rotation can land anything again.
