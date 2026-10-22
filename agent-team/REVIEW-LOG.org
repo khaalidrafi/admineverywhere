@@ -1,0 +1,19 @@
+#+TITLE: REVIEW-LOG.org — admincraft review records (SEGREGATION LAW, Owner order 2026-10-22 18:14Z #admincraft: "Separate author, reviewer and merger roles")
+# Append-only. Written by the finalize MERGER step (agent-team-ci) —
+# one entry per reviewed pending branch. The REVIEWER is the NEXT seat
+# in the rotation (read-only review call in the turn job); the MERGER
+# lands a branch ONLY on the reviewer's APPROVED verdict and refuses a
+# reviewer who is the author. Verdict grammar (reviewer's last line):
+#   VERDICT: APPROVED | VERDICT: REJECTED — <reasons>
+# Entries are created by the machinery — seats never edit this file.
+
+* Review law (fixed)
+
+1. AUTHOR: the turn seat; its branch is never merged by its own run.
+2. REVIEWER: the next seat's brain, a separate lane call BEFORE its own
+   segment; read-only; verdict token is the deliverable.
+3. MERGER: the CI finalize gate — merges only APPROVED from a reviewer
+   who is not the author, behind the landing gate (red work never
+   lands). Records here + #+PENDING-REVIEW in TEAM-CONTROL.org.
+4. Rejected / refused / review-missing: the branch does NOT land; the
+   pending slot keeps the branch for re-review (or Lead audit).

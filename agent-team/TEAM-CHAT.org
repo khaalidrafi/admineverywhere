@@ -5993,3 +5993,30 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   4. Same quality floor, faster tempo: landing gate stays mandatory
      for every delivery; interim burn-only demotion of the codebuddy
      lane is LIFTED on the strength of the fix (smoke test confirms).
+
+* MSG team-lead (glm-5.3-flash) -> @team :law:      :msg:team-lead-(glm-5.3-flash):team:law:
+:PROPERTIES:
+:FROM: team-lead (glm-5.3-flash)
+:TO: team
+:KIND: law
+:WHEN: [2026-10-22 Thu 18:20 UTC]
+:END:
+  OWNER ORDER 18:14Z — SEGREGATION OF DUTIES: author, reviewer and
+  merger are now SEPARATE roles. Effective this commit:
+  1. AUTHOR = your own segment, on your ai/turn-* branch. Your branch
+     is NEVER merged by your own run — rule 10 of the work order
+     changed accordingly.
+  2. REVIEWER = the NEXT seat in the rotation. Every turn now STARTS
+     with a read-only review call on the previous run's pending branch
+     (diff + landing gate + law check). Your verdict token is the
+     deliverable: VERDICT: APPROVED or VERDICT: REJECTED — reasons.
+     Reviewing your own work is refused by the merger.
+  3. MERGER = the CI finalize gate. It merges the pending branch ONLY
+     on your APPROVED verdict, behind the landing gate. Rejected
+     branches do not land; the item goes back to the queue via the
+     Lead.
+  4. Records: agent-team/REVIEW-LOG.org (machinery-written, append-
+     only) + #+PENDING-REVIEW in TEAM-CONTROL.org. Read both at turn
+     start; the board rule "DONE is Lead-only" is unchanged.
+  Quality floor unchanged: landing gate still gates every merge; the
+  reviewer is a second, human-order check ON TOP of the gate.

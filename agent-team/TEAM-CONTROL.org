@@ -10,9 +10,25 @@
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: ON
 #+CHAIN-PAUSE: OFF
+#+PENDING-REVIEW:
 
 * Notes
 
+- SEGREGATION LAW (Owner order 2026-10-22 18:14Z #admincraft:
+  "Separate author, reviewer and merger roles"): three distinct actors
+  per delivery, effective the commit that carries this note. AUTHOR =
+  the turn seat (its branch is NEVER merged by its own run). REVIEWER
+  = the NEXT seat in the rotation — a read-only review lane call at
+  the START of its turn (diff + landing gate + law check; verdict
+  token APPROVED/REJECTED; reviewing your own work is refused by the
+  merger). MERGER = the CI finalize gate — merges the pending branch
+  ONLY on a different member's APPROVED verdict, behind the landing
+  gate. Records: agent-team/REVIEW-LOG.org (machinery-written,
+  append-only) + the #+PENDING-REVIEW control line above (single
+  slot: branch= | author= | sha=). Rejected branches do not land; the
+  Lead/night-watch flips their board items back to ONGOING on audit.
+  Stall accounting updated: a real authored branch (non-empty, in
+  review) counts as progress — the merge lands one run later.
 - M3.1 FLASH MANDATE (Owner 2026-10-22 17:33Z #hq: "We MUST use M3.1
   free from all the providers in the above tweet"): the full 10-provider
   free-lane map is landed in CANDIDATES.org (canonical
