@@ -6,13 +6,21 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; one TODO per segment; the seat flips its item PENDING with :DELIVERED: evidence; the chain then PAUSES for Lead review (PAUSE-AFTER-TODO law, Owner order 2026-10-22 #admincraft)
-#+TURN: codebuddy/deepseek-v4.1-flash@codebuddy (Software Engineer)
+#+TURN: codebuddy/glm-5.3@codebuddy (Visiting Senior Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: ON
-#+CHAIN-PAUSE: armed 2026-10-22 16:20Z — a TODO was delivered; the Lead clears this line to resume
+#+CHAIN-PAUSE:
 
 * Notes
 
+- PAUSE-REVIEW 1 (Lead, 2026-10-22 16:28Z): COOL-CHAT-SEND-BACK-2
+  DELIVERED by the relief seat (ai/turn-20261022-1602 @ f2fdd7d,
+  merged c9198fe) — dead prompt builder deleted, its return refused;
+  stall 4 -> 0. Verdict ACCEPT. Lane attribution unconfirmed (result
+  line reads qoder fallback; commits say relief). Chain resumed WITH
+  the visiting seat first: #+TURN = codebuddy/glm-5.3@codebuddy on
+  FR-R001-FE per VISITING LAW; after the visit the rotation rejoins
+  at software-engineer.
 - VISITING LAW (Owner order 2026-10-22 ~16:08Z: burn the 250 expiring
   CodeBuddy paid credits): budget 250 / 5 days = 50/day until
   2026-10-27. The VISITING SENIOR ENGINEER = codebuddy/glm-5.3@codebuddy

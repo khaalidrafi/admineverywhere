@@ -110,7 +110,7 @@
   BURN LEDGER (Lead updates per run):
   | date       | member                      | segment        | credits spent | note                          |
   |------------+-----------------------------+----------------+---------------+-------------------------------|
-  | 2026-10-22 | codebuddy/glm-5.3@codebuddy | (first visit)  | ~50 budget    | dispatched via visiting seat  |
+  | 2026-10-22 | codebuddy/glm-5.3@codebuddy | FR-R001-FE     | ~50 budget    | dispatched 16:28Z, pause window |
 
 * HR PERFORMANCE REVIEWS (Owner order 2026-10-22 ~16:08Z: "regularly review your members' performance and record that in that file, just like a real HR would")
 
@@ -126,7 +126,7 @@
   | qoder/qwen3.8-flash@qoder                | TEST-T3 + segments | T3 caught empty-segment + Telegram-mirror bugs; gate green  | KEEP    |
   | openrouter/minimax-m3.1-flash:free@goose | TEST-T1, TEST-T2   | T2 found a real machinery bug (rotation-pointer no-op)      | KEEP    |
   | glm-5.3-flash@z.ai (Lead)                | every segment      | reviews at pause windows; harness repairs 3428567 + URL fix | KEEP    |
-  | zai/glm-4.7-flash@goose                  | 0 yet              | ARMED 10-22; turn in flight at review time                  | PROBE   |
+  | zai/glm-4.7-flash@goose                  | 0 confirmed       | relief turn delivered CC-SB-2 but lane line reads qoder fallback — attribution unconfirmed | PROBE |
   | groq/qwen3.8-27b@goose                   | 0 yet              | ARMED 10-22; relief fallback, unexercised                   | PROBE   |
   | codebuddy/deepseek-v4.1-flash@codebuddy  | 0 commits          | lane ran OK twice (ee5ed18, 0611493) but segments EMPTY     | WATCH   |
   | qoder/deepseek-v4.1-flash@qoder          | 0 yet              | ACTIVE; --model flag unverified                             | PROBE   |
