@@ -16,3 +16,14 @@ e489738@ai/turn-20261022-0942 | platform-engineer | minimax-m3.1-flash:free@goos
 ## Post-chain handoff (turn 4 — appended AFTER the log was closed at T3; append-only)
 
 - 965956e@ai/turn-20261022-1040 | platform-engineer | minimax-m3.1-flash:free@goose | 2026-10-22 | turn 4 (post-T3): the SESSION collect->restore defect re-measured LIVE (3 gaps: restore drops the qoder store, collect tars a path goose 1.55 never writes, three goose lanes pass --no-session) and a ready-to-apply proposal patch shipped at docs/session-loop-fix.patch — NOT applied (.github/workflows/* is Lead-owned); gate GREEN (4/4 legs)
+- Turn 5 (post-chain, harness): the objective's landed evidence became a COMMAND —
+  `scripts/chain_test_check.py` grades it: the three scripted turns each landed as a
+  commit that is an ancestor of the main ref, the chat carries the FROM in EVERY
+  headline with a complete :PROPERTIES: drawer, inside the objective's window every
+  historical chat version is a BYTE prefix of the current one, over the whole history
+  no entry ever disappears, the run log holds one well-formed line per turn whose every
+  run id resolves to a real commit and whose date agrees with that turn's chat entry,
+  and all 14 parked board items are still headlines. `--selftest` runs 8 controls
+  against copies and proves every leg can fail (rc 1 / rc 2 as expected). Deliberately
+  NOT named `*_diff.py`: that glob IS the landing gate's twin roster, and this grades
+  the CHAIN, not a pair of artifacts.
