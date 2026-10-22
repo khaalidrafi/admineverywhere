@@ -5,11 +5,11 @@
 
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
-#+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; the seat flips its item PENDING with :DELIVERED: evidence; the chain CONTINUES through the order — multiple TODOs per segment allowed (PAUSE-AFTER-TODO is opt-in, Owner refinement 2026-10-22 17:19Z #hq: pause only on explicit Owner order)
+#+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; the seat flips its item PENDING with :DELIVERED: evidence; the chain then PAUSES for Lead review (PAUSE-AFTER-TODO DEFAULT ON — Owner order 17:28Z "PAUSE AFTER TODO MUST BE DEFAULT"; an explicit order may set OFF for continuous runs)
 #+TURN: qoder/qwen3.8-flash@qoder (Platform Engineer)
 #+STALL-COUNT: 0
-#+PAUSE-AFTER-TODO: OFF
-#+CHAIN-PAUSE:
+#+PAUSE-AFTER-TODO: ON
+#+CHAIN-PAUSE: OFF
 
 * Notes
 
@@ -75,13 +75,14 @@
   bugs, both fixed same day). Full loop proven: worker -> gate -> auto-merge
   -> self-dispatch -> fallback chain. Machinery hardened in 3428567
   (empty-segment law) and this commit (real rotation + pause law).
-- PAUSE LAW (Owner refinement 2026-10-22 17:19Z #hq: pause after TODO is
-  OPTIONAL — "we should be able to continue as long as we want, including
-  multiple todos"): PAUSE-AFTER-TODO is OFF — the chain CONTINUES through
-  FEATURE-ORDER without halting after deliveries; the roles' reports still
-  reach the Owner on Telegram + Discord every run. Only an explicit Owner
-  order re-arms #+PAUSE-AFTER-TODO: ON (then finalize arms #+CHAIN-PAUSE
-  after a delivered TODO and the Lead clears it to resume).
+- PAUSE LAW (Owner order 2026-10-22 17:28Z #hq: "PAUSE AFTER TODO MUST BE
+  DEFAULT" — supersedes the 17:19Z opt-in default): PAUSE-AFTER-TODO is ON
+  — when a segment delivers a TODO (:DELIVERED: evidence on the board),
+  finalize arms #+CHAIN-PAUSE, the chain stops cleanly, and the roles'
+  reports reach the Owner on Telegram + Discord. The Lead clears
+  #+CHAIN-PAUSE to resume the next item in FEATURE-ORDER. The 17:19Z
+  capability stands: an explicit Owner order may set OFF for a continuous
+  multi-TODO run.
 - HIRE + BURN (Owner 2026-10-22 17:23Z #hq: "Hire deepseek-v4.1-flash@qoder
   and burn its free offer"): the QA seat is formally HIRED — HR ledger
   PROBE -> KEEP with evidence (qoder lane run OK a64902a, FR-R001-FE
