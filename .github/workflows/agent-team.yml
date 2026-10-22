@@ -769,7 +769,18 @@ jobs:
           OUTCOME="no-branch"
           if [ -n "$BRANCH" ] && git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
             git fetch origin "$BRANCH"
-            if git merge --no-ff --no-edit "origin/$BRANCH"; then
+            # EMPTY-SEGMENT LAW (Lead fix 2026-10-22, run 39761029125 T3
+            # evidence: the lane exited 0 but committed NOTHING — merge
+            # said "Already up to date" rc 0, was counted OUTCOME=merged
+            # + PROGRESS=yes, stall stayed 0, and the husk branch was
+            # deleted as if landed). Count commits ahead of ai/main:
+            # zero => empty segment, never "merged".
+            AHEAD=$(git rev-list --count "origin/ai/main..origin/$BRANCH" 2>/dev/null || echo 0)
+            if [ "${AHEAD:-0}" -eq 0 ]; then
+              OUTCOME="empty-segment"
+              echo "MERGE: empty segment — branch has no commits beyond ai/main; deleting the husk"
+              git push origin --delete "$BRANCH" || true
+            elif git merge --no-ff --no-edit "origin/$BRANCH"; then
               OUTCOME="merged"
             else
               git merge --abort || true
@@ -966,15 +977,18 @@ jobs:
           ADDED=""
           BASE="${{ needs.turn.outputs.base_sha }}"
           if [ -n "$BASE" ] && git cat-file -e "$BASE" 2>/dev/null; then
+            # || true: grep exits 1 on an EMPTY diff (segment appended no
+            # chat lines) and pipefail killed this step silently under
+            # set -e (run 39761029125 T3 finalize, step 7 evidence).
             ADDED=$(git diff "$BASE" HEAD -- agent-team/TEAM-CHAT.org 2>/dev/null \
-              | grep '^+' | grep -v '^+++' | sed 's/^+//')
+              | grep '^+' | grep -v '^+++' | sed 's/^+//' || true)
           fi
           CH=""
           if [ -n "$ADDED" ]; then
             CH=$(printf '%s' "$ADDED" | sha256sum | cut -c1-12)
             LASTC=$(grep -oP '^\#\+LAST-CHAT:\s*\K[0-9a-f]+' "$CTL" | head -1 || true)
             if [ "$CH" != "$LASTC" ]; then
-              SEAT=$(printf '%s\n' "$ADDED" | grep -oP '^\s*:FROM:\s*\K.*' | head -1)
+              SEAT=$(printf '%s\n' "$ADDED" | grep -oP '^\s*:FROM:\s*\K.*' | head -1 || true)
               SEAT="${SEAT:-team-lead}"
               export ADDED
               python3 -c 'import os,sys; added=os.environ["ADDED"]; sys.stdout.write("\x1f".join(added[i:i+3800] for i in range(0, len(added), 3800)))' > /tmp/tg-chunks.txt
@@ -1096,8 +1110,10 @@ jobs:
             "$FROM" "${TURN_BRANCH:-?}" "${SEG_RESULT:-?}" "${CHAIN_DECISION:-unknown}" "${CHAIN_STALL:-?}")"
           # The GLM chats this segment appended (merge landed them in ai/main):
           if [ -n "$BASE_SHA" ] && git cat-file -e "$BASE_SHA" 2>/dev/null; then
+            # || true: same empty-diff pipefail hazard as the TG mirror
+            # (Lead fix 2026-10-22, run 39761029125 evidence).
             ADDED=$(git diff "$BASE_SHA" HEAD -- agent-team/TEAM-CHAT.org 2>/dev/null \
-              | grep '^+' | grep -v '^+++' | sed 's/^+//')
+              | grep '^+' | grep -v '^+++' | sed 's/^+//' || true)
             if [ -n "$ADDED" ]; then
               post "$(printf '%s\nTO: @team (discord, admincraft channel)\n--- GLM chat, this segment ---\n%s' "$FROM" "$ADDED")"
             else
