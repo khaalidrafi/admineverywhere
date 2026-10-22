@@ -85,6 +85,8 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          GOMODEL_MASTER_KEY: ${{ secrets.GOMODEL_MASTER_KEY }}   # gateway free-offer catalog scan (Owner 2026-10-22)
+          GOMODEL_GATEWAY_URL: ${{ vars.GOMODEL_GATEWAY_URL || 'https://ai.khalidrafi.tech' }}
         run: |
           SUMMARY="$GITHUB_STEP_SUMMARY"
           echo "## Seat probe — ${GITHUB_SHA::7} (${{ github.event_name }})" >> "$SUMMARY"
@@ -128,6 +130,35 @@ jobs:
             "https://openrouter.ai/api/v1/chat/completions" \
             "minimax/minimax-m3.1-flash:free" "$OPENROUTER_API_KEY"
 
+          # FREE-OFFER CATALOG SCAN (Owner order 2026-10-22 #admincraft:
+          # "consume ALL the free offers of MiniMax M3.1 Flash happening
+          # right now"): list the GoModel gateway catalog, echo every
+          # minimax/deepseek id it serves, and live-probe the first
+          # MiniMax M3.1 Flash variant. Pure evidence — nothing here gates.
+          if [ -n "$GOMODEL_MASTER_KEY" ]; then
+            CATALOG=$(curl -sS -m 30 -H "Authorization: Bearer $GOMODEL_MASTER_KEY" \
+              "${GOMODEL_GATEWAY_URL}/v1/models" 2>/dev/null || echo '{}')
+            GWM=$(echo "$CATALOG" | jq -r '.data[]?.id' 2>/dev/null | grep -i 'minimax-m3.1' | head -5 || true)
+            GWD=$(echo "$CATALOG" | jq -r '.data[]?.id' 2>/dev/null | grep -i 'deepseek' | head -5 || true)
+            {
+              echo ""
+              echo "### GoModel gateway free-offer catalog (minimax / deepseek)"
+              echo ""
+              while IFS= read -r m; do [ -n "$m" ] && echo "- minimax: \`$m\`"; done <<< "$GWM"
+              while IFS= read -r d; do [ -n "$d" ] && echo "- deepseek: \`$d\`"; done <<< "$GWD"
+              [ -n "$GWM$GWD" ] || echo "- (no minimax/deepseek ids served by the gateway today)"
+            } >> "$SUMMARY"
+            FIRST_MM=$(echo "$GWM" | head -1)
+            if [ -n "$FIRST_MM" ]; then
+              probe "gomodel/$FIRST_MM" \
+                "${GOMODEL_GATEWAY_URL}/v1/chat/completions" \
+                "$FIRST_MM" "$GOMODEL_MASTER_KEY"
+            fi
+          else
+            echo "" >> "$SUMMARY"
+            echo "- GOMODEL_MASTER_KEY not set — gateway catalog scan skipped" >> "$SUMMARY"
+          fi
+
           echo "" >> "$SUMMARY"
           echo "Law: a probe row is evidence of the RUNTIME, not of quality —" >> "$SUMMARY"
           echo "seat ranks live in agent-team/MEMBERS.org." >> "$SUMMARY"
@@ -160,6 +191,7 @@ jobs:
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}   # fallback brain — self-heals when the Owner sets it
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}   # minimax relief lane
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # qwen3.8-27b relief lane (Lead fix 2026-10-22: qoder quota-dead, zai rate-limited)
+      CODEBUDDY_AUTH_TOKEN: ${{ secrets.CODEBUDDY_AUTH_TOKEN }}   # deepseek-v4.1-flash free-offer hire (Owner 2026-10-22)
       GOMODEL_MASTER_KEY: ${{ secrets.GOMODEL_MASTER_KEY }}   # Jev judgment layer (health-gated)
       GOMODEL_GATEWAY_URL: ${{ vars.GOMODEL_GATEWAY_URL || 'http://localhost:8080' }}
     steps:
@@ -205,15 +237,19 @@ jobs:
           echo "objective=$OBJECTIVE" >> "$GITHUB_OUTPUT"
           # Seat pointer -> seat id. The case grammar is extensible: one
           # line per rotation entry ("model@body ... role" pointer forms).
-          # T2 finding (turn 2026-10-22, chat evidence): the catch-all used
-          # to map EVERY pointer to platform-engineer, masking typos and
-          # freezing the rotation. Now: one arm per roster seat, and an
-          # unknown pointer REFUSES (BLOCKED path below) instead of silently
-          # running the wrong lane.
+          # MEMBER ID FORMAT LAW (Owner 2026-10-22 13:22Z #admincraft):
+          # member IDs are PROVIDER/MODEL@PLATFORM. Legacy arms kept for
+          # one rotation cycle so pointers written by runs still on the
+          # old code land on the right seat instead of BLOCKED.
           case "$TURN" in
-            qwen3.8-flash@qoder*) NEXT_SEAT=platform-engineer ;;
-            glm-4.7-flash@goose*) NEXT_SEAT=relief-engineer ;;
-            *)                    NEXT_SEAT=unknown ;;
+            qwen3.8-flash@qoder*)                      NEXT_SEAT=platform-engineer ;;            # legacy pre-2026-10-22
+            qoder/qwen3.8-flash@qoder*)                NEXT_SEAT=platform-engineer ;;
+            glm-4.7-flash@goose*)                      NEXT_SEAT=relief-engineer ;;              # legacy rotation-v1
+            zai/glm-4.7-flash@goose*)                  NEXT_SEAT=relief-engineer ;;
+            openrouter/minimax-m3.1-flash:free@goose*) NEXT_SEAT=relief-engineer ;;
+            codebuddy/deepseek-v4.1-flash@codebuddy*)  NEXT_SEAT=software-engineer ;;
+            qoder/deepseek-v4.1-flash@qoder*)          NEXT_SEAT=quality-assurance-engineer ;;
+            *)                                         NEXT_SEAT=unknown ;;
           esac
           echo "seat=$NEXT_SEAT" >> "$GITHUB_OUTPUT"
 
@@ -675,6 +711,61 @@ jobs:
                 echo "TURN_RESULT=BLOCKED (zai+minimax+groq+qoder lanes all failed — check the harness)"
               fi
               ;;
+            software-engineer)
+              # codebuddy/deepseek-v4.1-flash@codebuddy — free-offer hire
+              # (Owner order 2026-10-22 #admincraft). Headless: -y in -p
+              # mode for tool use (harness Dockerfile note). The default
+              # bundled brain is the Owner-specified deepseek-v4.1-flash
+              # free offer. Fallback: the proven lanes take the segment.
+              if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
+                   codebuddy -p "$BRIEF" -y; then
+                echo "TURN_RESULT=codebuddy run OK (lane: codebuddy/deepseek-v4.1-flash@codebuddy)"
+              elif env HOME=/usr/local/lib/qoder-home \
+                   qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
+                   --permission-mode bypassPermissions --max-turns 100; then
+                echo "TURN_RESULT=qoder run OK (lane: qoder/deepseek-v4.1-flash@qoder)"
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
+                   OPENAI_API_KEY="$ZAI_API_KEY" \
+                   OPENAI_HOST="https://api.z.ai" \
+                   OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
+                   OPENAI_API_KEY="$OPENROUTER_API_KEY" \
+                   OPENAI_HOST="https://openrouter.ai" \
+                   OPENAI_BASE_PATH="/api/v1/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: openrouter/minimax-m3.1-flash:free@goose)"
+              else
+                echo "TURN_RESULT=BLOCKED (codebuddy+qoder-ds+zai+minimax lanes all failed — check the harness)"
+              fi
+              ;;
+            quality-assurance-engineer)
+              # qoder/deepseek-v4.1-flash@qoder — free-offer hire (Owner
+              # order 2026-10-22 #admincraft). The qoder model flag is
+              # UNVERIFIED — if the CLI rejects it the chain self-heals to
+              # the next lane; never blocks the segment.
+              if env HOME=/usr/local/lib/qoder-home \
+                   qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
+                   --permission-mode bypassPermissions --max-turns 100; then
+                echo "TURN_RESULT=qoder run OK (lane: qoder/deepseek-v4.1-flash@qoder)"
+              elif env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
+                   codebuddy -p "$BRIEF" -y; then
+                echo "TURN_RESULT=codebuddy run OK (lane: codebuddy/deepseek-v4.1-flash@codebuddy)"
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
+                   OPENAI_API_KEY="$GROQ_API_KEY" \
+                   OPENAI_HOST="https://api.groq.com" \
+                   OPENAI_BASE_PATH="/openai/v1/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: groq/qwen3.8-27b@goose)"
+              elif env HOME=/usr/local/lib/qoder-home \
+                   qoder -p "$BRIEF" --output-format json \
+                   --permission-mode bypassPermissions --max-turns 100; then
+                echo "TURN_RESULT=qoder run OK (lane: qoder/qwen3.8-flash@qoder — default brain)"
+              else
+                echo "TURN_RESULT=BLOCKED (qoder-ds+codebuddy+groq+qoder lanes all failed — check the harness)"
+              fi
+              ;;
             *)
               echo "TURN_RESULT=BLOCKED (unknown seat ${SEAT} — rotation case gap)"
               ;;
@@ -706,7 +797,7 @@ jobs:
             -v "$PWD/.sessions-restore":/sessions-restore:ro \
             -e SEAT="${SEAT}" -e BRIEF="${BRIEF}" \
             -e QODER_PERSONAL_ACCESS_TOKEN -e ZAI_API_KEY -e OPENROUTER_API_KEY \
-            -e GROQ_API_KEY \
+            -e GROQ_API_KEY -e CODEBUDDY_AUTH_TOKEN \
             agent-harness:local bash /workspace/.turn-inside.sh \
             > /tmp/.turn-out.txt 2>&1; then
             echo "container verdict captured"
@@ -805,13 +896,15 @@ jobs:
           git push origin "${TURN_BRANCH:-ai/turn-orphan}" || echo "::notice::no work branch to push"
           echo "branch=${TURN_BRANCH:-}" >> "$GITHUB_OUTPUT"
           CTL=agent-team/TEAM-CONTROL.org
-          # REAL rotation (T2 finding fixed 2026-10-22): the pointer now
-          # alternates between the two CI seats; an unknown seat writes an
-          # honest marker instead of silently parking on one lane.
+          # REAL rotation (Owner 2026-10-22: member IDs are
+          # PROVIDER/MODEL@PLATFORM; the pointer cycles all four CI seats
+          # — platform -> relief -> software -> QA -> platform).
           case "${{ steps.control.outputs.seat }}" in
-            platform-engineer) NEXT="glm-4.7-flash@goose (Relief Engineer)" ;;
-            relief-engineer)   NEXT="qwen3.8-flash@qoder (Acting Platform Engineer)" ;;
-            *)                 NEXT="unknown (Lead: fix #+TURN in agent-team/TEAM-CONTROL.org)" ;;
+            platform-engineer)          NEXT="zai/glm-4.7-flash@goose (Relief Engineer)" ;;
+            relief-engineer)            NEXT="codebuddy/deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;
+            software-engineer)          NEXT="qoder/deepseek-v4.1-flash@qoder (QA Engineer)" ;;
+            quality-assurance-engineer) NEXT="qoder/qwen3.8-flash@qoder (Platform Engineer)" ;;
+            *)                          NEXT="unknown (Lead: fix #+TURN in agent-team/TEAM-CONTROL.org)" ;;
           esac
           git checkout -f ai/main
           # Race-proof the control commit: the Lead's pushes or another

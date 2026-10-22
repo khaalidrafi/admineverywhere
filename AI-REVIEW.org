@@ -109,3 +109,13 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   segment that delivers a TODO -> run ends decision=paused-todo-review,
   TEAM-CONTROL.org carries #+CHAIN-PAUSE, next run stops at the stop
   notice; clear the line -> chain resumes.
+
+- [ ] REVIEW: free-offer hires 2026-10-22 13:35Z — (1) new seats
+  software-engineer (codebuddy -p "$BRIEF" -y, headless flag per harness
+  Dockerfile) and quality-assurance-engineer (qoder --model
+  deepseek-v4.1-flash — UNVERIFIED flag; if the CLI rejects it the
+  fallback chain self-heals); (2) pointer grammar legacy arms
+  (bare model@platform forms) kept exactly one rotation cycle — drop
+  them after the first full platform->relief->software->QA cycle lands;
+  (3) probe job now scans the GoModel gateway /v1/models for
+  minimax/deepseek ids and live-probes the first MiniMax variant.

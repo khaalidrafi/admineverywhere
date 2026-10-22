@@ -1,47 +1,63 @@
 #+TITLE: ROSTER.org — admincraft hiring ledger (proven vs armed vs refused)
 # Lead-owned. Hiring law (prompt.org TEAMIFY): a body earns a seat only by
 # landing real work behind the landing gate; a probe row is evidence of the
-# RUNTIME, never of quality. Update on every hiring event.
+# RUNTIME, never of quality. Member ID FORMAT LAW (Owner 2026-10-22 13:22Z):
+# PROVIDER/MODEL@PLATFORM.
+# CONSULT LAW (Owner 2026-10-22 13:22Z): every hire is posted to the Owner
+# as a roles-with-members list BEFORE activation.
 
-* HIRING VERDICT — 2026-10-22 11:50Z (Owner question: "Have you completed hiring?")
+* HIRING VERDICT v2 — 2026-10-22 13:35Z (after Owner's 13:22Z orders)
 
-ANSWER: CI-chain hiring is DONE for the seats the machine needs today.
-2 PROVEN, 2 ARMED, rest of the candidate file staged on ai/teamify.
+CI-chain hiring is DONE for the seats the machine needs today; two
+free-offer hires (DeepSeek V4.1 Flash bundles) are activating this commit;
+all free MiniMax M3.1 Flash offers are wired or staged.
 
-* PROVEN (landed real work behind the green gate)
+* CI ROSTER — roles with members (canonical IDs)
 
-| seat / pair                          | role              | evidence                                              |
-|--------------------------------------+-------------------+-------------------------------------------------------|
-| qwen3.8-flash@qoder                  | platform-engineer | proof run 39477554903; TEST-T1..T3 cycle 2026-10-22   |
-| minimax-m3.1-flash:free@goose        | relief engineer   | TEST-T1 de44031 + TEST-T2 d655571 landed 2026-10-22   |
+| role                      | member ID                                      | status      | evidence / note                          |
+|---------------------------+------------------------------------------------+-------------+------------------------------------------|
+| LEAD / EM                 | glm-5.3-flash@z.ai (Lead agent)                | ACTIVE      | serves both repos; Discord + Telegram    |
+| PLATFORM ENGINEER         | qoder/qwen3.8-flash@qoder                      | PROVEN      | run 39477554903; TEST-T1..T3 2026-10-22  |
+| RELIEF ENGINEER           | openrouter/minimax-m3.1-flash:free@goose       | PROVEN      | TEST-T1 de44031 + TEST-T2 d655571        |
+| RELIEF ENGINEER (2nd)     | zai/glm-4.7-flash@goose                        | ARMED       | ZAI_API_KEY landed 2026-10-22            |
+| RELIEF ENGINEER (3rd)     | groq/qwen3.8-27b@goose                         | ARMED       | relief hire 2026-10-22                   |
+| SOFTWARE ENGINEER (NEW)   | codebuddy/deepseek-v4.1-flash@codebuddy        | ACTIVATING  | Owner order 13:22Z; token in secrets     |
+| QA ENGINEER (NEW)         | qoder/deepseek-v4.1-flash@qoder                | ACTIVATING  | Owner order 13:22Z; model flag unverified|
 
-* ARMED (key landed, first live proof pending)
+Rotation: platform -> relief -> software -> QA -> platform. Every seat
+carries a fallback chain into the proven lanes, so a dead new lane never
+blocks a segment.
 
-| seat / pair                          | role              | note                                                  |
-|--------------------------------------+-------------------+-------------------------------------------------------|
-| zai/glm-4.7-flash@goose              | relief engineer   | ZAI_API_KEY landed 2026-10-22; rotation seat T-next   |
-| qwen3.8-27b@groq                     | relief engineer   | relief hire 2026-10-22; probed every run              |
+* MiniMax M3.1 Flash — ALL free offers (Owner order 13:22Z)
+
+| offer                              | status              | note                                              |
+|------------------------------------+---------------------+---------------------------------------------------|
+| openrouter/minimax-m3.1-flash:free | ACTIVE (PROVEN)     | in every seat's fallback chain                    |
+| gomodel/<id>@goose (gateway)       | PROBING every run   | probe lists the gateway's minimax ids + live-tests the first |
+| gmi/minimax-m3.1-flash:free        | STAGED NEEDS-KEY    | GMI_API_KEY exists in agent-team.el secrets       |
+| tokenharbor/minimax-m3.1-flash:free| STAGED NEEDS-KEY    | TOKENHARBOR_API_KEY — same                        |
+| navyai/minimax-m3.1-flash:free     | STAGED NEEDS-KEY    | NAVYAI_API_KEY — same                             |
+| bai/minimax-m3.1-flash:free        | STAGED NEEDS-KEY    | BAI_API_KEY — same                                |
+| aa/minimax-m3.1-flash:free         | STAGED NEEDS-KEY    | AA_API_KEY — same                                 |
+| ollama-cloud/minimax-m3.1-flash    | STAGED NEEDS-KEY    | OLLAMA_CLOUD_API_KEY — same                       |
+
+GitHub secret values are write-only and cannot be copied cross-repo: a
+staged body activates the moment its key lands in THIS repo's secrets.
+Unknown endpoints are NOT invented — each provider's base URL is wired
+only after its key lands and the probe confirms the catalog.
 
 * REFUSED / CLOSED (failure classes, kept so nobody re-hires into them)
 
-| lane                                 | cause                                            | fix                    |
-|--------------------------------------+--------------------------------------------------+------------------------|
-| minimax via OPENAI_HOST=.../api/v1   | goose doubled /v1 -> 404 on every call           | HOST+BASE_PATH split   |
-| qoder bypassPermissions=accept_edits | denied ALL Bash (git/pytest) — seat could not run| escalated, run 39488529938 |
-| empty-husk segments                  | lane exited 0 with 0 commits, counted as progress| empty-segment law 3428567 |
-
-* PROBE (liveness only — not hiring evidence)
-
-The probe job liveness-tests 4 lanes every run (openrouter/poolside,
-groq/qwen3.8-27b, zai/glm-4.7-flash, openrouter/minimax) and prints the
-table to the run summary. Gate law: a probe row proves the runtime, never
-the quality of work.
+| lane                                 | cause                                             | fix                     |
+|--------------------------------------+---------------------------------------------------+-------------------------|
+| minimax via OPENAI_HOST=.../api/v1   | goose doubled /v1 -> 404 on every call            | HOST+BASE_PATH split    |
+| qoder bypassPermissions=accept_edits | denied ALL Bash (git/pytest) — seat could not run | escalated, run 39488529938 |
+| empty-husk segments                  | lane exited 0 with 0 commits, counted as progress | empty-segment law 3428567 |
 
 * STAGED (awaiting Owner review-merge of ai/teamify 3d9606d)
 
 - agent-team/CANDIDATES.org — full candidate file, verbatim from
   khaalidrafi/agent-team.el templates.
-- Further bodies (gemini, opencode, ollama-cloud, tokenharbor, ...) keep
-  their keys in khaalidrafi/agent-team.el repo secrets. GitHub secret
-  values are write-only and cannot be copied cross-repo: a body activates
-  the moment its key lands in THIS repo's secrets.
+- Further ranked pairs (Qwen3.8-Max @ chat.qwen.ai, GLM-5.3 @ Z.ai Agent
+  cloud shell, Kimi-K2.6 @ kimi.ai, ...) keep their ranks in MEMBERS.org
+  for the EM's manual dispatches.

@@ -1,22 +1,31 @@
 #+TITLE: MEMBERS — admincraft ranked roster
-# 2026-10-21 Lead update: the repo now runs the agent-team CI CHAIN
-# (.github/workflows/agent-team.yml). CI CHAIN SEATS (dispatchable
-# model@body pairs; bodies preinstalled in docker/harness):
+# MEMBER ID FORMAT LAW (Owner 2026-10-22 13:22Z): every member ID is
+# PROVIDER/MODEL@PLATFORM. "minimax@goose"-style bare IDs are invalid.
 #
-#   * qwen3.8-flash@qoder  [ACTIVE — CI seat: platform-engineer]
-#     PROVEN on this team's CI (proof run 39477554903; TEST-T1..T3
-#     landed 2026-10-22). Selected BY FIT per Owner law 17:47Z.
-#   * minimax-m3.1-flash:free@goose [ACTIVE — relief hire 05:33Z, PROVEN:
-#     TEST-T1 de44031 + TEST-T2 d655571 landed 2026-10-22; lane URL fixed
-#     in run 39752778724]
-#   * zai/glm-4.7-flash@goose [ARMED — ZAI_API_KEY landed in THIS repo's
-#     secrets 2026-10-22; rotation seat relief-engineer; first live proof
-#     pending]
-#   * qwen3.8-27b@groq [ARMED — relief hire 2026-10-22, GROQ_API_KEY;
-#     probed every run; first live proof pending]
-#   * every other pair below stays ranked for the EM's manual dispatches;
-#     CI chain seats are added as keys land (values write-only — a body
-#     activates when its key lands in THIS repo's secrets).
+# 2026-10-22 13:35Z Lead update (Owner orders 13:22Z): CI CHAIN SEATS,
+# rotation cycles platform -> relief -> software -> QA -> platform:
+#
+#   * ROLE: PLATFORM ENGINEER
+#     qoder/qwen3.8-flash@qoder [PROVEN — proof run 39477554903;
+#     TEST-T1..T3 landed 2026-10-22]
+#   * ROLE: RELIEF ENGINEER (fallback chain within the seat)
+#     openrouter/minimax-m3.1-flash:free@goose [PROVEN — TEST-T1 de44031
+#     + TEST-T2 d655571 landed 2026-10-22; free offer #1]
+#     zai/glm-4.7-flash@goose [ARMED — ZAI_API_KEY landed 2026-10-22]
+#     groq/qwen3.8-27b@goose [ARMED — relief hire 2026-10-22]
+#   * ROLE: SOFTWARE ENGINEER (NEW hire, Owner order 13:22Z)
+#     codebuddy/deepseek-v4.1-flash@codebuddy [ACTIVATING — CODEBUDDY_
+#     AUTH_TOKEN in repo secrets; first live proof pending]
+#   * ROLE: QA ENGINEER (NEW hire, Owner order 13:22Z)
+#     qoder/deepseek-v4.1-flash@qoder [ACTIVATING — model flag
+#     unverified; if the CLI rejects it the fallback chain self-heals]
+#   * MiniMax M3.1 Flash free offers — consume ALL (Owner 13:22Z):
+#     openrouter:free ACTIVE; gomodel gateway catalog scan (minimax/
+#     deepseek ids) probes every run and hires what it confirms;
+#     gmi/tokenharbor/navyai/bai/aa/ollama-cloud STAGED NEEDS-KEY (keys
+#     live in khaalidrafi/agent-team.el secrets; values write-only —
+#     each activates when its key lands in THIS repo).
+#   * every other pair below stays ranked for the EM's manual dispatches.
 #
 
 # BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on
