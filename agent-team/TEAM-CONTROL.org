@@ -42,6 +42,23 @@
   paid — do NOT re-add. EXPIRY LAW binds every row; M3.1 hallucination
   weak spot -> pair with verification (CANDIDATES map, MODEL FACTS).
 
+- CLINE LANE ADD (Owner 2026-10-22 18:16Z #hq: "add cline. Read their docs
+  WELL to find out a way other than auth link back-and-forth. If none
+  found, choose the last resort"): FOUND — no OAuth dance needed. Cline
+  takes a plain API key non-interactively (CLI proven in sandbox with a
+  DUMMY key: `cline auth -p cline -k $KEY -m minimax/minimax-m3.1-flash`,
+  exit 0, no browser, creds to providers.json — proves the path, not key
+  validity) AND runs a raw OpenAI-compatible API (api.cline.bot/api/v1 —
+  /models PUBLIC unauth, minimax/minimax-m3.1-flash in it). Gateway leg
+  declared (llmfisher, ${CLINE_API_KEY}); cline CLI 3.0.73 installed in
+  the sandbox. ONE Owner action pending: mint CLINE_API_KEY (path in the
+  CANDIDATES body profile) — the lane self-activates when the key lands
+  (.env + compose up VM-side; CLINE_API_KEY repo secret for CI). Burn:
+  M3.1 free tier UNVERIFIED until first live call — Cline's API leg is
+  credit-metered per docs (402) and no minimax id carries a :free tag in
+  the catalog; the daily-allowance shape is the CLI/extension tier's.
+  Pair with verification per the mandate.
+
 - NIGHT-CONTINUOUS (Owner order 2026-10-22 17:20Z #admincraft: no
   pauses at night, KEEP going until 8am, complete ALL remaining
   TODOs) + OWNER REFINEMENT 17:19Z (pause is opt-in — the chain runs
