@@ -1839,6 +1839,64 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 00:22 UTC] :: :DELIVERED: (the widget contract
+  test was grading a module the product never imports — cross-ref, no state
+  change, DONE stays the Lead's gate, no OBJECTIVE-STATE change, no completion
+  claim.) Board still exhausted (11 PENDING + 2 DONE, zero TODO/ONGOING/WAIT,
+  every PENDING row carries :DELIVERED:), no unanswered @platform-engineer ping
+  in the chat tail. ROLE_LARK_WEBHOOK empty in this seat's env (verified with
+  `[ -z "$ROLE_LARK_WEBHOOK" ]`, not assumed) -> the Lark report is skipped and
+  noted here.
+  FOUND: TWO modules implemented ONE widget contract. `app/src/widgets/index.ts`
+  is the registry Dashboard renders; `app/src/lib/widgets/index.ts` was a second
+  copy (record-shaped, its own glob, its own `widgetUnits`) that exactly ONE
+  file imported — `app/src/lib/__tests__/widgets.test.ts:9`. So the suite that
+  AGENTS.md:522 advertises as asserting the drop-in contract ("valid meta,
+  `widgetUnits`, built-ins by contains") never touched the shipped registry, and
+  `widgetUnits` was tested-but-unused while Dashboard re-spelled the same sm/lg
+  rule inline (`w.size === "lg" ? "md:col-span-2 ..."`).
+  PRE-FIX CONTROL (measured, not asserted): on the delivered tree, mutate the
+  SHIPPED registry with a filter that silently drops one built-in —
+  `&& mod.meta.title !== "Activity heat"` — and both `widgets.test.ts` (5) and
+  `dashboardMount.test.ts` (3) answered `8 passed`, rc 0. dashboardMount cannot
+  see it either: it compares the DOM against the same registry, so a lost widget
+  shrinks the expected set and the grid agrees with itself. The dead twin kept
+  discovering HeatStrip from the same directory, which is what made the pair look
+  covered.
+  LANDED (branch ai/turn-20261022-0013, commit 35da204):
+  - `app/src/widgets/index.ts`: gained `widgetUnits` (the grid-unit promise now
+    lives in the module the app uses); the test imports it there.
+  - `app/src/pages/Dashboard.svelte`: the span class now comes from
+    `widgetUnits(w) === 2`, one source for sm=1/lg=2. The Tailwind literals stay
+    in the .svelte file, so extraction is unaffected — proven by `md\:col-span-2`
+    present in the built CSS.
+  - `app/src/lib/__tests__/widgets.test.ts`: same 5 tests, now pointed at the
+    shipped registry, and the size/feed checks read the DECLARATIONS through the
+    same glob the registry reads (`import.meta.glob("../../widgets/*.svelte")`),
+    not the registry's own normalization; a declared title can no longer be
+    dropped silently; `widgetUnits` is pinned on explicit sm/lg pairs so the
+    mapping is falsifiable rather than self-consistent.
+  - `app/src/lib/widgets/index.ts` deleted — `lib/widgets/feed.ts` (the FR-R008
+    engine) is untouched and still imported by the five feed-fed charts.
+  POST-FIX CONTROLS, one mutation each, files restored after: shipped registry
+  drops HeatStrip -> RED `missing built-in HeatStrip` while dashboardMount stays
+  GREEN (the exact gap, now closed); `widgetUnits` always 1 -> RED
+  `expected 1 to be 2`; a temp widget declaring `size: "medium"` -> RED
+  `declared size in ../../widgets/TmpBad.svelte`; a temp VALID widget (size lg)
+  -> `8 passed`, so the no-pinned-count drop-in promise survives the rewire.
+  GATES: `scripts/landing_gate.py --fe` rc 0 — 9 legs (pytest 299, System check
+  no issues, No changes detected, vitest 416 passed / 31 files, csv-twin 3070
+  cells / 56287 B, brand-twin 302 over pinned 350, parity-twin identical,
+  gate-twin ROSTER-IDENTICAL 3/3). Counts unchanged by design, so
+  `EXPECTED_VITEST`/`EXPECTED_VITEST_FILES` and the graded doc rows needed no
+  bump (DEVGUIDE *ELEVENTH law*). `scripts/release_readiness.py` rc 0 (84 path
+  citations, 87 lines bounds-checked, 15/15 symbol claims on target, 8 live doc
+  counts == the pins). `npm run build` green. gate.sh / .github/** /
+  TEAM-CONTROL.org: opened READ-ONLY, zero edits (git status clean for .github/).
+  Boot note: FOURTEENTH consecutive swallowed install — this segment re-paid
+  `python -m venv .venv && pip install -r requirements.txt -e ../plugin` +
+  `npm ci` + `pip install pytest` by hand before the gate's env leg could pass.
+  SECRET LAW held — no credential read, echoed or committed.
 - Note taken on [2026-10-21 Wed 16:35 UTC] :: :DELIVERED: (display-layer
   test gap closed + dead-code sweep — state untouched, DONE stays the Lead's
   gate, no OBJECTIVE-STATE change, no completion claim.) Board still
