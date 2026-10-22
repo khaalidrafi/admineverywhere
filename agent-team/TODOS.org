@@ -175,6 +175,77 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
 :END:
 *** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 17:07 UTC] :: :DELIVERED: INDEPENDENT QA AUDIT OF
+  THE CLIENT HALF (seat quality-assurance-engineer, first activation, lane
+  qoder/deepseek-v4.1-flash@qoder, branch ai/turn-20261022-1655 @ 45e5c11, base
+  3de022f). FEATURE-ORDER entry 3 taken as a VERIFICATION, not a re-implementation:
+  every :DELIVERED: claim on this item is prose plus a green suite, and a green
+  suite is not proof that the refusal it claims is the thing keeping it green. So
+  the proof was mutated, one change at a time, whole suite per mutant.
+  MUTATION BATTERY (7 mutants, `npx vitest run --maxWorkers=1` after each, files
+  restored by copy — never `git checkout`, per the 12:11Z self-flag on this note):
+  - KILLED 5: bind `transitionPath` without POST evidence -> lifecycleMount red;
+    bind `historyPath` even when the path also accepts POST -> red; replace the
+    missing-path refusal with a guessed URL -> red (zero-calls assertion fires);
+    hide the 409 `reason` behind a generic banner -> red; treat every model as
+    governed (drop `hasLifecycle` from `lifecycleProblem`) -> red.
+  - EQUIVALENT 1 (reported, NOT forced into a fake test): DataTable's
+    `lifecycleAvailable` gate deleted in favour of `!!model.transitionPath` cannot
+    be killed, because the button block is anchored TWICE — it also requires
+    `statusField` from the registry (`app/src/components/DataTable.svelte:159`) and
+    iterates `getLegalTransitions` (`:160`), so a documented-but-undeclared model
+    renders nothing either way. That is defense in depth, not missing coverage: no
+    reachable input changes its output.
+  - GAP CLOSED 1 (real): `transitionRecord`/`fetchHistory` substitute the pk into
+    the discovered template THEMSELVES, never through `actionPath`, and the only
+    encoding witness on the tree was R-003's (`actions.test.ts:111`). Deleting
+    `encodeURIComponent` from either lifecycle call answered `417 passed` — a
+    space reaching the URL, a pk holding `/` silently retargeting another record's
+    trail. New witness added test-first at
+    `app/src/lib/__tests__/actions.test.ts` (lifecycle describe): both calls with
+    pk `a b/c` must hit `/api/orders/a%20b%2Fc/{transition,history}/`. Re-ran the
+    same mutation against it: 1 failed, 23 passed -> the gap is now pinned.
+  LIVE-TRANSPORT CHECK (the row every delivery left as "no human watched a
+  transition"): real HTTP against the running rig (migrate + seed_demo +
+  runserver 127.0.0.1:8033), the docs/section-2 table walked case by case — legal
+  move 200 with the updated object; no-op 409 `{"reason":"order is already
+  'paid'; no-op transitions are rejected"}` (exactly one key); terminal
+  refunded -> paid 409 naming the allowed set; unknown target 400 listing valid
+  values; missing field 400; unauthenticated 401; unknown order 404; history a
+  plain list, oldest first, first row the creation entry
+  (`from_status:""`, `actor:null`). Schema verbs still `transition=[post]`,
+  `history=[get]` — the evidence `normalizeOpenAPI` binds. Rig stopped, port
+  re-probed closed, no fixture re-shaped to make this pass.
+  MEASURED: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 legs
+  (env django 5.2.18, pytest 299 passed, System check no issues, No changes
+  detected, vitest 418 passed / 32 files, csv/brand/parity/gate/registry/doc
+  twins all IDENTICAL); `npx tsc --noEmit` rc 0; `scripts/release_readiness.py`
+  rc 0 (90 citations bounds-checked incl. the two new DataTable ones, doc-quoted
+  counts equal the gate's pins at pytest=299/vitest=418).
+  PINS: EXPECTED_VITEST 417 -> 418 in `scripts/landing_gate.py` in the SAME commit
+  as the added test (ELEVENTH law), with the four published count sites in
+  AGENTS.md + docs/DEVGUIDE.md ## Layout/## Commands. Also corrected
+  `docs/order-lifecycle.md`'s stale "pytest 285 / vitest 283" line, which no
+  harness graded because it sits outside those two sections.
+  FOR THE LEAD, REPORTED NOT FIXED:
+  1. `python3 scripts/chain_test_check.py` still rc 1 at this HEAD — CHAT-FORMAT
+     line 5715 (`:hiring-consult:`), the same hyphenated-KIND grammar gap the
+     relief seat filed; the entry is yours and append-only law kept me out of it.
+  2. Two consecutive empty segments on the paid visiting lane (STALL-COUNT 2,
+     TEAM-CONTROL.org:10-11) — the burn is spending credits and landing nothing;
+     HR review is yours, and this seat's own lane (qoder/deepseek-v4.1-flash@qoder)
+     ran fine, so the model flag noted "unverified" at hiring is now verified good.
+  3. QA verdict on this item: the client half is CORRECT and its refusal is now
+     mutation-pinned in both directions it can be. What no automated leg can close
+     is a human click in a real Tauri/browser window — still Lead/Owner's row.
+  HARNESS: 18th consecutive self-install — `app/node_modules` empty AND
+  `admincraft` unpip-installed at boot; the merge gate answered CANNOT RUN rc 2
+  until `python3 -m pip install -e ./plugin --no-deps` (the fix its own env leg
+  prints). Belongs in lead-owned docker/harness; reported, not edited.
+  SECRET LAW held: no credential read, echoed or committed. ROLE_LARK_WEBHOOK is
+  empty in this seat's env (checked with [ -z ]) -> Lark report SKIPPED, noted
+  here per instruction 8. State untouched — PENDING stands, DONE is the Lead's
+  gate, and no completion is claimed.
 - Note taken on [2026-10-21 Wed 18:46 UTC] :: HOST-COMMITTED MERGE AUDITED +
   ITS UNPROVEN FIX PINNED (seat platform-engineer, WORK ORDER still exhausted
   — rows 1-11 all carry :DELIVERED:, chat tail's newest entry is my own 18:04Z
