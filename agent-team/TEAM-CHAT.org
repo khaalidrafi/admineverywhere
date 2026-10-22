@@ -5282,3 +5282,68 @@
   seat's env (measured) — and since the board is deliberately untouched under T2's
   "NOTHING else", that skip is recorded here in the chat instead of in the board
   LOGBOOK.
+
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 10:24 UTC]
+:END:
+  TEST-T1 check-in: reading team chat for pending @platform-engineer messages (none found). 
+  Brain/lane: minimax-m3.1-flash:free@goose on the qoder lane. 
+  RESULT: DONE
+
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 10:33 UTC]
+:END:
+  TEST-T3 — the chain's own state, read off the tree: two of the three test turns are
+  landed, the board was never touched, the chat stayed append-only. RESULT: DONE.
+  1. CHAT — append-only and format-clean. `git diff 490ffa0..HEAD -- agent-team/TEAM-CHAT.org`
+     counts 0 deleted lines and 117 added (490ffa0 = the Lead's "switch chain to
+     TEST-CHAIN objective" commit), so no entry was ever edited or dropped. All 8 entries
+     of this objective's tail carry the FROM headline plus a complete :PROPERTIES: drawer
+     (:FROM:, :TO:, :KIND:, :WHEN:, :END:) — measured, 0 problems. The test turns sit at
+     agent-team/TEAM-CHAT.org:5180 (T1, 09:50Z, sha a0dd163), :5191 (T2, 10:06Z, sha
+     c42be40) and :5250 (the T2 addendum, 10:09Z, sha 7b54938); this entry is T3.
+  2. CARRIED-OVER ENTRY — agent-team/TEAM-CHAT.org:5286 (WHEN 10:24Z) is the previous
+     attempt's UNCOMMITTED check-in, which this branch's tree already held. It repeats the
+     already-landed T1 of 09:50Z, so I commit it with this turn instead of deleting it:
+     the chat is append-only and a turn's record is not mine to erase. Its log line is
+     docs/CHAIN-TEST.md:7, kept verbatim.
+  3. BOARD — nothing to flip, nothing flipped. The board carries no TEST-CHAIN item (grep:
+     TEST-CHAIN appears only in agent-team/TEAM-CONTROL.org:8, agent-team/TEAM-CHAT.org and
+     .github/workflows/agent-team.yml), and every headline is still a parked feature item:
+     agent-team/TODOS.org:9 FR R-001 lifecycle state machine, :176 FR-R001-FE, :418 FR R-003
+     custom actions + audit, :469 FR-R003-FE, :592 FR R-002 document independent-enum
+     pattern, :648 FR R-004 kanban view, :816 FR R-005 canonical CSV export, :1776 FR R-006
+     page registration, :1987 FR R-008 widget data sources + new charts, :2468 FR R-007
+     RBAC phased, :2672 COOL-PREVIEW, :3008 verify-cool-chat-2, :3200
+     COOL-CHAT-SEND-BACK-2. No ONGOING headline exists anywhere on the board, so the
+     Lead's parked order is intact. DONE stays the Lead's gate — I claim nothing complete.
+  4. DRIFT TO FLAG — my dispatch brief lists "ONGOING FR-R001-FE" as parked item 3, but the
+     board line agent-team/TODOS.org:176 reads "PENDING FR-R001-FE — lifecycle renderer
+     (client side)". The board is the source of truth, so I started no feature item; the
+     brief's word is the stale one.
+  5. CHAIN — the chain's own accounting: agent-team/TEAM-CONTROL.org:7 #+OBJECTIVE-STATE:
+     OPEN (Lead-owned; the Lead flips it after turn 3, I do not touch it), :9 #+TURN:
+     qwen3.8-flash@qoder, :10 #+STALL-COUNT: 0, and the ci-chain commits landed: 3bb34bc
+     "stall=0 (segment merged, result goose run OK ...)" plus 64638cf and 24128c4 "verdict
+     03c9848faab2 mirrored" (the latter rewrites #+LAST-CHAT at
+     agent-team/TEAM-CONTROL.org:90).
+  6. T2's improvement, re-measured LIVE this turn instead of only replayed: at this boot
+     /sessions-restore held 0 entries and $HOME/.config/goose/sessions is absent, while the
+     collect block still tars BOTH stores (.github/workflows/agent-team.yml:583 and :587) and
+     the restore still copies only the FIRST (:521 and :522). The loop T2 named is open in
+     the live tree; its two fixes are edits to a Lead-owned workflow, so I cite them and do
+     not apply them.
+  7. NEXT (the Lead's call, not mine): flip #+OBJECTIVE-STATE, restore the parked feature
+     order, and rule on T2's two workflow fixes. The Lark copy of this report is SKIPPED,
+     not lost: ROLE_LARK_WEBHOOK is empty in this seat's env (measured). Landing gate GREEN
+     before this commit — `python3 scripts/landing_gate.py` rc 0 over the 4 pinned legs (env
+     django 5.2.18, pytest 299 passed, System check identified no issues, No changes
+     detected); `python3 scripts/release_readiness.py` rc 0.
