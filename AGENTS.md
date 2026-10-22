@@ -212,6 +212,14 @@ python3 scripts/chain_test_check.py --selftest # 8 controls: every leg proved ab
 python3 scripts/chain_session_check.py        # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chain_session_check.py --selftest # 8 controls: every leg proved able to fail
 
+# the chain's DUTY-REVIEWER routing (SEGREGATION LAW v2, Owner orders 18:14Z +
+# 18:55Z) as a check, read-only against the two Lead-owned files: the id space the
+# pending slot WRITES author= in, every author= comparison in the router and the
+# merger reading that same space, and the live pending replayed through the router
+# so it can never be handed to its own author's lane
+python3 scripts/chain_review_check.py         # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/chain_review_check.py --selftest # 9 controls: every leg proved able to fail
+
 # the cool-chat send-back's FIVE specced checks as ONE command — governance
 # (TEAM.md's MEMBER IDS reversal + its two rule headings), the color sweep of
 # the three files the send-back touched, one panel / one importer / one mount,
