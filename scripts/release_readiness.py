@@ -49,6 +49,7 @@ Usage (from the repo root):
 import argparse
 import ast
 import importlib
+import importlib.util
 import os
 import re
 import subprocess
@@ -133,8 +134,12 @@ REQUIRED_CLAIMS = {
 # FOURTH time the same way: the machine-gate paragraph documents the spec the merge legs
 # EXECUTE, so it cites `leg_pytest()` (scripts/landing_gate.py:233) and `leg_django()`
 # (scripts/landing_gate.py:256) — the leg answered 13 against this 11, and 11 -> 13 is
-# the remedy it printed, applied in this same commit.
-EXPECTED_CLAIMS = 13
+# the remedy it printed, applied in this same commit. Measured a FIFTH time: the
+# doc-count paragraph cites this leg's own two entry points, and the leg answered 15 —
+# it caught the bump while the prose was still being written, because the citation was
+# spelled in plain parens and the scanner only reads backticked ones (see DEVGUIDE
+# TENTH law: an unscanned citation is an ungraded claim).
+EXPECTED_CLAIMS = 15
 
 # `name()` spellings only. Control words that are commonly written with parens in
 # prose (`if (x)`, `for (let i)`) are not claims about the cited code.
@@ -150,6 +155,33 @@ CITE_DOCS = ["AGENTS.md", "README.md", "docs/DEVGUIDE.md", "docs/csv-export.md",
              "docs/rbac.md", "docs/widget-data.md", "docs/page-registration.md",
              "docs/order-lifecycle.md", "docs/custom-actions.md",
              "docs/independent-enums.md"]
+
+# ------------------------------------------------------------------ DOC COUNTS
+# The docs that publish suite-size numbers as INSTRUCTIONS (the Layout table and
+# the Commands block) must state the size the landing gate actually owes. Closed
+# table of those live claims: (doc, anchor that must be unique in that doc, kind).
+DOC_COUNT_CLAIMS = [
+    ("AGENTS.md", "pip package `admincraft`", "pytest"),
+    ("AGENTS.md", "thin client — Vite 6", "vitest"),
+    ("AGENTS.md", "cd app && npm test", "vitest"),
+    ("AGENTS.md", "-m pytest ../plugin/tests", "pytest"),
+    ("docs/DEVGUIDE.md", "pip package `admincraft`", "pytest"),
+    ("docs/DEVGUIDE.md", "thin client — Vite 6", "vitest"),
+    ("docs/DEVGUIDE.md", "cd app && npm test", "vitest"),
+    ("docs/DEVGUIDE.md", "-m pytest ../plugin/tests", "pytest"),
+]
+EXPECTED_DOC_CLAIMS = 8
+
+# Sections whose count claims are LIVE INSTRUCTIONS, i.e. fully graded. Claims
+# outside them are narrative records and deliberately out of domain.
+DOC_LIVE_SECTIONS = ("## Layout", "## Commands")
+
+# Which pin in scripts/landing_gate.py each kind of claim must equal.
+DOC_PIN_NAMES = {"pytest": "EXPECTED_PYTEST", "vitest": "EXPECTED_VITEST"}
+
+# "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
+# side of the word, so both orientations are read.
+DOC_NUM = re.compile(r"(\d+)\s+(pytest|vitest)\b|\b(pytest|vitest)\s+(\d+)")
 
 TOP_DIRS = {p.name for p in ROOT.iterdir() if p.is_dir()}
 CITE_TOK = re.compile(r"`([^`\n]+)`")
@@ -572,6 +604,172 @@ def leg_citation_targets(log):
            len(unverified), EXPECTED_CLAIMS))
 
 
+def doc_nums(line):
+    """Every (number, kind) count claim on one doc line, either word order."""
+    pairs = []
+    for m in DOC_NUM.finditer(line):
+        if m.group(1):
+            pairs.append((int(m.group(1)), m.group(2)))
+        else:
+            pairs.append((int(m.group(4)), m.group(3)))
+    return pairs
+
+
+def section_span(text, header, rel):
+    """The 1-based line span of one `## ` section, or CANNOT RUN.
+
+    Sections, not regexes over the whole file: a heuristic "is this count claim
+    live or historical?" scan was measured to fire on narrative that is true as
+    written (DEVGUIDE's own control records, AGENTS.md's dated state log), and a
+    leg that fires on a correct sentence is worse than no leg. A header is
+    structural and does not move when prose is re-wrapped.
+    """
+    lines = text.split("\n")
+    starts = [n for n, ln in enumerate(lines, 1) if ln.strip() == header]
+    if len(starts) != 1:
+        raise CannotRun("%s: header %r matched %d line(s) — this leg tells a live "
+                        "instruction from narrative by the section it sits in, so a "
+                        "duplicated or vanished header leaves it unable to say which "
+                        "claims it is grading" % (rel, header, len(starts)))
+    first = starts[0]
+    for n in range(first + 1, len(lines) + 1):
+        if lines[n - 1].startswith("## ") and not lines[n - 1].startswith("### "):
+            return (first, n - 1)
+    return (first, len(lines))
+
+
+def section_claims(text, lo, hi):
+    out = []
+    lines = text.split("\n")
+    for n in range(lo, hi + 1):
+        for num, kind in doc_nums(lines[n - 1]):
+            out.append((n, num, kind))
+    return out
+
+
+def gate_pins():
+    """The landing gate's pins, read TWO independent ways and never re-spelled here.
+
+    Source text first (a pin that stops being a plain literal is a pin a doc cannot
+    quote as one number), then the imported module — and the two views must agree,
+    which is the same "two copies of one intent are the weakest pin" law the twin
+    roster applies against the filesystem instead of a second list.
+    """
+    src = read("scripts/landing_gate.py")
+    names = sorted(set(DOC_PIN_NAMES.values()))
+    parsed = {}
+    for name in names:
+        m = re.search(r"^%s\s*=\s*(\d+)\s*$" % name, src, re.M)
+        if not m:
+            raise CannotRun("scripts/landing_gate.py does not assign %s as a plain "
+                            "integer literal — a doc that quotes ONE number has no "
+                            "single pin to be graded against" % name)
+        parsed[name] = int(m.group(1))
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_landing_gate_pins", str(ROOT / "scripts" / "landing_gate.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    except Exception as exc:
+        raise CannotRun("scripts/landing_gate.py cannot be imported to read its own "
+                        "pins (%s: %s)" % (type(exc).__name__, exc))
+    for name in names:
+        live = getattr(mod, name, None)
+        if live != parsed[name]:
+            raise CannotRun("%s reads %r from the source text but %r from the "
+                            "imported module — the pin is computed, so the number the "
+                            "gate enforces is not the number the docs could quote"
+                            % (name, parsed[name], live))
+    return parsed
+
+
+def leg_doc_counts(log):
+    """What the docs TELL A READER the suites hold must equal what the gate OWES.
+
+    The population pins in scripts/landing_gate.py are graded against the runners,
+    and their own comment says those literals "are also quoted in AGENTS.md and the
+    CI header". Nothing compared the quotes to the literals, so the last link of
+    the chain was prose: bump a pin without bumping the docs (or the reverse) and
+    every report written from the doc cites a suite size no gate owes — measured
+    pre-fix on this tree, AGENTS.md's `npm test` line retyped to a different number
+    answered RELEASE READINESS GREEN, rc 0.
+    """
+    if len(DOC_COUNT_CLAIMS) != EXPECTED_DOC_CLAIMS:
+        raise CannotRun("DOC_COUNT_CLAIMS lists %d live claim(s), EXPECTED_DOC_CLAIMS "
+                        "pins %d — a row deleted from the table drops that number out "
+                        "of the compare and the doc drifts unmeasured, so a deliberate "
+                        "change is a two-place edit (release_readiness.py:"
+                        "EXPECTED_DOC_CLAIMS)" % (len(DOC_COUNT_CLAIMS),
+                                                  EXPECTED_DOC_CLAIMS))
+    kinds = {kind for _rel, _anchor, kind in DOC_COUNT_CLAIMS}
+    if kinds != set(DOC_PIN_NAMES):
+        raise CannotRun("the live-claim table grades %s but not %s — a suite whose pin "
+                        "no doc row is compared against would silently leave the "
+                        "compare" % (", ".join(sorted(kinds)),
+                                     ", ".join(sorted(set(DOC_PIN_NAMES) - kinds))))
+    pins = gate_pins()
+    docs = sorted({rel for rel, _a, _k in DOC_COUNT_CLAIMS})
+    texts = {}
+    for rel in docs:
+        texts[rel] = read(rel)
+    graded = []
+    findings = []
+    for rel, anchor, kind in DOC_COUNT_CLAIMS:
+        lines = texts[rel].split("\n")
+        hits = [n for n, ln in enumerate(lines, 1) if anchor in ln]
+        if len(hits) != 1:
+            raise CannotRun("anchor %r matched %d line(s) in %s — this leg reads a "
+                            "particular sentence, and an anchor that no longer names "
+                            "exactly one of them has no claim to grade"
+                            % (anchor, len(hits), rel))
+        at = hits[0]
+        nums = {num for num, k in doc_nums(lines[at - 1]) if k == kind}
+        if not nums:
+            findings.append("%s:%d still carries the anchor but states no %s count — "
+                            "the live claim left the compare, so a reader follows an "
+                            "instruction with the number missing" % (rel, at, kind))
+            continue
+        if len(nums) > 1:
+            findings.append("%s:%d states two %s counts (%s) in the one sentence a "
+                            "reader must follow — nothing here can say which is the "
+                            "live claim" % (rel, at, kind,
+                                            ", ".join(str(x) for x in sorted(nums))))
+            continue
+        stated = nums.pop()
+        graded.append((rel, at, kind))
+        owe = pins[DOC_PIN_NAMES[kind]]
+        if stated != owe:
+            why = ("the doc is stale: it was not bumped when the pin moved"
+                   if stated < owe else
+                   "the doc is ahead of the gate: the pin was never bumped to match")
+            findings.append("%s:%d says `%d %s`, the gate owes %d — %s. Bump the doc, "
+                            "the pin and every report citing them in the SAME commit "
+                            "as the diff that changes the suite"
+                            % (rel, at, stated, kind, owe, why))
+    table = {(rel, at, kind) for rel, at, kind in graded}
+    ungraded = []
+    for rel in docs:
+        for header in DOC_LIVE_SECTIONS:
+            lo, hi = section_span(texts[rel], header, rel)
+            for (at, num, kind) in section_claims(texts[rel], lo, hi):
+                if (rel, at, kind) not in table:
+                    ungraded.append("%s:%d `%d %s`" % (rel, at, num, kind))
+    if ungraded:
+        findings.append("live count claim(s) inside the graded sections that the table "
+                        "does not read: %s — a number a reader follows and no compare "
+                        "grades is the drift this leg exists for, so add the row, or "
+                        "move the sentence out of ## Layout / ## Commands if it is a "
+                        "historical record" % ", ".join(sorted(set(ungraded))))
+    if findings:
+        raise LegRed("; ".join(findings))
+    log("doc-counts %d live claim(s) over %d doc(s) equal the gate's own pins (%s); "
+        "%d claim(s) scanned inside %s, none ungraded, no number re-spelled in this "
+        "harness"
+        % (len(graded), len(docs),
+           ", ".join("%s=%d" % (k, pins[DOC_PIN_NAMES[k]]) for k in sorted(DOC_PIN_NAMES)),
+           len(graded) + len(ungraded), " and ".join(DOC_LIVE_SECTIONS)))
+
+
 def leg_scripts_ast(log):
     d = ROOT / "scripts"
     if not d.is_dir():
@@ -626,7 +824,7 @@ def main(argv):
 
     legs = [(leg_carriers, (opts.expect, log)), (leg_tag, (log,)),
             (leg_citations, (log,)), (leg_citation_lines, (log,)),
-            (leg_citation_targets, (log,)),
+            (leg_citation_targets, (log,)), (leg_doc_counts, (log,)),
             (leg_scripts_ast, (log,)), (leg_inputs, (log,))]
     failures = []
     for fn, args in legs:
@@ -643,8 +841,8 @@ def main(argv):
         print("RELEASE READINESS RED (%d leg(s))" % len(failures))
         return RED
     print("RELEASE READINESS GREEN — carriers, tag, citations (paths, line "
-          "numbers and targets), harness grammar and release inputs each asserted "
-          "their own fact")
+          "numbers and targets), doc-quoted suite counts, harness grammar and "
+          "release inputs each asserted their own fact")
     return GREEN
 
 
