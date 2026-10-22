@@ -1,8 +1,9 @@
 #+TITLE: ROSTER.org — admincraft hiring ledger (proven vs armed vs refused)
 # Lead-owned. Hiring law (prompt.org TEAMIFY): a body earns a seat only by
 # landing real work behind the landing gate; a probe row is evidence of the
-# RUNTIME, never of quality. Member ID FORMAT LAW (Owner 2026-10-22 13:22Z):
-# PROVIDER/MODEL@PLATFORM.
+# RUNTIME, never of quality. Member ID FORMAT LAW (Owner 2026-10-22 13:22Z,
+# refined 16:54Z): PROVIDER/MODEL@PLATFORM — PROVIDER/ ONLY for API models
+# (key-served lanes); platform-native brains are BARE model@platform.
 # CONSULT LAW (Owner 2026-10-22 13:22Z): every hire is posted to the Owner
 # as a roles-with-members list BEFORE activation.
 
@@ -17,13 +18,13 @@ all free MiniMax M3.1 Flash offers are wired or staged.
 | role                      | member ID                                      | status      | evidence / note                          |
 |---------------------------+------------------------------------------------+-------------+------------------------------------------|
 | LEAD / EM                 | glm-5.3-flash@z.ai (Lead agent)                | ACTIVE      | serves both repos; Discord + Telegram    |
-| PLATFORM ENGINEER         | qoder/qwen3.8-flash@qoder                      | PROVEN      | run 39477554903; TEST-T1..T3 2026-10-22  |
+| PLATFORM ENGINEER         | qwen3.8-flash@qoder                      | PROVEN      | run 39477554903; TEST-T1..T3 2026-10-22  |
 | RELIEF ENGINEER           | openrouter/minimax-m3.1-flash:free@goose       | PROVEN      | TEST-T1 de44031 + TEST-T2 d655571        |
 | RELIEF ENGINEER (2nd)     | zai/glm-4.7-flash@goose                        | ARMED       | ZAI_API_KEY landed 2026-10-22            |
 | RELIEF ENGINEER (3rd)     | groq/qwen3.8-27b@goose                         | ARMED       | relief hire 2026-10-22                   |
-| SOFTWARE ENGINEER (NEW)   | codebuddy/deepseek-v4.1-flash@codebuddy        | ACTIVATING  | Owner order 13:22Z; token in secrets     |
-| QA ENGINEER (NEW)         | qoder/deepseek-v4.1-flash@qoder                | ACTIVATING  | Owner order 13:22Z; model flag unverified|
-| VISITING SENIOR ENGINEER  | codebuddy/glm-5.3@codebuddy                    | ACTIVE (PAID)| Owner order ~16:08Z; 50 credits/day to 10-27 |
+| SOFTWARE ENGINEER (NEW)   | deepseek-v4.1-flash@codebuddy        | ACTIVATING  | Owner order 13:22Z; token in secrets     |
+| QA ENGINEER (NEW)         | deepseek-v4.1-flash@qoder                | ACTIVATING  | Owner order 13:22Z; model flag unverified|
+| VISITING SENIOR ENGINEER  | glm-5.3@codebuddy                    | ACTIVE (PAID)| Owner order ~16:08Z; 50 credits/day to 10-27 |
 
 Rotation: platform -> relief -> software -> QA -> platform. Every seat
 carries a fallback chain into the proven lanes, so a dead new lane never
