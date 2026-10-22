@@ -136,7 +136,7 @@ RUN_LINE_RE = re.compile(
 # The log's header prose ("One line per turn: run id | seat | lane | date.")
 # does not start like a run line, so it is prose and stays prose.
 RUN_LINE_INTENT_RE = re.compile(r"^[0-9a-f]{4,40}@")
-WHEN_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+WHEN_RE = re.compile(r"^\[?(?P<date>\d{4}-\d{2}-\d{2})")
 DRAWER_KEYS = ("FROM", "TO", "KIND", "WHEN")
 HEADLINE_LINE = re.compile(r"^\* MSG ")
 
@@ -194,7 +194,12 @@ def parse_messages(text):
                 break
             if cur.startswith(":") and not cur.startswith(":PROPERTIES:"):
                 key = cur[1:].split(":", 1)[0].strip()
-                drawer[key] = cur.split(":", 1)[1].strip() if ":" in cur else ""
+                # split(":", 2) and NOT split(":", 1): a drawer VALUE carries
+                # colons of its own (`:WHEN: [2026-10-22 Thu 18:58 UTC]`), and
+                # splitting once leaves the key glued to the value, so every
+                # value read back as "WHEN: [2026-10-22 Thu 18".
+                parts = cur.split(":", 2)
+                drawer[key] = parts[2].strip() if len(parts) > 2 else ""
             if cur.startswith(":END:"):
                 ended = True
                 cursor += 1
@@ -335,10 +340,27 @@ def main(argv):
             when = hit["drawer"].get("WHEN", "")
             match = WHEN_RE.match(when)
             if match:
-                dates.add(match.group(0))
+                # group(1), not group(0): the FORMAT LAW writes an Org INACTIVE
+                # timestamp `[YYYY-MM-DD Eee HH:MM UTC]`, and the bracket is not
+                # part of the date the log line carries.
+                dates.add(match.group("date"))
         turn_dates[turn] = dates
         notes.append("CHAT-TURN %s: %d entr(y/ies) carry %s (line %s)"
                      % (turn, len(hits), marker, ", ".join(str(h["line"]) for h in hits[:4])))
+
+    # The DATE cross-check below compares each turn's log date against its chat
+    # entry's — a comparison that cannot see its own coverage. A turn whose chat
+    # entries exist but yield NO parseable :WHEN: has nothing to compare, and the
+    # leg would silently skip it (that is exactly how the glued-key parse hid it:
+    # three cycles answered "OK" with turn_dates permanently empty). So a blind
+    # turn is CANNOT RUN, naming the parse — never a silent pass, and never a
+    # false red for a missing entry, which leg CHAT-TURN already reports.
+    blind = [turn for turn in TURNS if turn in turn_dates and not turn_dates[turn]]
+    if messages and blind:
+        raise CannotRun("the chat entries carrying %s yield no parseable :WHEN: value (%r) — "
+                        "the drawer parse is broken, so the log/chat date cross-check "
+                        "compares nothing"
+                        % (", ".join("TEST-%s" % t for t in blind), WHEN_RE.pattern))
 
     # ---- 3. CHAT-FORMAT: the FORMAT LAW over EVERY entry
     for message in messages:
@@ -415,6 +437,7 @@ def main(argv):
                           cwd=root, capture_output=True).returncode != 0:
             problems.append("LOG line %d: run id %s does not resolve to a commit in this repo"
                             % (number, sha))
+    compared = 0
     for turn in TURNS:
         markers = LOG_MARKERS[turn]
         hits = []
@@ -431,12 +454,17 @@ def main(argv):
             continue
         dates = {match.group("date") for _number, match in hits}
         chat_dates = turn_dates.get(turn) or set()
+        if chat_dates:
+            compared += 1
         if chat_dates and not (chat_dates & dates):
             problems.append("LOG-TURN %s: the log's date(s) %s disagree with the chat entry's "
                             "date(s) %s — the two records of the turn are not the same turn"
                             % (turn, sorted(dates), sorted(chat_dates)))
     notes.append("LOG: %d run line(s), every run id resolves to a commit; %d summary line(s)"
                  % (len(run_lines), len(summary)))
+    notes.append("LOG-DATE: %d/%d turn(s) cross-checked between the log date and the chat "
+                 ":WHEN: (a turn with none is refused above, never skipped)"
+                 % (compared, len(TURNS)))
 
     # ---- 7. BOARD: the parked order is still restorable
     headlines = board_headlines(board_text)
@@ -548,7 +576,13 @@ def control_broken_run_id(root):
 
 
 def control_missing_summary(root):
-    _replace_once(root, LOG_REL, "## Summary (TEST-CHAIN, 3 turns)", "## Notes (not closed)")
+    text = _read_file(root, LOG_REL)
+    if "## Summary" not in text:
+        raise CannotRun("control unclosed-log-summary: the log holds no `## Summary` heading")
+    # EVERY heading, not the first: the log gained a second cycle's Summary on
+    # 2026-10-22, so a single replacement left a live "Summary" section behind and
+    # this control answered rc 0 over its own rotted premise (measured here).
+    _write_file(root, LOG_REL, text.replace("## Summary", "## Notes"))
 
 
 def control_missing_control_file(root):
@@ -557,6 +591,44 @@ def control_missing_control_file(root):
 
 def control_no_change(root):
     return None
+
+
+def control_log_date_disagrees(root):
+    """Re-date EVERY graded marker-carrying run line (graded = inside the log's
+    `runs` sections, the only region the harness reads).
+
+    All of them, not the first: the leg asks whether a turn's log dates and its
+    chat dates INTERSECT, and each turn is logged by three cycles, so one stale
+    date still agrees with the chat and answers GREEN — the control would grade
+    nothing (measured here)."""
+    text = _read_file(root, LOG_REL)
+    run_lines, _summary = parse_log(text)
+    markers = [m for turn in TURNS for m in LOG_MARKERS[turn]]
+    lines = text.splitlines()
+    touched = 0
+    for number, line in run_lines:
+        match = RUN_LINE_RE.match(line)
+        if not (match and any(m in (match.group("note") or "") for m in markers)):
+            continue
+        lines[number - 1] = line.replace(match.group("date"), "2026-01-01")
+        touched += 1
+    if not touched:
+        raise CannotRun("control log-date-disagrees: no marker-carrying run line to re-date")
+    _write_file(root, LOG_REL, "\n".join(lines) + "\n")
+
+
+def control_unparseable_when(root):
+    """Blind the drawer read the way the glued-key parse did: NO :WHEN: value
+    yields a date, so the log/chat cross-check has nothing to compare.
+
+    Every value, and the whole `:WHEN: ` label rather than `:WHEN: [`: one entry
+    in the live chat carries a bracket-less timestamp, so a bracket-only sweep
+    left a readable date behind and the coverage leg never fired."""
+    text = _read_file(root, CHAT_REL)
+    broken = text.replace(":WHEN: ", ":WHEN: x")
+    if broken == text:
+        raise CannotRun("control unparseable-when: the chat holds no :WHEN: timestamp to break")
+    _write_file(root, CHAT_REL, broken)
 
 
 # (name, mutation, expected exit code, expected text in the output, extra argv)
@@ -569,11 +641,24 @@ CONTROLS = (
     ("unclosed log summary", control_missing_summary, 1, "section is missing", ()),
     ("missing control file", control_missing_control_file, 2, "CANNOT RUN", ()),
     ("turns never landed", control_no_change, 1, "none is an ancestor of", "--main",),
+    ("log date disagrees", control_log_date_disagrees, 1, "disagree with the chat entry", ()),
+    ("no chat date parses", control_unparseable_when, 2, "drawer parse is broken", ()),
 )
+
+# The control roster is PINNED, not derived: a comparison cannot see its own
+# coverage, and `SELFTEST OK — N control(s)` printed N from len(CONTROLS), so
+# deleting a control deleted the proof and still answered OK (landing_gate's
+# MERGE_ROSTER law, applied to this harness's own legs).
+EXPECTED_CONTROLS = 10
 
 
 def selftest(root):
     """Prove each leg can fire, against copies. Returns 0 or raises Red."""
+    if len(CONTROLS) != EXPECTED_CONTROLS:
+        raise CannotRun("the control roster holds %d entries, the pin says %d — a control "
+                        "vanished (or was added without the pin), so `SELFTEST OK` would no "
+                        "longer mean every leg was run"
+                        % (len(CONTROLS), EXPECTED_CONTROLS))
     script = os.path.join(root, "scripts", "chain_test_check.py")
     base = objective_base(root, read(root, CONTROL_REL))
     failures = []
