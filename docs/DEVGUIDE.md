@@ -47,7 +47,7 @@ Product constraints — do not relax:
   concatenated onto `apiUrl`; an unresolvable source renders a friendly
   empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
   the `$effect` cleanup kills the timer. Contract + checklist:
-  `docs/widget-data.md`.
+  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`.
 - RBAC (FR-R007) is claims-driven and degrades silently: `normalizeOpenAPI`
   binds `schema.mePath` ONLY when the document carries `GET …/me/` and no
   POST (exportPath law again — never a guessed `/api/me/`), the client
@@ -202,9 +202,10 @@ python3 scripts/registry_roster_diff.py --src /tmp/copy   # controls run on copi
 # THE DROP-IN CONTRACT FIELD LISTS as one command — every `meta{...}` list the two
 # mirror docs publish against the fields the registries actually read (`PageMeta`,
 # `ActionMeta`, and the widget registry's own `mod.meta` reads cross-checked against the
-# shipped `Widget` interface), plus the four doors: a doc field the code does not
-# declare, a code field no doc mentions, a doc `x?` the interface requires, and two
-# mirror docs stating two shapes for one contract.
+# shipped `Widget` interface) PLUS the nested FR-R008 feed block against `WidgetDataSpec`,
+# and the four doors: a doc field the code does not declare, a code field no doc mentions,
+# a doc `x?` the interface requires, and two mirror docs stating two shapes for one
+# contract. FOUR contracts, 14 lists, every count pinned.
 python3 scripts/doc_field_roster_diff.py    # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on copies
 
@@ -1278,12 +1279,26 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   against the shipped `Widget` interface minus the two keys the registry injects
   (`file`, `component`). Two independent derivations of one shape; if they disagree the
   harness refuses to pick a winner (CANNOT RUN).
+  THE FOURTH CONTRACT IS NESTED INSIDE THE THIRD: `data` is one field of the widget
+  `meta` and SIX fields of the feed engine — `WidgetDataSpec` in
+  `app/src/lib/widgets/feed.ts` against the six-name list both mirror docs publish in
+  the very same bullet. Measured BEFORE wiring (the 01:27Z report's own prediction):
+  the two AGREE, so this entry ships green — the point is the door, not a find, and a
+  leg that only fires when someone remembers the contract is not a leg. Writing that
+  list INTO this section would add a contract list and move the pin, so the law names
+  it by reference and never by braces. The two lists share one paragraph, so
+  paragraph-token attribution cannot separate them — any token in that bullet answers
+  "names 2 registries" — and the feed entry is therefore matched by its OWN literal (a
+  brace body that opens with the endpoint name) and attributed by construction. What
+  replaces the paragraph check is the per-registry count (1 list per doc) plus the
+  total pin, and a list claimed by BOTH the generic and the own read is CANNOT RUN
+  rather than silently graded twice.
   THE FOUR DOORS: DOC-NAMED (a doc promises a field the registry does not declare),
   COVERAGE (a code field no in-domain doc list mentions — the `roles` hole), OPTIONAL
   (a doc marks `x?` while the interface requires `x`), MIRROR (the two docs state
-  DIFFERENT shapes for one contract). Plus population pins: 12 contract lists, 3+2+1 per
-  registry per doc, 7/7/3 code fields — a list that vanished shrinks every door above,
-  so a moved count is CANNOT RUN, not a smaller green.
+  DIFFERENT shapes for one contract). Plus population pins: 14 contract lists, 3+2+1+1
+  per registry per doc, 7/7/3/6 code fields — a list that vanished OR appeared changes
+  every door above, so a moved count is CANNOT RUN, not a smaller green.
   WHY OPTIONAL IS ONE-DIRECTIONAL, measured: graded both ways it fired on FOUR CORRECT
   sentences — `nav, icon, order, standalone` are optional in `PageMeta` and listed
   without `?`, which is shorthand, not a claim of requiredness. A leg that fires on true
@@ -1292,9 +1307,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   below that heading everything is a dated record, the same ruling the doc-count leg
   applies. Control 10 proves the cut is real rather than accidental: a bogus field added
   to a state-log list leaves the verdict rc 0.
-  CONTROLS, twelve of them, every mutation on a COPY (`--root /tmp/…`, and the gate doors
-  by calling `pin_twins()` / `leg_twin()` on a copy of `landing_gate.py` — no shipped file
-  was ever mutated): honest rc 0 over 17 fields / 12 lists / 76 field claims; `roles?`
+  CONTROLS, twenty-three of them, every mutation on a COPY (`--root /tmp/…`, and the gate
+  doors by calling `pin_twins()` / `leg_twin()` on a copy of `landing_gate.py` — no shipped
+  file was ever mutated): honest rc 0 over 23 fields / 14 lists / 88 field claims; `roles?`
   stripped from every pages list in BOTH docs → RED `registry pages: declares roles …
   NO in-domain doc list mentions it`; a doc promising `width` → RED naming `AGENTS.md:73`
   and the mirror pair; a doc `title?` against a required `title` → RED `a drop-in written
@@ -1309,6 +1324,25 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   paragraph lost its `app/src/widgets/` token → CANNOT RUN `name no registry dir in their
   paragraph` (an unattributable list is graded against nothing); a list body carrying
   prose — `title, the size, …` inside the braces → CANNOT RUN naming the piece.
+  THE FOURTH CONTRACT, eleven more controls, all on copies: the cap field stripped from
+  the six-name list in BOTH docs → RED `registry feed: declares rowCap in code and NO
+  in-domain doc list mentions it`; that list promising a field the interface never
+  declared → RED at `AGENTS.md:41` AND at its DEVGUIDE mirror line; the source field
+  marked optional while `WidgetDataSpec` requires it → RED `a drop-in written from this
+  doc is refused by the registry`; the SAME list reordered in AGENTS.md ONLY → RED on the
+  mirror door and on nothing else — every field is still documented somewhere, so
+  coverage stays green, which is the proof the doors are independent for this contract
+  too; the list deleted from both docs → CANNOT RUN `the docs carry 12 contract
+  list(s), EXPECTED_LISTS pins 14`; a second copy of it added in one doc → CANNOT RUN on
+  the same total pin; the list deleted in AGENTS.md while one is added in DEVGUIDE so the
+  TOTAL stays 14 (the total pin cannot mask a per-registry move) → CANNOT RUN `feed in
+  AGENTS.md: 0 contract list(s), this harness owes 1`; the cap field renamed in a COPY of
+  the feed source → RED `the CODE contract moved off its pin — added (maxRows), removed
+  (rowCap)`; the interface renamed away → CANNOT RUN (no interface block — the harness
+  admits it stopped reading the engine); the widget meta list re-spelled so it OPENS with
+  the source field's name → CANNOT RUN `a contract list claimed by BOTH the generic` read
+  and the own read — the price of own-literal attribution, and the reason a double-claim
+  is a refusal rather than a free second grade.
   ONE CONTROL THAT WENT THE OTHER WAY, and should be read as the door working: the first
   draft of this section's own *Commands* text wrote `meta{...}` as a placeholder and the
   harness answered CANNOT RUN `a contract list piece this harness cannot parse ('...')`.
@@ -1320,8 +1354,10 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   the harness still on disk → CANNOT RUN from the same pin (the count door answers before
   the disk-vs-roster door, both are refusals); the leg's probe phrase renamed away from
   what the harness prints → RED `doc-twin rc 0 but printed no … verdict line`; the leg run
-  as the gate runs it → `doc-twin   DOC FIELD ROSTER OK — 3 registries, 17 contract
-  fields, 12 doc lists, 76 field claims graded`.
+  as the gate runs it → `doc-twin   DOC FIELD ROSTER OK — 4 registries, 23 contract
+  fields, 14 doc lists, 88 field claims graded` (the gate itself: 11 legs, GATE GREEN,
+  and the merge gate alone still 4 legs — the fourth contract added no leg, it widened
+  the leg that was already there).
   IT STAYS OUT OF THE MERGE ROSTER for the THIRTEENTH law's reason: gate.sh is Lead-owned
   and `gate_roster_diff.py` grades the two gates leg-by-leg, so a fourth merge leg here
   registers only as machine-gate drift.
@@ -1332,9 +1368,16 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   field, only that it declares/reads one; and the per-feature docs (`docs/custom-actions.md`,
   `docs/page-registration.md`, `docs/rbac.md`) carry abbreviated lists and worked examples
   and are out of domain — the mirror pair is the instruction surface, same ruling as above.
-  SEAT RULE: adding a field to a drop-in interface makes this commit owe the doc lists in
-  the SAME commit — run `python3 scripts/doc_field_roster_diff.py` and it names every list
-  that is missing it; deleting a doc list without moving the pin stops the gate.
+  For the nested feed contract it also does not grade the VALUE set (the aggregate kinds,
+  the 5-second poll floor, the row-cap clamp bounds live in `feed.ts` and its own unit
+  tests) — only that the two docs and the interface name the same six fields. Worth
+  knowing what the runtime does with a name the interface lacks: `validateWidgetData`
+  ignores an unknown key silently and defaults the rest, so a doc field the code never
+  declared is invisible to the user and visible ONLY to this door.
+  SEAT RULE: adding a field to a drop-in interface, or to `WidgetDataSpec`, makes this
+  commit owe the doc lists in the SAME commit — run `python3 scripts/doc_field_roster_diff.py`
+  and it names every list that is missing it; deleting a doc list without moving the pin
+  stops the gate.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone,roles?}` from
   `<script module>` (runes are unavailable there — the export must be static).
