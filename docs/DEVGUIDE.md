@@ -1211,7 +1211,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whose `*` is a quantifier, not a literal): a control whose mutation is a no-op is a
   false green wearing a number. Every control above asserts the file actually changed
   before it is scored — same rule as EIGHTH law, aimed at the harness author.
-  WIRED, 2026-10-22 01:10Z, and the wiring is the NAME: the harness shipped as
+  WIRED, 2026-10-22 00:59Z, and the wiring is the NAME: the harness shipped as
   `registry_roster_check.py` because the boot that wrote it had no `app/node_modules`,
   so its author could not measure an `--fe` leg. `landing_gate.py` cross-checks its
   twin roster against the `scripts/*_diff.py` glob, so renaming it to
