@@ -44,7 +44,7 @@ Product constraints — do not relax:
   concatenated onto `apiUrl`; an unresolvable source renders a friendly
   empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
   the `$effect` cleanup kills the timer. Contract + checklist:
-  `docs/widget-data.md`.
+  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`.
 - RBAC (FR-R007) is claims-driven and degrades silently: `normalizeOpenAPI`
   binds `schema.mePath` ONLY when the document carries `GET …/me/` and no
   POST (exportPath law again — never a guessed `/api/me/`), the client
@@ -190,9 +190,9 @@ python3 scripts/registry_roster_diff.py --src /tmp/copy   # controls run on copi
 
 # THE DROP-IN CONTRACT FIELD LISTS as a check: every `meta{...}` field the two mirror
 # docs promise against the fields the registries read (`PageMeta`, `ActionMeta`, the
-# widget registry's own `mod.meta` reads), plus coverage (a code field no doc list
-# mentions), one-directional optionality (a doc `x?` the interface requires) and the
-# AGENTS↔DEVGUIDE mirror (two files, one document, never two shapes).
+# widget registry's own `mod.meta` reads) AND the nested FR-R008 feed block against
+# `WidgetDataSpec` — plus coverage (a code field no doc list mentions), one-directional
+# optionality (a doc `x?` the interface requires) and the AGENTS↔DEVGUIDE mirror.
 python3 scripts/doc_field_roster_diff.py    # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on copies
 
