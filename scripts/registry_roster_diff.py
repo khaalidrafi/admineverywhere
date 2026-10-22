@@ -34,12 +34,16 @@ Verdicts follow the house convention: 0 = OK, 1 = RED (a claim is false),
 false red for a tree it has not measured).
 
 Controls run against copies via --src, so the shipped tree is only ever read:
-  cp -r app/src /tmp/x && python3 scripts/registry_roster_check.py --src /tmp/x
+  cp -r app/src /tmp/x && python3 scripts/registry_roster_diff.py --src /tmp/x
 
-This harness is a CANDIDATE, not yet a gate leg: it is deliberately not named
-`scripts/*_diff.py`, because `landing_gate.py` cross-checks its twin roster
-against that glob (EXPECTED_TWINS) and wiring an FE leg this seat cannot run
-(no app/node_modules on this boot) would ship an unmeasured claim.
+It is the fifth FE leg of the landing gate (`python3 scripts/landing_gate.py --fe`
+-> `registry-twin`), which is why the file is named `*_diff.py`: `landing_gate.py`
+cross-checks its twin roster against that glob (EXPECTED_TWINS), so the name IS the
+wiring — a harness written beside the gate but not in that glob is a comparison no
+merge runs, and it was exactly that unwired state which let this seat ship the check
+as a candidate it could not measure (no app/node_modules). It diffs two rosters the
+way the other twins diff two documents: the pinned promise (3 registries, their dirs,
+their floors) against the tree on disk.
 """
 
 import argparse
