@@ -28,6 +28,110 @@
 #   * every other pair below stays ranked for the EM's manual dispatches.
 #
 
+* HIRES WITH REASONS (Owner order 2026-10-22 ~16:08Z: hire list with reasons — model capability, performance, benchmarks, reviews)
+
+  1. ROLE: LEAD / EM — glm-5.3-flash@z.ai [ACTIVE]
+     WHY: GLM-5.3-lineage fast tier (quality-93, 117 t/s). The full
+     GLM-5.3 brain is quality-96 tier — HN sentiment "budget Claude",
+     highest non-A/O TB 4.0 in our research ledger — and the Flash
+     variant trades a little depth for dispatch latency, which is what
+     a Lead needs. Proven across BOTH repos: orchestration, harness
+     repairs (3428567, run 39752778724 URL fix), gate verdicts. Free.
+  2. ROLE: PLATFORM ENGINEER — qoder/qwen3.8-flash@qoder [PROVEN]
+     WHY: the ONLY body with CI evidence on THIS repo (proof run
+     39477554903: real qoder JSON result, 72s agentic turn; TEST-T1..T3
+     landed). The Qwen3.8-Flash brain is weak alone (Flash tier, no
+     independent data) — hired for its HANDS: control-experiment rigor,
+     governance-rewrite trap catch, CSP regression catch, and it runs
+     the full gate loop (git/pytest/vitest) inside the harness. Fit
+     law: this seat runs the loop, not invent design.
+  3. ROLE: RELIEF ENGINEER (primary) — openrouter/minimax-m3.1-flash:free@goose [PROVEN]
+     WHY: MiniMax M3.1 Flash is the fast agentic coding tier and the
+     free promo (Owner burn order; expires 2026-10-25) makes it the
+     cheapest REAL work on the team. Delivered TEST-T1 (de44031) and
+     TEST-T2 (d655571) where T2 found a genuine machinery bug (the
+     rotation-pointer no-op). Field reviews rank M3.1 Flash a solid
+     cheap coder; OpenRouter free lane costs nothing per turn.
+  4. ROLE: RELIEF ENGINEER (fallback 2) — zai/glm-4.7-flash@goose [ARMED]
+     WHY: GLM lineage (sibling of the proven GLM-5.3 brains) on the
+     URL pattern this team already debugged into a proven lane shape
+     (OPENAI_HOST + OPENAI_BASE_PATH). Free, and a second provider for
+     the same seat = lane diversity the chain never had before.
+  5. ROLE: RELIEF ENGINEER (fallback 3) — groq/qwen3.8-27b@goose [ARMED]
+     WHY: Qwen3.8-27B on Groq = very high t/s free tier; same Qwen
+     lineage as the proven platform brain. Added after run 39752778724
+     proved a single-lane relief seat is a stall risk (the minimax URL
+     death stalled the whole chain on its own).
+  6. ROLE: SOFTWARE ENGINEER — codebuddy/deepseek-v4.1-flash@codebuddy [ACTIVE — free tier, MUST burn]
+     WHY (Owner order): DeepSeek V4.1 Flash = fast agentic coding
+     tier; CodeBuddy = agentic IDE harness (plan/act, file tools, bash,
+     -y headless mode). The free tier is tokens we are ORDERED to burn,
+     so the seat gets the highest-token work: implementation segments
+     (features, fixes, tests). Reviews flag benchmaxxing risk (HN
+     thread: benchmark gains > real-world gains) — mitigated by the
+     landing gate + Lead review that every segment rides anyway.
+     Model id VERIFIED against the codebuddy CLI --help (supported:
+     deepseek-v4.1-flash, glm-5.3, kimi-k3, gpt-6-astra, ...).
+  7. ROLE: QA ENGINEER — qoder/deepseek-v4.1-flash@qoder [ACTIVE — free tier]
+     WHY: the same free brain on the Owner's LOCAL qoder body — a
+     second body of a brain we already run (BODY SHAPES OUTPUT law:
+     same brain, different body = a different member). QA = run the
+     suites, reproduce failures, write regression evidence: token-
+     heavy work, all free. The qoder --model flag is unverified; the
+     fallback chain self-heals if the CLI rejects it.
+
+* VISITING MEMBER — paid burn (Owner order 2026-10-22 ~16:08Z)
+
+  CREDIT LAW: 250 CodeBuddy credits, expire 2026-10-27 -> 5 burnable
+  days (Oct 22..27) -> budget 50/day. Unused budget dies at expiry, so
+  front-load, never save. One visiting turn per day, Lead-briefed.
+
+  ROLE: VISITING SENIOR ENGINEER — codebuddy/glm-5.3@codebuddy
+  [ACTIVE — first visit 2026-10-22]
+  WHY: the strongest credit-eligible brain on the codebuddy pool with
+  VERIFIED evidence in this ledger (GLM-5.3 = quality-96 tier, HN
+  "budget Claude", solo-delivered v0.1.2 @chat.z.ai). Paid credits go
+  on the reviewed brain, not on a benchmaxxing flag (that is also why
+  the visiting seat is NOT deepseek — its reviews are split). Model id
+  glm-5.3 verified against the codebuddy CLI --help. Assignment: one
+  hard deep-work segment per visit — first visit = the STALLED
+  COOL-CHAT-SEND-BACK-2 segment (4 empty segments, stall=4) so the
+  burn doubles as unstick. The landing gate applies to its work like
+  everyone's. NOT in the standing rotation: the Lead points #+TURN at
+  it for the daily burn; its advance rejoins the rotation at
+  software-engineer (the free deepseek burn still runs every cycle).
+
+  BALANCE CHECK (Owner asked): NO — CodeBuddy publishes no balance
+  endpoint the CI key can hit (credits are console-only), and roster
+  law forbids inventing endpoints. Mitigation: the burn ledger below
+  estimates per-run spend; the Owner reads the console number and we
+  recalibrate the estimate against it.
+
+  BURN LEDGER (Lead updates per run):
+  | date       | member                      | segment        | credits spent | note                          |
+  |------------+-----------------------------+----------------+---------------+-------------------------------|
+  | 2026-10-22 | codebuddy/glm-5.3@codebuddy | (first visit)  | ~50 budget    | dispatched via visiting seat  |
+
+* HR PERFORMANCE REVIEWS (Owner order 2026-10-22 ~16:08Z: "regularly review your members' performance and record that in that file, just like a real HR would")
+
+  CADENCE LAW: at EVERY PAUSE-AFTER-TODO review window the Lead updates
+  this table for the seat that just ran; full sweep weekly. Metrics:
+  segments delivered, gate green on first try, rework/stall count,
+  findings (a caught bug is a bonus). Verdicts: KEEP / WATCH / PROBE /
+  RELEASE. A member that stalls the chain twice without a finding goes
+  WATCH; three, RELEASE.
+
+  | member                                   | delivered          | review evidence (as of 2026-10-22)                          | verdict |
+  |------------------------------------------+--------------------+-------------------------------------------------------------+---------|
+  | qoder/qwen3.8-flash@qoder                | TEST-T3 + segments | T3 caught empty-segment + Telegram-mirror bugs; gate green  | KEEP    |
+  | openrouter/minimax-m3.1-flash:free@goose | TEST-T1, TEST-T2   | T2 found a real machinery bug (rotation-pointer no-op)      | KEEP    |
+  | glm-5.3-flash@z.ai (Lead)                | every segment      | reviews at pause windows; harness repairs 3428567 + URL fix | KEEP    |
+  | zai/glm-4.7-flash@goose                  | 0 yet              | ARMED 10-22; turn in flight at review time                  | PROBE   |
+  | groq/qwen3.8-27b@goose                   | 0 yet              | ARMED 10-22; relief fallback, unexercised                   | PROBE   |
+  | codebuddy/deepseek-v4.1-flash@codebuddy  | 0 commits          | lane ran OK twice (ee5ed18, 0611493) but segments EMPTY     | WATCH   |
+  | qoder/deepseek-v4.1-flash@qoder          | 0 yet              | ACTIVE; --model flag unverified                             | PROBE   |
+  | codebuddy/glm-5.3@codebuddy (visiting)   | 0 yet              | first visit dispatching 2026-10-22, 50-credit budget        | PROBE   |
+
 # BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on
 different bodies produces different work. model@Goose and model@OpenCode are
 DIFFERENT members with DIFFERENT ranks. Every entry below is one dispatchable
