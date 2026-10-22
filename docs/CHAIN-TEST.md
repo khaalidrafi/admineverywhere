@@ -27,3 +27,12 @@ e489738@ai/turn-20261022-0942 | platform-engineer | minimax-m3.1-flash:free@goos
   against copies and proves every leg can fail (rc 1 / rc 2 as expected). Deliberately
   NOT named `*_diff.py`: that glob IS the landing gate's twin roster, and this grades
   the CHAIN, not a pair of artifacts.
+- Turn 6 (post-chain, harness): the SESSION collect->restore defect became a COMMAND —
+  `scripts/chain_session_check.py` grades the Lead-owned workflow READ-ONLY: every store
+  the collect tar takes is restored to its OWN path (the tar is rooted at /, so each member
+  keeps its absolute archive-relative path), no lane runs the CLI with --no-session, the
+  collect list covers the goose session store, and the restore dir is created and mounted.
+  The shipped tree grades RED on the real defect (rc 1); `--selftest` applies
+  docs/session-loop-fix.patch to a COPY and proves the fix turns it GREEN, plus 7 more
+  controls that prove each leg can fail (8 controls, rc 0). The patch stays UNAPPLIED —
+  .github/workflows/* is Lead-owned.
