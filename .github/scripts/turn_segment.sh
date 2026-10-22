@@ -6,7 +6,7 @@
 # Behavior identical to the former inline block (bash -e).
 set -e
 
-SEAT=""${SEG_SEAT:-}""
+SEAT="${SEG_SEAT:-}"
 # Read the objective FROM THE FILE, never by template substitution:
 # an objective containing quotes/dollars/backticks must never be
 # rendered into the script by the workflow template (mesh/01 turn
