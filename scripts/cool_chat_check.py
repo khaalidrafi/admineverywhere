@@ -17,7 +17,8 @@ cool-chat send-back slipped past a GREEN suite:
 because every test fed the helper a HAND-WRITTEN string instead of the prompt
 the panel actually POSTs. A check that cannot fail is not a check (DEVGUIDE
 *ELEVENTH harness law, applied to the harness itself), so this one grades the
-four claims against the tree, the way the other harnesses grade their pairs:
+four claims against the tree (plus the one-builder refusal that closes the
+fifth), the way the other harnesses grade their pairs:
 
   GOVERNANCE  agent-team/TEAM.md carries no "MEMBER IDS" section (the
               governance reversal the send-back was about), still carries its
@@ -37,6 +38,15 @@ four claims against the tree, the way the other harnesses grade their pairs:
               mount test that asserts the captured request body) is still on
               disk — so "the prompt the panel ACTUALLY sends is the wired one"
               rests on a machine proof, not on a hand-written string.
+  ONE-BUILDER exactly ONE product file in app/src builds the AI schema-prompt
+              line, and it is chat.ts. LIVE-PATH alone cannot see the opposite
+              failure: it greps the panel for the dead name, so a second
+              legend-less builder stays invisible right up to the moment a
+              future edit imports it — which is the exact defect this item was
+              filed for (openapi.ts kept shipping schemaSummary, a clone of the
+              builder with no legend and no caller, green behind its own unit
+              test). Existence of an alternative is what makes re-wiring
+              possible, so the alternative is what this leg refuses.
 
 Verdicts follow the house convention: 0 = OK, 1 = RED (a claim is false),
 2 = CANNOT RUN (the harness no longer understands its own input — never a
@@ -72,6 +82,7 @@ CHAT_REL = "app/src/lib/chat.ts"
 CHAT_TEST_REL = "app/src/lib/__tests__/chat.test.ts"
 MOUNT_PROOF_REL = "app/src/lib/__tests__/chatMount.test.ts"
 SHELL_REL = "app/src/components/Shell.svelte"
+OPENAPI_REL = "app/src/lib/openapi.ts"
 APP_SRC = "app/src"
 
 # the three files the send-back touched, and the size of that population
@@ -86,6 +97,14 @@ EXPECTED_GOVERNANCE_SECTIONS = 2
 # the count of brand-var uses is a fact about the file, not a promise)
 EXPECTED_BRAND_VARS_IN_PANEL = 1
 LEGEND = "Available models (fields in parentheses; fk = foreign key to that model):"
+
+# The AI schema-prompt line's shape — `${f.name}(fk->${f.fkModel})` — is written
+# in exactly ONE product file, and that file is the live prompt builder. A test
+# file may repeat the literal (that is the wire-level assertion), so __tests__ is
+# out of domain here; a second PRODUCT file carrying it is a second builder, and a
+# second builder is what a future edit silently imports.
+PROMPT_SHAPE = "(fk->"
+EXPECTED_PROMPT_BUILDERS = 1
 
 # A hard-coded color: a hex literal or an rgb()/hsl() call. Brand vars are
 # var(--brand-*) and carry no color of their own.
@@ -140,6 +159,17 @@ def walk_files(root, rel):
         for name in filenames:
             found.append(os.path.relpath(os.path.join(dirpath, name), root))
     return sorted(found)
+
+
+def product_sources(root):
+    """Product .ts/.svelte files under app/src — test dirs are out of domain."""
+    found = []
+    for rel in walk_files(root, APP_SRC):
+        if "__tests__" in rel.split(os.sep):
+            continue
+        if rel.endswith((".svelte", ".ts")):
+            found.append(rel)
+    return found
 
 
 def line_of(text, pattern):
@@ -273,11 +303,30 @@ def leg_live_path(root):
     return problems, summary
 
 
+def leg_one_builder(root):
+    """Exactly one product file writes the prompt line, and it is chat.ts."""
+    builders = []
+    for rel in product_sources(root):
+        if PROMPT_SHAPE in read(root, rel):
+            builders.append(rel)
+    problems = []
+    if len(builders) != EXPECTED_PROMPT_BUILDERS:
+        problems.append("one-builder: %d product file(s) build the AI schema-prompt "
+                        "line (%s), the claim is exactly one" % (
+                            len(builders), ", ".join(builders) or "none"))
+    elif builders[0] != CHAT_REL:
+        problems.append("one-builder: the only prompt builder is %s, not the live %s"
+                        % (builders[0], CHAT_REL))
+    summary = "%d builder(s): %s" % (len(builders), ", ".join(builders) or "none")
+    return problems, summary
+
+
 LEGS = (
     ("governance", leg_governance),
     ("sweep", leg_sweep),
     ("one-panel", leg_one_panel),
     ("live-path", leg_live_path),
+    ("one-builder", leg_one_builder),
 )
 
 
@@ -372,6 +421,17 @@ def control_second_importer(root):
                   '<script lang="ts">\n  import ChatPanel from "../ai/ChatPanel.svelte";\n</script>\n<script')
 
 
+def control_second_builder(root):
+    # the control that makes the one-builder leg honest: the dead clone is
+    # re-added to a PRODUCT file (openapi.ts, the file that shipped it), so the
+    # leg must count two builders. Written inside app/src on purpose — a copy
+    # outside it would prove nothing, the hazard control_second_panel records.
+    text = read(root, OPENAPI_REL)
+    write(root, OPENAPI_REL, text + "\nexport function schemaSummary(schema: "
+          "AdminSchema): string {\n  return schema.models.map((m) => "
+          "`${m.name}(fk->${m.id})`).join(\"\\n\");\n}\n")
+
+
 # (name, mutation, expected exit code, expected text in the output)
 CONTROLS = (
     ("governance: MEMBER IDS restored", control_member_ids, 1, "MEMBER IDS"),
@@ -385,6 +445,7 @@ CONTROLS = (
     ("live-path: the panel is rewired", control_rewired, 1, "does not import buildSchemaPrompt"),
     ("live-path: the legend is gone", control_legend_gone, 1, "legend"),
     ("live-path: the wire proof is gone", control_proof_gone, 2, "CANNOT RUN"),
+    ("one-builder: the dead clone returns", control_second_builder, 1, "one-builder"),
 )
 
 
@@ -424,7 +485,7 @@ def selftest(root):
 
 def main(argv):
     parser = argparse.ArgumentParser(
-        description="Grade the cool-chat send-back's four specced checks.")
+        description="Grade the cool-chat send-back's five specced checks.")
     parser.add_argument("--root", default=".",
                         help="the tree to grade (default: this repo)")
     parser.add_argument("--selftest", action="store_true",
