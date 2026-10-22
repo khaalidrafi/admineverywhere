@@ -227,7 +227,10 @@ jobs:
           # #+CHAIN-PAUSE when a segment delivers a TODO. Turns stay halted
           # until the Lead clears the line after reviewing the roles' work.
           CHAINPAUSE=$(grep -oP '^\#\+CHAIN-PAUSE:\s*\K.*' "$CTL" | head -1 | xargs || true)
-          if [ -n "$CHAINPAUSE" ]; then
+          # Any non-empty value pauses — EXCEPT the literal "OFF" (Owner
+          # ec22dcc wrote "#+CHAIN-PAUSE: OFF" and froze the chain: the
+          # bare -n test read it as armed). Empty or OFF = chain runs.
+          if [ -n "$CHAINPAUSE" ] && ! printf '%s' "$CHAINPAUSE" | grep -qi '^off$'; then
             echo "mode=paused" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -773,12 +776,17 @@ jobs:
               ;;
             software-engineer)
               # deepseek-v4.1-flash@codebuddy — free-offer hire
-              # (Owner order 2026-10-22 #admincraft). Headless: -y in -p
-              # mode for tool use (harness Dockerfile note). The default
-              # bundled brain is the Owner-specified deepseek-v4.1-flash
-              # free offer. Fallback: the proven lanes take the segment.
-              if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
-                   codebuddy -p "$BRIEF" -y; then
+              # (Owner order 2026-10-22 #admincraft). Headless tool use
+              # must be pre-authorized: -y ALONE still asks on
+              # HIGH/CRITICAL tools and headless asks auto-DENY — prose
+              # only, exit 0, zero writes (the 2026-10-22 body bug: 3
+              # runs, 2 brains, same symptom). Fix per the CLI's own
+              # --help + DE analysis (TEAM-CHAT 3b00d4f):
+              # --permission-mode bypassPermissions + CODEBUDDY_IS_SANDBOX=1
+              # full pass (sanctioned: the job IS an isolated container).
+              if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
+                   codebuddy -p "$BRIEF" -y --permission-mode bypassPermissions \
+                   --max-turns 100 --model deepseek-v4.1-flash; then
                 echo "TURN_RESULT=codebuddy run OK (lane: deepseek-v4.1-flash@codebuddy)"
               elif env HOME=/usr/local/lib/qoder-home \
                    qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
@@ -809,8 +817,9 @@ jobs:
                    qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
                    --permission-mode bypassPermissions --max-turns 100; then
                 echo "TURN_RESULT=qoder run OK (lane: deepseek-v4.1-flash@qoder)"
-              elif env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
-                   codebuddy -p "$BRIEF" -y; then
+              elif env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
+                   codebuddy -p "$BRIEF" -y --permission-mode bypassPermissions \
+                   --max-turns 100 --model deepseek-v4.1-flash; then
                 echo "TURN_RESULT=codebuddy run OK (lane: deepseek-v4.1-flash@codebuddy)"
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
                    OPENAI_API_KEY="$GROQ_API_KEY" \
@@ -838,8 +847,9 @@ jobs:
               # at software-engineer. If the paid lane fails, the segment
               # still runs on the proven free lanes but the result SAYS
               # the burn did not happen — a visit is never faked.
-              if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
-                   codebuddy -p "$BRIEF" -y --model glm-5.3; then
+              if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
+                   codebuddy -p "$BRIEF" -y --permission-mode bypassPermissions \
+                   --max-turns 100 --model glm-5.3; then
                 echo "TURN_RESULT=codebuddy PAID run OK (lane: glm-5.3@codebuddy — visiting burn)"
               elif env HOME=/usr/local/lib/qoder-home \
                    qoder -p "$BRIEF" --output-format json \

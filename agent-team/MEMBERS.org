@@ -137,9 +137,18 @@
   | glm-5.3-flash@z.ai (Lead)                | every segment      | reviews at pause windows; harness repairs 3428567 + URL fix | KEEP    |
   | zai/glm-4.7-flash@goose                  | 0 confirmed       | relief turn delivered CC-SB-2 but lane line reads qoder fallback — attribution unconfirmed | PROBE |
   | groq/qwen3.8-27b@goose                   | 0 yet              | ARMED 10-22; relief fallback, unexercised                   | PROBE   |
-  | deepseek-v4.1-flash@codebuddy  | 0 commits          | lane ran OK twice (ee5ed18, 0611493) but segments EMPTY     | WATCH   |
+  | deepseek-v4.1-flash@codebuddy  | 0 commits          | 3 empty runs ROOT-CAUSED (body bug: headless -y auto-deny) — CI flags fixed 17:30Z, next software segment = smoke test | WATCH |
   | deepseek-v4.1-flash@qoder          | FR-R001-FE audit   | lane run OK (a64902a); --model flag VERIFIED live; HIRED + burn the free offer (Owner 17:23Z) | KEEP    |
-  | glm-5.3@codebuddy (visiting)   | 0 commits          | visit 1: PAID lane VERIFIED (run OK, ~50 credits burned) but segment EMPTY — session artifact review before visit 2 | WATCH |
+  | glm-5.3@codebuddy (visiting)   | 0 commits          | visit 1: PAID burn VERIFIED (~50 credits) but empty — same body bug, fix landed; visit 2 (10-23) runs with bypassPermissions | WATCH |
+
+  HR NOTE (Lead, 2026-10-22 17:31Z): the two WATCH rows share ONE root
+  cause — the codebuddy BODY, not the brains (DE analysis f8b62b2 +
+  CLI --help: headless tool use needs pre-authorization; -y alone
+  leaves HIGH/CRITICAL asks that auto-deny with no TTY). Fix landed in
+  agent-team.yml (all three codebuddy arms). Both members stay WATCH
+  until their next segment lands a real diff; three no-progress
+  segments on the fixed body = RELEASE per the stall law. Night-window
+  HR reviews are asynchronous — the chain does NOT halt for them.
 
 # BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on
 different bodies produces different work. model@Goose and model@OpenCode are
