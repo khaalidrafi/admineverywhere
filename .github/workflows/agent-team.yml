@@ -6,10 +6,14 @@ name: Agent Team Chain
 # khaalidrafi/admincraft (Owner orders 2026-10-20 -> 2026-10-21).
 #
 # Structure per run: test (landing gate) -> probe (seat liveness, never
-# gates) -> turn (TG ingest owner-locked -> session restore -> ONE agent
-# segment in the preinstalled harness container -> session scrub+upload ->
-# branch push + rotation advance) -> finalize (auto-merge behind the gate
-# -> Jev judgment -> stall accounting -> SELF-DISPATCH while the objective
+# gates) -> turn (TG ingest owner-locked -> session restore -> REVIEW phase
+# (SEGREGATION LAW: this seat reviews the previous run's pending branch,
+# read-only) -> ONE author segment in the preinstalled harness container ->
+# session scrub+upload -> branch push + rotation advance; the author branch
+# is NEVER merged by its own run) -> finalize (MERGER: resolves the pending
+# branch's review verdict and merges ONLY on a different member's APPROVED
+# verdict, behind the landing gate -> review record + next-pending write ->
+# Jev judgment -> stall accounting -> SELF-DISPATCH while the objective
 # is open and KILL-SWITCH is OFF). The team decides how many runs the
 # objective takes; the chain stops ONLY on kill switch, objective
 # complete, or tests red; a no-progress streak shifts to backoff, never to
@@ -187,6 +191,10 @@ jobs:
       tg_chat: ${{ steps.ingest.outputs.chat_id }}   # owner-locked chat id (secret TELEGRAM_OWNER_ID)
       base_sha: ${{ steps.control.outputs.base_sha }} # ai/main before this segment — the Discord chat-mirror diff base
       seat: ${{ steps.control.outputs.seat }}        # which seat ran — surfaced in the Telegram verdict
+      pending_branch: ${{ steps.seg.outputs.pending_branch }}   # SEGREGATION LAW: branch awaiting THIS run's review
+      pending_author: ${{ steps.seg.outputs.pending_author }}   # who authored it (merger refuses same-member reviews)
+      pending_sha: ${{ steps.seg.outputs.pending_sha }}
+      review_verdict: ${{ steps.seg.outputs.review_verdict }}   # APPROVED | REJECTED | empty (review-missing)
     runs-on: ubuntu-latest
     timeout-minutes: 35
     continue-on-error: true
@@ -556,6 +564,43 @@ jobs:
           BRANCH="ai/turn-$(date -u +%Y%m%d-%H%M)"
           git checkout -b "$BRANCH"
           echo "TURN_BRANCH=$BRANCH" >> "$GITHUB_ENV"
+          # ----------------------------------------------------------------
+          # SEGREGATION LAW (Owner order 2026-10-22 18:14Z #admincraft:
+          # "Separate author, reviewer and merger roles") — three distinct
+          # actors per delivery: AUTHOR = this seat's own segment;
+          # REVIEWER = the NEXT seat in the rotation (this run, read-only
+          # review call on the previous run's pending branch — never the
+          # author); MERGER = the finalize gate, which merges ONLY on the
+          # reviewer's APPROVED verdict and refuses same-member reviews.
+          # What the previous finalize left pending:
+          PENDING_LINE=$(grep -oP '^\#\+PENDING-REVIEW:\s*\K.*' agent-team/TEAM-CONTROL.org | head -1 | xargs || true)
+          PENDING_BRANCH=$(printf '%s' "$PENDING_LINE" | sed -n 's/^branch=\([^ |]*\).*/\1/p')
+          PENDING_AUTHOR=$(printf '%s' "$PENDING_LINE" | sed -n 's/.*author=\([^ |]*\).*/\1/p')
+          PENDING_SHA=$(printf '%s' "$PENDING_LINE" | sed -n 's/.*sha=\([0-9a-f]\{7,40\}\).*/\1/p')
+          if [ -n "$PENDING_BRANCH" ] && git ls-remote --exit-code --heads origin "$PENDING_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$PENDING_BRANCH" >/dev/null 2>&1 || true
+            echo "REVIEW DUTY: ${PENDING_BRANCH} (author: ${PENDING_AUTHOR:-unknown}) — this seat reviews before authoring"
+          else
+            PENDING_BRANCH=""; PENDING_AUTHOR=""; PENDING_SHA=""
+          fi
+          # Reviewer brief (host-built, passed into the container; the
+          # review is a SEPARATE lane call from the author's segment —
+          # different duty, different brief, read-only).
+          REVIEW_BRIEF=""
+          if [ -n "$PENDING_BRANCH" ]; then
+            REVIEW_BRIEF="REVIEW DUTY (SEGREGATION LAW, Owner 2026-10-22 18:14Z: author, reviewer and merger are SEPARATE roles — no seat merges its own work).
+          You are the REVIEWER, seat ${SEAT}. Pending branch: ${PENDING_BRANCH} (authored by ${PENDING_AUTHOR:-unknown}, head ${PENDING_SHA:-unknown}).
+          If the author is the SAME member as you, your verdict is REJECTED (reason: reviewer-equals-author).
+          Do this READ-ONLY, in order:
+          1. git fetch origin ${PENDING_BRANCH} ; git log --oneline origin/ai/main..origin/${PENDING_BRANCH}
+          2. git diff origin/ai/main...origin/${PENDING_BRANCH} — read EVERY hunk.
+          3. Landing gate: python -m pytest plugin/tests -p no:cacheprovider -q ; app vitest run ; demo-backend/manage.py check ; demo-backend/manage.py makemigrations --check — report each rc.
+          4. Law check: no secrets in the diff (SECRET LAW); no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes); the board flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries legal format.
+          5. Do NOT modify or commit anything — your verdict text is your whole deliverable.
+          6. The LAST line of your answer MUST be exactly one of:
+          VERDICT: APPROVED
+          VERDICT: REJECTED — <one line of reasons>"
+          fi
 
           BRIEF="You are the on-turn member of the admincraft Agent Team, seat ${SEAT}.
           TEAM OBJECTIVE (from agent-team/TEAM-CONTROL.org): ${OBJECTIVE}
@@ -649,9 +694,12 @@ jobs:
              goes to the chat as '${SEAT} -> @lead :report:'; the Lead
              verifies against the objective and only the Lead sets
              OBJECTIVE-STATE: COMPLETE.
-          10. Do NOT push to ai/main; the CI self-chain auto-merges your
-              branch right after the segment (your chat posts must
-              propagate).
+          10. Do NOT push to ai/main; SEGREGATION LAW (Owner 2026-10-22
+              18:14Z: author, reviewer and merger are SEPARATE roles) —
+              your branch is NEVER merged by your own run. The NEXT seat
+              reviews it (verdict recorded in agent-team/REVIEW-LOG.org)
+              and the CI merger merges it ONLY on that reviewer's APPROVED
+              verdict. Your chat posts propagate with the branch merge.
           11. LEAD-OWNED FILES — never edit, only read and cite:
               .github/workflows/*, agent-team/TEAM-CONTROL.org,
               .gitattributes, .github/scripts/*. Verify plumbing facts with
@@ -700,6 +748,48 @@ jobs:
           fi
           # The plugin is the code under test: link it fast (deps baked).
           python -m pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true
+          # -------------------------------------------------------------
+          # REVIEW PHASE (SEGREGATION LAW, Owner 18:14Z): this seat first
+          # acts as the REVIEWER for the previous run's pending branch —
+          # a SEPARATE lane call from the author segment below. Read-only:
+          # the verdict token lands in /workspace/.turn-review.txt and the
+          # HOST extracts it; the merger (finalize) acts only on APPROVED
+          # from a reviewer that is not the author.
+          : > /workspace/.turn-review.txt 2>/dev/null || true
+          if [ -n "$PENDING_BRANCH" ]; then
+            case "$SEAT" in
+              platform-engineer)
+                env HOME=/usr/local/lib/qoder-home \
+                  qoder -p "$REVIEW_BRIEF" --output-format json \
+                  --permission-mode bypassPermissions --max-turns 60 \
+                  > /workspace/.turn-review.txt 2>&1 || true ;;
+              quality-assurance-engineer)
+                env HOME=/usr/local/lib/qoder-home \
+                  qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \
+                  --permission-mode bypassPermissions --max-turns 60 \
+                  > /workspace/.turn-review.txt 2>&1 || true ;;
+              software-engineer)
+                env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
+                  codebuddy -p "$REVIEW_BRIEF" -y --permission-mode bypassPermissions \
+                  --max-turns 60 --model deepseek-v4.1-flash \
+                  > /workspace/.turn-review.txt 2>&1 || true ;;
+              visiting-engineer)
+                env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
+                  codebuddy -p "$REVIEW_BRIEF" -y --permission-mode bypassPermissions \
+                  --max-turns 60 --model glm-5.3 \
+                  > /workspace/.turn-review.txt 2>&1 || true ;;
+              relief-engineer)
+                env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
+                  OPENAI_API_KEY="$OPENROUTER_API_KEY" \
+                  OPENAI_HOST="https://openrouter.ai" \
+                  OPENAI_BASE_PATH="/api/v1/chat/completions" \
+                  goose run --no-session -t "$REVIEW_BRIEF" \
+                  > /workspace/.turn-review.txt 2>&1 || true ;;
+            esac
+            echo "REVIEW: reviewer call done for ${PENDING_BRANCH}"
+          else
+            echo "REVIEW: no pending branch this run"
+          fi
           case "$SEAT" in
             platform-engineer)
               # qwen3.8-flash@qoder — the body PROVEN on this team's CI.
@@ -895,6 +985,8 @@ jobs:
             -v "$PWD":/workspace -w /workspace \
             -v "$PWD/.sessions-restore":/sessions-restore:ro \
             -e SEAT="${SEAT}" -e BRIEF="${BRIEF}" \
+            -e REVIEW_BRIEF="${REVIEW_BRIEF}" \
+            -e PENDING_BRANCH="${PENDING_BRANCH}" -e PENDING_AUTHOR="${PENDING_AUTHOR}" \
             -e QODER_PERSONAL_ACCESS_TOKEN -e ZAI_API_KEY -e OPENROUTER_API_KEY \
             -e GROQ_API_KEY -e CODEBUDDY_AUTH_TOKEN \
             agent-harness:local bash /workspace/.turn-inside.sh \
@@ -915,6 +1007,16 @@ jobs:
           sed -n '1,80p' /tmp/.turn-out.txt || true
 
           TURN_RESULT=$(sed 's/^TURN_RESULT=//' "$PWD/.turn-result.txt" | tail -1)
+          # SEGREGATION LAW bookkeeping outputs: what this run reviewed and
+          # what it decided (the merger in finalize acts on these).
+          REVIEW_VERDICT=$(grep -hoE 'VERDICT:[[:space:]]*(APPROVED|REJECTED)' "$PWD/.turn-review.txt" 2>/dev/null | tail -1 | sed 's/.*VERDICT:[[:space:]]*//' | awk '{print $1}')
+          REVIEW_EVID=$(grep -hE 'VERDICT:' "$PWD/.turn-review.txt" 2>/dev/null | tail -1 | tr -d '\r\n"%' | cut -c1-200)
+          echo "review verdict for ${PENDING_BRANCH:-none}: ${REVIEW_VERDICT:-none}"
+          echo "pending_branch=${PENDING_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "pending_author=${PENDING_AUTHOR}" >> "$GITHUB_OUTPUT"
+          echo "pending_sha=${PENDING_SHA}" >> "$GITHUB_OUTPUT"
+          echo "review_verdict=${REVIEW_VERDICT}" >> "$GITHUB_OUTPUT"
+          echo "review_evid=${REVIEW_EVID}" >> "$GITHUB_OUTPUT"
           # HOST-SIDE COMMIT (run 39488529938: the seat EDITED + VERIFIED but
           # its sandbox denied git/pytest — the edits died in the container,
           # branch pushed empty, work lost). The host commits the workspace
@@ -1032,13 +1134,19 @@ jobs:
 
   # SELF-CHAIN — the last link of every turn (Owner order 2026-10-20 #hq
   # 14:52: unlimited runs, agents decide how many runs an objective takes).
-  # After every segment:
-  #   1. AUTO-MERGE the seat's work branch into ai/main behind the landing
-  #      gate (re-merge race-proof vs moved main; branch deleted ONLY after
-  #      a verified landing). Team chat and board notes propagate
-  #      seat-to-seat with NO Lead in the loop (TEAM-CHAT.org is
-  #      union-merged via .gitattributes, so concurrent appends never
-  #      conflict). Red work never lands (merge undone, branch stays).
+  # After every segment (SEGREGATION LAW — Owner 2026-10-22 18:14Z:
+  # "Separate author, reviewer and merger roles"; author ≠ reviewer ≠
+  # merger):
+  #   1. MERGER: resolve the pending branch's review verdict (reviewer =
+  #      the NEXT seat's read-only review call in the turn job; same
+  #      member as the author = refused) and merge into ai/main ONLY on
+  #      APPROVED, behind the landing gate (re-merge race-proof vs moved
+  #      main; branch deleted ONLY after a verified landing). The seat's
+  #      OWN author branch is never merged by its own run — it becomes
+  #      the next #+PENDING-REVIEW. Team chat and board notes propagate
+  #      with the branch merge (TEAM-CHAT.org is union-merged via
+  #      .gitattributes). Red work never lands (merge undone, branch
+  #      stays). Review records: agent-team/REVIEW-LOG.org.
   #   2. Jev judgment (health-gated): weighs the stall state for the
   #      dispatch decision; gateway down -> local rules decide.
   #   3. Advance #+STALL-COUNT: +1 on a no-progress segment (dead seat,
@@ -1060,43 +1168,56 @@ jobs:
           fetch-depth: 0
           ref: ai/main
 
-      - name: Auto-merge the turn branch (peer mail propagation)
+      - name: Merger — resolve the pending branch's review verdict (SEGREGATION LAW)
         id: merge
         run: |
           git config user.name "agent-team-ci"
           git config user.email "agent-team-ci@users.noreply.github.com"
           git remote set-url --push origin \
             "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
-          BRANCH="${{ needs.turn.outputs.turn_branch }}"
-          RESULT="${{ needs.turn.outputs.seg_result }}"
-          OUTCOME="no-branch"
-          if [ -n "$BRANCH" ] && git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            git fetch origin "$BRANCH"
-            # EMPTY-SEGMENT LAW (Lead fix 2026-10-22, run 39761029125 T3
-            # evidence: the lane exited 0 but committed NOTHING — merge
-            # said "Already up to date" rc 0, was counted OUTCOME=merged
-            # + PROGRESS=yes, stall stayed 0, and the husk branch was
-            # deleted as if landed). Count commits ahead of ai/main:
-            # zero => empty segment, never "merged".
-            AHEAD=$(git rev-list --count "origin/ai/main..origin/$BRANCH" 2>/dev/null || echo 0)
+          # SEGREGATION LAW (Owner 18:14Z): the merger NEVER merges this
+          # run's own author branch — it merges the PREVIOUS run's pending
+          # branch ONLY on the reviewer's APPROVED verdict, and refuses a
+          # reviewer who is the author. Author branch -> next pending.
+          AUTHOR_BRANCH="${{ needs.turn.outputs.turn_branch }}"
+          PENDING_BRANCH="${{ needs.turn.outputs.pending_branch }}"
+          PENDING_AUTHOR="${{ needs.turn.outputs.pending_author }}"
+          VERDICT="${{ needs.turn.outputs.review_verdict }}"
+          REVIEWER_SEAT="${{ needs.turn.outputs.seat }}"
+          REVIEWER_ID=$(printf '%s' "$REVIEWER_SEAT" | cut -d' ' -f1)
+          OUTCOME="no-pending"
+          MERGE_TARGET=""
+          if [ -n "$PENDING_BRANCH" ] && git ls-remote --exit-code --heads origin "$PENDING_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$PENDING_BRANCH" || true
+            # EMPTY-SEGMENT LAW (unchanged): zero commits beyond main =
+            # husk, delete, never merge.
+            AHEAD=$(git rev-list --count "origin/ai/main..origin/$PENDING_BRANCH" 2>/dev/null || echo 0)
             if [ "${AHEAD:-0}" -eq 0 ]; then
               OUTCOME="empty-segment"
-              echo "MERGE: empty segment — branch has no commits beyond ai/main; deleting the husk"
-              git push origin --delete "$BRANCH" || true
-            elif git merge --no-ff --no-edit "origin/$BRANCH"; then
-              OUTCOME="merged"
+              echo "MERGER: pending branch is an empty husk — deleting"
+              git push origin --delete "$PENDING_BRANCH" || true
+            elif [ -z "$VERDICT" ]; then
+              OUTCOME="review-missing"
+              echo "MERGER: no verdict captured — branch stays pending for re-review"
+            elif [ "$VERDICT" != "APPROVED" ]; then
+              OUTCOME="rejected"
+              echo "MERGER: reviewer REJECTED the branch — it does not land"
+            elif [ "${PENDING_AUTHOR:-x}" = "$REVIEWER_ID" ]; then
+              OUTCOME="refused-same-member"
+              echo "MERGER: reviewer equals author (${REVIEWER_ID}) — refuse by law"
             else
-              git merge --abort || true
-              OUTCOME="conflict-left-for-lead"
+              OUTCOME="approved"
+              MERGE_TARGET="$PENDING_BRANCH"
             fi
           fi
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "branch=${MERGE_TARGET}" >> "$GITHUB_OUTPUT"
+          echo "author_branch=${AUTHOR_BRANCH}" >> "$GITHUB_OUTPUT"
           echo "outcome=$OUTCOME" >> "$GITHUB_OUTPUT"
-          echo "MERGE: $OUTCOME (branch: ${BRANCH:-none}, segment result: ${RESULT:-none})"
+          echo "MERGER: pending=${PENDING_BRANCH:-none} verdict=${VERDICT:-none} reviewer=${REVIEWER_ID:-none} -> $OUTCOME"
 
-      - name: Landing gate, land the merge (race-proof vs moved main)
+      - name: Landing gate, land the approved merge (race-proof vs moved main)
         id: gate
-        if: steps.merge.outputs.outcome == 'merged'
+        if: steps.merge.outputs.outcome == 'approved'
         run: |
           pip install -r demo-backend/requirements.txt pytest
           pip install -e plugin
@@ -1138,6 +1259,77 @@ jobs:
             *)
               echo "gate=conflict-branch-kept" >> "$GITHUB_OUTPUT" ;;
           esac
+
+      - name: SEGREGATION bookkeeping — record review, set next pending (merger law)
+        id: segregate
+        if: always()
+        run: |
+          git config user.name "agent-team-ci"
+          git config user.email "agent-team-ci@users.noreply.github.com"
+          git remote set-url --push origin \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          CTL=agent-team/TEAM-CONTROL.org
+          RLOG=agent-team/REVIEW-LOG.org
+          OUTCOME="${{ steps.merge.outputs.outcome }}"
+          GATE="${{ steps.gate.outputs.gate }}"
+          PENDING_BRANCH="${{ needs.turn.outputs.pending_branch }}"
+          PENDING_AUTHOR="${{ needs.turn.outputs.pending_author }}"
+          PENDING_SHA="${{ needs.turn.outputs.pending_sha }}"
+          VERDICT="${{ needs.turn.outputs.review_verdict }}"
+          SEAT="${{ needs.turn.outputs.seat }}"
+          AUTHOR_BRANCH="${{ steps.merge.outputs.author_branch }}"
+          AUTHOR_ID=$(printf '%s' "$SEAT" | cut -d' ' -f1)
+          OUT="$OUTCOME"
+          [ "$OUTCOME" = "approved" ] && OUT="approved+gate-${GATE:-n/a}"
+          # Which branch is pending NEXT? Author branch takes the slot
+          # unless it is empty OR the old pending is still unresolved
+          # (review-missing / refused / gate-red keeps the old slot so the
+          # SAME branch gets re-reviewed — overflow branches are Lead-
+          # merged on audit, single-slot by design tonight).
+          NEWPENDING=""
+          if [ -n "$AUTHOR_BRANCH" ] && git ls-remote --exit-code --heads origin "$AUTHOR_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$AUTHOR_BRANCH" >/dev/null 2>&1 || true
+            AHEAD=$(git rev-list --count "origin/ai/main..origin/$AUTHOR_BRANCH" 2>/dev/null || echo 0)
+            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" = "approved" ] && [ "$GATE" = "green" ]; then
+              SHA=$(git rev-parse "origin/$AUTHOR_BRANCH")
+              NEWPENDING="branch=${AUTHOR_BRANCH} | author=${AUTHOR_ID} | sha=${SHA}"
+            fi
+          fi
+          if [ "$OUTCOME" = "approved" ] && [ "$GATE" != "green" ]; then
+            NEWPENDING="branch=${PENDING_BRANCH} | author=${PENDING_AUTHOR} | sha=${PENDING_SHA}"
+          fi
+          if [ "$OUTCOME" = "review-missing" ] || [ "$OUTCOME" = "refused-same-member" ]; then
+            NEWPENDING="branch=${PENDING_BRANCH} | author=${PENDING_AUTHOR} | sha=${PENDING_SHA}"
+          fi
+          # Race-proof control write (same fetch-reset-reapply flow as the
+          # stall commit) — record + pending line ride ONE ci-review commit.
+          for i in 1 2 3; do
+            git fetch origin ai/main
+            git reset --hard origin/ai/main
+            if [ -n "$PENDING_BRANCH" ]; then
+              WHEN=$(date -u '+%Y-%m-%d %a %H:%M UTC')
+              {
+                echo ""
+                echo "* REVIEW ${PENDING_BRANCH} :${OUT}:"
+                echo ":PROPERTIES:"
+                echo ":AUTHOR: ${PENDING_AUTHOR:-unknown}"
+                echo ":REVIEWER: ${AUTHOR_ID:-unknown}"
+                echo ":VERDICT: ${VERDICT:-none}"
+                echo ":OUTCOME: ${OUT}"
+                echo ":WHEN: [${WHEN}]"
+                echo ":END:"
+                echo "  Merger outcome: ${OUT} (reviewer=${AUTHOR_ID:-unknown}, verdict=${VERDICT:-none})."
+              } >> "$RLOG"
+            fi
+            sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"
+            git add "$CTL" "$RLOG"
+            if git commit -m "ci-review: ${OUT} (pending ${PENDING_BRANCH:-none}); next pending: ${NEWPENDING:-none}" 2>/dev/null; then
+              if git push origin "ai/main"; then break; fi
+            else
+              break   # nothing changed — no pending and no record
+            fi
+            sleep 15
+          done
 
       - name: Resolve gateway (override -> deployment -> local -> boot — Owner order 2026-10-22)
         if: always()
@@ -1289,8 +1481,18 @@ jobs:
           OUTCOME="${{ steps.merge.outputs.outcome }}"
           GATE="${{ steps.gate.outputs.gate }}"
           STALL=$(grep -oP '^\#\+STALL-COUNT:\s*\K\d+' "$CTL" | head -1 || true); STALL=${STALL:-0}
+          # PROGRESS under SEGREGATION LAW (Owner 18:14Z): a green approved
+          # merge is progress; so is a REAL authored branch (non-empty,
+          # awaiting next-run review — the merge lands one run later).
+          AUTHOR_AHEAD=0
+          AUTHOR_BRANCH="${{ steps.merge.outputs.author_branch }}"
+          if [ -n "$AUTHOR_BRANCH" ] && git ls-remote --exit-code --heads origin "$AUTHOR_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$AUTHOR_BRANCH" >/dev/null 2>&1 || true
+            AUTHOR_AHEAD=$(git rev-list --count "origin/ai/main..origin/$AUTHOR_BRANCH" 2>/dev/null || echo 0)
+          fi
           PROGRESS=no
-          if [ "$OUTCOME" = "merged" ] && [ "$GATE" = "green" ]; then PROGRESS=yes; fi
+          if [ "$OUTCOME" = "approved" ] && [ "$GATE" = "green" ]; then PROGRESS=yes; fi
+          if [ "${AUTHOR_AHEAD:-0}" -gt 0 ]; then PROGRESS=yes; fi
           case "$RESULT" in *BLOCKED*) PROGRESS=no ;; esac
           if [ "$PROGRESS" = "yes" ]; then NEW=0; else NEW=$((STALL+1)); fi
           if [ "$NEW" != "$STALL" ]; then
