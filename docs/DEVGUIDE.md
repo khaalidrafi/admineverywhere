@@ -176,8 +176,9 @@ python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = c
 
 # the RELEASE story as one command — the four carriers + the Cargo.lock entry vs a
 # HEAD tag (or --expect), doc path citations that must exist AND every cited line
-# that must land inside its file, release inputs present,
-# and no PEP 604 annotation in any harness (see NINTH + TENTH harness laws)
+# that must land inside its file, the suite counts these docs publish as instructions
+# graded against the landing gate's own pins, release inputs present,
+# and no PEP 604 annotation in any harness (see NINTH + TENTH + ELEVENTH harness laws)
 python3 scripts/release_readiness.py        # 0 = coherent, 1 = a leg is red, 2 = cannot run
 
 # rebrand the whole client in one command (build-time layer)
@@ -1047,6 +1048,57 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   harness family, the next file to measure is the one that runs the family — and the
   population to pin there is BOTH the numbers its legs print and the roster of legs
   that prints them.
+  THE LAST LINK WAS THE COPY A READER FOLLOWS — WHAT THE DOCS *SAY* THE SUITES HOLD.
+  `population()` grades the runner's summary against a literal, and that literal's own
+  comment says the numbers "are also quoted in AGENTS.md and the CI header". Nothing
+  compared the quotes to the literals. Measured on this tree before the fix: the
+  Commands line a reader copies was retyped to a different count and `release_readiness`
+  answered GREEN, rc 0 — the pin, the runner and every narrative record stayed
+  consistent with each other while the INSTRUCTION had moved. That is the failure this
+  whole law is about, arriving from the doc side: a seat that adds tests and bumps the
+  pin leaves a repo telling the next reader a suite size no gate owes, and a seat that
+  edits the doc without the pin has re-numbered every report written from it.
+  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:686`) grades the docs' LIVE
+  count claims against the pins, read from the gate's own source rather than re-spelled
+  here — `gate_pins()` (`scripts/release_readiness.py:650`) parses each literal AND imports
+  the module, and the two views must agree, because a pin that has become a computed
+  value is a number a doc cannot honestly quote. Six doors, in two verdict words:
+  a doc that states a different count than the pin is RED naming doc:line, the number,
+  the number owed and the direction (doc stale / doc ahead); a live row whose number was
+  DELETED is RED (the claim left the compare, which is coverage lost, exactly as in the
+  twins); a count claim inside a graded section that the table does not read is RED
+  (an instruction nobody grades is the drift this leg exists for); and an anchor that
+  matches two lines, a section header that is duplicated, a table shorter than
+  `EXPECTED_DOC_CLAIMS` (`scripts/release_readiness.py:173`), a kind that stopped being
+  covered or a pin whose two views disagree is `CANNOT RUN` — the harness no longer
+  knows what it is reading, so it has no verdict about the tree.
+  WHY A CLOSED TABLE AND NOT A SCAN: "is this number a live instruction or a historical
+  record?" cannot be answered by regex. The two docs hold a dozen honest past-tense
+  counts (a state log's `75 pytest / 58 vitest`, a control record's `printed 297, owes
+  299`, the dated `as measured` lines) and a heuristic that tried to sort them would
+  fire on all of them — the TENTH law's ruling applies: a leg that fires on a correct
+  sentence is worse than no leg. So the domain is STRUCTURAL, not semantic: everything
+  inside `## Layout` and `## Commands` is an instruction and must be in the table
+  (`DOC_LIVE_SECTIONS`, `scripts/release_readiness.py:177`), everything outside them is a
+  record and is out of domain. That is also why the Lead-owned CI header is NOT here —
+  `.github/workflows/build-all.yml:4` still advertises the pre-gate counts and is
+  cited, not edited.
+  CONTROLS, 12, each file restored byte-identical (md5 verified): honest run rc 0 over 8
+  claims; doc retyped low → RED `says 300 vitest, the gate owes 416`; doc retyped high →
+  RED `the doc is ahead`; the number deleted but the sentence kept → RED `states no
+  vitest count`; a new `# 500 vitest` line added inside `## Commands` → RED naming the
+  ungraded claim; the Layout row duplicated → CANNOT RUN `matched 2 line(s)`; a row
+  deleted from the table → CANNOT RUN `lists 7 live claim(s), pins 8`; the pin rewritten
+  as `250 + 49` → CANNOT RUN `does not assign EXPECTED_PYTEST as a plain integer
+  literal`; a second assignment added below the literal → CANNOT RUN `reads 416 from the
+  source text but 417 from the imported module`; the pin bumped alone → RED on the four
+  doc rows, which is the proof the harness reads the LIVE pin and not a copy of it; both
+  `vitest` rows retyped to `pytest` → CANNOT RUN `grades pytest but not vitest`; a second
+  `## Commands` header → CANNOT RUN.
+  SEAT RULE, one doc wider: a pin is not the end of the chain. Ask who else QUOTES the
+  pinned number — the file a reader copies from is part of the contract, and the cheap
+  way to keep it honest is a closed table of its live claims plus a domain defined by
+  section, not by guessing which sentences are history.
 
 - **TWELFTH harness law — a verdict leg that reads the TRANSPORT, not the VERDICT, is
   the EIGHTH law running backwards.** EIGHTH says `exit 0` alone never proved anything;
@@ -1226,7 +1278,11 @@ scripts/release_readiness.py` diffs the four carriers + the Cargo.lock entry,
 compares them against a `vX.Y.Z` tag pointing at HEAD (or `--expect X.Y.Z`),
 and refuses any doc citation of a path that does not exist AND any `file:line`
 citation whose number is past the end of that file — a path check cannot see the
-second half of the claim. A bare hooks.py:50 citation is never guessed at, so
+second half of the claim. It also grades the suite counts these docs publish as
+INSTRUCTIONS: everything inside `## Layout` and `## Commands` must equal the pin
+`scripts/landing_gate.py` enforces, read from that file's source and its imported value,
+while counts elsewhere in the docs stay out of domain — they are records of a measured
+moment, not promises to a reader (ELEVENTH law, the last link). A bare hooks.py:50 citation is never guessed at, so
 write the directory or the citation stays unverifiable (only the Lead-owned
 workflow still
 carries that stale citation, so it is cited, not edited).
