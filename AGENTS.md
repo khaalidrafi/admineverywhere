@@ -203,7 +203,7 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 # turn (every run id resolving to a real commit), and every parked board item is
 # still a headline — an order cannot be restored over a deleted item.
 python3 scripts/chain_test_check.py            # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/chain_test_check.py --selftest # 8 controls: every leg proved able to fail
+python3 scripts/chain_test_check.py --selftest # 10 controls: every leg proved able to fail
 
 # the chain's SESSION collect->restore loop (Owner order 2026-10-21 18:27Z) as a
 # check, read-only against the Lead-owned workflow: every store the collect tar
