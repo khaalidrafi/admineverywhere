@@ -205,6 +205,13 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 python3 scripts/chain_test_check.py            # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chain_test_check.py --selftest # 8 controls: every leg proved able to fail
 
+# the chain's SESSION collect->restore loop (Owner order 2026-10-21 18:27Z) as a
+# check, read-only against the Lead-owned workflow: every store the collect tar
+# takes is restored to its OWN path, no lane opts out with --no-session, the
+# goose session store is covered by the collect list, the restore dir is mounted
+python3 scripts/chain_session_check.py        # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/chain_session_check.py --selftest # 8 controls: every leg proved able to fail
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
