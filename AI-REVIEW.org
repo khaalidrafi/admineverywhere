@@ -84,3 +84,13 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   the model + docs), loose object_type/object_id targeting (no GFK) as the
   deliberate simplicity tradeoff. Registry FE contract:
   docs/custom-actions.md; tests: plugin/tests/test_audit_actions.py (+24).
+
+- [ ] REVIEW: harness fixes 2026-10-22 (TEST-CHAIN T3 evidence, run
+  39761029125) — (1) auto-merge empty-segment law: rev-list count
+  ahead of ai/main; zero => OUTCOME=empty-segment, no gate, stall
+  increments, husk branch deleted (was: "Already up to date" counted
+  as merged+progress, stall stayed 0); (2) `|| true` on the three
+  chat-diff grep pipelines (TG ADDED, TG SEAT, Discord ADDED) — grep
+  rc 1 on an empty diff killed the step silently under set -e +
+  pipefail. Verify by dispatching a no-op segment and reading the
+  finalize summary lines (merge: empty-segment, stall: +1).
