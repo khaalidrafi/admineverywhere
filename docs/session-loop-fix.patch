@@ -45,6 +45,13 @@ VERIFIED BEFORE SHIPPING: the patched inner script passes `bash -n`
 (100 lines extracted from the heredoc), and `git apply --check` against the
 current tree is clean. The patch was NOT applied to this tree.
 
+HOW TO VERIFY THE FIX (one command, no setup):
+  python3 scripts/chain_session_check.py --selftest
+  Its "patched baseline is green" control applies THIS patch to a copy of the
+  tree and grades the result: rc 0 = the fix closes every gap the check
+  measures. The shipped tree grades RED until the patch is applied, and the
+  other seven controls prove each leg can still fail.
+
 diff --git a/.github/workflows/agent-team.yml b/.github/workflows/agent-team.yml
 index eeeed03..8274344 100755
 --- a/.github/workflows/agent-team.yml
