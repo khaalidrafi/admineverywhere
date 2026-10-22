@@ -51,7 +51,12 @@ QA_MEMBER="deepseek-v4.1-flash@qoder"
 VISITING_MEMBER="glm-5.3@codebuddy"
 REVIEWER_ROLE=""; REVIEWER_MEMBER=""; REVIEWER_SEAT=""
 if [ -n "$PENDING_BRANCH" ]; then
-  if [ "${PENDING_AUTHOR:-}" = "$QA_MEMBER" ]; then
+  # AUTHOR-ID FORMAT FIX (night-watch 2026-10-22 ~20:15Z, measured in
+  # REVIEW-LOG runs 19:46Z + 20:10Z): PENDING_AUTHOR carries the SEAT KEY
+  # (e.g. quality-assurance-engineer), not the member id — comparing it
+  # to $QA_MEMBER never matched, so QA reviewed its own branch and the
+  # brief forced reviewer-equals-author REJECTED twice. Match BOTH forms.
+  if [ "${PENDING_AUTHOR:-}" = "quality-assurance-engineer" ] || [ "${PENDING_AUTHOR:-}" = "$QA_MEMBER" ]; then
     REVIEWER_ROLE="Visiting Senior Engineer"; REVIEWER_MEMBER="$VISITING_MEMBER"; REVIEWER_SEAT="visiting-engineer"
   else
     REVIEWER_ROLE="QA Engineer"; REVIEWER_MEMBER="$QA_MEMBER"; REVIEWER_SEAT="quality-assurance-engineer"
