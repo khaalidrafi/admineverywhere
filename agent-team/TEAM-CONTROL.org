@@ -10,7 +10,7 @@
 #+STALL-COUNT: 2
 #+PAUSE-AFTER-TODO: ON
 #+CHAIN-PAUSE: OFF
-#+PENDING-REVIEW: 
+#+PENDING-REVIEW: branch=ai/turn-20261022-1904 | author=quality-assurance-engineer | sha=ad1192936563dec81bf4123b425f1fa5700a9122
 
 * Notes
 
