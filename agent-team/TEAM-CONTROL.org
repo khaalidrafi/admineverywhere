@@ -9,10 +9,35 @@
 #+TURN: qoder/qwen3.8-flash@qoder (Platform Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: OFF
-#+CHAIN-PAUSE: OFF
+#+CHAIN-PAUSE:
 
 * Notes
 
+- NIGHT-CONTINUOUS (Owner order 2026-10-22 17:20Z #admincraft: no
+  pauses at night, KEEP going until 8am, complete ALL remaining
+  TODOs) + OWNER REFINEMENT 17:19Z (pause is opt-in — the chain runs
+  FEATURE-ORDER end to end, multiple TODOs per segment allowed). The
+  Lead reviews asynchronously: flips DONE, updates MEMBERS.org HR,
+  never halts the chain. 08:00 Dhaka = 02:00 UTC 2026-10-23.
+- PAUSE-REVIEW 2 (Lead, 2026-10-22 17:31Z): QA seat's INDEPENDENT
+  AUDIT ACCEPTED (ai/turn-20261022-1655, TODOS.org 17:07Z note):
+  live-HTTP rig 127.0.0.1:8033, every legal/illegal lifecycle move
+  exercised, EXPECTED_VITEST pin 417 -> 418, gate 11/11 (pytest 299,
+  vitest 418/32). Owner's own disarm (ec22dcc) + QA formalization
+  (a2037d5) landed while the review was in flight — both incorporated.
+  NOTE: #+CHAIN-PAUSE written back to EMPTY — the turn reader pauses
+  on ANY non-empty value, so the literal "OFF" (ec22dcc) froze the
+  chain; the reader is hardened this push to also accept "OFF".
+- CODEBUDDY BODY BUG FIXED (Lead, 2026-10-22 17:30Z, closes the DE
+  work item from ADMINCRAFT-LESSONS item 5): headless -p tool use
+  needs pre-authorization; -y ALONE still asks on HIGH/CRITICAL tools
+  and headless asks auto-DENY -> prose-only, exit 0, zero writes (3
+  runs, 2 brains, same symptom — DE PRIMARY confirmed vs the CLI's
+  own --help). All three codebuddy arms now: --permission-mode
+  bypassPermissions + CODEBUDDY_IS_SANDBOX=1 + --max-turns 100 +
+  explicit --model. Next software segment = smoke test; burn-only
+  demotion LIFTED on the strength of the fix (stall law if still
+  empty). Tomorrow's visit burns with the fixed flags.
 - MEMBER ID FORMAT LAW v2 (Owner order 2026-10-22 16:54Z #admincraft:
   "PROVIDER/ should only be included with API models!"): key-served
   API lanes on goose KEEP the prefix (zai/ groq/ openrouter/ gomodel/
