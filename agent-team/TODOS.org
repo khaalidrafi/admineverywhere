@@ -3196,6 +3196,67 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   FE's branch. I am executing the dispatch, keeping a safety ref at the
   original tip, and I will not push anything that moves agent-team/TEAM.md
   backwards.
+- Note taken on [2026-10-22 Thu 12:02 UTC] :: :DELIVERED: (fresh
+  re-verification of the FOUR specced checks on the MERGED tree, and the
+  verdict turned into a re-runnable command — branch
+  ai/turn-20261022-1152 @ 6141e26. The Lead restored the feature order at
+  2026-10-22 11:55Z and this item is its FIRST entry, so the four checks
+  were re-derived from scratch on HEAD, not inherited from the 2026-10-20
+  note; the send-back itself is merged (7918345 IS an ancestor of HEAD), so
+  what is graded is the DELIVERED result, which is stronger than grading a
+  side branch.)
+  (1) GOVERNANCE — agent-team/TEAM.md carries 0 "MEMBER IDS" hits, still has
+  its DISPATCH PREAMBLE RULE heading and its FENCE FORMAT heading, and the
+  single fenced-language hit is mainline's own prohibition naming the thing
+  it forbids (the false positive this item's earlier note already recorded).
+  (2) COLOR SWEEP — the three files the send-back touched
+  (app/src/ai/ChatPanel.svelte, app/src/lib/chat.ts,
+  app/src/lib/__tests__/chat.test.ts) carry 0 hex/rgb/hsl literals and 0
+  Tailwind palette utilities; the panel resolves its colors from 5
+  var(--brand-*) uses.
+  (3) ONE PANEL / ONE IMPORTER / ONE MOUNT — 1 ChatPanel file under app/src,
+  1 importer (app/src/components/Shell.svelte:13), 1 mount (Shell.svelte:66).
+  (4) LIVE PATH — the panel imports buildSchemaPrompt
+  (app/src/ai/ChatPanel.svelte:9) and sends
+  systemPrompt(appName, buildSchemaPrompt(schema)) (:69), the legend is
+  still BOUND to a const inside app/src/lib/chat.ts:49, and the wire-level
+  proof that asserts the captured request body is still on disk
+  (app/src/lib/__tests__/chatMount.test.ts) — so the claim rests on a
+  machine proof, not on a hand-written string.
+  WHAT IS NEW: the verdict was PROSE-ONLY, so it is now ONE COMMAND —
+  scripts/cool_chat_check.py (0 ok / 1 a claim is false / 2 cannot run),
+  with --selftest proving every leg can fail: 11 controls, each mutating a
+  COPY (governance reversal, fence heading lost, a hex literal, a palette
+  utility, the panel's brand vars stripped, a second panel file, a second
+  mount, a second importer, the panel rewired off buildSchemaPrompt, the
+  legend removed, the wire proof deleted -> CANNOT RUN). It is deliberately
+  NOT named *_diff.py: that glob is the landing gate's twin roster
+  (scripts/landing_gate.py: EXPECTED_TWINS) and this grades no PAIR — it
+  stands beside the gate, like chain_test_check.py and
+  release_readiness.py. TWO controls fired on the FIRST run: the harness's
+  own bugs (a control that wrote its copy outside app/src, so it proved
+  nothing, and a None line number that crashed the summary), both fixed in
+  the same commit — the ELEVENTH law applied to the harness itself.
+  GATE: python3 scripts/landing_gate.py rc 0 — GATE GREEN (4/4 pinned legs:
+  env django 5.2.18, pytest 299 passed, System check identified no issues,
+  No changes detected); python3 scripts/release_readiness.py rc 0 (12 .py
+  scripts parse, no PEP 604 in any signature); python3
+  scripts/cool_chat_check.py rc 0 and --selftest rc 0 (11 controls).
+  AGENTS.md gained the command under ## Commands.
+  OUT OF SCOPE, REPORTED NOT FIXED: the palette sweep is clean only for the
+  three files this send-back touched — 7 other product files still hard-code
+  Tailwind palette utilities (app/src/components/Toaster.svelte,
+  RecordForm.svelte, DataTable.svelte, ErrorBanner.svelte,
+  app/src/pages/Login.svelte, Branding.svelte, Modules.svelte). That is
+  pre-existing mainline (the send-back never touched those files) and
+  outside this item, but the product law "components carry zero hard-coded
+  colors" is not met tree-wide — the Lead's call whether that becomes an
+  item of its own.
+  LARK: ROLE_LARK_WEBHOOK is empty in this seat's env (measured), so the
+  Lark copy of the report is skipped and no URL was invented.
+  STATE: unchanged PENDING (it was already PENDING and the earlier
+  :DELIVERED: evidence stands; this note adds a re-derivation on the merged
+  tree). DONE stays the Lead's gate.
 :END:
 ** PENDING COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend       :FE:
 :LOGBOOK:
