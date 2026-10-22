@@ -6111,3 +6111,82 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   Read your turn brief as usual — nothing changes for how you author;
   what changed is WHO reviews (QA, not the next seat) and who the
   merger answers to (the Lead).
+* MSG software-engineer -> @lead :report:      :msg:software-engineer:lead:report:
+:PROPERTIES:
+:FROM: software-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 21:38 UTC]
+:END:
+  RESULT: DONE — the segment repaired the chain harness's own dead DATE
+  cross-check; nothing on the FEATURE-ORDER board was flipped.
+  STATE MEASURED AT BOOT (not inherited): FEATURE-ORDER entries 1-4
+  (verify-cool-chat-2 :3079, COOL-CHAT-SEND-BACK-2 :3332, FR-R001-FE :176,
+  COOL-PREVIEW :2743) are all PENDING-with-:DELIVERED:, `grep -E '^\*+
+  .*(TODO|ONGOING|WAIT)' agent-team/TODOS.org` = 0 hits, and this seat has
+  NEVER been pinged (`grep -c 'MSG .* -> @software-engineer' agent-team/TEAM-CHAT.org`
+  = 0). So per instruction 2 the work was the smallest verifiable
+  improvement — and it was the one item the TEST-CHAIN itself left
+  undispatched: the second cycle's T3 recorded "the check's DATE cross-check
+  is dead for every entry" (docs/CHAIN-TEST.md:58) and asked for a dispatch.
+  WHAT WAS WRONG, TWO CAUSES — (1) the drawer VALUE was read with
+  `cur.split(":", 1)[1]`, which keeps the key glued on, so every `:WHEN:`
+  came back as the literal text `WHEN: [2026-10-22 Thu 18`; (2) fixing only
+  that was still blind, because `WHEN_RE` was `^\d{4}-\d{2}-\d{2}` while the
+  FORMAT LAW writes an Org INACTIVE timestamp WITH BRACKETS — measured after
+  cause (1) alone: LOG-DATE 1/3 turns, and the single survivor was the one
+  MALFORMED entry in the chat (see FOR THE LEAD 2). The check answered rc 0
+  through three cycles with the comparison permanently empty.
+  FIXED IN scripts/chain_test_check.py — the split, the bracket-tolerant
+  named-group regex, and the ELEVENTH-law coverage rule applied to the
+  harness itself: a turn whose chat entries exist but yield no parseable
+  `:WHEN:` is now CANNOT RUN naming the parse (measured by re-introducing the
+  glued-key read on a copy: old = `CHAIN-TEST CHECK OK` rc 0, new = rc 2), and
+  `EXPECTED_CONTROLS = 10` is asserted against `len(CONTROLS)` (pin set to 9
+  -> rc 2), because `SELFTEST OK — N control(s)` printed N from the very list
+  a deletion would shrink.
+  TWO CONTROLS WERE THEMSELVES ROTTED (found by running `--selftest`, not by
+  trusting its last recorded rc): `unclosed log summary` cleared only the
+  FIRST of the log's two `## Summary` headings, so the leg stayed satisfied and
+  the control graded nothing (rc 0); the new `log date disagrees` control had
+  to re-date EVERY graded run line, since the leg tests set INTERSECTION and
+  each turn is logged by three cycles — and its first draft dropped a line
+  terminator (parse_log returns lines WITHOUT endings) and silently merged two
+  run lines, which is why the count read 8 where the tree holds 9.
+  EVIDENCE: work commit c1cedb4 on ai/turn-20261022-2108.
+  `python3 scripts/chain_test_check.py` rc 0 — 3 turns landed, 128 chat
+  messages, 9 run lines, LOG-DATE 3/3; `--selftest` rc 0 over 10 controls;
+  `python3 scripts/landing_gate.py` rc 0 — GATE GREEN 4 legs (pytest 299
+  passed, System check no issues, No changes detected; the same self-install the QA seat logged
+  as its 18th: `admincraft` unpip-installed at boot, CANNOT RUN rc 2 until
+  `python3 -m pip install -e ./plugin --no-deps`);
+  `scripts/release_readiness.py`, `doc_field_roster_diff.py`,
+  `registry_roster_diff.py`, `gate_roster_diff.py` all rc 0. Docs published as
+  instructions were retyped in the SAME commit (AGENTS.md and docs/DEVGUIDE.md
+  ## Commands: 8 -> 10 controls); docs/CHAIN-TEST.md gained the closing note.
+  FOR THE LEAD — 4 items, reported not fixed.
+  1. LANE ATTRIBUTION: #+TURN points this seat at deepseek-v4.1-flash@codebuddy
+  (agent-team/TEAM-CONTROL.org:9) but that lane died AGAIN, exactly as the
+  HONEST LANE VERDICT comment in .turn-inside.sh:136-138 predicts:
+  /tmp/cb-lane.log (21:25Z) reads `502 网络请求超时 ... connect ETIMEDOUT
+  0.0.0.1:443 (target: https://www.codebuddy.ai)`, and the segment ran on the
+  fallback arm `qoder --model deepseek-v4.1-flash` (.turn-inside.sh:156). So
+  the result line will read `qoder run OK (lane: deepseek-v4.1-flash@qoder)` —
+  the burn-credit lane is delivering nothing while the free qoder arm is.
+  2. FORMAT-LAW DEFECT, append-only so a seat cannot touch it:
+  agent-team/TEAM-CHAT.org:5528 carries `:WHEN: 2026-10-22 Wed 11:24 UTC` —
+  no brackets, and 2026-10-22 is a Thu. The harness tolerates the missing
+  bracket; only the Lead can correct the entry.
+  3. NO HARNESS GRADES A CONTROL COUNT: release_readiness's doc-count leg
+  knows only DOC_PIN_NAMES = {pytest, vitest}, so `N controls` in the two
+  mirror docs is an ungraded instruction — same class, could join that leg.
+  4. THE SLOT DEADLOCK the platform seat filed at 18:38Z still stands
+  (docs/CHAIN-TEST.md:67, and the relief seat's follow-up is queued as the
+  pending branch ai/turn-20261022-2051 @ d6d75fb): until the Lead fixes the
+  write at .github/workflows/agent-team.yml:809, NO turn branch lands, so this
+  delivery cannot reach ai/main by itself.
+  SECRET LAW held: no credential read, echoed or committed (only ENV VAR NAMES
+  appear above). ROLE_LARK_WEBHOOK is empty in this seat's env (`[ -z ]`,
+  measured) -> the Lark copy of this report is skipped, not lost.
+  No OBJECTIVE-STATE claim: the FEATURE-ORDER entries stay PENDING for the
+  Lead's DONE gate, and this segment touched none of them.
