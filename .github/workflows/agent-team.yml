@@ -722,8 +722,13 @@ jobs:
           REVIEW_MEMBER="${{ needs.turn.outputs.review_member }}"
           QA_MEMBER="deepseek-v4.1-flash@qoder"
           VISITING_MEMBER="glm-5.3@codebuddy"
-          # Expected duty reviewer by law, given who authored:
-          if [ "${PENDING_AUTHOR:-x}" = "$QA_MEMBER" ]; then EXPECTED_REVIEWER="$VISITING_MEMBER"; else EXPECTED_REVIEWER="$QA_MEMBER"; fi
+          # Expected duty reviewer by law, given who authored. AUTHOR-ID
+          # FORMAT FIX (night-watch 2026-10-22 ~20:15Z): PENDING_AUTHOR is a
+          # SEAT KEY (quality-assurance-engineer) — the old member-id-only
+          # comparison never matched, so the gate EXPECTED QA to review
+          # QA's own branch and blessed the reviewer-equals-author
+          # auto-rejections (REVIEW-LOG 19:46Z + 20:10Z). Match both forms.
+          if [ "${PENDING_AUTHOR:-x}" = "quality-assurance-engineer" ] || [ "${PENDING_AUTHOR:-x}" = "$QA_MEMBER" ]; then EXPECTED_REVIEWER="$VISITING_MEMBER"; else EXPECTED_REVIEWER="$QA_MEMBER"; fi
           OUTCOME="no-pending"
           MERGE_TARGET=""
           if [ -n "$PENDING_BRANCH" ] && git ls-remote --exit-code --heads origin "$PENDING_BRANCH" >/dev/null 2>&1; then
@@ -741,7 +746,7 @@ jobs:
             elif [ "$VERDICT" != "APPROVED" ]; then
               OUTCOME="rejected"
               echo "MERGER: reviewer REJECTED the branch — it does not land"
-            elif [ "${PENDING_AUTHOR:-x}" = "${REVIEW_MEMBER:-y}" ]; then
+            elif [ "${PENDING_AUTHOR:-x}" = "${REVIEW_MEMBER:-y}" ] || { [ "${PENDING_AUTHOR:-x}" = "quality-assurance-engineer" ] && [ "${REVIEW_MEMBER:-y}" = "$QA_MEMBER" ]; } || { [ "${PENDING_AUTHOR:-x}" = "visiting-engineer" ] && [ "${REVIEW_MEMBER:-y}" = "$VISITING_MEMBER" ]; }; then
               OUTCOME="refused-same-member"
               echo "MERGER: reviewer equals author (${REVIEW_MEMBER}) — refuse by law"
             elif [ "${REVIEW_MEMBER:-}" != "$EXPECTED_REVIEWER" ]; then
