@@ -32,8 +32,13 @@ name: Agent Team Chain
 # inside are the engine's proven defaults.
 
 on:
-  push:
-    branches: [ai/main]
+  # NO push trigger (Lead fix 2026-10-22 ~19:30Z, Owner-visible): every
+  # chain commit on ai/main spawned another run — with self-dispatch that
+  # doubled the run count every cycle (three concurrent runs observed at
+  # 19:07Z). The self-dispatching finalize owns pacing; the hourly cron
+  # stays only as the infra-death safety net. All triggers share the
+  # concurrency group below, so runs serialize; cancel stays FALSE — a
+  # redundant queued run is cheaper than killing an in-flight lane burn.
   schedule:
     # Chain safety net — the self-dispatching finalize owns the pacing;
     # this cron only re-kicks a chain that died infra-level.
