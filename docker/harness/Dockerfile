@@ -86,6 +86,19 @@ COPY docker/harness/goose-config.yaml /home/agent/.config/goose/config.yaml
 COPY AGENTS.md /home/agent/.config/opencode/AGENTS.md
 COPY AGENTS.md /home/agent/.config/goose/.goosehints
 COPY AGENTS.md /home/agent/.codebuddy/CODEBUDDY.md
+# OWNER GLOBAL LAW (Owner order 2026-10-22 09:22Z: "You and your team
+# members MUST follow it, except for my local-specific parts. This should
+# be configured in agents/harnesses' configs to load."). Baked VERBATIM as
+# the TOP layer of every agent's global config — the repo AGENTS.md below
+# it stays the project layer. Local-specific parts (Guix box, emacsclient
+# detection) self-neutralize in CI: INSIDE_EMACS is never set here.
+COPY agent-team/AGENTS-GLOBAL.md /tmp/AGENTS-GLOBAL.md
+RUN for f in /home/agent/.config/opencode/AGENTS.md \
+            /home/agent/.config/goose/.goosehints \
+            /home/agent/.codebuddy/CODEBUDDY.md; do \
+      printf '\n\n=====\n\n# ==== OWNER GLOBAL LAW (agent-team/AGENTS-GLOBAL.md — top layer) ====\n\n' | cat - /tmp/AGENTS-GLOBAL.md "$f" > /tmp/.law-merge \
+      && mv /tmp/.law-merge "$f"; \
+    done && rm -f /tmp/AGENTS-GLOBAL.md
 RUN chown -R agent:agent /home/agent
 
 ENV HOME=/home/agent \

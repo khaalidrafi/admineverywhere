@@ -131,6 +131,9 @@ jobs:
           echo "" >> "$SUMMARY"
           echo "Law: a probe row is evidence of the RUNTIME, not of quality —" >> "$SUMMARY"
           echo "seat ranks live in agent-team/MEMBERS.org." >> "$SUMMARY"
+          # Lead fix 2026-10-22: the table went only to the step summary
+          # (invisible in logs fetched via API) — echo it to stdout too.
+          cat "$GITHUB_STEP_SUMMARY" || true
 
   # ONE TURN OF WORK. Reads agent-team/TEAM-CONTROL.org:
   #   #+KILL-SWITCH: ON           -> stop everything, exit green.
@@ -155,6 +158,7 @@ jobs:
       QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}   # fallback brain — self-heals when the Owner sets it
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}   # minimax relief lane
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # qwen3.8-27b relief lane (Lead fix 2026-10-22: qoder quota-dead, zai rate-limited)
       GOMODEL_MASTER_KEY: ${{ secrets.GOMODEL_MASTER_KEY }}   # Jev judgment layer (health-gated)
       GOMODEL_GATEWAY_URL: ${{ vars.GOMODEL_GATEWAY_URL || 'https://ai.khalidrafi.tech' }}
     steps:
@@ -408,9 +412,24 @@ jobs:
           mailbox/ is a frozen archive — NEVER write there.
           TOP BOARD ITEMS (oldest-first):
           ${TOP}
-          WORK ORDER (take the FIRST item in this order that is not
-          DONE / PENDING-with-delivered-evidence, or continue the item you
-          already moved to ONGOING — the board is the truth):
+          WORK ORDER — TEST-CHAIN MODE (Owner order 2026-10-22 09:22Z: the
+          team is validating its own machinery; the feature work order at
+          the bottom is PARKED until the Lead restores it — do NOT start
+          feature items). Do EXACTLY ONE item per turn, in this order:
+          1. TEST-T1 (turn 1): append a check-in to agent-team/TEAM-CHAT.org
+             (${SEAT} -> @lead :report: — one line on which brain/lane ran
+             for you, RESULT: DONE) AND add one line to docs/CHAIN-TEST.md
+             logging: run id, seat, lane, date. NOTHING else.
+          2. TEST-T2 (turn 2, only if TEST-T1 landed): append a chat entry
+             naming ONE concrete improvement you noticed in the
+             harness/dispatch flow, and log it in docs/CHAIN-TEST.md.
+             NOTHING else.
+          3. TEST-T3 (turn 3, only if TEST-T2 landed): verify the board and
+             chat state (file:line evidence), post a short :report: to
+             @lead, and close docs/CHAIN-TEST.md with a 3-line summary.
+             NOTHING else.
+          PARKED FEATURE ORDER (Lead restores after the test — ignore in
+          TEST-CHAIN MODE):
           1. PENDING verify-cool-chat-2 (Senior FE send-back verification)
           2. PENDING COOL-CHAT-SEND-BACK-2 (wire prompt builder + fix legend)
           3. ONGOING FR-R001-FE — lifecycle renderer (finish, client side)
@@ -526,13 +545,28 @@ jobs:
                    OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
                    goose run --no-session -t "$BRIEF"; then
                 echo "TURN_RESULT=goose run OK (acting lane: zai/glm-4.7-flash@goose)"
+              # Lead URL fix 2026-10-22 (run 39752778724 evidence): goose
+              # appends /v1/chat/completions to OPENAI_HOST, so the old
+              # HOST=https://openrouter.ai/api/v1 produced
+              # .../api/v1/v1/chat/completions -> 404 on EVERY turn.
+              # Mirrors the proven zai-lane pattern (HOST + BASE_PATH).
               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
                    OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-                   OPENAI_HOST="https://openrouter.ai/api/v1" \
+                   OPENAI_HOST="https://openrouter.ai" \
+                   OPENAI_BASE_PATH="/api/v1/chat/completions" \
                    goose run --no-session -t "$BRIEF"; then
                 echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — promo hire 05:33Z)"
+              # Lead lane add 2026-10-22: qwen3.8-27b@groq — GROQ_API_KEY is
+              # in repo secrets (probed every run); gives the chain a 4th,
+              # independent brain when qoder quota + zai rate-limit die.
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
+                   OPENAI_API_KEY="$GROQ_API_KEY" \
+                   OPENAI_HOST="https://api.groq.com" \
+                   OPENAI_BASE_PATH="/openai/v1/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=goose run OK (lane: qwen3.8-27b@groq — relief hire 2026-10-22)"
               else
-                echo "TURN_RESULT=BLOCKED (qoder+zai+minimax lanes all failed — check the harness)"
+                echo "TURN_RESULT=BLOCKED (qoder+zai+minimax+groq lanes all failed — check the harness)"
               fi
               ;;
             *)
@@ -566,6 +600,7 @@ jobs:
             -v "$PWD/.sessions-restore":/sessions-restore:ro \
             -e SEAT="${SEAT}" -e BRIEF="${BRIEF}" \
             -e QODER_PERSONAL_ACCESS_TOKEN -e ZAI_API_KEY -e OPENROUTER_API_KEY \
+            -e GROQ_API_KEY \
             agent-harness:local bash /workspace/.turn-inside.sh \
             > /tmp/.turn-out.txt 2>&1; then
             echo "container verdict captured"
@@ -1014,7 +1049,21 @@ jobs:
           write_markers
           git add "$CTL"
           git commit -m "ci-chain: verdict ${VH} mirrored" || exit 0
-          for i in 1 2 3; do git push origin "ai/main" && break; git fetch origin ai/main && git reset --hard origin/ai/main; write_markers; git add "$CTL"; git commit -m "ci-chain: verdict ${VH} mirrored" || exit 0; done
+          # Lead fix 2026-10-22 (runs 39747548417..39752778724 evidence):
+          # this step's push lost 3x races vs concurrent runs and its exit 1
+          # painted every healthy run "failure". Mirror markers are
+          # bookkeeping, not the chain verdict — a lost marker may re-mirror
+          # one deduped message once; it must NEVER fail the run.
+          PUSH_OK=no
+          for i in 1 2 3; do
+            if git push origin "ai/main"; then PUSH_OK=yes; break; fi
+            git fetch origin ai/main && git reset --hard origin/ai/main
+            write_markers
+            git add "$CTL"
+            git commit -m "ci-chain: verdict ${VH} mirrored" || break
+          done
+          [ "$PUSH_OK" = "yes" ] || echo "::warning::verdict markers not persisted (non-fatal; dedupe may re-mirror once)"
+          exit 0
 
       # Owner order 2026-10-20 19:56Z: "You serve as the lead of both repos.
       # Their GLM chats go to their respective Discord channels." This
