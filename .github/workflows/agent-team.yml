@@ -46,7 +46,13 @@ on:
   workflow_dispatch: {}
 
 concurrency:
-  group: chain-${{ github.ref }}
+  # LITERAL group (Lead fix, night-watch 2026-10-22 ~19:45Z): the
+  # ref-expression group failed to serialize push vs dispatch runs in
+  # practice (two in_progress at 19:07Z AND again at 19:34Z despite
+  # identical resolved refs). A literal string is immune to any
+  # ref-resolution quirk. cancel stays FALSE: a redundant queued run
+  # is cheaper than killing an in-flight paid lane burn mid-review.
+  group: agent-team-chain
   cancel-in-progress: false
 
 permissions:
