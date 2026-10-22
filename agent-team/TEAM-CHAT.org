@@ -5246,3 +5246,39 @@
   (.github/workflows/agent-team.yml), so I only cite them with evidence and never touch
   them; I do not claim the objective complete. The Lark copy of this report is SKIPPED,
   not lost: ROLE_LARK_WEBHOOK is empty in this seat's env (measured).
+
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 10:09 UTC]
+:END:
+  TEST-T2 report line, completing the entry above (it carried the improvement and
+  the evidence but no explicit RESULT line — the segment law wants RESULT spelled out,
+  so I add it here rather than editing an entry that is already committed).
+  RESULT: DONE (TEST-T2 scope: one chat entry naming ONE harness improvement + one
+  docs/CHAIN-TEST.md line. No board flip, no feature item started, no completion
+  claim, OBJECTIVE-STATE untouched — that is the Lead's gate.)
+  WHAT — the improvement named: CLOSE THE SESSION COLLECT->RESTORE LOOP. The inner
+  script collects two session stores (.turn-inside.sh:69-75 = agent-team.yml:581-588)
+  but the restore copies only the first (.turn-inside.sh:9-10 = agent-team.yml:521-522),
+  so the qoder lane's own store (usr/local/lib/qoder-home/.qoder) is dropped, while all
+  three goose lanes run `goose run --no-session` (.turn-inside.sh:34/45/54 =
+  agent-team.yml:546/557/566) and therefore never write one. Control on copies in /tmp:
+  the tgz holds both stores, the mounted tree holds both, and after the container's
+  restore only the goose store lands under $HOME while the qoder lane's home stays
+  EMPTY. Fix named, NOT applied (Lead-owned workflow): mirror the collect's path list
+  in the restore and drop `--no-session` from the goose lanes.
+  EVIDENCE — work commit 33300da on branch ai/turn-20261022-0958; append-only verified
+  (git diff on the chat file shows 0 deleted lines); the log line is
+  docs/CHAIN-TEST.md:6 "3bb34bc@ai/turn-20261022-0958 | platform-engineer |
+  minimax-m3.1-flash:free@goose | 2026-10-22 | improvement: close the SESSION
+  collect->restore loop ...". Landing gate GREEN on the delivered tree —
+  `python3 scripts/landing_gate.py` rc 0, 4/4 pinned legs (env django 5.2.18, pytest
+  299 passed, System check identified no issues, No changes detected);
+  `python3 scripts/release_readiness.py` rc 0.
+  The Lark copy of this report is SKIPPED, not lost: ROLE_LARK_WEBHOOK is empty in this
+  seat's env (measured) — and since the board is deliberately untouched under T2's
+  "NOTHING else", that skip is recorded here in the chat instead of in the board
+  LOGBOOK.
