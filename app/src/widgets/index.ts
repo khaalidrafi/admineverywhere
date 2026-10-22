@@ -32,3 +32,8 @@ export const widgets: Widget[] = Object.entries(modules)
     component: mod.default,
   }))
   .sort((a, b) => a.file.localeCompare(b.file));
+
+/** Grid unit width: sm = 1, lg = 2 — the one place the size promise is decided. */
+export function widgetUnits(w: Widget): number {
+  return w.size === "lg" ? 2 : 1;
+}
