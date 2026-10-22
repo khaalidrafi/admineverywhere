@@ -1775,6 +1775,73 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-006 page registration                                            :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 01:24 UTC] :: CROSS-REF, no state change (board
+  still exhausted — 14 PENDING + 4 DONE, every WORK ORDER row carries
+  :DELIVERED:, zero TODO/ONGOING/WAIT, no unanswered @platform-engineer ping in
+  the chat tail; re-measured this boot, not inherited from the 01:00Z note). The
+  candidate my own 00:09Z report measured and did NOT ship is now a gate leg:
+  commit 9968e39 on ai/turn-20261022-0105 —
+  `scripts/doc_field_roster_diff.py` + `FE_ROSTER += doc-twin` +
+  `EXPECTED_TWINS 5 -> 6` + `TWINS += ("doc-twin", …, "DOC FIELD ROSTER OK")`.
+  WHY (measured before shipping, and the harness reproduces it): `roles` is a
+  field of `PageMeta` and of `ActionMeta` — FR-R007 gating reads it — and it
+  appeared in NO `meta{…}` contract list in either mirror doc, so a seat writing
+  a drop-in from the published contract produced a silently un-gated page while
+  pytest 299 / vitest 416 / `registry_roster_diff.py` rc 0 all stayed green: the
+  THIRTEENTH law sees dirs and importers, never a field NAME. With the harness
+  written and the docs not yet fixed it answered RED, exactly those two lines
+  (`registry pages: declares roles in code and NO in-domain doc list mentions
+  it`, plus the actions twin), so the fix went to the doc side — six pages lists
+  (3 in AGENTS.md, 3 in docs/DEVGUIDE.md) and four actions lists (2+2) now carry
+  `roles?`
+  (line-neutral edits: nothing shifted, because the docs cite
+  `scripts/landing_gate.py:67/86/92/103` and DEVGUIDE cites an AGENTS.md line).
+  EVIDENCE on the delivered tree: `landing_gate.py --fe` = 11 legs, GATE GREEN
+  rc 0, `doc-twin   DOC FIELD ROSTER OK — 3 registries, 17 contract fields, 12
+  doc lists, 76 field claims graded`; merge gate alone rc 0 with 4 legs;
+  `gate_roster_diff.py` rc 0 (ROSTER-IDENTICAL 3/3, gate.sh read-only,
+  `git status` clean for .github/); `release_readiness.py` rc 0 (85 path
+  citations, 87 line citations bounds-checked, 15/15 symbol claims ==
+  EXPECTED_CLAIMS — my new prose deliberately adds no same-line name()+citation
+  pair, 8 doc counts == the pins, 9 .py files parse with no PEP 604).
+  CONTROLS, 12, every mutation on a COPY (`--root /tmp/…` for the harness doors,
+  `pin_twins()`/`leg_twin()` on a copy of landing_gate.py for the leg doors):
+  `roles?` stripped from every pages list in BOTH docs → RED coverage; a doc
+  promising `width` → RED naming `AGENTS.md:73`; a doc `title?` against a
+  required `title` → RED `refused by the registry`; `roles?` deleted from
+  AGENTS.md ONLY → RED mirror (proving MIRROR is independent of COVERAGE:
+  coverage still passes because DEVGUIDE documents the field); one list deleted
+  → CANNOT RUN `the docs carry 11 contract list(s), EXPECTED_LISTS pins 12`;
+  `standalone` renamed in PageMeta → RED `the CODE contract moved off its pin`;
+  a new `mod.meta.unit` read → CANNOT RUN (the widget contract has two sources
+  and they disagree); `PageMeta` renamed away → CANNOT RUN; a list that lost its
+  `app/src/widgets/` token → CANNOT RUN `name no registry dir`; prose inside
+  braces → CANNOT RUN naming the piece; a bogus field BELOW `## State as of` →
+  rc 0 (the state-log cut is real, not accidental). GATE DOORS:
+  `EXPECTED_TWINS` left at 5 → CANNOT RUN; `doc-twin` deleted from TWINS with the
+  harness on disk → CANNOT RUN; the leg's probe phrase renamed → RED `rc 0 but
+  printed no … verdict line`.
+  HONESTY, one control that went the other way and is recorded rather than
+  smoothed out: the first draft of this leg's own *Commands* text wrote
+  `meta{...}` as a placeholder and the harness refused it
+  (`a contract list piece this harness cannot parse ('...')`). The tempting fix
+  was to tolerate anything unparseable — which is the blind spot, not the bug —
+  so the shipped rule skips only a body of pure separators/ellipsis and keeps the
+  refusal for everything else, with the list count pinned so the skip cannot
+  become a hiding place. The same draft also carried three brace-shaped examples
+  IN the law prose (`meta{…,standalone,roles?}`, a prose piece, `meta{size}`)
+  which the harness correctly refused to grade as contracts; they are reworded out
+  of the docs — a doc that trips your own gate is the gate working.
+  ONE STALE RECORD I did not silently repair: docs/DEVGUIDE.md:808 quotes
+  `AGENTS.md:190` as evidence of a historical control run. That record was
+  already out of date before this commit (the `core/urls.py:10` citation now sits
+  at AGENTS.md:213) and my Commands block moves it again. It is a dated record of
+  a run, the sentence itself says the numbers are re-measured by a control rather
+  than trusted as prose, and `release_readiness` does not grade it — so it is
+  cited here, not rewritten.
+  SECRET LAW held: no credential read, echoed or committed.
+  ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, measured not assumed) ->
+  the Lark copy of the report is skipped, not lost.
 - Note taken on [2026-10-22 Thu 01:00 UTC] :: CROSS-REF, no state change (board
   still exhausted — every WORK ORDER row carries :DELIVERED:, zero
   TODO/ONGOING/WAIT, no unanswered @platform-engineer ping in the chat tail). The
