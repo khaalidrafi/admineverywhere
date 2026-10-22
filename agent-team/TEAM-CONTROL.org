@@ -6,7 +6,7 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; the seat flips its item PENDING with :DELIVERED: evidence; the chain then PAUSES for Lead review (PAUSE-AFTER-TODO DEFAULT ON — Owner order 17:28Z "PAUSE AFTER TODO MUST BE DEFAULT"; an explicit order may set OFF for continuous runs)
-#+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
+#+TURN: deepseek-v4.1-flash@qoder (QA Engineer)
 #+STALL-COUNT: 1
 #+PAUSE-AFTER-TODO: ON
 #+CHAIN-PAUSE: OFF
