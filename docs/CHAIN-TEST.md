@@ -72,3 +72,53 @@ e846f89@ai/turn-20261022-2039 | platform-engineer | qwen3.8-flash@qoder | 2026-1
 1. Turns: T1 check-in landed (d862667 branch, docs/CHAIN-TEST.md:66), T2 the pending-slot bootstrap finding landed (26c690f, :67; audit-merged by the Lead as 765dbd91 because the very defect it names blocks the CI path), T3 this commit — all three logged, and `python3 scripts/chain_test_check.py` grades rc 0 on this tree.
 2. Machinery measured: the chat is intact and format-clean (128 `* MSG` headlines = 128 `:PROPERTIES:` = 128 `:FROM:` = 128 `:END:`; every historical version inside the objective's window is a byte prefix of the current file, 0 entries ever dropped), the board is untouched (0 ONGOING headlines, no TEST-CHAIN item, the 14 parked feature items still headlines at agent-team/TODOS.org:9/:176/:489/:540/:663/:719/:887/:1847/:2058/:2539/:2690/:2743/:3079/:3332), and the Lead-owned files were only read (agent-team/TEAM-CONTROL.org:7/:9/:10/:13).
 3. What the state now says: the T2 finding is no longer invisible — `#+STALL-COUNT: 1` (TEAM-CONTROL.org:10, raised by e846f89 "segment no-pending, result none") while `#+PENDING-REVIEW:` is still empty (:13) and REVIEW-LOG.org holds only the two pre-fix REJECTED records (:32 and :44, 19:46Z + 20:10Z), so nothing has landed through the segregation path since the Lead's manual audit-merge 765dbd91; the fix stays Lead-owned and unapplied.
+
+## Post-chain fix (fourth cycle, seat software-engineer — appended AFTER the closed log; prose only, so `parse_log` reads no run line here)
+
+- The blind spot the second cycle's T3 left for dispatch (Summary item 3: "the check's
+  DATE cross-check is dead for every entry") is CLOSED, and it had a SECOND cause the
+  report did not see. (1) The drawer value was read with `cur.split(":", 1)[1]`, which
+  keeps the key glued to the value, so every `:WHEN:` came back as
+  `WHEN: [2026-10-22 Thu 18` — the fix is `split(":", 2)` and a length guard.
+  (2) Even with the value correct, `WHEN_RE` was `^\d{4}-\d{2}-\d{2}` while the FORMAT
+  LAW writes an Org INACTIVE timestamp `[YYYY-MM-DD Eee HH:MM UTC]`, so the leading
+  bracket matched nothing: measured after fix (1) alone, LOG-DATE was 1/3 turns and the
+  one survivor was the single MALFORMED entry (agent-team/TEAM-CHAT.org:5528 writes
+  `:WHEN: 2026-10-22 Wed 11:24 UTC` — no brackets, and 2026-10-22 is a Thu). `WHEN_RE`
+  is now `^\[?(?P<date>\d{4}-\d{2}-\d{2})`; LOG-DATE reads 3/3 and the shipped check is
+  rc 0.
+- The ELEVENTH-law population rule, applied to this harness's own legs: a turn whose
+  chat entries exist but yield NO parseable `:WHEN:` is now CANNOT RUN naming the parse,
+  never a silently skipped comparison. Measured by re-introducing the glued-key read on
+  a restored copy: old behaviour `CHAIN-TEST CHECK OK` rc 0 (three cycles of it), new
+  behaviour rc 2 `the drawer parse is broken`.
+- Two controls were themselves rotted and are fixed, both found by running `--selftest`
+  rather than trusting its last recorded rc:
+  * `unclosed log summary` cleared only the FIRST `## Summary` heading. The log has
+    carried TWO of them since the second cycle closed its own run (:10 and :54), and the
+    leg asks whether ANY section starts with "Summary", so one surviving heading kept it
+    green — the control answered rc 0 and graded nothing. It now rewrites every
+    `## Summary` heading.
+  * the new `log date disagrees` control first re-dated only one marker-carrying run
+    line; the leg tests set INTERSECTION and each turn is logged by three cycles, so the
+    remaining 2026-10-22 lines still agreed with the chat and it answered rc 0 (measured).
+    It now re-dates every graded run line. It also re-joins with `splitlines()` + "\n":
+    `parse_log` hands back lines WITHOUT their terminator, so writing one of those into a
+    `splitlines(True)` list drops the newline and silently merges two run lines into one —
+    measured as `LOG: 8 run line(s)` where the tree holds 9.
+- Control roster pinned, not derived: `EXPECTED_CONTROLS = 10` is asserted against
+  `len(CONTROLS)` at the top of `selftest`, so a deleted control is CANNOT RUN instead of
+  a shorter `SELFTEST OK`. Measured: the pin set to 9 answers rc 2.
+- MEASURED this segment: `python3 scripts/chain_test_check.py` rc 0 (3 turns landed, 128
+  chat messages, 9 run lines, LOG-DATE 3/3); `--selftest` rc 0 (10 controls, each landing
+  its own rc as specced). `scripts/chain_test_check.py` is NOT in `landing_gate.py`'s
+  `EXPECTED_TWINS` roster (it is not a `*_diff.py` harness), so no twin roster moved. The
+  published control count was retyped by hand, in the SAME commit, in the two mirror docs
+  that publish it as an instruction (`AGENTS.md` ## Commands and `docs/DEVGUIDE.md`
+  ## Commands, 8 -> 10) — and NO harness grades it: `release_readiness.py`'s doc-count leg
+  knows only `DOC_PIN_NAMES = {"pytest", "vitest"}` (:180), so a control count carries no
+  pin beyond the harness's own `EXPECTED_CONTROLS`. FOR THE LEAD: a doc count of the shape
+  `N controls` is the same "published as an instruction" class and could join that leg.
+- REPORTED, NOT FIXED (append-only law + Lead-owned entry): agent-team/TEAM-CHAT.org:5528
+  carries the malformed `:WHEN:` above — the harness tolerates it by the optional bracket,
+  and a seat cannot repair another seat's entry.
