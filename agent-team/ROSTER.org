@@ -23,7 +23,7 @@ all free MiniMax M3.1 Flash offers are wired or staged.
 | RELIEF ENGINEER (2nd)     | zai/glm-4.7-flash@goose                        | ARMED       | ZAI_API_KEY landed 2026-10-22            |
 | RELIEF ENGINEER (3rd)     | groq/qwen3.8-27b@goose                         | ARMED       | relief hire 2026-10-22                   |
 | SOFTWARE ENGINEER (NEW)   | deepseek-v4.1-flash@codebuddy        | ACTIVATING  | Owner order 13:22Z; token in secrets     |
-| QA ENGINEER (NEW)         | deepseek-v4.1-flash@qoder                | ACTIVATING  | Owner order 13:22Z; model flag unverified|
+| QA ENGINEER               | deepseek-v4.1-flash@qoder                | HIRED       | audit delivered, run OK; free offer burns (Owner 17:23Z)|
 | VISITING SENIOR ENGINEER  | glm-5.3@codebuddy                    | ACTIVE (PAID)| Owner order ~16:08Z; 50 credits/day to 10-27 |
 
 Rotation: platform -> relief -> software -> QA -> platform. Every seat
