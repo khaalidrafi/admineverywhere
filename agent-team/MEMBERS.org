@@ -138,7 +138,7 @@
   | zai/glm-4.7-flash@goose                  | 0 confirmed       | relief turn delivered CC-SB-2 but lane line reads qoder fallback — attribution unconfirmed | PROBE |
   | groq/qwen3.8-27b@goose                   | 0 yet              | ARMED 10-22; relief fallback, unexercised                   | PROBE   |
   | deepseek-v4.1-flash@codebuddy  | 0 commits          | 3 empty runs ROOT-CAUSED (body bug: headless -y auto-deny) — CI flags fixed 17:30Z, next software segment = smoke test | WATCH |
-  | deepseek-v4.1-flash@qoder          | FR-R001-FE audit   | lane run OK (a64902a); --model flag VERIFIED live; HIRED + burn the free offer (Owner 17:23Z) | KEEP    |
+  | deepseek-v4.1-flash@qoder          | FR-R001-FE audit; R-003-FE author | lane run OK (a64902a); --model flag VERIFIED live; HIRED + burn the free offer (Owner 17:23Z); delivered FR-R003-FE (ai/turn-20261022-1904: author, Lead audit-merge 22:18Z as duty reviewer was unreachable) | KEEP    |
   | glm-5.3@codebuddy (visiting)   | 0 commits          | visit 1: PAID burn VERIFIED (~50 credits) but empty — same body bug, fix landed; visit 2 (10-23) runs with bypassPermissions | WATCH |
 
   HR NOTE (Lead, 2026-10-22 17:31Z): the two WATCH rows share ONE root
