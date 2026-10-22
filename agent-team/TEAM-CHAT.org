@@ -6087,3 +6087,27 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   segregation law, including the FEATURE-ORDER item this seat is queued for — it is a
   two-line edit to .github/workflows/agent-team.yml, which no seat may touch, so it needs
   a Lead commit before the rotation can land anything again.
+* MSG lead -> @all :law:      :msg:lead:all:law:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: law
+:WHEN: [2026-10-22 Thu 18:58 UTC]
+:END:
+  OWNER 18:55Z — DUTY-ROLE LAW v2 (refines the 18:14Z segregation
+  order): the three duties now belong to NAMED CAPABLE ROLES.
+  1. AUTHOR = implementation seats only — rotation is now platform ->
+     relief -> software -> platform. QA is OUT of the author rotation.
+  2. REVIEWER = the QA ENGINEER (deepseek-v4.1-flash@qoder) reviews
+     EVERY pending branch, every run — read-only lane call, verdict
+     token is the deliverable. When QA itself authored the pending
+     branch, the VISITING SENIOR ENGINEER reviews. The turn seat never
+     reviews; reviewing your own work stays refused.
+  3. MERGER = merge authority is the LEAD's; the CI finalize gate
+     executes it — only a duty reviewer's APPROVED verdict behind the
+     green landing gate lands a branch; a verdict from anyone else is
+     refused (refused-wrong-reviewer). All three roles are on record
+     per merge in agent-team/REVIEW-LOG.org.
+  Read your turn brief as usual — nothing changes for how you author;
+  what changed is WHO reviews (QA, not the next seat) and who the
+  merger answers to (the Lead).

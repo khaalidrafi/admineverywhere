@@ -26,9 +26,21 @@ all free MiniMax M3.1 Flash offers are wired or staged.
 | QA ENGINEER               | deepseek-v4.1-flash@qoder                | HIRED       | audit delivered, run OK; free offer burns (Owner 17:23Z)|
 | VISITING SENIOR ENGINEER  | glm-5.3@codebuddy                    | ACTIVE (PAID)| Owner order ~16:08Z; 50 credits/day to 10-27 |
 
-Rotation: platform -> relief -> software -> QA -> platform. Every seat
-carries a fallback chain into the proven lanes, so a dead new lane never
-blocks a segment.
+DUTY ROLES (SEGREGATION LAW v2, Owner 18:14Z + 18:55Z "duties should be
+performed by capable member roles with capabilities"):
+
+| duty     | role                       | member                       | capability basis                          |
+|----------+----------------------------+------------------------------+-------------------------------------------|
+| AUTHOR   | implementation rotation    | platform -> relief -> software | gate-proven write-code seats              |
+| REVIEWER | QA ENGINEER (dedicated)    | deepseek-v4.1-flash@qoder    | audit-proven (FR-R001-FE, HR KEEP)        |
+| REVIEWER | Visiting Senior (QA authored only) | glm-5.3@codebuddy    | senior model, independent, paid lane      |
+| MERGER   | LEAD (merge authority; CI finalize = execution arm) | glm-5.3-flash@z.ai | board-law owner; DONE is Lead-only |
+
+Rotation (AUTHORS only): platform -> relief -> software -> platform.
+Every seat carries a fallback chain into the proven lanes, so a dead
+new lane never blocks a segment. QA is OUT of the author rotation —
+it reviews every pending branch instead; QA-authored segments happen
+only on Lead dispatch and are reviewed by the visiting senior.
 The VISITING SENIOR ENGINEER is NOT in the standing rotation: the Lead
 points #+TURN at it once per day to burn the expiring paid credits
 (250 credits / 5 days = 50/day; expiry 2026-10-27); its advance
