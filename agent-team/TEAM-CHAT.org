@@ -6111,3 +6111,89 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   Read your turn brief as usual — nothing changes for how you author;
   what changed is WHO reviews (QA, not the next seat) and who the
   merger answers to (the Lead).
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 19:45 UTC]
+:END:
+  COOL-PREVIEW (FEATURE-ORDER entry 4, the segment you dispatched at 17:30Z) —
+  RESULT: DONE. Branch ai/turn-20261022-1931 @ 7bc376a (base 0ace2c1).
+  WHAT THE SUITE COULD NOT SEE, MEASURED ON-TREE BEFORE TOUCHING ANYTHING: there
+  were TWO functions named `applyBrand`. lib/branding.ts:71 injects CSS + sets
+  document.title; lib/stores.ts:115 is the fan-out that also writes the store, the
+  tab icon and the native Tauri title — and it is the one boot (stores.ts:85/:95)
+  and save (stores.ts:140) use. The editor's live preview imported the branding.ts
+  twin, so an identity edit re-themed the stylesheet while Shell.svelte:34 and
+  Sidebar.svelte:32-40 — which render `$app.brand.appName/logo/tagline` — kept the
+  old identity; the favicon never followed a draft, and a pending favicon upload
+  could not have, because draft.favicon stayed the served value. That is the row
+  this item has carried since 2026-10-17 ("an actually re-painted screen, the
+  favicon swap and the Tauri setTitle call"), and the 13:20Z DOM proof closed only
+  the CSS+title half of it.
+  SECOND DEFECT, FOUND IN THE SAME PATH AND WORSE: the preview's cleanup
+  re-applied `orig` — the snapshot taken at editor INIT. A successful save applies
+  the server brand through the fan-out; navigating away then re-applied the
+  PRE-SAVE brand, i.e. saving and leaving the page rolled the rebrand back until a
+  reload. Nothing in the suite could see this: the editor had exactly one
+  save-then-unmount path and no assertion crossed it.
+  FIX (one commit, 7bc376a): stores.applyBrand is now the single fan-out for boot,
+  save AND preview, and it delegates its DOM half to branding.applyBrand instead of
+  re-spelling title+CSS — which also means an empty name mid-typing gets the shipped
+  "Admin" fallback on the tab AND the native title, where stores used to write "";
+  a brand that carries no icon lands index.html's bundled /icon.png instead of
+  leaving the previous write (stores.ts:38/:118). Branding.svelte previews through
+  it, folding the pending logo/favicon uploads into the brand it applies
+  (:149-157), and reverts to the brand the app ACTUALLY carries, which a successful
+  save updates from the server's own response (:40, :121-129).
+  PROOF + ABILITY TO FAIL: 7 tests — brandingMount.test.ts 9->15 (the edit reaches
+  the store the chrome reads; a pending upload becomes the tab icon and the old one
+  returns on unmount; a configured icon survives an unrelated edit; a brand with no
+  icon falls back to the bundled one; an empty name blanks nothing; save-then-leave
+  keeps the SAVED brand) and storesTauri.test.ts 16->17 (setTitle receives
+  "Admin", never ""). FIVE mutants, each red on exactly the named test, product
+  files restored byte-identical (diff -q against pre-mutant copies): preview back
+  on the branding.ts twin -> 5 red; drop `orig = resolved` -> the rollback test red;
+  revert to `if (favicon && brand.favicon)` -> the bundled-fallback test red; drop
+  faviconUpload from the preview brand -> the upload test red; raw name into
+  setNativeWindowTitle -> the Tauri fallback test red.
+  GATE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 (pytest 299,
+  manage.py check no issues, makemigrations no changes, vitest 425 over 32 files,
+  csv/brand/parity twins BYTE-IDENTICAL, gate/registry/doc rosters OK);
+  EXPECTED_VITEST 418->425 bumped in the SAME commit as the added tests and the
+  AGENTS.md + DEVGUIDE `## Layout`/`## Commands` counts re-typed with it
+  (DEVGUIDE ELEVENTH law) — `python3 scripts/release_readiness.py` rc 0;
+  `npx tsc --noEmit` rc 0. Board: the COOL-PREVIEW item now carries a :DELIVERED:
+  LOGBOOK note (agent-team/TODOS.org:2745, pure insertion — 59 lines added, 0
+  deleted); state stays PENDING, DONE is your gate, OBJECTIVE-STATE untouched.
+  LANE: the qoder arm ran this segment (first arm, .turn-inside.sh:62-64; the
+  rotation pointer declares qwen3.8-flash@qoder at agent-team/TEAM-CONTROL.org:9 —
+  QODER_CLI=1 in this container). The GOOSE_MODEL=nvidia/nemotron-3.5-lightning:free
+  sitting in the image's environment belongs to none of the arms in the elif chain:
+  a relief lane that is not hired, not run, and worth a look before someone is
+  dispatched against it. GITHUB_RUN_ID is unset inside the seat container (measured),
+  so the ids above are commit shas, not run ids.
+  NO WRITE-UP WITHOUT ITS HOLE: branding.ts's `revertBrand` now has no product
+  caller (the editor reverts through the fan-out). It stays as the pure module's
+  documented pair, pinned by branding.test.ts — if you want it gone, say so and the
+  next segment deletes it with its test. And what is STILL UNVERIFIED is the part
+  this box cannot produce: an observed window. The assertions are happy-dom reads of
+  document.title, the `<link rel=icon>` href, the injected `--brand-*` vars and
+  `$app.brand` — not a screenshot, not a Tauri title bar. Pixels stay your call.
+  NEXT: PAUSE-AFTER-TODO is ON (agent-team/TEAM-CONTROL.org:11), so the chain pauses
+  here for your review. Two QUEUE facts, both read-only, neither a seat's to change:
+  (a) the slot still holds ai/turn-20261022-1904, whose REJECTED verdict came from a
+  reviewer that was also its author (duty-role law v2: agent-team/TEAM-CONTROL.org:24-27
+  and agent-team/REVIEW-LOG.org law 2) — that branch needs the VISITING SENIOR
+  ENGINEER, and mine parks behind it; (b) the 18:41Z bootstrap finding is FIXED on
+  this tree and law 4 is now ENFORCED: the park keys on whether the old pending is
+  RETAINED (.github/workflows/agent-team.yml:831-835) and the retain clause at :842
+  names `rejected`, so a rejected branch stays queued for re-review instead of
+  dropping out. Replayed the step's own logic on a COPY in /tmp (shipped files
+  untouched): no-pending + empty slot -> THIS run's branch parks; rejected + 1904 ->
+  1904 stays; approved + green -> this run's branch; refused-wrong-reviewer -> 1904
+  stays. So the chain can fill, review and land again — my branch simply waits its
+  turn behind the parked QA one.
+  ROLE_LARK_WEBHOOK is empty in this seat's env (length 0, measured with [ -z ]) —
+  the Lark copy of this report is SKIPPED, not lost, and no URL was invented.

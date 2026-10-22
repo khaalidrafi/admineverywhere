@@ -2742,6 +2742,65 @@ superuser, so a live smoke could never show a gated surface hidden.
 
 ** PENDING COOL-PREVIEW — live rebrand preview (apply/revert pure module) :FE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 19:43 UTC] :: :DELIVERED: THE PREVIEW REACHES THE
+  SURFACE THE PURE MODULE CANNOT (seat platform-engineer, FEATURE-ORDER entry 4 as
+  the Lead dispatched it at 17:30Z; branch ai/turn-20261022-1931 @ 7bc376a, base
+  0ace2c1). The row this item has carried since 2026-10-17 is "pixels: an actually
+  re-painted screen, the favicon swap and the Tauri setTitle call" — and the 13:20Z
+  note closed only the CSS+title half. MEASURED ON-TREE: Branding.svelte's $effect
+  called `applyBrand` from lib/branding.ts (the CSS + document.title half), while
+  boot (stores.ts:85/:95) and save (stores.ts:140) fan out through the OTHER
+  applyBrand — stores.ts:115, the one that writes the store, the tab icon and the
+  native window title. Two same-named functions, two surfaces: typing a new name
+  re-themed the CSS vars and the tab title but never moved $app.brand, which is
+  exactly what Shell.svelte:34 and Sidebar.svelte:32-40 render (logo, name,
+  tagline), so the "live preview" repainted the stylesheet and left the chrome
+  alone; the favicon never followed a draft at all, and an upload never reached
+  previewBrand because draft.favicon stayed the served one. SECOND DEFECT FOUND IN
+  THE SAME CODE PATH, WORSE THAN THE FIRST: the cleanup re-applied `orig`, the
+  snapshot taken at editor init — after a SUCCESSFUL save (which applies the
+  server brand through the fan-out) navigating away re-applied the PRE-SAVE brand,
+  so saving then leaving the page rolled the rebrand back until a reload.
+  WHAT LANDED (7bc376a): stores.applyBrand is the ONE fan-out for boot, save AND
+  preview, and it delegates its DOM half to branding.applyBrand instead of
+  re-spelling title+CSS (so an empty draft name gets the shipped "Admin" fallback
+  on the tab AND the native title, where stores used to write ""); a brand with no
+  favicon lands index.html's bundled /icon.png instead of leaving the previous
+  write (stores.ts:38, :118); Branding.svelte previews through it with the pending
+  logo/favicon uploads folded in (:149-157) and reverts to the brand the app
+  ACTUALLY carries, which a successful save updates from the server's response
+  (:40, :121-129).
+  PROOF: 7 new tests — brandingMount.test.ts 9->15 (the edit reaches the store the
+  chrome reads; a pending favicon upload becomes the tab icon and the old one comes
+  back on unmount; a configured icon survives an unrelated edit; a brand with no
+  icon falls back to the bundled one; an empty name blanks nothing; save-then-leave
+  keeps the SAVED brand) + storesTauri.test.ts 16->17 (setTitle gets "Admin", not
+  ""). NEGATIVE CONTROLS, five mutants, each failing exactly the test(s) named and
+  the product files restored byte-identical (diff -q against pre-mutant copies):
+  preview back on the branding.ts twin -> 5 red; drop the `orig = resolved`
+  refresh -> the rollback test red; revert the favicon to `if (favicon &&
+  brand.favicon)` -> the bundled-fallback test red; drop faviconUpload from
+  previewBrand -> the upload test red; hand setNativeWindowTitle the raw name ->
+  the Tauri fallback test red.
+  GATE: python3 scripts/landing_gate.py --fe rc 0 — GATE GREEN 11/11 legs (pytest
+  299, manage.py check no issues, makemigrations no changes, vitest 425 passed over
+  32 files, csv/brand/parity twins BYTE-IDENTICAL, gate/registry/doc rosters OK);
+  EXPECTED_VITEST 418->425 bumped in the SAME commit as the added tests
+  (DEVGUIDE ELEVENTH law) and AGENTS.md + DEVGUIDE `## Layout`/`## Commands` counts
+  re-typed to match — python3 scripts/release_readiness.py rc 0 (8 doc-count claims
+  == the gate's pins; 90 citations bounds-checked); `npx tsc --noEmit` rc 0.
+  HONEST RESIDUE: branding.ts's `revertBrand` now has no product caller (the editor
+  reverts through the fan-out); it stays as the pure module's documented pair,
+  pinned by branding.test.ts — a reviewer who wants it gone says so. And what
+  remains UNVERIFIED after this turn is the part no CI can see: an actually
+  observed window — the Tauri title bar repainting, and a real browser tab's icon
+  (this container has no browser and no Tauri; the assertions are happy-dom DOM
+  reads, not screenshots).
+  STATE: PENDING stands — DONE is the Lead's gate; nothing else touched, no
+  Lead-owned file, no completion claim. PAUSE-AFTER-TODO is ON
+  (agent-team/TEAM-CONTROL.org:11), so the chain pauses here for Lead review.
+  ROLE_LARK_WEBHOOK is empty in this seat's env (length 0, measured with [ -z ]) —
+  the Lark copy of the report is SKIPPED, not lost, and no URL was invented.
 - Note taken on [2026-10-21 Wed 19:43 UTC] :: THE BRAND CSS TWIN CLAIM BECAME A
   TOOL (branch ai/turn-20261021-1933; state untouched — PENDING stands, the two
   :DELIVERED: rows above unchanged; DONE is the Lead's gate). Board was exhausted
