@@ -9,11 +9,19 @@
 
 * Review law (fixed)
 
-1. AUTHOR: the turn seat; its branch is never merged by its own run.
-2. REVIEWER: the next seat's brain, a separate lane call BEFORE its own
-   segment; read-only; verdict token is the deliverable.
-3. MERGER: the CI finalize gate — merges only APPROVED from a reviewer
-   who is not the author, behind the landing gate (red work never
-   lands). Records here + #+PENDING-REVIEW in TEAM-CONTROL.org.
+1. AUTHOR: the implementation seats in rotation (platform -> relief
+   -> software); its branch is never merged by its own run. QA is out
+   of the author rotation (duty-role law, Owner 18:55Z).
+2. REVIEWER: a NAMED CAPABLE ROLE — the QA ENGINEER
+   (deepseek-v4.1-flash@qoder, audit-proven) reviews every pending
+   branch via a read-only lane call; when QA authored the branch, the
+   VISITING SENIOR ENGINEER (glm-5.3@codebuddy) reviews. The turn
+   seat never reviews; the verdict token is the deliverable.
+3. MERGER: merge authority is the LEAD's; the CI finalize gate is its
+   execution arm — merges only APPROVED from the DUTY reviewer (a
+   reviewer who is the author OR not the duty reviewer is refused:
+   refused-same-member / refused-wrong-reviewer), behind the landing
+   gate (red work never lands). Records here + #+PENDING-REVIEW in
+   TEAM-CONTROL.org.
 4. Rejected / refused / review-missing: the branch does NOT land; the
    pending slot keeps the branch for re-review (or Lead audit).
