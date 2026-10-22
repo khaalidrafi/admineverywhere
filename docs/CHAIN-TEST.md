@@ -36,3 +36,4 @@ e489738@ai/turn-20261022-0942 | platform-engineer | minimax-m3.1-flash:free@goos
   docs/session-loop-fix.patch to a COPY and proves the fix turns it GREEN, plus 7 more
   controls that prove each leg can fail (8 controls, rc 0). The patch stays UNAPPLIED —
   .github/workflows/* is Lead-owned.
+f1678cd@ai/turn-20261022-1124 | platform-engineer | minimax-m3.1-flash:free@goose | 2026-10-22
