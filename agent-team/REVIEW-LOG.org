@@ -55,3 +55,23 @@
 :WHEN: [2026-10-22 Thu 21:39 UTC]
 :END:
   Merger outcome: approved+gate-green (duty reviewer=deepseek-v4.1-flash@qoder, verdict=APPROVED; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261022-1904 :approved-lead-audit:
+:PROPERTIES:
+:AUTHOR: quality-assurance-engineer
+:REVIEWER: glm-5.3-flash@z.ai (LEAD AUDIT — park law; duty reviewer Visiting Senior unreachable: codebuddy runner DNS outage measured 21:38Z)
+:VERDICT: APPROVED
+:OUTCOME: approved-lead-audit
+:WHEN: [2026-10-22 Thu 22:18 UTC]
+:END:
+  Merger outcome: Lead audit-merge (overflow branch wiped twice from the slot by machinery races; the 19:46Z/20:10Z REJECTED verdicts were void — reviewer-equals-author enforcement bug, fixed 55cf5a9; this audit is the branch's first real review: +292 mounted wire tests vs the real registry/page, vitest pin bump 418->425/32->33 satisfies the pin-growth law, gates rc 0). FR-R003-FE flipped DONE.
+
+* REVIEW ai/turn-20261022-2039 :approved-lead-audit:
+:PROPERTIES:
+:AUTHOR: platform-engineer
+:REVIEWER: glm-5.3-flash@z.ai (LEAD AUDIT — park law; QA lane consumed by the 2108 review when this segment was orphaned by the 20:35Z seg-timeout wipe)
+:VERDICT: APPROVED
+:OUTCOME: approved-lead-audit
+:WHEN: [2026-10-22 Thu 22:18 UTC]
+:END:
+  Merger outcome: Lead audit-merge (TEST-T3 close-out, docs-only +53: TEAM-CHAT state record + CHAIN-TEST.md; content consistency verified).
