@@ -173,8 +173,9 @@ python3 scripts/landing_gate.py --fe        # plus vitest AND the six twin harne
                                             # doc-roster — the first three need app/node_modules)
 
 # the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
-# doc-citation rot AND every cited line landing inside its file, the suite counts the
-# docs publish as instructions graded against the gate's own pins, release inputs,
+# doc-citation rot AND every cited line landing inside its file, the suite counts AND
+# the selftest control counts the docs publish as instructions graded against the pins
+# the harnesses themselves enforce, release inputs,
 # no PEP 604 in any harness) — DEVGUIDE NINTH + TENTH + ELEVENTH laws
 python3 scripts/release_readiness.py        # 0 coherent / 1 a leg is red / 2 cannot run
 python3 scripts/release_readiness.py --expect 0.1.3   # what the NEXT tag must say
@@ -746,7 +747,12 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    `AGENTS.md` or `docs/DEVGUIDE.md` that differs from it — a pin bumped without its docs
    is RED, and so is a doc retyped without the pin (DEVGUIDE *ELEVENTH law*, last link;
    narrative counts elsewhere are dated records and out of domain, the Lead-owned CI
-   header included).
+   header included). ONE LINK UP, SAME LEG: a `--selftest # N controls` sentence is an
+   instruction too, so `leg_doc_controls()` grades each one against the `EXPECTED_CONTROLS`
+   of the harness the same sentence names — and every `*_check.py` harness must therefore
+   pin its own roster, which `scripts/chain_session_check.py` and `scripts/cool_chat_check.py`
+   did not (measured pre-fix: one control deleted answered `SELFTEST OK — 11 control(s)`,
+   rc 0).
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.

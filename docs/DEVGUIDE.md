@@ -233,6 +233,17 @@ python3 scripts/chain_test_check.py --selftest # 10 controls: every leg proved a
 python3 scripts/chain_session_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/chain_session_check.py --selftest # 8 controls: every leg proved able to fail
 
+# the cool-chat send-back's FIVE specced checks as ONE command — governance
+# (TEAM.md's MEMBER IDS reversal + its two rule headings), the color sweep of the
+# three files the send-back touched, one panel / one importer / one mount, the LIVE
+# prompt path (the panel really calls buildSchemaPrompt, the legend is still bound in
+# chat.ts, and the wire-level proof that asserts the captured request body is still on
+# disk) AND one prompt builder (exactly one product file writes the schema-summary
+# line, and it is chat.ts). The item's verdict was prose-only; this makes it
+# re-runnable, so a later edit cannot silently un-wire the panel.
+python3 scripts/cool_chat_check.py            # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/cool_chat_check.py --selftest # 12 controls: every leg proved able to fail
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
@@ -1158,6 +1169,40 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   pinned number — the file a reader copies from is part of the contract, and the cheap
   way to keep it honest is a closed table of its live claims plus a domain defined by
   section, not by guessing which sentences are history.
+
+- **ELEVENTH law, one link up — a `--selftest` COUNT is the same class of instruction.**
+  Every `*_check.py` harness prints `SELFTEST OK — N control(s)`, the mirror docs publish
+  that N as an instruction a reader copies (`--selftest # 10 controls: every leg proved
+  able to fail`), and the harness pins `len(CONTROLS)` against its own
+  `EXPECTED_CONTROLS` so a vanished control is `CANNOT RUN`. Three facts held that chain
+  open, and all three were measured before being fixed: (1) the sibling harnesses had
+  the sentence but no pin at all — one control deleted from `scripts/cool_chat_check.py`
+  answered `SELFTEST OK — 11 control(s)`, rc 0; (2) `release_readiness.py`'s
+  doc-count leg knew only `DOC_PIN_NAMES = {pytest, vitest}`, so no compare read the
+  CONTROL numbers — `AGENTS.md`'s cool-chat line retyped from 12 to 3 answered
+  RELEASE READINESS GREEN, rc 0; (3) widening the scanner without widening the table
+  would have made every control claim an ungraded instruction.
+  THE FIX: `leg_doc_controls()` (`scripts/release_readiness.py:838`) grades each live
+  `N controls` claim against the pin of the harness the SAME sentence tells the reader to
+  run, and `pin_two_ways()` (`scripts/release_readiness.py:804`) reads that pin from the
+  file's source AND from the imported module, so nothing is re-spelled here and a pin
+  that has become a computed value is a number no doc can honestly quote. The table is
+  closed and pinned like its sibling (`EXPECTED_DOC_CONTROL_CLAIMS`,
+  `scripts/release_readiness.py:801`), the domain is still structural (`## Layout` +
+  `## Commands`), and `scripts/chain_session_check.py` + `scripts/cool_chat_check.py`
+  gained the `EXPECTED_CONTROLS` pin their own sentence already promised.
+  CONTROLS, 5, each file restored byte-identical (md5 verified): honest run rc 0 over 6
+  claims; the doc retyped 12 → 3 → RED `says 3 controls, scripts/cool_chat_check.py pins
+  12 … the doc is stale`; the number deleted but the sentence kept → RED `states no
+  control count`; a real doc edit adding the DEVGUIDE cool-chat line without a table row
+  → RED naming the ungraded claim (that is how the mirror gap was found, and the row is
+  why it is now 6); the pin rewritten as `len(CONTROLS)` → CANNOT RUN `does not assign
+  EXPECTED_CONTROLS as a plain integer literal`; `EXPECTED_DOC_CONTROL_CLAIMS` left one
+  short → CANNOT RUN `lists 6 live claim(s), pins 5`; each sibling harness's pin set one
+  low → that harness exits 2 naming its own roster.
+  SEAT RULE, same shape as the one above: when a harness PRINTS a count as its proof,
+  ask what the count is a count OF, pin it against the roster, then ask who QUOTES it —
+  the doc that quotes it is in the contract too.
 
 - **TWELFTH harness law — a verdict leg that reads the TRANSPORT, not the VERDICT, is
   the EIGHTH law running backwards.** EIGHTH says `exit 0` alone never proved anything;

@@ -522,8 +522,18 @@ CONTROLS = (
     ("workflow file missing", control_missing_workflow, 2, "CANNOT RUN", True),
 )
 
+# The control roster is PINNED, not derived: `SELFTEST OK — N control(s)` printed
+# N from len(CONTROLS), so deleting a control deleted the proof and still answered
+# OK (the chain_test_check.py:EXPECTED_CONTROLS law, applied to its sibling).
+EXPECTED_CONTROLS = 8
+
 
 def selftest(root):
+    if len(CONTROLS) != EXPECTED_CONTROLS:
+        raise CannotRun("the control roster holds %d entries, the pin says %d — a control "
+                        "vanished (or was added without the pin), so `SELFTEST OK` would no "
+                        "longer mean every leg was run"
+                        % (len(CONTROLS), EXPECTED_CONTROLS))
     script = os.path.join(root, "scripts", "chain_session_check.py")
     failures = []
     for name, mutation, expected_rc, expected_text, patched in CONTROLS:

@@ -13,3 +13,8 @@ db.sqlite3
 .vite/
 coverage/
 admincraft_brand/
+# the turn harness's own files, written into the worktree by the runner and swept into
+# a delivery by the host committer (measured: branch ai/turn-20261022-2227 committed
+# .turn-review.txt, the PRIOR segment's verdict JSON, inside its work commit)
+.turn-inside.sh
+.turn-review.txt
