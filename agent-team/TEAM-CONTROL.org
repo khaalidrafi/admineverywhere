@@ -9,7 +9,7 @@
 #+TURN: codebuddy/deepseek-v4.1-flash@codebuddy (Software Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: ON
-#+CHAIN-PAUSE:
+#+CHAIN-PAUSE: armed 2026-10-22 16:20Z — a TODO was delivered; the Lead clears this line to resume
 
 * Notes
 
