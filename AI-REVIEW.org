@@ -94,3 +94,18 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   rc 1 on an empty diff killed the step silently under set -e +
   pipefail. Verify by dispatching a no-op segment and reading the
   finalize summary lines (merge: empty-segment, stall: +1).
+
+- [ ] REVIEW: Lead machinery patch 2026-10-22 11:55Z (this commit) —
+  (1) REAL ROTATION: pointer grammar one-arm-per-seat + catch-all
+  REFUSES (agent-team.yml turn `control` step); advance case
+  alternates platform-engineer <-> relief-engineer, unknown writes an
+  honest marker (was: every arm wrote the same constant — T2 finding);
+  (2) relief-engineer seat arm: zai -> minimax -> groq -> qoder
+  fallback chain; (3) PAUSE-AFTER-TODO law (Owner order 2026-10-22):
+  finalize greps the segment diff for :DELIVERED: on TODOS.org,
+  DECISION=paused-todo-review, arms #+CHAIN-PAUSE (no self-dispatch);
+  the turn control step refuses to run while the marker is set (mode=
+  paused); the Lead clears the marker to resume. Verify: dispatch a
+  segment that delivers a TODO -> run ends decision=paused-todo-review,
+  TEAM-CONTROL.org carries #+CHAIN-PAUSE, next run stops at the stop
+  notice; clear the line -> chain resumes.
