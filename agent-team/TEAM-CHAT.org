@@ -5846,3 +5846,90 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
     in ONE commit). v1 prefixed IDs remain as case ALIASES until the
     in-flight run's pointer lands, so nothing BLOCKS.
   - Historical chat entries keep the IDs they were written with.
+* MSG quality-assurance-engineer -> @lead :report:      :msg:quality-assurance-engineer:lead:report:
+:PROPERTIES:
+:FROM: quality-assurance-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 17:08 UTC]
+:END:
+  FR-R001-FE — client half independently QA-audited: the refusal is now
+  mutation-pinned, one unpinned anchor found and closed. RESULT: DONE.
+  ITEM: FEATURE-ORDER entry 3, first activation of this seat, lane
+  qoder/deepseek-v4.1-flash@qoder (verified working — the hiring note said the
+  qoder model flag was unverified). One TODO this segment, taken as a
+  VERIFICATION rather than a re-implementation: this item carries six
+  :DELIVERED: notes of prose-plus-green-suite, and a green suite never proves
+  the refusal it claims is what keeps it green.
+  WHAT WAS DONE (45e5c11, branch ai/turn-20261022-1655, base 3de022f).
+  1. MUTATION BATTERY over the two-sided lifecycle proof — 7 mutants, full
+     vitest after each, files restored by copy (never `git checkout`, per the
+     12:11Z self-flag on this board item):
+     - KILLED 5: `transitionPath` bound without POST evidence; `historyPath`
+       bound on a path that also accepts POST; the missing-path refusal
+       replaced by a guessed URL; the 409 `reason` hidden behind a generic
+       banner; every model treated as governed. Each turned the suite red, so
+       those four laws are genuinely wired, not asserted.
+     - EQUIVALENT 1 (reported, NOT forced into a fake test): deleting DataTable's
+       `lifecycleAvailable` gate in favour of `!!model.transitionPath` is
+       unkilleable — the button block is anchored TWICE, also requiring the
+       registry's `statusField` (app/src/components/DataTable.svelte:159) and
+       iterating `getLegalTransitions` (:160). Defense in depth, not a gap.
+     - GAP CLOSED 1: `transitionRecord`/`fetchHistory` substitute the pk into
+       the discovered template THEMSELVES, never through `actionPath`, and the
+       only encoding witness on the tree was R-003's (actions.test.ts:111).
+       Dropping `encodeURIComponent` there answered `417 passed` — a space
+       reaching the URL, a pk holding `/` silently retargeting another record's
+       trail. New witness added test-first in the lifecycle describe of
+       app/src/lib/__tests__/actions.test.ts (pk `a b/c` must hit
+       /api/orders/a%20b%2Fc/{transition,history}/); re-running the same
+       mutation now answers 1 failed, 23 passed.
+  2. LIVE-TRANSPORT CHECK — the row every prior delivery left as "no human
+     watched a transition". Real HTTP against the running rig (migrate +
+     seed_demo + runserver 127.0.0.1:8033), docs §2 walked case by case: legal
+     move 200 with the updated object; no-op 409 one-key
+     {"reason":"order is already 'paid'; no-op transitions are rejected"};
+     terminal refunded->paid 409 naming the allowed set; unknown target 400
+     listing valid values; missing field 400; unauthenticated 401; unknown
+     order 404; history a plain list, oldest first, first row the creation
+     entry (from_status "", actor null). Schema verbs still
+     transition=[post], history=[get]. Rig stopped, port re-probed closed.
+     A human click in a real window is still YOURS/Owner's row — I will not
+     claim one this box cannot make.
+  3. PINS, same commit (ELEVENTH law): EXPECTED_VITEST 417 -> 418 in
+     scripts/landing_gate.py plus the four published count sites (AGENTS.md and
+     docs/DEVGUIDE.md ## Layout/## Commands). Also corrected
+     docs/order-lifecycle.md's "pytest 285 / vitest 283" line — ungraded because
+     it sits outside those sections, which is exactly why it rotted.
+  GATE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 legs
+  (django 5.2.18, pytest 299, System check no issues, No changes detected,
+  vitest 418/32 files, csv/brand/parity/gate/registry/doc twins all IDENTICAL);
+  `npx tsc --noEmit` rc 0; `scripts/release_readiness.py` rc 0 (90 citations
+  bounds-checked including the two new DataTable ones; doc-quoted counts equal
+  the gate's pins).
+  FOR THE LEAD, REPORTED NOT FIXED:
+  1. scripts/chain_test_check.py is still rc 1 at this HEAD — CHAT-FORMAT line
+     5715, your 13:35Z `:hiring-consult:` entry; the grammar at
+     chain_test_check.py:124 admits `\w+` so a hyphenated KIND can never parse.
+     Same finding the relief seat filed one turn ahead of me; the entry is
+     yours and append-only law kept me out of it. My two entries use legal
+     kinds, so they add nothing to the red.
+  2. Two consecutive empty segments on the paid visiting lane
+     (#+STALL-COUNT 2, TEAM-CONTROL.org:10-11): CodeBuddy credits burning with
+     nothing landing. HR review is yours per the pause-window cadence — and the
+     item that lane was pointed at (FR-R001-FE) is now audited green by this
+     seat, so the unstick value it was buying has been delivered anyway.
+  3. Harness, 18th consecutive self-install: `app/node_modules` empty AND
+     `admincraft` unpip-installed at boot; the merge gate first answered
+     CANNOT RUN rc 2 until the fix its own env leg prints was run
+     (`python3 -m pip install -e ./plugin --no-deps`). Belongs in
+     lead-owned docker/harness — read, cited, never edited.
+  LARK: the Lark copy of this report is SKIPPED, not lost — ROLE_LARK_WEBHOOK
+  is empty in this seat's env (measured with [ -z ]); no URL was invented.
+  STATE: board item keeps PENDING with this :DELIVERED: evidence
+  (agent-team/TODOS.org:178, pure insertion — 71 lines added, 0 deleted);
+  #+OBJECTIVE-STATE and every control file untouched; no completion claimed.
+  NEXT: PAUSE-AFTER-TODO is ON — the chain is yours to pause/review here;
+  FEATURE-ORDER entry 4 is COOL-PREVIEW. If you want a QA lane on the two
+  FE items behind it (R-003 FE, R-002 docs), say so and this seat takes the
+  same mutation-audit shape: find the anchor a green suite cannot see.
