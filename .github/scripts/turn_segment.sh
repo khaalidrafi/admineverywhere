@@ -20,13 +20,21 @@ BRANCH="ai/turn-$(date -u +%Y%m%d-%H%M)"
 git checkout -b "$BRANCH"
 echo "TURN_BRANCH=$BRANCH" >> "$GITHUB_ENV"
 # ----------------------------------------------------------------
-# SEGREGATION LAW (Owner order 2026-10-22 18:14Z #admincraft:
-# "Separate author, reviewer and merger roles") — three distinct
-# actors per delivery: AUTHOR = this seat's own segment;
-# REVIEWER = the NEXT seat in the rotation (this run, read-only
-# review call on the previous run's pending branch — never the
-# author); MERGER = the finalize gate, which merges ONLY on the
-# reviewer's APPROVED verdict and refuses same-member reviews.
+# SEGREGATION LAW v2 — DUTY ROLES (Owner 18:14Z "Separate author,
+# reviewer and merger roles" + 18:55Z refinement: "author, reviewer,
+# merger duties should be performed by capable member roles with
+# capabilities") — three distinct CAPABLE ROLES per delivery:
+# AUTHOR = the implementation seats in rotation (platform -> relief
+#   -> software); QA is OUT of the author rotation.
+# REVIEWER = the QA ENGINEER (deepseek-v4.1-flash@qoder — the
+#   audit-proven reviewer role, FR-R001-FE), ALWAYS, not "whoever is
+#   next"; when QA itself authored the pending branch the VISITING
+#   SENIOR ENGINEER (glm-5.3@codebuddy) reviews instead. The turn
+#   seat NEVER reviews.
+# MERGER = the LEAD holds merge authority; the finalize gate is its
+#   execution arm — merges ONLY on the duty reviewer's APPROVED
+#   verdict, behind the green landing gate, and refuses a reviewer
+#   who is the author or not the duty reviewer.
 # What the previous finalize left pending:
 PENDING_LINE=$(grep -oP '^\#\+PENDING-REVIEW:\s*\K.*' agent-team/TEAM-CONTROL.org | head -1 | xargs || true)
 PENDING_BRANCH=$(printf '%s' "$PENDING_LINE" | sed -n 's/^branch=\([^ |]*\).*/\1/p')
@@ -34,17 +42,28 @@ PENDING_AUTHOR=$(printf '%s' "$PENDING_LINE" | sed -n 's/.*author=\([^ |]*\).*/\
 PENDING_SHA=$(printf '%s' "$PENDING_LINE" | sed -n 's/.*sha=\([0-9a-f]\{7,40\}\).*/\1/p')
 if [ -n "$PENDING_BRANCH" ] && git ls-remote --exit-code --heads origin "$PENDING_BRANCH" >/dev/null 2>&1; then
   git fetch origin "$PENDING_BRANCH" >/dev/null 2>&1 || true
-  echo "REVIEW DUTY: ${PENDING_BRANCH} (author: ${PENDING_AUTHOR:-unknown}) — this seat reviews before authoring"
+  echo "REVIEW DUTY: ${PENDING_BRANCH} (author: ${PENDING_AUTHOR:-unknown}) — duty reviewer is called below"
 else
   PENDING_BRANCH=""; PENDING_AUTHOR=""; PENDING_SHA=""
+fi
+# DUTY-REVIEWER selection (determined BEFORE the brief is built):
+QA_MEMBER="deepseek-v4.1-flash@qoder"
+VISITING_MEMBER="glm-5.3@codebuddy"
+REVIEWER_ROLE=""; REVIEWER_MEMBER=""; REVIEWER_SEAT=""
+if [ -n "$PENDING_BRANCH" ]; then
+  if [ "${PENDING_AUTHOR:-}" = "$QA_MEMBER" ]; then
+    REVIEWER_ROLE="Visiting Senior Engineer"; REVIEWER_MEMBER="$VISITING_MEMBER"; REVIEWER_SEAT="visiting-engineer"
+  else
+    REVIEWER_ROLE="QA Engineer"; REVIEWER_MEMBER="$QA_MEMBER"; REVIEWER_SEAT="quality-assurance-engineer"
+  fi
 fi
 # Reviewer brief (host-built, passed into the container; the
 # review is a SEPARATE lane call from the author's segment —
 # different duty, different brief, read-only).
 REVIEW_BRIEF=""
 if [ -n "$PENDING_BRANCH" ]; then
-  REVIEW_BRIEF="REVIEW DUTY (SEGREGATION LAW, Owner 2026-10-22 18:14Z: author, reviewer and merger are SEPARATE roles — no seat merges its own work).
-You are the REVIEWER, seat ${SEAT}. Pending branch: ${PENDING_BRANCH} (authored by ${PENDING_AUTHOR:-unknown}, head ${PENDING_SHA:-unknown}).
+  REVIEW_BRIEF="REVIEW DUTY (SEGREGATION LAW v2, Owner 18:14Z + 18:55Z refinement: duties belong to capable member roles — author, reviewer and merger are SEPARATE roles; no seat merges its own work).
+You are the DUTY REVIEWER: ${REVIEWER_ROLE}, member ${REVIEWER_MEMBER}. Pending branch: ${PENDING_BRANCH} (authored by ${PENDING_AUTHOR:-unknown}, head ${PENDING_SHA:-unknown}).
 If the author is the SAME member as you, your verdict is REJECTED (reason: reviewer-equals-author).
 Do this READ-ONLY, in order:
 1. git fetch origin ${PENDING_BRANCH} ; git log --oneline origin/ai/main..origin/${PENDING_BRANCH}
@@ -204,44 +223,37 @@ fi
 # The plugin is the code under test: link it fast (deps baked).
 python -m pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true
 # -------------------------------------------------------------
-# REVIEW PHASE (SEGREGATION LAW, Owner 18:14Z): this seat first
-# acts as the REVIEWER for the previous run's pending branch —
-# a SEPARATE lane call from the author segment below. Read-only:
-# the verdict token lands in /workspace/.turn-review.txt and the
-# HOST extracts it; the merger (finalize) acts only on APPROVED
-# from a reviewer that is not the author.
+# REVIEW PHASE (SEGREGATION LAW v2, Owner 18:14Z + 18:55Z): the
+# DUTY REVIEWER is a capable member ROLE, not the turn seat — the
+# host already selected REVIEWER_SEAT/REVIEWER_MEMBER and passed
+# them in via docker -e. A SEPARATE lane call from the author
+# segment below. Read-only: the verdict token lands in
+# /workspace/.turn-review.txt and the HOST extracts it; the merger
+# (finalize, on LEAD authority) acts only on APPROVED from the
+# duty reviewer, who is never the author.
 : > /workspace/.turn-review.txt 2>/dev/null || true
 if [ -n "$PENDING_BRANCH" ]; then
-  case "$SEAT" in
-    platform-engineer)
-      env HOME=/usr/local/lib/qoder-home \
-        qoder -p "$REVIEW_BRIEF" --output-format json \
-        --permission-mode bypassPermissions --max-turns 60 \
-        > /workspace/.turn-review.txt 2>&1 || true ;;
+  # DUTY-REVIEWER lanes (Owner 18:55Z: the review duty belongs to a
+  # capable member ROLE, not to whoever happens to hold the turn):
+  #   default  -> QA ENGINEER lane (deepseek-v4.1-flash@qoder via the
+  #               qoder body — the seat's PROVEN recipe, --model pinned)
+  #   QA authored -> VISITING SENIOR lane (glm-5.3@codebuddy)
+  # The turn seat NEVER reviews its own or anyone's work here.
+  case "$REVIEWER_SEAT" in
     quality-assurance-engineer)
       env HOME=/usr/local/lib/qoder-home \
         qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \
         --permission-mode bypassPermissions --max-turns 60 \
-        > /workspace/.turn-review.txt 2>&1 || true ;;
-    software-engineer)
-      env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
-        codebuddy -p "$REVIEW_BRIEF" -y --permission-mode bypassPermissions \
-        --max-turns 60 --model deepseek-v4.1-flash \
         > /workspace/.turn-review.txt 2>&1 || true ;;
     visiting-engineer)
       env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
         codebuddy -p "$REVIEW_BRIEF" -y --permission-mode bypassPermissions \
         --max-turns 60 --model glm-5.3 \
         > /workspace/.turn-review.txt 2>&1 || true ;;
-    relief-engineer)
-      env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
-        OPENAI_API_KEY="$OPENROUTER_API_KEY" \
-        OPENAI_HOST="https://openrouter.ai" \
-        OPENAI_BASE_PATH="/api/v1/chat/completions" \
-        goose run --no-session -t "$REVIEW_BRIEF" \
-        > /workspace/.turn-review.txt 2>&1 || true ;;
+    *)
+      echo "REVIEW: no duty reviewer selected (pending empty or unknown author ${PENDING_AUTHOR:-?})" ;;
   esac
-  echo "REVIEW: reviewer call done for ${PENDING_BRANCH}"
+  echo "REVIEW: duty reviewer ${REVIEWER_SEAT:-none} (${REVIEWER_MEMBER:-none}) reviewed ${PENDING_BRANCH}"
 else
   echo "REVIEW: no pending branch this run"
 fi
@@ -442,6 +454,7 @@ if docker run --rm --user 1001:1001 \
   -e SEAT="${SEAT}" -e BRIEF="${BRIEF}" \
   -e REVIEW_BRIEF="${REVIEW_BRIEF}" \
   -e PENDING_BRANCH="${PENDING_BRANCH}" -e PENDING_AUTHOR="${PENDING_AUTHOR}" \
+  -e REVIEWER_SEAT="${REVIEWER_SEAT}" -e REVIEWER_MEMBER="${REVIEWER_MEMBER}" \
   -e QODER_PERSONAL_ACCESS_TOKEN -e ZAI_API_KEY -e OPENROUTER_API_KEY \
   -e GROQ_API_KEY -e CODEBUDDY_AUTH_TOKEN \
   agent-harness:local bash /workspace/.turn-inside.sh \
@@ -472,6 +485,8 @@ echo "pending_author=${PENDING_AUTHOR}" >> "$GITHUB_OUTPUT"
 echo "pending_sha=${PENDING_SHA}" >> "$GITHUB_OUTPUT"
 echo "review_verdict=${REVIEW_VERDICT}" >> "$GITHUB_OUTPUT"
 echo "review_evid=${REVIEW_EVID}" >> "$GITHUB_OUTPUT"
+echo "review_seat=${REVIEWER_SEAT}" >> "$GITHUB_OUTPUT"
+echo "review_member=${REVIEWER_MEMBER}" >> "$GITHUB_OUTPUT"
 # HOST-SIDE COMMIT (run 39488529938: the seat EDITED + VERIFIED but
 # its sandbox denied git/pytest — the edits died in the container,
 # branch pushed empty, work lost). The host commits the workspace
