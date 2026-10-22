@@ -1,12 +1,16 @@
 #+TITLE: MEMBERS — admincraft ranked roster
-# MEMBER ID FORMAT LAW (Owner 2026-10-22 13:22Z): every member ID is
-# PROVIDER/MODEL@PLATFORM. "minimax@goose"-style bare IDs are invalid.
+# MEMBER ID FORMAT LAW (Owner 2026-10-22 13:22Z, refined 16:54Z):
+# PROVIDER/MODEL@PLATFORM — and PROVIDER/ ONLY for API models (key-
+# served lanes: zai/ groq/ openrouter/ gomodel/ ...). Platform-native
+# bundled brains are BARE model@platform (qwen3.8-flash@qoder,
+# deepseek-v4.1-flash@codebuddy, glm-5.3@codebuddy). Bare
+# "minimax@goose"-style ids remain invalid for API lanes.
 #
 # 2026-10-22 13:35Z Lead update (Owner orders 13:22Z): CI CHAIN SEATS,
 # rotation cycles platform -> relief -> software -> QA -> platform:
 #
 #   * ROLE: PLATFORM ENGINEER
-#     qoder/qwen3.8-flash@qoder [PROVEN — proof run 39477554903;
+#     qwen3.8-flash@qoder [PROVEN — proof run 39477554903;
 #     TEST-T1..T3 landed 2026-10-22]
 #   * ROLE: RELIEF ENGINEER (fallback chain within the seat)
 #     openrouter/minimax-m3.1-flash:free@goose [PROVEN — TEST-T1 de44031
@@ -14,10 +18,10 @@
 #     zai/glm-4.7-flash@goose [ARMED — ZAI_API_KEY landed 2026-10-22]
 #     groq/qwen3.8-27b@goose [ARMED — relief hire 2026-10-22]
 #   * ROLE: SOFTWARE ENGINEER (NEW hire, Owner order 13:22Z)
-#     codebuddy/deepseek-v4.1-flash@codebuddy [ACTIVATING — CODEBUDDY_
+#     deepseek-v4.1-flash@codebuddy [ACTIVATING — CODEBUDDY_
 #     AUTH_TOKEN in repo secrets; first live proof pending]
 #   * ROLE: QA ENGINEER (NEW hire, Owner order 13:22Z)
-#     qoder/deepseek-v4.1-flash@qoder [ACTIVATING — model flag
+#     deepseek-v4.1-flash@qoder [ACTIVATING — model flag
 #     unverified; if the CLI rejects it the fallback chain self-heals]
 #   * MiniMax M3.1 Flash free offers — consume ALL (Owner 13:22Z):
 #     openrouter:free ACTIVE; gomodel gateway catalog scan (minimax/
@@ -37,7 +41,7 @@
      variant trades a little depth for dispatch latency, which is what
      a Lead needs. Proven across BOTH repos: orchestration, harness
      repairs (3428567, run 39752778724 URL fix), gate verdicts. Free.
-  2. ROLE: PLATFORM ENGINEER — qoder/qwen3.8-flash@qoder [PROVEN]
+  2. ROLE: PLATFORM ENGINEER — qwen3.8-flash@qoder [PROVEN]
      WHY: the ONLY body with CI evidence on THIS repo (proof run
      39477554903: real qoder JSON result, 72s agentic turn; TEST-T1..T3
      landed). The Qwen3.8-Flash brain is weak alone (Flash tier, no
@@ -62,7 +66,7 @@
      lineage as the proven platform brain. Added after run 39752778724
      proved a single-lane relief seat is a stall risk (the minimax URL
      death stalled the whole chain on its own).
-  6. ROLE: SOFTWARE ENGINEER — codebuddy/deepseek-v4.1-flash@codebuddy [ACTIVE — free tier, MUST burn]
+  6. ROLE: SOFTWARE ENGINEER — deepseek-v4.1-flash@codebuddy [ACTIVE — free tier, MUST burn]
      WHY (Owner order): DeepSeek V4.1 Flash = fast agentic coding
      tier; CodeBuddy = agentic IDE harness (plan/act, file tools, bash,
      -y headless mode). The free tier is tokens we are ORDERED to burn,
@@ -72,7 +76,7 @@
      landing gate + Lead review that every segment rides anyway.
      Model id VERIFIED against the codebuddy CLI --help (supported:
      deepseek-v4.1-flash, glm-5.3, kimi-k3, gpt-6-astra, ...).
-  7. ROLE: QA ENGINEER — qoder/deepseek-v4.1-flash@qoder [ACTIVE — free tier]
+  7. ROLE: QA ENGINEER — deepseek-v4.1-flash@qoder [ACTIVE — free tier]
      WHY: the same free brain on the Owner's LOCAL qoder body — a
      second body of a brain we already run (BODY SHAPES OUTPUT law:
      same brain, different body = a different member). QA = run the
@@ -86,7 +90,7 @@
   days (Oct 22..27) -> budget 50/day. Unused budget dies at expiry, so
   front-load, never save. One visiting turn per day, Lead-briefed.
 
-  ROLE: VISITING SENIOR ENGINEER — codebuddy/glm-5.3@codebuddy
+  ROLE: VISITING SENIOR ENGINEER — glm-5.3@codebuddy
   [ACTIVE — first visit 2026-10-22]
   WHY: the strongest credit-eligible brain on the codebuddy pool with
   VERIFIED evidence in this ledger (GLM-5.3 = quality-96 tier, HN
@@ -110,7 +114,7 @@
   BURN LEDGER (Lead updates per run):
   | date       | member                      | segment        | credits spent | note                          |
   |------------+-----------------------------+----------------+---------------+-------------------------------|
-  | 2026-10-22 | codebuddy/glm-5.3@codebuddy | FR-R001-FE     | ~50 (burned)  | 16:28Z dispatch; PAID run OK, 0 commits (empty) |
+  | 2026-10-22 | glm-5.3@codebuddy | FR-R001-FE     | ~50 (burned)  | 16:28Z dispatch; PAID run OK, 0 commits (empty) |
 
 * HR PERFORMANCE REVIEWS (Owner order 2026-10-22 ~16:08Z: "regularly review your members' performance and record that in that file, just like a real HR would")
 
@@ -123,14 +127,14 @@
 
   | member                                   | delivered          | review evidence (as of 2026-10-22)                          | verdict |
   |------------------------------------------+--------------------+-------------------------------------------------------------+---------|
-  | qoder/qwen3.8-flash@qoder                | TEST-T3 + segments | T3 caught empty-segment + Telegram-mirror bugs; gate green  | KEEP    |
+  | qwen3.8-flash@qoder                | TEST-T3 + segments | T3 caught empty-segment + Telegram-mirror bugs; gate green  | KEEP    |
   | openrouter/minimax-m3.1-flash:free@goose | TEST-T1, TEST-T2   | T2 found a real machinery bug (rotation-pointer no-op)      | KEEP    |
   | glm-5.3-flash@z.ai (Lead)                | every segment      | reviews at pause windows; harness repairs 3428567 + URL fix | KEEP    |
   | zai/glm-4.7-flash@goose                  | 0 confirmed       | relief turn delivered CC-SB-2 but lane line reads qoder fallback — attribution unconfirmed | PROBE |
   | groq/qwen3.8-27b@goose                   | 0 yet              | ARMED 10-22; relief fallback, unexercised                   | PROBE   |
-  | codebuddy/deepseek-v4.1-flash@codebuddy  | 0 commits          | lane ran OK twice (ee5ed18, 0611493) but segments EMPTY     | WATCH   |
-  | qoder/deepseek-v4.1-flash@qoder          | 0 yet              | ACTIVE; --model flag unverified                             | PROBE   |
-  | codebuddy/glm-5.3@codebuddy (visiting)   | 0 commits          | visit 1: PAID lane VERIFIED (run OK, ~50 credits burned) but segment EMPTY — session artifact review before visit 2 | WATCH |
+  | deepseek-v4.1-flash@codebuddy  | 0 commits          | lane ran OK twice (ee5ed18, 0611493) but segments EMPTY     | WATCH   |
+  | deepseek-v4.1-flash@qoder          | 0 yet              | ACTIVE; --model flag unverified                             | PROBE   |
+  | glm-5.3@codebuddy (visiting)   | 0 commits          | visit 1: PAID lane VERIFIED (run OK, ~50 credits burned) but segment EMPTY — session artifact review before visit 2 | WATCH |
 
 # BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on
 different bodies produces different work. model@Goose and model@OpenCode are
