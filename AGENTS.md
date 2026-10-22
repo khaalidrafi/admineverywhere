@@ -196,6 +196,15 @@ python3 scripts/registry_roster_diff.py --src /tmp/copy   # controls run on copi
 python3 scripts/doc_field_roster_diff.py    # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on copies
 
+# the TEST-CHAIN objective's landed evidence, re-runnable in ONE command: the three
+# scripted turns each landed as a commit on the main ref, the chat carries the FROM in
+# every headline and a complete :PROPERTIES: drawer, the chat was never edited or
+# dropped inside the objective's window, the run log holds one well-formed line per
+# turn (every run id resolving to a real commit), and every parked board item is
+# still a headline — an order cannot be restored over a deleted item.
+python3 scripts/chain_test_check.py            # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/chain_test_check.py --selftest # 8 controls: every leg proved able to fail
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
