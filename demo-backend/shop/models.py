@@ -26,6 +26,19 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    class Packaging(models.TextChoices):
+        """Free enum (no lifecycle machine): the choices themselves exclude the
+        empty value; ``blank=True`` below adds the real "not decided" state."""
+
+        BOX = "box", "Box"
+        CRATE = "crate", "Crate"
+        PALLET = "pallet", "Pallet"
+
+    # FR-R002 §2 case C — the shape a blank=True choices field emits
+    # ({oneOf: [PackagingEnum, BlankEnum]}). The thin client must resolve it to
+    # a select, not degrade it to free text.
+    PACKAGING_CHOICES = [("", "Not decided")] + Packaging.choices
+
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
@@ -33,6 +46,13 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     launch_date = models.DateField(null=True, blank=True)
+    packaging = models.CharField(
+        max_length=20,
+        choices=PACKAGING_CHOICES,
+        blank=True,
+        default="",
+        help_text="Free enum that allows the empty state (FR-R002 case C).",
+    )
 
     def __str__(self):
         return self.name
