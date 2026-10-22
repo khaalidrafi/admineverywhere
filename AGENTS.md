@@ -76,10 +76,10 @@ Product constraints — do not relax:
   shell and sidebar carry no page-specific line.
 - The three drop-in registries (widgets, pages, actions) are ONE contract with THREE
   glob dirs, and the failure mode is a test that grades a module nobody imports:
-  `python3 scripts/registry_roster_check.py` pins which files glob, refuses one dir
+  `python3 scripts/registry_roster_diff.py` pins which files glob, refuses one dir
   claimed twice, requires each pinned dir to still hold its declared `meta` files and
-  each registry to have a non-test product importer. Candidate leg, not yet a gate
-  leg (see *Commands*); the class and its controls: DEVGUIDE *THIRTEENTH harness law*.
+  each registry to have a non-test product importer. It is the fifth FE twin leg of
+  `landing_gate.py --fe` (see *Commands*); the class and its controls: DEVGUIDE *THIRTEENTH harness law*.
 - Deliberately out of scope: virtual scrolling, command palette, alerts.
 
 ## Product spec (from MVP brief)
@@ -167,9 +167,9 @@ python3 scripts/gate_roster_diff.py --gate /tmp/copy.sh   # controls run on copi
 # the LANDING GATE itself (pytest + manage.py check + makemigrations --check),
 # with a dep preflight so a swallowed boot-install failure is exit 2 not a false red
 python3 scripts/landing_gate.py             # 0 green / 1 a leg is red / 2 cannot run
-python3 scripts/landing_gate.py --fe        # plus vitest AND the four twin harnesses
-                                            # (csv/brand/parity/gate-roster — the first
-                                            # three need app/node_modules)
+python3 scripts/landing_gate.py --fe        # plus vitest AND the five twin harnesses
+                                            # (csv/brand/parity/gate-roster/registry-roster
+                                            # — the first three need app/node_modules)
 
 # the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
 # doc-citation rot AND every cited line landing inside its file, the suite counts the
@@ -181,9 +181,11 @@ python3 scripts/release_readiness.py --expect 0.1.3   # what the NEXT tag must s
 # the DROP-IN REGISTRIES as a check: which files glob a contract dir at all, whether ONE
 # dir is globbed TWICE (the dead-twin shape — a second registry a test can keep green
 # while the app imports the other), whether each pinned dir still holds its declared
-# `meta` files, and whether any product file imports the registry the test asserts
-python3 scripts/registry_roster_check.py    # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/registry_roster_check.py --src /tmp/copy   # controls run on copies
+# `meta` files, and whether any product file imports the registry the test asserts.
+# Named `*_diff.py` because that glob IS the wiring: landing_gate's EXPECTED_TWINS
+# cross-check refuses any harness on disk that its roster does not run, and vice versa.
+python3 scripts/registry_roster_diff.py     # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/registry_roster_diff.py --src /tmp/copy   # controls run on copies
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -674,10 +676,12 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    prints no count to argue with. A roster drift is `CANNOT RUN` (the harness is no
    longer this gate), never RED; the twin roster is cross-checked against the
    `scripts/*_diff.py` files on disk, not only against its own literal, so an unwired
-   harness is a refusal too. `--fe` adds vitest plus all four twin harnesses
-   (csv/brand/parity byte identity and the machine-gate roster): the merge gate
-   deliberately stays three legs, because the twins answer `CANNOT RUN` where
-   `app/node_modules` is absent and that verdict must not stall every merge — but a
+   harness is a refusal too. `--fe` adds vitest plus all five twin harnesses
+   (csv/brand/parity byte identity, the machine-gate roster and the drop-in registry
+   roster): the merge gate deliberately stays three legs, because `.github/scripts/
+   gate.sh` is Lead-owned and `gate_roster_diff.py` grades it against `MERGE_COMMANDS`
+   leg-by-leg — a fourth leg a seat adds here would only register as machine-gate
+   drift (the registry twin needs no `app/node_modules` and still cannot join) — but a
    seat delivering work that touches a twin pair must run `--fe`, because per-side
    unit tests are green against their own fixture and therefore cannot see a
    divergence *between* the two. The fourth twin is the one a seat cannot see at
