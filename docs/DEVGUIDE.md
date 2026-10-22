@@ -73,7 +73,7 @@ Product constraints — do not relax:
   `app/src/lib/__tests__/lifecycleMount.test.ts`.
   Contract + copy checklist: `docs/rbac.md`.
 - New page (non-CRUD module) = drop one `.svelte` file in `app/src/pages/`
-  exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`
+  exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`
   — the same glob contract, applied to routes: `app/src/lib/pages/index.ts`
   validates it, injects the router's route table and the sidebar entry. Router,
   shell and sidebar carry no page-specific line.
@@ -81,8 +81,9 @@ Product constraints — do not relax:
   glob dirs, and the failure mode is a test that grades a module nobody imports:
   `python3 scripts/registry_roster_diff.py` pins which files glob, refuses one dir
   claimed twice, requires each pinned dir to still hold its declared `meta` files and
-  each registry to have a non-test product importer. It is the fifth FE twin leg of
-  `landing_gate.py --fe` (see *Commands*); the class and its controls: *THIRTEENTH harness law* below.
+  each registry to have a non-test product importer. The FIELD NAMES it reads are the
+  next claim up, graded by `doc_field_roster_diff.py`: the fifth and sixth FE twin legs of
+  `landing_gate.py --fe` (see *Commands*); classes and controls: *THIRTEENTH + FOURTEENTH harness law* below.
 - Deliberately out of scope: virtual scrolling, command palette, alerts.
 
 ## Product spec (from MVP brief)
@@ -120,9 +121,9 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (416 vitest) |
-| `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
+| `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
-| `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
+| `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
 | `skills/` | the two agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
@@ -175,9 +176,10 @@ python3 scripts/gate_roster_diff.py         # 0 = identical, 1 = divergence, 2 =
 
 # the LANDING GATE as one command — pytest + manage.py check + makemigrations --check,
 # behind a dep preflight (see EIGHTH harness law: a swallowed boot install must not
-# impersonate a red tree). --fe adds vitest AND the five twin harnesses — the
-# byte-identity claims, the machine-gate roster and the drop-in registry roster that
-# NO single suite can see, since every writer is green against its own fixture;
+# impersonate a red tree). --fe adds vitest AND the six twin harnesses — the
+# byte-identity claims, the machine-gate roster, the drop-in registry roster and the
+# doc field-list roster, none of which NO single suite can see, since every writer is
+# green against its own fixture;
 # --python <exe> forces one interpreter.
 python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = cannot run
 
@@ -196,6 +198,15 @@ python3 scripts/release_readiness.py        # 0 = coherent, 1 = a leg is red, 2 
 # harness on disk its roster does not run, and a roster naming a harness that is gone.
 python3 scripts/registry_roster_diff.py     # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/registry_roster_diff.py --src /tmp/copy   # controls run on copies
+
+# THE DROP-IN CONTRACT FIELD LISTS as one command — every `meta{...}` list the two
+# mirror docs publish against the fields the registries actually read (`PageMeta`,
+# `ActionMeta`, and the widget registry's own `mod.meta` reads cross-checked against the
+# shipped `Widget` interface), plus the four doors: a doc field the code does not
+# declare, a code field no doc mentions, a doc `x?` the interface requires, and two
+# mirror docs stating two shapes for one contract.
+python3 scripts/doc_field_roster_diff.py    # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on copies
 
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
@@ -254,7 +265,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   governance on a field *name* — `app/src/lib/statusTransitions.ts` is keyed
   by model id. Full convention + guardrails in `docs/independent-enums.md`.
 - Custom actions (FR-R003) follow the widget drop-in contract: one `.ts` in
-  `app/src/actions/` exporting `meta{label,scope,model?,confirm?,input?,handler}`
+  `app/src/actions/` exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`
   — the registry globs it, nothing to edit. Endpoint URLs come from
   `actionPath(model, slug, recordId?)`, i.e. the schema-discovered
   `model.listPath`, NEVER from `apiUrl + model.id` (`apiUrl` is only the base
@@ -1247,8 +1258,85 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   SEAT RULE: for every module your suite names, `grep` its importers and count the
   NON-test ones. Zero means your contract test is a memo about a file nobody runs; two
   modules claiming one directory means one of them is a second fixture.
+- **FOURTEENTH harness law — one contract written in two docs and one interface is
+  THREE artifacts, and only a diff can see that they agree.**
+  WHY (measured, not assumed): `roles` is a field of `PageMeta` and of `ActionMeta` —
+  FR-R007 gating reads it — and it appeared in NO `meta{...}` list in either mirror doc.
+  A seat that wrote a drop-in from the published contract therefore produced a silently
+  un-gated page, and pytest 299 / vitest 416 / `registry_roster_diff.py` rc 0 all stayed
+  green, because the roster law sees DIRECTORIES and IMPORTERS, never a field NAME. The
+  symmetric hole is the one a reviewer cannot spot from either side: rename a registry
+  field and eight sentences keep promising the old shape. Measured with the harness
+  written and the docs not yet fixed — it answered RED, exactly those two lines:
+  `registry pages: declares roles in code and NO in-domain doc list mentions it` and the
+  `actions` twin. The fix is the doc side — every pages list now ends
+  `standalone,roles?` and every actions list `input?,roles?,handler` — because the field
+  is real and the docs were the stale artifact.
+  THE CODE SIDE IS PARSED, NEVER RESTATED: pages/actions come from
+  `export interface PageMeta` / `ActionMeta`, and the widget registry declares no meta
+  interface, so its contract is the set of `mod.meta.X` reads IT performs, cross-checked
+  against the shipped `Widget` interface minus the two keys the registry injects
+  (`file`, `component`). Two independent derivations of one shape; if they disagree the
+  harness refuses to pick a winner (CANNOT RUN).
+  THE FOUR DOORS: DOC-NAMED (a doc promises a field the registry does not declare),
+  COVERAGE (a code field no in-domain doc list mentions — the `roles` hole), OPTIONAL
+  (a doc marks `x?` while the interface requires `x`), MIRROR (the two docs state
+  DIFFERENT shapes for one contract). Plus population pins: 12 contract lists, 3+2+1 per
+  registry per doc, 7/7/3 code fields — a list that vanished shrinks every door above,
+  so a moved count is CANNOT RUN, not a smaller green.
+  WHY OPTIONAL IS ONE-DIRECTIONAL, measured: graded both ways it fired on FOUR CORRECT
+  sentences — `nav, icon, order, standalone` are optional in `PageMeta` and listed
+  without `?`, which is shorthand, not a claim of requiredness. A leg that fires on true
+  prose is worse than no leg (the TENTH law's precedent, re-paid here).
+  DOMAIN: `AGENTS.md` + `docs/DEVGUIDE.md` only, cut at each file's `## State as of` —
+  below that heading everything is a dated record, the same ruling the doc-count leg
+  applies. Control 10 proves the cut is real rather than accidental: a bogus field added
+  to a state-log list leaves the verdict rc 0.
+  CONTROLS, twelve of them, every mutation on a COPY (`--root /tmp/…`, and the gate doors
+  by calling `pin_twins()` / `leg_twin()` on a copy of `landing_gate.py` — no shipped file
+  was ever mutated): honest rc 0 over 17 fields / 12 lists / 76 field claims; `roles?`
+  stripped from every pages list in BOTH docs → RED `registry pages: declares roles …
+  NO in-domain doc list mentions it`; a doc promising `width` → RED naming `AGENTS.md:73`
+  and the mirror pair; a doc `title?` against a required `title` → RED `a drop-in written
+  from this doc is refused by the registry`; `roles?` deleted from AGENTS.md ONLY →
+  RED `the two mirror docs state DIFFERENT shapes for one contract` (proving MIRROR is
+  independent of COVERAGE — DEVGUIDE still documents the field, so coverage passes and
+  only the mirror fires); one contract list deleted → CANNOT RUN `the docs carry 11
+  contract list(s), EXPECTED_LISTS pins 12`; `standalone` renamed in `PageMeta` → RED
+  `the CODE contract moved off its pin — added (hideNav), removed (standalone)`; a new
+  `mod.meta.unit` read → CANNOT RUN `the widget contract has two sources and they
+  disagree`; `PageMeta` renamed away → CANNOT RUN (no interface block); a list whose
+  paragraph lost its `app/src/widgets/` token → CANNOT RUN `name no registry dir in their
+  paragraph` (an unattributable list is graded against nothing); a list body carrying
+  prose — `title, the size, …` inside the braces → CANNOT RUN naming the piece.
+  ONE CONTROL THAT WENT THE OTHER WAY, and should be read as the door working: the first
+  draft of this section's own *Commands* text wrote `meta{...}` as a placeholder and the
+  harness answered CANNOT RUN `a contract list piece this harness cannot parse ('...')`.
+  The tempting fix — tolerate anything unparseable — is the one that makes a comparison
+  blind; the shipped rule skips a body made only of separators/ellipsis and still refuses
+  everything else, and the list count is pinned so the skip cannot become a hiding place.
+  GATE DOORS (the wiring, measured on copies): `EXPECTED_TWINS` left at 5 → CANNOT RUN
+  `TWINS lists 6 harness(es), EXPECTED_TWINS pins 5`; `doc-twin` deleted from `TWINS` with
+  the harness still on disk → CANNOT RUN from the same pin (the count door answers before
+  the disk-vs-roster door, both are refusals); the leg's probe phrase renamed away from
+  what the harness prints → RED `doc-twin rc 0 but printed no … verdict line`; the leg run
+  as the gate runs it → `doc-twin   DOC FIELD ROSTER OK — 3 registries, 17 contract
+  fields, 12 doc lists, 76 field claims graded`.
+  IT STAYS OUT OF THE MERGE ROSTER for the THIRTEENTH law's reason: gate.sh is Lead-owned
+  and `gate_roster_diff.py` grades the two gates leg-by-leg, so a fourth merge leg here
+  registers only as machine-gate drift.
+  WHAT IT DOES NOT COVER, so the next reader does not over-read it: NAMES only, never
+  types or semantics (the `size` field says nothing about `"sm" | "lg"` —
+  `widgets/index.ts`
+  decides that, and its own unit tests grade it); not whether a registry VALIDATES a
+  field, only that it declares/reads one; and the per-feature docs (`docs/custom-actions.md`,
+  `docs/page-registration.md`, `docs/rbac.md`) carry abbreviated lists and worked examples
+  and are out of domain — the mirror pair is the instruction surface, same ruling as above.
+  SEAT RULE: adding a field to a drop-in interface makes this commit owe the doc lists in
+  the SAME commit — run `python3 scripts/doc_field_roster_diff.py` and it names every list
+  that is missing it; deleting a doc list without moving the pin stops the gate.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
-  `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
+  `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone,roles?}` from
   `<script module>` (runes are unavailable there — the export must be static).
   `app/src/lib/pages/index.ts` globs eagerly, validates, and hands
   `lib/router.ts` its route table via `setPages()` — the router owns NO table,
