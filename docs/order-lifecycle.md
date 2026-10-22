@@ -153,6 +153,33 @@ verbatim in the toast (not a generic failure banner), the trail read through the
 discovered history path in oldest-first order, and zero buttons plus zero
 requests once the actions are stripped from the schema.
 
+The refusal is anchored TWICE, which a 2026-10-22 QA mutation audit measured: the
+button block requires `hasLifecycleGovernance` (`app/src/components/DataTable.svelte:159`)
+AND iterates the registry's own target list through `getLegalTransitions`
+(`app/src/components/DataTable.svelte:160`), so a schema that documents
+`POST …/transition/` for a model the client never declared still renders nothing —
+and deleting only the `lifecycleAvailable` call is an EQUIVALENT mutation (no
+reachable input changes its output, so no test can and none should pin it). The
+five mutations that do change behavior are each killed by a named test: binding
+`transitionPath` without POST evidence, binding `historyPath` on a document that
+also accepts POST, replacing the missing-path refusal with a guessed URL, hiding
+the 409 `reason` behind a generic banner, and treating every model as governed.
+One anchor the audit initially found UNPINNED is now witness-backed: both lifecycle
+calls substitute the pk into the discovered template themselves (never through
+`actionPath`), so `transitionRecord`/`fetchHistory` carry their own
+percent-encoding assertion in `app/src/lib/__tests__/actions.test.ts` — dropping
+`encodeURIComponent` there turns the suite red instead of shipping a URL whose
+space fetch may reject and whose `/` silently retargets another record's trail.
+
+Live-transport check (same audit, real HTTP against the running rig, not the
+fixture): the §2 table answers exactly as documented — legal move `200` with the
+updated object, no-op/illegal/terminal `409` with a one-key `{reason}` body,
+unknown target and missing field `400` with `{reason}`, unauthenticated `401`,
+unknown order `404`, and `GET …/history/` a plain list, oldest first, whose first
+row is the creation entry (`from_status: ""`, `actor: null`). The schema still
+documents `transition` as `[post]` and `history` as `[get]`, which is the evidence
+`normalizeOpenAPI` binds on.
+
 ## 5. Notes & compatibility
 
 - **`status` stays writable on `PATCH /api/orders/{id}/`** — pre-existing
@@ -178,4 +205,6 @@ requests once the actions are stripped from the schema.
   profile (`COMPONENT_SPLIT_REQUEST` since 2026-10-21, measured zero drift on
   all 16 paths), so the four rig modules' schema tests generate a
   fixture-consistent document too.
-- Suites: `pytest 285` / `vitest 283` (`cd app && npm test`).
+- Suites: `pytest 299` / `vitest 418` (32 files) — the counts `scripts/landing_gate.py`
+  pins (`EXPECTED_PYTEST`/`EXPECTED_VITEST`/`EXPECTED_VITEST_FILES`), re-measured
+  2026-10-22 by the QA seat on this branch.

@@ -256,6 +256,21 @@ describe("lifecycle endpoints build their URLs off the schema path", () => {
     }
   });
 
+  it("an unusual pk travels percent-encoded into the lifecycle URL", async () => {
+    // Both lifecycle calls substitute the pk into the DISCOVERED template
+    // themselves — never through actionPath — so the encoding rule that the
+    // R-003 case above pins needs its own witness for R-001. Without it a
+    // space reaches the URL (fetch may reject it outright) and a pk holding
+    // "/" silently retargets the call onto another record's trail.
+    mockFetch.mockResolvedValueOnce(jsonReply({ id: "a b/c", status: "paid" }, 200));
+    await transitionRecord(CFG, "tok", ORDERS, "a b/c", "paid");
+    expect(lastUrl()).toBe("http://localhost:8000/api/orders/a%20b%2Fc/transition/");
+
+    mockFetch.mockResolvedValueOnce(jsonReply([], 200));
+    await fetchHistory(CFG, "tok", ORDERS, "a b/c");
+    expect(lastUrl()).toBe("http://localhost:8000/api/orders/a%20b%2Fc/history/");
+  });
+
   it("a machine the API does not document is refused with zero network calls", async () => {
     // Same document, lifecycle actions stripped — i.e. a backend that never
     // shipped the R-001 @actions. The client must not invent the URL.
