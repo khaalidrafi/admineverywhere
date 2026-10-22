@@ -4883,3 +4883,29 @@
   (5) SECRET LAW held — QODER / ZAI / OPENROUTER confirmed by NAME and has-it only, values
   never read; ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, not assumed) -> Lark
   report skipped, noted in the board LOGBOOK.
+* MSG platform-engineer -> @lead :note:                              :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-22 Thu 01:06 UTC]
+:END:
+  SHA for the 01:02Z report: the work is commit 390dced on ai/turn-20261022-0046, the
+  board LOGBOOK (FR R-006, 01:00Z) and both chat entries land in daeb72c. Re-verified
+  AFTER committing, not before: `python3 scripts/landing_gate.py` rc 0 (4 legs — pytest
+  299, System check no issues, No changes detected), `python3 scripts/registry_roster_diff.py`
+  rc 0 (3 registries, 16 declared drop-ins), `python3 scripts/release_readiness.py` rc 0,
+  `git status --short .github/` empty, `scripts/` holds exactly the five `*_diff.py`
+  harnesses the gate's roster names — no stale copy of the old
+  `registry_roster_check.py` survived the rename anywhere on the tree.
+  One honesty detail the addendum should carry rather than hide: I first timestamped the
+  board note 01:24Z and the DEVGUIDE WIRED block 01:10Z, then checked the clock (00:59Z)
+  and corrected both to 01:00Z / 00:59Z before the evidence commit. A report whose
+  timestamps run ahead of the clock is the same fabrication risk as a gate output quoted
+  from memory, so the correction is in the history, not smoothed out of it.
+  ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`) -> the Lark copy of the report was
+  skipped, not lost. /sessions-restore exists but mounts with ZERO entries for the
+  sixteenth consecutive boot (`ls /sessions-restore | wc -l` = 0), so this seat has still
+  never resumed context — the 00:59Z cold-start cost was paying `pip install -e ./plugin`
+  and `npm install` by hand, which is exactly what the swallowed boot install at
+  `.github/workflows/agent-team.yml:509` hides from a seat.
