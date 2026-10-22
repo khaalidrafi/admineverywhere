@@ -5528,3 +5528,53 @@
 :WHEN: 2026-10-22 Wed 11:24 UTC
 :END:
 TEST-T1 check-in (no pending pings, minimax-m3.1-flash:free@goose) — carried over from the 11:24Z attempt
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 11:32 UTC]
+:END:
+  TEST-T2 — ONE concrete improvement in the harness/dispatch flow.
+  RESULT: DONE (turn 2 of the TEST-CHAIN cycle; TEST-T1 landed as de44031 on this branch).
+  THE IMPROVEMENT — make the #+TURN: rotation pointer REAL. Today it is a no-op in BOTH
+  directions: it can never select another seat, and it can never advance to one.
+  1. IT CAN NEVER ADVANCE (measured, not argued). The pointer-advance case
+     (.github/workflows/agent-team.yml:702-705) writes the SAME constant for EVERY arm
+     ("qwen3.8-flash@qoder (Acting Platform Engineer)"), so the post-turn sed (:713, :723)
+     rewrites the pointer to the value it already holds -> the file is unchanged -> that
+     `git commit` is empty ("nothing to commit", :715) -> ZERO pointer commits exist in the
+     whole history: `git log --oneline --grep='ci-turn'` -> 0 commits, and across the 92
+     commits that touch agent-team/TEAM-CONTROL.org the #+TURN: line changed ONCE (its
+     creation) while the SAME file's #+STALL-COUNT: line changed 89 times. The "rotation
+     pointer" has never rotated.
+  2. IT CAN NEVER SELECT ANOTHER SEAT. The pointer->seat grammar (:198-201) maps
+     `qwen3.8-flash@qoder*` -> platform-engineer AND its catch-all `*` -> platform-engineer,
+     so EVERY pointer value selects the same lane. The roster's second CI-chain seat,
+     `zai/glm-4.7-flash@goose` [DORMANT — self-heals when ZAI_API_KEY is set]
+     (agent-team/MEMBERS.org:9-11), is therefore unreachable by the dispatch flow: the
+     Lead cannot rotate onto it without editing a Lead-owned file.
+  3. THE CATCH-ALL MASKS A MIS-SET POINTER. The workflow already owns the honest outcome
+     for an unknown seat — `TURN_RESULT=BLOCKED (unknown seat ${SEAT} — rotation case
+     gap)` (:573) — but the grammar can never produce an unknown seat, so that path is
+     dead code: a typo'd pointer silently runs the WRONG lane instead of stopping.
+  THE FIX (Lead-owned file — NOT applied here, by seat law): make the catch-all REFUSE
+  (`NEXT_SEAT=unknown` -> the existing :573 BLOCKED path) and give the pointer a REAL next
+  seat — one arm per roster seat in BOTH the pointer->seat grammar and the pointer-advance
+  case. I did not edit .github/workflows/* (Lead-owned, read-only for seats) and shipped no
+  patch file: TEST-T2 says NOTHING else.
+  SCOPE: exactly two appends this turn — this chat entry and one docs/CHAIN-TEST.md line.
+  The board is untouched (it carries no TEST-CHAIN item: no TEST-CHAIN headline in
+  agent-team/TODOS.org), so the parked feature order stays the Lead's to restore.
+  GATE: `python3 scripts/landing_gate.py` rc 0 — GATE GREEN (4/4 pinned legs: env django
+  5.2.18, pytest 299 passed, System check identified no issues, No changes detected);
+  `python3 scripts/chain_test_check.py` rc 0 (the objective's evidence still grades green
+  after this append) and `python3 scripts/release_readiness.py` rc 0.
+  LANE: minimax-m3.1-flash:free@goose (GOOSE_MODEL=minimax/minimax-m3.1-flash:free,
+  GOOSE_PROVIDER=openai). The Lark copy of this report is SKIPPED, not lost:
+  ROLE_LARK_WEBHOOK is empty in this seat's env (measured), and no URL was invented.
+  ACCURACY NOTE (not scope, but the Lead should know): the 11:24Z TEST-T1 log line quotes
+  run id f1678cd — that is the v0.1.0 release tag's commit, not this cycle's branch base.
+  This line uses the branch base f05cd19 (GITHUB_RUN_ID is unset inside the seat
+  container — measured). The earlier line was left untouched (append-only); the Lead may
+  want it corrected.
