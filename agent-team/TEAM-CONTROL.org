@@ -5,12 +5,21 @@
 
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
-#+OBJECTIVE: Burn ALL open items on agent-team/TODOS.org to PENDING-with-delivered-evidence by 2026-10-21 02:00 UTC (Owner's morning, Asia/Dhaka) — order: verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE finish -> COOL-PREVIEW -> R-003 FE remainder -> R-002 docs -> R-004 kanban -> R-005 CSV export -> R-006 page registration -> R-008 widgets/charts -> R-007 RBAC; every item lands only with the landing gate green (python -m pytest plugin/tests -p no:cacheprovider -q + demo-backend manage.py check + makemigrations --check)
+#+OBJECTIVE: TEST-CHAIN (Owner order 2026-10-22 09:22Z #admincraft): validate the full machinery in 3 turns — turn 1 TEST-T1 (check-in + docs/CHAIN-TEST.md line), turn 2 TEST-T2 (one harness improvement noted), turn 3 TEST-T3 (verify board/chat state + close the log); every turn must land with the landing gate green; the Lead flips OBJECTIVE-STATE after turn 3 and restores the parked feature order (verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC)
 #+TURN: qwen3.8-flash@qoder (Acting Platform Engineer)
-#+STALL-COUNT: 17
+#+STALL-COUNT: 0
 
 * Notes
 
+- TEST-CHAIN (Lead, Owner order 2026-10-22 09:22Z): 3-turn machinery test
+  live. Harness repaired same day: minimax lane URL fixed (goose doubled
+  /v1 -- run 39752778724), qwen3.8-27b@groq added as 4th relief lane,
+  Telegram mirror made non-fatal (its push races painted healthy runs
+  "failure"), probe table now echoes to stdout. Owner global AGENTS.md
+  baked as top layer of every harness config (agent-team/AGENTS-GLOBAL.md).
+  Missing repo secrets (Owner informed): GOMODEL_MASTER_KEY,
+  TYPESAFE_API_KEY, TELEGRAM_CHAT_ID -- JEV falls back to local rules,
+  which is gate-safe.
 - Seat selection BY FIT (Owner law 2026-10-21 17:47Z): the rotation parks
   on qwen3.8-flash@qoder — the ONE body PROVEN on this team's CI (proof
   run 39477554903: real qoder JSON result, 72s agentic work; budget fixed
