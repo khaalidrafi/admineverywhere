@@ -918,7 +918,7 @@ jobs:
             SLOTISOURS=0
             case "$CURSLOT" in "branch=${PENDING_BRANCH:-} |"*) SLOTISOURS=1 ;; esac
             if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || { [ -n "${PENDING_BRANCH:-}" ] && [ "$SLOTISOURS" = "1" ]; }; then
-              sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%"
+              sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"
             else
               echo "SEGREGATION: slot '${CURSLOT}' changed under this run — empty write retained it"
             fi
