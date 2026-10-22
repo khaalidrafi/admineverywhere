@@ -6,7 +6,7 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; one TODO per segment; the seat flips its item PENDING with :DELIVERED: evidence; the chain then PAUSES for Lead review (PAUSE-AFTER-TODO law, Owner order 2026-10-22 #admincraft)
-#+TURN: codebuddy/glm-5.3@codebuddy (Visiting Senior Engineer)
+#+TURN: codebuddy/deepseek-v4.1-flash@codebuddy (Software Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: ON
 #+CHAIN-PAUSE:
