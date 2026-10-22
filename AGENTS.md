@@ -212,6 +212,16 @@ python3 scripts/chain_test_check.py --selftest # 8 controls: every leg proved ab
 python3 scripts/chain_session_check.py        # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chain_session_check.py --selftest # 8 controls: every leg proved able to fail
 
+# the cool-chat send-back's FOUR specced checks as ONE command — governance
+# (TEAM.md's MEMBER IDS reversal + its two rule headings), the color sweep of
+# the three files the send-back touched, one panel / one importer / one mount,
+# and the LIVE prompt path (the panel really calls buildSchemaPrompt, the
+# legend is still bound in chat.ts, and the wire-level proof that asserts the
+# captured request body is still on disk). The item's verdict was prose-only;
+# this makes it re-runnable, so a later edit cannot silently un-wire the panel
+python3 scripts/cool_chat_check.py            # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/cool_chat_check.py --selftest # 11 controls: every leg proved able to fail
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
