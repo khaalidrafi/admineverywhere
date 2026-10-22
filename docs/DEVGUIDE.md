@@ -79,10 +79,10 @@ Product constraints — do not relax:
   shell and sidebar carry no page-specific line.
 - The three drop-in registries (widgets, pages, actions) are ONE contract with THREE
   glob dirs, and the failure mode is a test that grades a module nobody imports:
-  `python3 scripts/registry_roster_check.py` pins which files glob, refuses one dir
+  `python3 scripts/registry_roster_diff.py` pins which files glob, refuses one dir
   claimed twice, requires each pinned dir to still hold its declared `meta` files and
-  each registry to have a non-test product importer. Candidate leg, not yet a gate
-  leg (see *Commands*); the class and its controls: *THIRTEENTH harness law* below.
+  each registry to have a non-test product importer. It is the fifth FE twin leg of
+  `landing_gate.py --fe` (see *Commands*); the class and its controls: *THIRTEENTH harness law* below.
 - Deliberately out of scope: virtual scrolling, command palette, alerts.
 
 ## Product spec (from MVP brief)
@@ -175,9 +175,10 @@ python3 scripts/gate_roster_diff.py         # 0 = identical, 1 = divergence, 2 =
 
 # the LANDING GATE as one command — pytest + manage.py check + makemigrations --check,
 # behind a dep preflight (see EIGHTH harness law: a swallowed boot install must not
-# impersonate a red tree). --fe adds vitest AND the four twin harnesses — the
-# byte-identity claims and the machine-gate roster that NO single suite can see, since
-# every writer is green against its own fixture; --python <exe> forces one interpreter.
+# impersonate a red tree). --fe adds vitest AND the five twin harnesses — the
+# byte-identity claims, the machine-gate roster and the drop-in registry roster that
+# NO single suite can see, since every writer is green against its own fixture;
+# --python <exe> forces one interpreter.
 python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = cannot run
 
 # the RELEASE story as one command — the four carriers + the Cargo.lock entry vs a
@@ -190,9 +191,11 @@ python3 scripts/release_readiness.py        # 0 = coherent, 1 = a leg is red, 2 
 # the DROP-IN REGISTRIES as one command — which files glob a contract dir, whether ONE
 # dir is globbed TWICE (the dead-twin shape: a test can stay green over a registry the
 # app never imports), whether each pinned dir still holds its declared `meta` files, and
-# whether any product file consumes the registry the contract test asserts
-python3 scripts/registry_roster_check.py    # 0 = ok, 1 = a claim is false, 2 = cannot run
-python3 scripts/registry_roster_check.py --src /tmp/copy   # controls run on copies
+# whether any product file consumes the registry the contract test asserts. The
+# `*_diff.py` NAME is the wiring: landing_gate's EXPECTED_TWINS cross-check refuses a
+# harness on disk its roster does not run, and a roster naming a harness that is gone.
+python3 scripts/registry_roster_diff.py     # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/registry_roster_diff.py --src /tmp/copy   # controls run on copies
 
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
@@ -1182,7 +1185,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   because the suite was grading the dead copy; and `dashboardMount.test.ts` could not see
   it either, since it compares the rendered grid against the same registry, so a lost
   widget shrinks the expectation and the DOM agrees with itself. That class is now a
-  machine check: `python3 scripts/registry_roster_check.py` pins WHICH files glob a
+  machine check: `python3 scripts/registry_roster_diff.py` pins WHICH files glob a
   contract dir (roster drift = CANNOT RUN — the harness no longer describes the tree),
   refuses one dir claimed by TWO registries (the twin door), requires each pinned dir to
   still hold its declared `meta` files (population), requires each registry to be imported
@@ -1208,6 +1211,39 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whose `*` is a quantifier, not a literal): a control whose mutation is a no-op is a
   false green wearing a number. Every control above asserts the file actually changed
   before it is scored — same rule as EIGHTH law, aimed at the harness author.
+  WIRED, 2026-10-22 00:59Z, and the wiring is the NAME: the harness shipped as
+  `registry_roster_check.py` because the boot that wrote it had no `app/node_modules`,
+  so its author could not measure an `--fe` leg. `landing_gate.py` cross-checks its
+  twin roster against the `scripts/*_diff.py` glob, so renaming it to
+  `registry_roster_diff.py` + `FE_ROSTER += registry-twin` + `EXPECTED_TWINS 4 → 5` +
+  `TWINS += ("registry-twin", …, "REGISTRY ROSTER OK")` is what makes it a leg.
+  CONTROLS — the delivered tree plus six mutations, each on a copy (a `/tmp` ROOT for
+  the roster doors, `leg_twin()` called directly for the leg doors, so no shipped file
+  was ever mutated): a ROSTER door answers CANNOT RUN rc 2 and fires before a single leg
+  launches; a LEG door answers RED rc 1.
+    * delivered tree: `--fe` = 10 legs, `registry-twin REGISTRY ROSTER OK — 3
+      registries, 16 declared drop-ins`, GATE GREEN rc 0.
+    * harness restored under its old (non-`_diff`) name → CANNOT RUN `the TWINS roster
+      (…) is not the set of twin harnesses on disk` — a roster naming a leg that
+      cannot be launched.
+    * an extra `*_diff.py` dropped beside it, never added to the roster → CANNOT RUN
+      the same line, disk side now longer: an unwired harness is a comparison nobody
+      runs. THE SAME MESSAGE IN BOTH DIRECTIONS IS THE POINT — the roster and the
+      filesystem are two independent views of one intent.
+    * `EXPECTED_TWINS` back to 4 alone → CANNOT RUN `TWINS lists 5 harness(es),
+      EXPECTED_TWINS pins 4`.
+    * `TWINS` label renamed away from `FE_ROSTER` → CANNOT RUN (the label door fires
+      too, not only the script-name door).
+    * the leg's probe repointed at a phrase the harness never prints → RED `registry-twin
+      rc 0 but printed no REGISTRY ROSTER-OK verdict line — exit 0 alone never proved
+      the compare happened`, with the real verdict quoted back.
+    * a drop-in deleted in a COPY of `app/src` → RED `registry-twin
+      (registry_roster_diff.py) rc 1 — the twins DIVERGE: RED — POPULATION widgets:
+      …pinned floor is 8`, i.e. a real contract break reaches the gate as a named
+      missing file, not as a shrunk suite count.
+  It stays OUT of the MERGE roster on purpose: gate.sh is Lead-owned and
+  `gate_roster_diff.py` grades it leg-by-leg, so a fourth merge leg here would only
+  register as machine-gate drift.
   SEAT RULE: for every module your suite names, `grep` its importers and count the
   NON-test ones. Zero means your contract test is a memo about a file nobody runs; two
   modules claiming one directory means one of them is a second fixture.

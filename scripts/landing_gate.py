@@ -30,10 +30,10 @@ is genuinely RED, 2 = the gate could not be RUN (missing interpreter deps,
 missing node_modules, a tool that cannot launch). Launch failures are 2, never
 1 — a check that cannot start has no opinion about your diff. ``--fe`` adds the
 vitest leg (not part of the merge gate, but every seat is told to keep it
-green) plus the four twin harnesses (csv/brand/parity byte identity and the
-machine-gate roster — the claims NO single suite can see, since each writer is
-green against its own fixture) and refuses with 2 when ``app/node_modules`` is
-absent.
+green) plus the five twin harnesses (csv/brand/parity byte identity, the
+machine-gate roster and the drop-in registry roster — the claims NO single suite
+can see, since each writer is green against its own fixture) and refuses with 2
+when ``app/node_modules`` is absent.
 
 Usage (from the repo root):
   python3 scripts/landing_gate.py          # the three merge-gate legs
@@ -84,12 +84,12 @@ EXPECTED_VITEST_FILES = 31
 # a wrong roster means this file is no longer the gate finalize replays, so it has no
 # opinion about the diff in front of it.
 MERGE_ROSTER = ("env", "pytest", "check", "migrations")
-FE_ROSTER = ("vitest", "csv-twin", "brand-twin", "parity-twin", "gate-twin")
+FE_ROSTER = ("vitest", "csv-twin", "brand-twin", "parity-twin", "gate-twin", "registry-twin")
 # Third, INDEPENDENT source for the twin legs: the harnesses that exist on disk. The
 # roster and a literal are two copies of one intent (the weakest pin the twins were
-# fixed for); the filesystem is not, so a 4th *_diff.py harness written and never
+# fixed for); the filesystem is not, so a 5th *_diff.py harness written and never
 # wired into the gate, or a roster naming a script that is gone, both fire here.
-EXPECTED_TWINS = 4
+EXPECTED_TWINS = 5
 
 # WHAT EACH MERGE LEG ACTUALLY RUNS — the contract in one place, and EXECUTED by the
 # legs, not described beside them. This exists because of a fourth member of the same
@@ -291,10 +291,16 @@ def leg_vitest(log):
 # the comparison. Seats have been writing "siblings re-run green" in reports by
 # hand; a leg turns that prose back into a measurement. The twins already speak
 # the FIFTH-law grammar (0/1/2), so the mapping is direct, not invented here.
+# The last two are the same law aimed at ROSTERS instead of bytes: gate-twin diffs
+# the machine gate's executed commands against MERGE_COMMANDS, registry-twin diffs
+# the three drop-in registries (glob dirs, populations, product importers) against
+# the tree on disk — DEVGUIDE THIRTEENTH law, wired because `*_diff.py` on disk IS
+# the wiring (pin_twins refuses any harness the roster does not run).
 TWINS = [("csv-twin", "csv_twin_diff.py", "BYTE-IDENTICAL"),
          ("brand-twin", "brand_twin_diff.py", "BYTE-IDENTICAL"),
          ("parity-twin", "parity_table_diff.py", "BYTE-IDENTICAL"),
-         ("gate-twin", "gate_roster_diff.py", "ROSTER-IDENTICAL")]
+         ("gate-twin", "gate_roster_diff.py", "ROSTER-IDENTICAL"),
+         ("registry-twin", "registry_roster_diff.py", "REGISTRY ROSTER OK")]
 
 
 def leg_twin(py, name, script, probe, log):

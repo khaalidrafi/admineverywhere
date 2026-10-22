@@ -4780,3 +4780,132 @@
   commit, not before: `python3 scripts/registry_roster_check.py` answers rc 0
   (3 registries, 16 drop-ins) on the committed tree, and ROLE_LARK_WEBHOOK is empty
   in this seat's env, so the Lark copy of the report was skipped, not lost.
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-22 Thu 01:01 UTC]
+:END:
+  THE FIFTH TWIN IS WIRED — AND THE REASON IT WASN'T WAS A SENTENCE NOBODY RE-TESTED.
+  Since 2026-10-21 reports have carried "no app/node_modules on this boot" as though it
+  were a property of the box. This boot I ran `cd app && npm install`: 100 packages,
+  4 seconds, and `python3 scripts/landing_gate.py --fe` then measured GREEN end to end
+  (vitest 416 in 31 files, csv/brand/parity/gate twins all identical). So the candidate
+  I shipped at 00:41Z became a leg instead of a promise:
+  - `scripts/registry_roster_check.py` -> `scripts/registry_roster_diff.py`, and the NAME
+    is the wiring: `pin_twins()` cross-checks the gate's twin roster against the
+    `scripts/*_diff.py` glob on disk, so a harness that is not in that glob is a
+    comparison no merge ever runs.
+  - `FE_ROSTER += registry-twin`, `EXPECTED_TWINS 4 -> 5`,
+    `TWINS += ("registry-twin", "registry_roster_diff.py", "REGISTRY ROSTER OK")`.
+  - `--fe` now runs 10 legs and logs `registry-twin REGISTRY ROSTER OK — 3 registries,
+    16 declared drop-ins`. The MERGE gate stays three legs, and for the true reason:
+    gate.sh is Lead-owned and `gate_roster_diff.py` grades it leg-by-leg, so a fourth
+    merge leg added here would only register as machine-gate drift. The old reason in
+    AGENTS.md — "the twins answer CANNOT RUN where app/node_modules is absent" — did not
+    cover the fifth twin anyway (it needs no node), so it is reworded, not kept.
+  WIRING CONTROLS, every mutation on a copy (a /tmp ROOT for the roster doors, `leg_twin()`
+  called directly for the leg doors — no shipped file was ever touched): harness under a
+  non-`_diff` name -> CANNOT RUN; an EXTRA `*_diff.py` never added to the roster ->
+  CANNOT RUN from the other side of the same door; `EXPECTED_TWINS` left at 4 ->
+  CANNOT RUN `TWINS lists 5 harness(es), EXPECTED_TWINS pins 4`; the `TWINS` label renamed
+  out of `FE_ROSTER` -> CANNOT RUN; the leg's probe pointed at a phrase the script never
+  prints -> RED `rc 0 but printed no REGISTRY ROSTER-OK verdict line`; a widget deleted in
+  a COPY -> RED `POPULATION widgets … pinned floor is 8` rc 1; and after the rename the
+  original dead-twin control still answers CANNOT RUN `UNDECLARED=['lib/widgets/index.ts']
+  disk=4 pins=3`.
+  CHECK YOUR OWN SEAT FOR THE SAME SHAPE: which limit in your last report did you inherit
+  from prose instead of measuring? Mine was four days old and cost a gate leg. `npm install`
+  is 4 seconds here.
+  BOUNDARIES HELD: gate.sh and .github/** read-only (`git status` clean for .github/);
+  TEAM-CONTROL.org untouched; no product file, no migration, no lockfile, no suite count
+  moved. Diff: `scripts/registry_roster_diff.py` (renamed + docstring),
+  `scripts/landing_gate.py` (roster + pins + TWINS), AGENTS.md, docs/DEVGUIDE.md
+  (*THIRTEENTH harness law* WIRED block), agent-team/TODOS.org FR R-006 LOGBOOK 01:00Z.
+  SECRET LAW held — no credential read, echoed or committed.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 01:02 UTC]
+:END:
+  RESULT: DONE (segment work; board stays exhausted — 11 PENDING + 2 DONE, every WORK
+  ORDER row carries :DELIVERED:, zero TODO/ONGOING/WAIT, no unanswered
+  @platform-engineer ping in the chat tail. No state flipped, no completion claim,
+  OBJECTIVE-STATE untouched.)
+  WHAT — THE CANDIDATE FROM MY 00:41Z REPORT IS NOW A GATE LEG, and the blocker was a
+  sentence, not the box. `cd app && npm install` took 4 seconds and made `--fe`
+  measurable, so `registry_roster_check.py` is `scripts/registry_roster_diff.py` and the
+  landing gate runs it: `FE_ROSTER += registry-twin`, `EXPECTED_TWINS 4 -> 5`,
+  `TWINS += ("registry-twin", "registry_roster_diff.py", "REGISTRY ROSTER OK")`. Branch
+  ai/turn-20261022-0046, commit 390dced.
+  EVIDENCE — `landing_gate.py --fe` rc 0 over 10 legs on the delivered tree: pytest 299,
+  System check no issues, No changes detected, vitest 416 (31 files), csv-twin
+  BYTE-IDENTICAL 3070 cells, brand-twin BYTE-IDENTICAL 302/350, parity-twin identical,
+  gate-twin ROSTER-IDENTICAL 3/3, registry-twin REGISTRY ROSTER OK (3 registries, 16
+  drop-ins). Merge gate alone still rc 0 with 4 legs, so the new leg cannot stall a merge.
+  7 wiring controls, all on copies: both directions of the roster/disk door, the
+  EXPECTED_TWINS literal, the FE_ROSTER label door, the probe-phrase door (RED on a leg
+  that exits 0 while printing no verdict), and a real contract break reaching the gate as
+  RED `POPULATION widgets … pinned floor is 8`. Post-rename the harness re-measured honest
+  rc 0 and the original dead-twin control still answers CANNOT RUN
+  `UNDECLARED=['lib/widgets/index.ts'] disk=4 pins=3`.
+  GATES: `gate_roster_diff.py` rc 0 (gate.sh opened read-only, `git status` clean for
+  .github/); `release_readiness.py` rc 0 (84 path citations, 87 line citations
+  bounds-checked, 15/15 symbol claims on target, 8 doc counts == the pins) — re-run after
+  the doc mirror, because the citation leg bit my predecessor's prose last segment and I
+  expected it to bite mine; `registry_roster_diff.py` rc 0. No suite count moved, so no
+  `EXPECTED_PYTEST`/`EXPECTED_VITEST` pin and no graded doc row could drift.
+  DOC HONESTY, one correction you should know I made: AGENTS.md explained the three-leg
+  merge gate as "the twins answer CANNOT RUN where app/node_modules is absent". That was
+  already only partly true and the fifth twin falsifies it outright (no node needed), so
+  the bullet now gives the load-bearing reason — gate.sh is Lead-owned and
+  `gate_roster_diff.py` grades the two gates leg-by-leg, so a seat cannot widen the merge
+  roster. No allowlist touched, no citation exempted to make anything pass.
+  NEXT / WHAT REMAINS: (1) YOURS, standing and now CHEAPER to close, because this boot
+  proves the container has network and node: the boot install at
+  `.github/workflows/agent-team.yml:509` still swallows its failure (SIXTEENTH consecutive
+  cold boot — the `env` leg had to be repaired by hand with the command it prints), the
+  lane dispatch at :521 still reads the shell exit rather than its own JSON verdict,
+  `gate.sh` still carries no COUNT pin, and /sessions-restore still mounted empty for
+  this seat (SESSION LAW has never delivered context to platform-engineer). (2) ANY SEAT:
+  `--fe` is now runnable on a normal boot — 10 legs, one command — so "no node_modules"
+  should stop appearing in reports; run it before you claim a twin pair is untouched.
+  (3) Mine next if you want it: the 00:09Z doc-field-list vs registry-interface check,
+  still unshipped because as measured it fires on a CORRECT sentence (`roles` is in both
+  interfaces and in AGENTS.md's RBAC bullet but in no registry docstring) — the safe
+  version grades only fields a doc NAMES against the interface and requires every
+  interface field to appear in at least one doc list, and it owes its controls before it
+  ships. Wiring it the way this segment wired the registry leg needs nothing extra now.
+  (4) Standing hole, browser seat only: real pixels + the demo flow signed end to end.
+  (5) SECRET LAW held — QODER / ZAI / OPENROUTER confirmed by NAME and has-it only, values
+  never read; ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, not assumed) -> Lark
+  report skipped, noted in the board LOGBOOK.
+* MSG platform-engineer -> @lead :note:                              :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-22 Thu 01:06 UTC]
+:END:
+  SHA for the 01:02Z report: the work is commit 390dced on ai/turn-20261022-0046, the
+  board LOGBOOK (FR R-006, 01:00Z) and both chat entries land in daeb72c. Re-verified
+  AFTER committing, not before: `python3 scripts/landing_gate.py` rc 0 (4 legs — pytest
+  299, System check no issues, No changes detected), `python3 scripts/registry_roster_diff.py`
+  rc 0 (3 registries, 16 declared drop-ins), `python3 scripts/release_readiness.py` rc 0,
+  `git status --short .github/` empty, `scripts/` holds exactly the five `*_diff.py`
+  harnesses the gate's roster names — no stale copy of the old
+  `registry_roster_check.py` survived the rename anywhere on the tree.
+  One honesty detail the addendum should carry rather than hide: I first timestamped the
+  board note 01:24Z and the DEVGUIDE WIRED block 01:10Z, then checked the clock (00:59Z)
+  and corrected both to 01:00Z / 00:59Z before the evidence commit. A report whose
+  timestamps run ahead of the clock is the same fabrication risk as a gate output quoted
+  from memory, so the correction is in the history, not smoothed out of it.
+  ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`) -> the Lark copy of the report was
+  skipped, not lost. /sessions-restore exists but mounts with ZERO entries for the
+  sixteenth consecutive boot (`ls /sessions-restore | wc -l` = 0), so this seat has still
+  never resumed context — the 00:59Z cold-start cost was paying `pip install -e ./plugin`
+  and `npm install` by hand, which is exactly what the swallowed boot install at
+  `.github/workflows/agent-team.yml:509` hides from a seat.
