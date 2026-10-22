@@ -84,12 +84,12 @@ EXPECTED_VITEST_FILES = 31
 # a wrong roster means this file is no longer the gate finalize replays, so it has no
 # opinion about the diff in front of it.
 MERGE_ROSTER = ("env", "pytest", "check", "migrations")
-FE_ROSTER = ("vitest", "csv-twin", "brand-twin", "parity-twin", "gate-twin", "registry-twin")
+FE_ROSTER = ("vitest", "csv-twin", "brand-twin", "parity-twin", "gate-twin", "registry-twin", "doc-twin")
 # Third, INDEPENDENT source for the twin legs: the harnesses that exist on disk. The
 # roster and a literal are two copies of one intent (the weakest pin the twins were
-# fixed for); the filesystem is not, so a 5th *_diff.py harness written and never
+# fixed for); the filesystem is not, so an extra *_diff.py harness written and never
 # wired into the gate, or a roster naming a script that is gone, both fire here.
-EXPECTED_TWINS = 5
+EXPECTED_TWINS = 6
 
 # WHAT EACH MERGE LEG ACTUALLY RUNS — the contract in one place, and EXECUTED by the
 # legs, not described beside them. This exists because of a fourth member of the same
@@ -295,12 +295,15 @@ def leg_vitest(log):
 # the machine gate's executed commands against MERGE_COMMANDS, registry-twin diffs
 # the three drop-in registries (glob dirs, populations, product importers) against
 # the tree on disk — DEVGUIDE THIRTEENTH law, wired because `*_diff.py` on disk IS
-# the wiring (pin_twins refuses any harness the roster does not run).
+# the wiring (pin_twins refuses any harness the roster does not run). doc-twin is the
+# same class one layer up: it diffs the `meta{...}` field lists the two mirror docs
+# promise against the fields those registries read — DEVGUIDE FOURTEENTH law.
 TWINS = [("csv-twin", "csv_twin_diff.py", "BYTE-IDENTICAL"),
          ("brand-twin", "brand_twin_diff.py", "BYTE-IDENTICAL"),
          ("parity-twin", "parity_table_diff.py", "BYTE-IDENTICAL"),
          ("gate-twin", "gate_roster_diff.py", "ROSTER-IDENTICAL"),
-         ("registry-twin", "registry_roster_diff.py", "REGISTRY ROSTER OK")]
+         ("registry-twin", "registry_roster_diff.py", "REGISTRY ROSTER OK"),
+         ("doc-twin", "doc_field_roster_diff.py", "DOC FIELD ROSTER OK")]
 
 
 def leg_twin(py, name, script, probe, log):
