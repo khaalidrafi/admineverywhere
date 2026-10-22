@@ -70,7 +70,7 @@ Product constraints — do not relax:
   `app/src/lib/__tests__/lifecycleMount.test.ts`.
   Contract + copy checklist: `docs/rbac.md`.
 - New page (non-CRUD module) = drop one `.svelte` file in `app/src/pages/`
-  exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`
+  exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`
   — the same glob contract, applied to routes: `app/src/lib/pages/index.ts`
   validates it, injects the router's route table and the sidebar entry. Router,
   shell and sidebar carry no page-specific line.
@@ -78,8 +78,9 @@ Product constraints — do not relax:
   glob dirs, and the failure mode is a test that grades a module nobody imports:
   `python3 scripts/registry_roster_diff.py` pins which files glob, refuses one dir
   claimed twice, requires each pinned dir to still hold its declared `meta` files and
-  each registry to have a non-test product importer. It is the fifth FE twin leg of
-  `landing_gate.py --fe` (see *Commands*); the class and its controls: DEVGUIDE *THIRTEENTH harness law*.
+  each registry to have a non-test product importer. The FIELD NAMES it reads are the
+  next claim up, graded by `doc_field_roster_diff.py`: the fifth and sixth FE twin legs of
+  `landing_gate.py --fe` (see *Commands*); classes and controls: DEVGUIDE *THIRTEENTH + FOURTEENTH harness law*.
 - Deliberately out of scope: virtual scrolling, command palette, alerts.
 
 ## Product spec (from MVP brief)
@@ -117,9 +118,9 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (416 vitest) |
-| `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
+| `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
-| `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,handler}`; registry `app/src/lib/actions/index.ts` |
+| `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
 | `skills/` | the two agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
@@ -167,9 +168,9 @@ python3 scripts/gate_roster_diff.py --gate /tmp/copy.sh   # controls run on copi
 # the LANDING GATE itself (pytest + manage.py check + makemigrations --check),
 # with a dep preflight so a swallowed boot-install failure is exit 2 not a false red
 python3 scripts/landing_gate.py             # 0 green / 1 a leg is red / 2 cannot run
-python3 scripts/landing_gate.py --fe        # plus vitest AND the five twin harnesses
-                                            # (csv/brand/parity/gate-roster/registry-roster
-                                            # — the first three need app/node_modules)
+python3 scripts/landing_gate.py --fe        # plus vitest AND the six twin harnesses
+                                            # (csv/brand/parity/gate-roster/registry-roster/
+                                            # doc-roster — the first three need app/node_modules)
 
 # the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
 # doc-citation rot AND every cited line landing inside its file, the suite counts the
@@ -186,6 +187,14 @@ python3 scripts/release_readiness.py --expect 0.1.3   # what the NEXT tag must s
 # cross-check refuses any harness on disk that its roster does not run, and vice versa.
 python3 scripts/registry_roster_diff.py     # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/registry_roster_diff.py --src /tmp/copy   # controls run on copies
+
+# THE DROP-IN CONTRACT FIELD LISTS as a check: every `meta{...}` field the two mirror
+# docs promise against the fields the registries read (`PageMeta`, `ActionMeta`, the
+# widget registry's own `mod.meta` reads), plus coverage (a code field no doc list
+# mentions), one-directional optionality (a doc `x?` the interface requires) and the
+# AGENTS↔DEVGUIDE mirror (two files, one document, never two shapes).
+python3 scripts/doc_field_roster_diff.py    # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on copies
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -239,7 +248,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   governance on a field *name* — `app/src/lib/statusTransitions.ts` is keyed
   by model id. Full convention + guardrails in `docs/independent-enums.md`.
 - Custom actions (FR-R003) follow the widget drop-in contract: one `.ts` in
-  `app/src/actions/` exporting `meta{label,scope,model?,confirm?,input?,handler}`
+  `app/src/actions/` exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`
   — the registry globs it, nothing to edit. Endpoint URLs come from
   `actionPath(model, slug, recordId?)`, i.e. the schema-discovered
   `model.listPath`, NEVER from `apiUrl + model.id` (`apiUrl` is only the base
@@ -335,7 +344,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   captures `DEFAULT_SCHEMA_CLASS` at decoration time. Contract in
   `docs/csv-export.md`.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
-  `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
+  `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone,roles?}` from
   `<script module>` (runes are unavailable there — the export must be static).
   `app/src/lib/pages/index.ts` globs eagerly, validates, and hands
   `lib/router.ts` its route table via `setPages()` — the router owns NO table,
@@ -676,9 +685,10 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    prints no count to argue with. A roster drift is `CANNOT RUN` (the harness is no
    longer this gate), never RED; the twin roster is cross-checked against the
    `scripts/*_diff.py` files on disk, not only against its own literal, so an unwired
-   harness is a refusal too. `--fe` adds vitest plus all five twin harnesses
-   (csv/brand/parity byte identity, the machine-gate roster and the drop-in registry
-   roster): the merge gate deliberately stays three legs, because `.github/scripts/
+   harness is a refusal too. `--fe` adds vitest plus all six twin harnesses
+   (csv/brand/parity byte identity, the machine-gate roster, the drop-in registry
+   roster and the doc field-list roster): the merge gate deliberately stays three legs,
+   because `.github/scripts/
    gate.sh` is Lead-owned and `gate_roster_diff.py` grades it against `MERGE_COMMANDS`
    leg-by-leg — a fourth leg a seat adds here would only register as machine-gate
    drift (the registry twin needs no `app/node_modules` and still cannot join) — but a
