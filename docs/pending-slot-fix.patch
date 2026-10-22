@@ -1,0 +1,30 @@
+diff --git a/.github/workflows/agent-team.yml b/.github/workflows/agent-team.yml
+index 05b1d65..b48597a 100755
+--- a/.github/workflows/agent-team.yml
++++ b/.github/workflows/agent-team.yml
+@@ -902,7 +902,24 @@ jobs:
+                 echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}; merge authority: Lead, executed by this gate)."
+               } >> "$RLOG"
+             fi
+-            sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"
++            # NON-CLOBBER GUARD (relief-seat slot audit, 2026-10-22 ~21:00Z,
++            # measured LIVE: the Lead wrote the re-queued branch
++            # ai/turn-20261022-1904 into the slot in 0ace32e at 20:47:17Z and
++            # the sed below blanked it 20 seconds later in 86d88ce). The loop
++            # above does `git reset --hard origin/ai/main`, which re-imports a
++            # control file that may carry a NEWER slot than the one this run
++            # read, and NEWPENDING was computed BEFORE that reset. So the
++            # write must be judged against the slot as it is NOW: an EMPTY
++            # write may blank an empty or already-resolved slot, and a
++            # non-empty write parks this run's branch, but an empty write must
++            # never erase a slot this run never read, resolved or parked. The
++            # REVIEW-LOG append above is deliberately left untouched.
++            CURSLOT="$(grep -E '^\#+PENDING-REVIEW:' "$CTL" | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
++            if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || [ "$CURSLOT" = "$NEWPENDING" ]; then
++              sed -i "s%^\#+PENDING-REVIEW:.*%\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"
++            else
++              echo "SEGREGATION: ${CURSLOT} changed under this run — slot retained, an empty write does not blank it"
++            fi
+             git add "$CTL" "$RLOG"
+             if git commit -m "ci-review: ${OUT} (pending ${PENDING_BRANCH:-none}); next pending: ${NEWPENDING:-none}" 2>/dev/null; then
+               if git push origin "ai/main"; then break; fi
