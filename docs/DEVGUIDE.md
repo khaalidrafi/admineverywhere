@@ -77,6 +77,12 @@ Product constraints — do not relax:
   — the same glob contract, applied to routes: `app/src/lib/pages/index.ts`
   validates it, injects the router's route table and the sidebar entry. Router,
   shell and sidebar carry no page-specific line.
+- The three drop-in registries (widgets, pages, actions) are ONE contract with THREE
+  glob dirs, and the failure mode is a test that grades a module nobody imports:
+  `python3 scripts/registry_roster_check.py` pins which files glob, refuses one dir
+  claimed twice, requires each pinned dir to still hold its declared `meta` files and
+  each registry to have a non-test product importer. Candidate leg, not yet a gate
+  leg (see *Commands*); the class and its controls: *THIRTEENTH harness law* below.
 - Deliberately out of scope: virtual scrolling, command palette, alerts.
 
 ## Product spec (from MVP brief)
@@ -180,6 +186,13 @@ python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = c
 # graded against the landing gate's own pins, release inputs present,
 # and no PEP 604 annotation in any harness (see NINTH + TENTH + ELEVENTH harness laws)
 python3 scripts/release_readiness.py        # 0 = coherent, 1 = a leg is red, 2 = cannot run
+
+# the DROP-IN REGISTRIES as one command — which files glob a contract dir, whether ONE
+# dir is globbed TWICE (the dead-twin shape: a test can stay green over a registry the
+# app never imports), whether each pinned dir still holds its declared `meta` files, and
+# whether any product file consumes the registry the contract test asserts
+python3 scripts/registry_roster_check.py    # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/registry_roster_check.py --src /tmp/copy   # controls run on copies
 
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
@@ -1158,6 +1171,46 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   tells you what happened.** A leg that collects a verdict must parse the verdict body,
   never the transport status — otherwise a run that was cut off and a run that never
   started are the same word in the log, and the next reader debugs the wrong machine.
+
+- **THIRTEENTH harness law — a contract test is only coverage of the module the app
+  IMPORTS, and nothing measured which module that was.** The shape (found 2026-10-22
+  00:22Z, then fixed): a second `index.ts` under `app/src/lib/widgets/` re-implemented the
+  FR-R008 widget contract — same glob dir, its own record shape, its own `widgetUnits` —
+  and exactly one file imported it: the contract test. `Dashboard.svelte` imported
+  `app/src/widgets/index.ts`.
+  Mutating the SHIPPED registry to silently drop one built-in answered `8 passed`, rc 0,
+  because the suite was grading the dead copy; and `dashboardMount.test.ts` could not see
+  it either, since it compares the rendered grid against the same registry, so a lost
+  widget shrinks the expectation and the DOM agrees with itself. That class is now a
+  machine check: `python3 scripts/registry_roster_check.py` pins WHICH files glob a
+  contract dir (roster drift = CANNOT RUN — the harness no longer describes the tree),
+  refuses one dir claimed by TWO registries (the twin door), requires each pinned dir to
+  still hold its declared `meta` files (population), requires each registry to be imported
+  by a product file outside `__tests__` AND outside its own drop-in dir (a file in
+  `actions/` importing the actions registry for its type is self-reference, not a
+  consumer), and requires a test to still glob a pinned dir — the declaration-level
+  reference read that grades a registry against its inputs rather than against itself.
+  CONTROLS, each one mutation on a copy under `/tmp` via `--src`, shipped tree read-only:
+  honest rc 0 over 3 registries / 16 drop-ins; the dead twin restored → CANNOT RUN
+  `UNDECLARED=['lib/widgets/index.ts']`; one pinned registry globbing ANOTHER pinned dir →
+  RED `TWIN REGISTRY`; the only product importer repointed → RED `TEST-ONLY-MODULE
+  widgets`; a widget file deleted → RED `POPULATION widgets … pinned floor is 8`; a 4th
+  undeclared registry → CANNOT RUN; a pinned registry deleted → CANNOT RUN `MISSING`;
+  `import.meta.glob` renamed away in the test → RED `REFERENCE GONE`; a registry glob
+  retargeted off its pinned dir → CANNOT RUN `globs ['lib/__tests__'], not the pinned dir`;
+  `EXPECTED_REGISTRIES` bumped alone → CANNOT RUN `disk=3 pins=4`; an empty `--src` →
+  CANNOT RUN naming all three MISSING.
+  WHAT IT DELIBERATELY DOES NOT COVER, so the next reader does not over-read it: the
+  registry's runtime FILTER. A filesystem scan cannot see `widgets/index.ts` dropping a
+  file that exists on disk — that is exactly what `widgets.test.ts`'s declaration-level
+  check is for, which is why the REFERENCE door guards it from the other side. And a
+  first control attempt answered rc 0 on a mutation that had NOT applied (a `sed` pattern
+  whose `*` is a quantifier, not a literal): a control whose mutation is a no-op is a
+  false green wearing a number. Every control above asserts the file actually changed
+  before it is scored — same rule as EIGHTH law, aimed at the harness author.
+  SEAT RULE: for every module your suite names, `grep` its importers and count the
+  NON-test ones. Zero means your contract test is a memo about a file nobody runs; two
+  modules claiming one directory means one of them is a second fixture.
 - Pages (FR-R006) follow the widget drop-in law: one `.svelte` in
   `app/src/pages/` exporting `meta{title,path,nav,icon,order,standalone}` from
   `<script module>` (runes are unavailable there — the export must be static).
