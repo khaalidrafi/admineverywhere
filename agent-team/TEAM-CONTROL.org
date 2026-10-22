@@ -14,6 +14,18 @@
 
 * Notes
 
+- RELIEF LANE WATCH (Lead, 22:45Z — third degradation tonight): 18:52Z
+  groq empty husk; 21:04Z all three zai/glm-4.7-flash@goose arms exited
+  non-zero (qoder fallback saved the segment, real work); 22:17Z goose
+  harness reported "run OK" on lane qwen3.8-27b@groq but authored an
+  EMPTY branch ai/turn-20261022-2217 (no diff vs base) — the
+  honest-lane-verdict guard greps NETWORK markers only, so a clean-exit
+  empty-output run passes as OK. Lead note: author-segment empty-diff
+  guard owed (branch with zero commits ahead = empty-segment outcome,
+  not "run OK"); overflow 2217 Lead-closed as husk artifact (no content
+  to audit). Relief segment work this window was saved by fallbacks
+  twice (qoder 21:04Z, platform arm 22:2xZ).
+
 - SEGREGATION LAW v2 — DUTY ROLES (Owner 18:14Z "Separate author,
   reviewer and merger roles" + Owner 18:55Z refinement: "author,
   reviewer, merger duties should be performed by capable member roles
