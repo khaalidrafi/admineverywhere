@@ -7,7 +7,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: TEST-CHAIN (Owner order 2026-10-22 09:22Z #admincraft): validate the full machinery in 3 turns — turn 1 TEST-T1 (check-in + docs/CHAIN-TEST.md line), turn 2 TEST-T2 (one harness improvement noted), turn 3 TEST-T3 (verify board/chat state + close the log); every turn must land with the landing gate green; the Lead flips OBJECTIVE-STATE after turn 3 and restores the parked feature order (verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC)
 #+TURN: qwen3.8-flash@qoder (Acting Platform Engineer)
-#+STALL-COUNT: 1
+#+STALL-COUNT: 0
 
 * Notes
 
