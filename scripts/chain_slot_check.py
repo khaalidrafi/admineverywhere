@@ -510,17 +510,42 @@ LANDED_GUARD = ('            if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || '
 
 
 def build_green(root):
-    """Restore the dropped sed operand on a COPY — the fix the Lead must ship.
+    """Bring a COPY to the green baseline: the sed write targets "$CTL".
 
     This is the green baseline: the non-clobber guard already re-reads $CURSLOT
     after the reset and gates the write, so once the write actually targets "$CTL"
     all four slot laws hold.
+
+    Idempotent across BOTH shipped shapes: the pre-fix tree carries the operand-less
+    SED_WRITE_LINE and needs it restored, but the Lead has since landed the fix, so
+    the shipped tree already holds SED_WRITE_FIXED and there is nothing to restore.
+    Insisting on the broken text once the real file is repaired turns the green
+    baseline into a CANNOT RUN and blinds every control that builds on it - the same
+    stale-anchor rot this harness exists to catch in others.
     """
-    _replace_once(root, WORKFLOW_REL, SED_WRITE_LINE, SED_WRITE_FIXED)
+    text = _read_file(root, WORKFLOW_REL)
+    if SED_WRITE_LINE in text:
+        _write_file(root, WORKFLOW_REL, text.replace(SED_WRITE_LINE, SED_WRITE_FIXED, 1))
+    elif SED_WRITE_FIXED in text:
+        pass  # already green - the fix is landed on the shipped tree
+    else:
+        raise CannotRun("control: neither the broken nor the fixed slot-write line is in "
+                        "%s - the writer shape this harness understands has changed"
+                        % WORKFLOW_REL)
 
 
 def control_no_change(root):
     return None
+
+
+def control_strip_operand(root):
+    """Take the one-token fix back out: the write loses its "$CTL" file operand.
+
+    Proves blank-guard can still fail on the repaired tree - without it, a control
+    that only asserted "the shipped tree is red" would be grading a state that no
+    longer exists and would silently stop exercising the leg.
+    """
+    _replace_once(root, WORKFLOW_REL, SED_WRITE_FIXED, SED_WRITE_LINE)
 
 
 def control_reintroduce_approved_gate(root):
@@ -574,7 +599,7 @@ def control_missing_workflow(root):
 # (name, mutation, expected rc, expected text, build the green baseline first?)
 CONTROLS = (
     ("operand fix is green", control_no_change, 0, "SLOT CHECK OK", True),
-    ("shipped tree is red", control_no_change, 1, "blank-guard", False),
+    ("sed operand stripped is red", control_strip_operand, 1, "blank-guard", True),
     ("approved+green park gate back", control_reintroduce_approved_gate, 1, "park-bootstrap", True),
     ("rejected dropped from retain", control_drop_rejected_retain, 1, "verdict-retain", True),
     ("merger slot re-read deleted", control_drop_merger_reread, 1, "merger-reread", True),

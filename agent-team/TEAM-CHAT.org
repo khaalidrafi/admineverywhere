@@ -6472,3 +6472,65 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   run makes the deadlock live again; (2) resume/DONE the four delivered FEATURE-ORDER
   entries so the rotation has a real next item; (3) the 5 dropped branches still want an
   audit-merge.
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 23:36 UTC]
+:END:
+  FEATURE-ORDER state + one seat-lane harness repair + one governance RED for you.
+  BOARD: all FEATURE-ORDER items are already :DELIVERED: and PENDING (machine-listed over
+  agent-team/TODOS.org this segment: FR-R001, R-003, R-002, R-004, R-005, R-006, R-008,
+  R-007, COOL-PREVIEW, verify-cool-chat-2, COOL-CHAT-SEND-BACK-2, plus DONE brand-1).
+  Nothing is left for a seat to author; the next real feature move is your DONE/resume,
+  not a new author segment. Board untouched by me (DONE is Lead-only).
+  GOOD NEWS: the slot-writer defect my prior segment flagged is FIXED on the tree —
+  `"$CTL"` is restored at .github/workflows/agent-team.yml:921 and
+  `python3 scripts/chain_slot_check.py` grades the shipped shape 4/4 green (rc 0).
+  WHAT I REPAIRED (scripts/chain_slot_check.py only — no Lead-owned file): your :921 fix
+  rotted that harness's OWN --selftest. `build_green` insisted on finding the pre-fix
+  operand-LESS `SED_WRITE_LINE`, but the shipped tree now carries the FIXED line, so
+  `_replace_once` raised `CANNOT RUN` and EVERY control (which builds on that green
+  baseline) died before running; the roster also had a control that hard-coded "shipped
+  tree is red," a state that no longer exists. A check whose controls cannot fire is
+  blind. Re-anchored both: `build_green` is now idempotent across BOTH shipped shapes
+  (restore the operand if absent, no-op if already landed, else name the new shape) and
+  the stale control became "sed operand stripped is red" — it now strips the operand on a
+  copy to prove blank-guard can still fail. MEASURED: shipped grade rc 0 (4/4);
+  `--selftest` rc 0 over 9 controls, each leg proven able to fail; the roster count is
+  unchanged (9) so EXPECTED_CONTROLS and the mirror docs do not move.
+  ESCALATION (your decision, NOT fixed by me): `python3 scripts/chain_test_check.py`
+  now reads RED (rc 1) — 26 APPEND-ONLY + 26 NO-DROP hits — because TWO Lead in-place
+  format repairs to agent-team/TEAM-CHAT.org:5528 (aa6e7ef added the missing `:WHEN:`
+  brackets, 0dd7985 corrected Wed->Thu) are byte edits inside a historical message. Both
+  are legitimate corrections, but they collide with the harness's two promises:
+  (1) APPEND-ONLY is strict-by-design ("the chat was never edited") so it honestly fires
+      on ANY in-place edit, and (2) NO-DROP keys message identity on the RAW `:WHEN:`
+      value (scripts/chain_test_check.py:211-214), so a formatting correction is mislabeled
+      as "an entry removed or reordered." The objective's own landed-evidence claim ("the
+      chat was never edited," asserted rc 0 by every prior T3) is now falsified by the
+      repairs, and a permanently-RED append-only leg cannot tell your authorized format
+      repair from a real message drop — the "fires on a correct thing" failure mode
+      DEVGUIDE warns about. I deliberately did NOT edit the harness to whitelist your own
+      edits (a seat editing the rules to pass is self-serving masking, and I cannot touch
+      another seat's entry anyway). The fix is a governance call: either declare an
+      allow-list of authorized Lead format-repairs the harness tolerates, OR hold
+      append-only absolute and land future corrections as NEW correction entries (never
+      in-place) so the byte-prefix invariant survives. Your ruling, then I or the next
+      seat can encode it.
+  GATE: `python3 scripts/landing_gate.py` rc 0 — GATE GREEN 4/4 (env django 5.2.18,
+  pytest 299 passed, System check 0 issues, No changes detected); needed the boot self-
+  install `pip install -e ./plugin --no-deps` (the docker/harness gap seats keep noting).
+  `scripts/release_readiness.py` rc 0. NOT run --fe/vitest: zero app/ or plugin/ file
+  touched (one `*_check.py`, not a `*_diff.py` twin), and app/node_modules is absent at
+  boot, so no twin roster moved.
+  EVIDENCE: work commit follows this report on branch ai/turn-20261022-2325 (run id =
+  branch base 7d07d27; GITHUB_RUN_ID unset in the container, measured).
+  SECRET LAW held: no credential read, echoed or committed (ENV VAR NAMES only).
+  ROLE_LARK_WEBHOOK is EMPTY in this seat's env (measured) -> the Lark copy of this report
+  is SKIPPED, not lost. No OBJECTIVE-STATE claim: the FEATURE-ORDER entries stay PENDING
+  for your DONE gate; this segment authored none of them.
+  RESULT: DONE — one stale selftest re-anchored to the now-fixed tree (selftest rc 0
+  over 9 controls, shipped grade rc 0, gate green) and one append-only governance RED
+  named with file:line evidence and left for your ruling.
