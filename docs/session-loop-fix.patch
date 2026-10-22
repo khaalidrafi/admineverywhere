@@ -1,0 +1,122 @@
+SESSION-LOOP FIX — proposal patch for the agent-team chain (Lead-owned file)
+
+TARGET: .github/workflows/agent-team.yml  (the inner .turn-inside.sh heredoc)
+STATUS: PROPOSAL — NOT APPLIED. .github/workflows/* is Lead-owned; a seat may
+        only read and cite it. Apply with:  git apply --check docs/session-loop-fix.patch
+                                                    git apply       docs/session-loop-fix.patch
+
+WHAT IS BROKEN (measured live in the seat container on 2026-10-22, not replayed):
+  The chain's SESSION collect->restore loop never closes, so a seat loses its
+  context every turn. Three gaps, all inside the Lead-owned workflow:
+
+  1. RESTORE drops a store the COLLECT takes (workflow lines 519-526).
+     The collect tar is rooted at /, so every store keeps its absolute path
+     inside the archive. The restore copied only /sessions-restore/home/agent/.
+     The qoder lane runs with HOME=/usr/local/lib/qoder-home, so its store
+     lands in usr/local/lib/qoder-home/.qoder - collected (last member of the
+     tar list, line 587) and then never restored.
+     Measured: /usr/local/lib/qoder-home/.qoder/projects/-workspace/
+     63503841-d9d7-46d3-9547-07af3c2fbea9.jsonl existed this turn (33 KB,
+     written 10:40Z), while /sessions-restore was EMPTY at this boot.
+
+  2. COLLECT tars a path goose 1.55 never writes (workflow line 583).
+     The list holds "${HOME#/}/.config/goose/sessions"; goose 1.55.0 keeps its
+     session in a SQLite store at "${HOME#/}/.local/share/goose/sessions/"
+     (sessions.db + sessions.db-wal + sessions.db-shm).
+     Measured: $HOME/.config/goose/sessions DOES NOT EXIST, while
+     $HOME/.local/share/goose/sessions/sessions.db-wal grew during this very
+     turn (mtime 10:45Z, 1.6 MB). tar's "Cannot stat" was swallowed by the
+     collect's 2>/dev/null, so the miss was silent every run.
+
+  3. The three goose lanes opt out of session creation (lines 546, 557, 566).
+     goose run --no-session -t ... - the flag's own help says it runs
+     "without creating or using a session file", the exact opposite of the
+     Owner's SESSION LAW. Fix = drop the flag.
+
+WHY NOT FIXED HERE: .github/workflows/* is Lead-owned (TEAM law 2/11). This
+file is the seat's proposal; the Lead applies it.
+
+RISK NOTE: hunk 3 changes how the goose lanes run. If goose 1.55 errors
+without --no-session, that lane falls through to the next fallback lane
+(the elif chain already handles a non-zero exit), so the worst case is a
+lane order change, not a stalled chain.
+
+VERIFIED BEFORE SHIPPING: the patched inner script passes `bash -n`
+(100 lines extracted from the heredoc), and `git apply --check` against the
+current tree is clean. The patch was NOT applied to this tree.
+
+diff --git a/.github/workflows/agent-team.yml b/.github/workflows/agent-team.yml
+index eeeed03..8274344 100755
+--- a/.github/workflows/agent-team.yml
++++ b/.github/workflows/agent-team.yml
+@@ -523,6 +523,18 @@ jobs:
+             else
+               cp -a /sessions-restore/. "$HOME/" 2>/dev/null || true
+             fi
++            # The collect tar is rooted at /, so every collected store keeps
++            # its ABSOLUTE path inside the archive: the restore must mirror
++            # the collect's path list, not only the HOME-relative one. The
++            # qoder lane runs with HOME=/usr/local/lib/qoder-home, so its
++            # store lands in usr/local/lib/qoder-home/.qoder - collected
++            # (last member of the tar) but NEVER restored, so the seat lost
++            # its session EVERY turn. Seat finding 2026-10-22.
++            if [ -d /sessions-restore/usr/local/lib/qoder-home/.qoder ]; then
++              mkdir -p /usr/local/lib/qoder-home/.qoder
++              cp -a /sessions-restore/usr/local/lib/qoder-home/.qoder/. \
++                /usr/local/lib/qoder-home/.qoder/ 2>/dev/null || true
++            fi
+           fi
+           # The plugin is the code under test: link it fast (deps baked).
+           python -m pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true
+@@ -539,11 +551,15 @@ jobs:
+                    qoder -p "$BRIEF" --output-format json \
+                    --permission-mode bypassPermissions --max-turns 100; then
+                 echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder)"
++              # SESSION LAW: no --no-session on the goose lanes - the flag's
++              # own help says it runs "without creating or using a session
++              # file", the opposite of what the Owner asked for. The store is
++              # collected at the end of the turn and restored into the next.
+               elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
+                    OPENAI_API_KEY="$ZAI_API_KEY" \
+                    OPENAI_HOST="https://api.z.ai" \
+                    OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
+-                   goose run --no-session -t "$BRIEF"; then
++                   goose run -t "$BRIEF"; then
+                 echo "TURN_RESULT=goose run OK (acting lane: zai/glm-4.7-flash@goose)"
+               # Lead URL fix 2026-10-22 (run 39752778724 evidence): goose
+               # appends /v1/chat/completions to OPENAI_HOST, so the old
+@@ -554,7 +570,7 @@ jobs:
+                    OPENAI_API_KEY="$OPENROUTER_API_KEY" \
+                    OPENAI_HOST="https://openrouter.ai" \
+                    OPENAI_BASE_PATH="/api/v1/chat/completions" \
+-                   goose run --no-session -t "$BRIEF"; then
++                   goose run -t "$BRIEF"; then
+                 echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — promo hire 05:33Z)"
+               # Lead lane add 2026-10-22: qwen3.8-27b@groq — GROQ_API_KEY is
+               # in repo secrets (probed every run); gives the chain a 4th,
+@@ -563,7 +579,7 @@ jobs:
+                    OPENAI_API_KEY="$GROQ_API_KEY" \
+                    OPENAI_HOST="https://api.groq.com" \
+                    OPENAI_BASE_PATH="/openai/v1/chat/completions" \
+-                   goose run --no-session -t "$BRIEF"; then
++                   goose run -t "$BRIEF"; then
+                 echo "TURN_RESULT=goose run OK (lane: qwen3.8-27b@groq — relief hire 2026-10-22)"
+               else
+                 echo "TURN_RESULT=BLOCKED (qoder+zai+minimax+groq lanes all failed — check the harness)"
+@@ -578,9 +594,16 @@ jobs:
+           # captured. Scrubbing happens on the host before upload.
+           SESS="/workspace/.turn-sessions.tgz"
+           rm -f "$SESS"
++          # goose 1.55 keeps its session in a SQLite store under
++          # .local/share/goose/sessions (sessions.db + -wal/-shm), NOT under
++          # .config/goose/sessions - which that path never created, and
++          # tar's "Cannot stat" was swallowed by 2>/dev/null, so the miss
++          # was silent. Both paths are listed: the old one serves an older
++          # goose, the new one serves the baked 1.55. Seat finding 2026-10-22.
+           tar czf "$SESS" -C / \
+             "${HOME#/}/.qoder" \
+             "${HOME#/}/.config/goose/sessions" \
++            "${HOME#/}/.local/share/goose/sessions" \
+             "${HOME#/}/.local/share/opencode" \
+             "${HOME#/}/.codebuddy/projects" \
+             "${HOME#/}/.codebuddy/sessions" \

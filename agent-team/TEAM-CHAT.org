@@ -5347,3 +5347,52 @@
      before this commit — `python3 scripts/landing_gate.py` rc 0 over the 4 pinned legs (env
      django 5.2.18, pytest 299 passed, System check identified no issues, No changes
      detected); `python3 scripts/release_readiness.py` rc 0.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 10:48 UTC]
+:END:
+  Turn 4 (post-T3 handoff) — the objective's three scripted turns are landed, and
+  the one defect T2 named is now measured in full and handed over as a
+  ready-to-apply patch. RESULT: DONE.
+  1. THE ASK (yours, not mine): flip #+OBJECTIVE-STATE and restore the parked
+     feature order. T1 landed at a0dd163, T2 at c42be40 + 7b54938, T3 at 813cf6a
+     (merged in 965956e). The board still carries no TEST-CHAIN item and no
+     ONGOING headline, so nothing is in flight — while the state stays OPEN the
+     chain keeps dispatching seats onto a finished objective.
+  2. WHAT I FOUND — the SESSION collect->restore loop never closes, so a seat
+     loses its context every turn. Three gaps, all in the Lead-owned workflow,
+     all measured LIVE this turn (not replayed):
+     - RESTORE drops a store the COLLECT takes. The tar is rooted at /, so every
+       store keeps its absolute path inside the archive, but the restore copied
+       only /sessions-restore/home/agent/. (.github/workflows/agent-team.yml:519-526).
+       The qoder lane runs with HOME=/usr/local/lib/qoder-home, so its store lands
+       in usr/local/lib/qoder-home/.qoder — collected (:587) and never restored.
+       Measured: /usr/local/lib/qoder-home/.qoder/projects/-workspace/63503841-d9d7-46d3-9547-07af3c2fbea9.jsonl
+       (33 KB, mtime 10:40:33Z — written THIS turn), while /sessions-restore was
+       EMPTY at this boot.
+     - COLLECT tars a path goose 1.55 never writes. The list holds
+       "${HOME#/}/.config/goose/sessions" (:583); goose 1.55.0 keeps its session in
+       ${HOME#/}/.local/share/goose/sessions/sessions.db. Measured:
+       $HOME/.config/goose/sessions does not exist, while sessions.db-wal grew
+       during this very turn (mtime 10:45Z, 1.6 MB). tar's "Cannot stat" was
+       swallowed by the collect's 2>/dev/null, so the miss was silent every run.
+     - The three goose lanes opt out of session creation (:546, :557, :566):
+       `goose run --no-session` — the flag's own help says it runs "without
+       creating or using a session file", the opposite of the Owner's SESSION LAW.
+  3. THE DELIVERABLE: docs/session-loop-fix.patch — one git-applicable patch (5
+     hunks) closing all three gaps. NOT APPLIED: .github/workflows/* is Lead-owned,
+     so the seat only read and cited it. Check before applying:
+     `git apply --check docs/session-loop-fix.patch` (clean on the current tree);
+     the patched inner script passes `bash -n` (100 lines pulled from the heredoc).
+  4. LANE: minimax-m3.1-flash:free@goose (the qoder lane started and wrote its
+     session, then the chain fell through to goose). Landing gate GREEN before
+     this commit — `python3 scripts/landing_gate.py` rc 0 over the 4 pinned legs
+     (env django 5.2.18, pytest 299 passed, System check identified no issues,
+     No changes detected); `python3 scripts/release_readiness.py` rc 0.
+  5. The Lark copy of this report is SKIPPED, not lost: ROLE_LARK_WEBHOOK is empty
+     in this seat's env (measured). The board is deliberately untouched — T3 left
+     no board item to flip, and the feature items stay parked until you restore
+     them.

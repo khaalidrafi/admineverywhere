@@ -12,3 +12,7 @@ e489738@ai/turn-20261022-0942 | platform-engineer | minimax-m3.1-flash:free@goos
 1. Turns: T1 check-in landed (a0dd163), T2 one harness improvement landed (c42be40 + 7b54938), T3 state verification + log close landed (this branch) — every turn committed with the landing gate green (pytest 299 passed, manage.py check 0 issues, no migration drift).
 2. Machinery measured: the chat stayed append-only and format-clean (0 deleted lines, 0 malformed drawers across the objective's 8 entries), the board was never touched (it carries no TEST-CHAIN item and no ONGOING headline, so the Lead's parked feature order is intact), and the chain's own stall accounting sits at 0 (agent-team/TEAM-CONTROL.org:10).
 3. One defect still open for the Lead: T2's SESSION collect->restore loop is unapplied and re-measured LIVE this turn — the restore copies only the first store (.github/workflows/agent-team.yml:521 and :522) while the collect tars two (:583 and :587), and /sessions-restore was empty at this boot.
+
+## Post-chain handoff (turn 4 — appended AFTER the log was closed at T3; append-only)
+
+- 965956e@ai/turn-20261022-1040 | platform-engineer | minimax-m3.1-flash:free@goose | 2026-10-22 | turn 4 (post-T3): the SESSION collect->restore defect re-measured LIVE (3 gaps: restore drops the qoder store, collect tars a path goose 1.55 never writes, three goose lanes pass --no-session) and a ready-to-apply proposal patch shipped at docs/session-loop-fix.patch — NOT applied (.github/workflows/* is Lead-owned); gate GREEN (4/4 legs)
