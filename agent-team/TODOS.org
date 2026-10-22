@@ -1,7 +1,7 @@
 #+TITLE: TODOS — admincraft
 #+TODO: TODO(t) ONGOING(o) WAIT(w@) PENDING(p@) | DONE(d!) CANCELLED(c@) DEFERRED(f@)
 #+COLUMNS: %40ITEM %TODO %CLOCKSUM_EFFORT(Clocked)
-# Hiring rule: the assignee flips its item to ONGOING at task start (first commit of its branch). Marking DONE/CANCELLED is Lead-only.
+# Hiring rule (SEGREGATION LAW, Owner 18:14Z): the assignee (AUTHOR) flips its item to ONGOING at task start and to PENDING with :DELIVERED: evidence on delivery; the NEXT seat (REVIEWER) reviews the branch read-only; the CI merger (MERGER) lands it only on the reviewer's APPROVED verdict. Marking DONE/CANCELLED is Lead-only.
 #+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
 #+PROPERTY: ORDERED t
 
