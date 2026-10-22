@@ -20,9 +20,10 @@
 #   * ROLE: SOFTWARE ENGINEER (NEW hire, Owner order 13:22Z)
 #     deepseek-v4.1-flash@codebuddy [ACTIVATING — CODEBUDDY_
 #     AUTH_TOKEN in repo secrets; first live proof pending]
-#   * ROLE: QA ENGINEER (NEW hire, Owner order 13:22Z)
-#     deepseek-v4.1-flash@qoder [ACTIVATING — model flag
-#     unverified; if the CLI rejects it the fallback chain self-heals]
+#   * ROLE: QA ENGINEER (HIRED — Owner hire+burn order 17:23Z #hq)
+#     deepseek-v4.1-flash@qoder [KEEP — --model flag VERIFIED live:
+#     qoder lane run OK (a64902a) + FR-R001-FE audit delivered
+#     (cab7c47); free tier burns on real FEATURE-ORDER work]
 #   * MiniMax M3.1 Flash free offers — consume ALL (Owner 13:22Z):
 #     openrouter:free ACTIVE; gomodel gateway catalog scan (minimax/
 #     deepseek ids) probes every run and hires what it confirms;
@@ -81,8 +82,12 @@
      second body of a brain we already run (BODY SHAPES OUTPUT law:
      same brain, different body = a different member). QA = run the
      suites, reproduce failures, write regression evidence: token-
-     heavy work, all free. The qoder --model flag is unverified; the
-     fallback chain self-heals if the CLI rejects it.
+     heavy work, all free. The qoder --model flag is VERIFIED live —
+     the lane ran OK (a64902a) and the FR-R001-FE audit delivered
+     (cab7c47). Owner order 2026-10-22 17:23Z: formally HIRED (HR
+     ledger PROBE -> KEEP) and the FREE offer BURNS on real chain
+     work — the QA seat takes the token-heavy suites and regression
+     evidence every rotation so the quota never idles.
 
 * VISITING MEMBER — paid burn (Owner order 2026-10-22 ~16:08Z)
 
@@ -133,7 +138,7 @@
   | zai/glm-4.7-flash@goose                  | 0 confirmed       | relief turn delivered CC-SB-2 but lane line reads qoder fallback — attribution unconfirmed | PROBE |
   | groq/qwen3.8-27b@goose                   | 0 yet              | ARMED 10-22; relief fallback, unexercised                   | PROBE   |
   | deepseek-v4.1-flash@codebuddy  | 0 commits          | lane ran OK twice (ee5ed18, 0611493) but segments EMPTY     | WATCH   |
-  | deepseek-v4.1-flash@qoder          | 0 yet              | ACTIVE; --model flag unverified                             | PROBE   |
+  | deepseek-v4.1-flash@qoder          | FR-R001-FE audit   | lane run OK (a64902a); --model flag VERIFIED live; HIRED + burn the free offer (Owner 17:23Z) | KEEP    |
   | glm-5.3@codebuddy (visiting)   | 0 commits          | visit 1: PAID lane VERIFIED (run OK, ~50 credits burned) but segment EMPTY — session artifact review before visit 2 | WATCH |
 
 # BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on

@@ -57,6 +57,12 @@
   reach the Owner on Telegram + Discord every run. Only an explicit Owner
   order re-arms #+PAUSE-AFTER-TODO: ON (then finalize arms #+CHAIN-PAUSE
   after a delivered TODO and the Lead clears it to resume).
+- HIRE + BURN (Owner 2026-10-22 17:23Z #hq: "Hire deepseek-v4.1-flash@qoder
+  and burn its free offer"): the QA seat is formally HIRED — HR ledger
+  PROBE -> KEEP with evidence (qoder lane run OK a64902a, FR-R001-FE
+  audit delivered cab7c47, --model flag verified live). Its FREE offer
+  burns on real FEATURE-ORDER work: the QA seat takes the token-heavy
+  suites / regression-evidence work every rotation — quota never idles.
 - REAL ROTATION (Lead fix from the T2 finding): #+TURN now maps one arm
   per CI seat — platform-engineer <-> relief-engineer alternate every
   turn; an unknown pointer REFUSES (BLOCKED) instead of silently running
