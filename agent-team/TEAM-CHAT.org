@@ -5458,3 +5458,65 @@
      the parked feature order. This turn adds the tool that PROVES the order can be
      restored — it now refuses a restored order whose board items were deleted — but the
      state flip and the order itself remain the Lead's gate. I claim no completion.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 11:11 UTC]
+:END:
+  TURN 6 (post-chain, harness) — the SESSION collect->restore defect became a COMMAND.
+  RESULT: DONE.
+  1. WHAT WAS PROSE IS NOW RE-RUNNABLE. Turn 4 measured the SESSION gap and shipped a
+     proposal patch; until now nothing re-measured it, so the finding was a claim in a
+     commit message. scripts/chain_session_check.py (NEW, 567 lines) grades the loop
+     READ-ONLY against the Lead-owned workflow: COLLECT (the tar takes a real population,
+     scripts/chain_session_check.py:340), RESTORE (every collected store lands back at its
+     OWN path — the tar is rooted at /, so each member keeps its absolute archive-relative
+     path, :351), NO-OPT-OUT (no lane runs the CLI with --no-session, :361), GOOSE-STORE
+     (the collect list covers the store the CLI actually writes, :371) and MOUNT (the
+     restore dir is created and mounted, :388). The inputs are pinned literals
+     (:68-:89) and the verdict follows the house semantics: 0 ok / 1 a claim is false /
+     2 cannot run.
+  2. THE TREE IS RED ON PURPOSE, AND THE FIX IS PROVEN, NOT ASSERTED. On the shipped
+     tree the check answers rc 1 with exactly the four real findings: RESTORE (the collect
+     takes usr/local/lib/qoder-home/.qoder but no copy puts it back at its own path),
+     three NO-OPT-OUT findings (the three goose lanes, .github/workflows/agent-team.yml:546,
+     :557, :566) and GOOSE-STORE (the collect list at :581-:588 still tars the legacy
+     .config/goose/sessions at :583, not the .local/share/goose/sessions the CLI writes).
+     The restore block copies only /sessions-restore/home/agent and the archive root
+     (:521-:524), and the mount is at :600. `--selftest` answers rc 0 over 8 controls: the
+     patched baseline is green (it applies docs/session-loop-fix.patch to a COPY and
+     grades the result), the shipped tree is red, and six more controls drop the restore
+     copy, reintroduce --no-session, drop the goose store, drop the mount, drop the
+     collect block and delete the workflow file — so every leg is proved able to fail.
+  3. THE LEAD-OWNED WORKFLOW WAS NOT TOUCHED. The patch stays UNAPPLIED: it lives as a
+     proposal at docs/session-loop-fix.patch and `git apply --check` against it is clean.
+     .github/workflows/*, .github/scripts/*, .gitattributes and agent-team/TEAM-CONTROL.org
+     are byte-identical to the branch tip (git status on those paths is empty). The
+     checker only READS them; every control runs on a temporary copy.
+  4. NOT NAMED *_diff.py, DELIBERATELY. That glob IS the landing gate's twin roster
+     (scripts/landing_gate.py EXPECTED_TWINS = 6, cross-checked against the scripts/*_diff.py
+     files on disk) — an unwired *_diff.py would register as roster drift. The gate roster
+     was NOT touched.
+  5. GATES ON THE DELIVERED TREE — all green. `python3 scripts/landing_gate.py` rc 0 over
+     the 4 pinned legs (env django 5.2.18, pytest 299 passed, System check identified no
+     issues, No changes detected) — GATE GREEN. `python3 scripts/release_readiness.py` rc 0
+     (0.1.2 in 5 carriers, 85 repo path citations, 88 bounded citations, 15 symbol claims,
+     8 live suite-count claims equal to the pins, 11 .py files parse with no PEP 604, 5
+     release inputs present) — RELEASE READINESS GREEN. `python3 scripts/chain_test_check.py`
+     rc 0 (3 turns landed, 111 chat messages, 4 run lines, 14 parked items present, 0 ONGOING).
+  6. FILES CHANGED: scripts/chain_session_check.py (NEW), AGENTS.md (+7), docs/DEVGUIDE.md
+     (+12), docs/session-loop-fix.patch (+7, the verification paragraph only),
+     docs/CHAIN-TEST.md (+13, the turn-6 note), agent-team/TEAM-CHAT.org (this entry,
+     append-only). Deliberately NOT touched: the board (no TEST-CHAIN item to flip; the
+     feature items stay parked until you restore them), agent-team/TEAM-CONTROL.org,
+     .github/workflows/*, .github/scripts/*, .gitattributes.
+  7. LANE: minimax-m3.1-flash:free@goose (GOOSE_MODEL=minimax/minimax-m3.1-flash:free,
+     GOOSE_PROVIDER=openai). The Lark copy of this report is SKIPPED, not lost:
+     ROLE_LARK_WEBHOOK is empty in this seat's env (measured), and no URL was invented.
+  8. THE ASK IS STILL YOURS (unchanged from turns 4 and 5): flip #+OBJECTIVE-STATE and
+     restore the parked feature order, and decide whether docs/session-loop-fix.patch gets
+     applied to the workflow. This turn hands you the tool that measures the decision —
+     after you apply it, `python3 scripts/chain_session_check.py` answers rc 0 instead of
+     rc 1. I claim no completion.
