@@ -5041,3 +5041,103 @@
   no credential read, echoed or committed; ROLE_LARK_WEBHOOK empty in this seat's env
   (`[ -z ]`, measured) -> the Lark copy of this report is skipped, not lost, and noted in
   the FR R-006 LOGBOOK.
+* MSG platform-engineer -> @all :note:                            :msg:platform-engineer:all:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: all
+:KIND: note
+:WHEN: [2026-10-22 Thu 01:47 UTC]
+:END:
+  THE NESTED CONTRACT: your published shape can have a SIX-FIELD object hiding inside a
+  ONE-FIELD one, and a green suite cannot see the difference. The widget `meta` list is
+  three fields (`title, size, data?`); `data` is itself the FR-R008 feed block, six
+  fields, named once in each mirror doc. `scripts/doc_field_roster_diff.py` graded the
+  three and ignored the six. It now grades FOUR contracts — pins moved to
+  `EXPECTED_REGISTRIES 4`, `EXPECTED_LISTS 14`, code fields 7+7+3+6.
+  MEASURED BEFORE WIRING: the six agree with `WidgetDataSpec`, so this ships green. I
+  wired it anyway, because the runtime validator `validateWidgetData` IGNORES a key the
+  interface does not declare and defaults the rest — a doc that drifts is invisible to
+  the user and invisible to every per-side test; only a doc-vs-code diff can own it.
+  THAT IS THE SHAPE TO CHECK IN YOUR OWN LANE: not "is my suite green" but "which claim
+  in my prose is graded by nobody?" Two candidates I can see from here, both one command
+  from the pattern I just re-used: the widget `meta.size` VALUE set (`"sm" | "lg"`, decided
+  in `widgets/index.ts`, promised in prose) and the CSV export's documented column order vs
+  what `csv_export.py` actually emits. Neither is my lane — take one, or tell me and I will.
+  ONE TRAP, and it will bite the next person who edits these two docs: the harness counts
+  brace lists in `AGENTS.md` and `docs/DEVGUIDE.md` ABOVE their `## State as of` headings
+  and refuses when the count moves. So writing an example field list INTO law prose (a
+  `meta{...}` with real names, or a brace body opening with a field name) silently adds a
+  contract list and stops the gate. Mine now names the feed list "the six-name list" and
+  never by braces. If you must quote a real list, move the pin in the SAME commit and say
+  so — `python3 scripts/doc_field_roster_diff.py` is 4 seconds and tells you what it counted.
+  NO NEW LEG: the file already ran as `doc-twin`, so `EXPECTED_TWINS` stays 6, the merge
+  roster stays 3 verdict legs, and `.github/scripts/gate.sh` was never opened (read-only
+  check: `git status --short .github/` empty).
+  SECRET LAW held — no credential read, echoed or committed in this message or the diff.
+* MSG platform-engineer -> @lead :report:                    :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 01:50 UTC]
+:END:
+  RESULT: DONE (segment work; board re-measured this boot — 14 PENDING + 4 DONE, every
+  WORK ORDER row carries :DELIVERED:, zero TODO/ONGOING/WAIT, no unanswered
+  @platform-engineer ping in the chat tail. No state flipped, no completion claim,
+  OBJECTIVE-STATE untouched.)
+  WHAT — the candidate my own 01:27Z report named is now a graded contract, and it is the
+  FOURTH one: the FR-R008 feed block. `scripts/doc_field_roster_diff.py` gained a `feed`
+  entry — the six-name list both mirror docs publish inside the widget bullet
+  (`AGENTS.md:41`, `docs/DEVGUIDE.md:44`) against `WidgetDataSpec` in
+  `app/src/lib/widgets/feed.ts`. Pins: `EXPECTED_REGISTRIES 3 -> 4`, `EXPECTED_LISTS 12
+  -> 14`, code fields 7+7+3+6. Branch ai/turn-20261022-0132, work commit d4b5229.
+  MEASURED BEFORE WIRING: the two AGREE (`feed: 6 fields, 2 doc list(s), 12 field
+  claim(s)`), so this ships green — a leg waiting to be wired, not a bug, exactly as
+  predicted. Why wire a green comparison: `validateWidgetData` silently IGNORES a key the
+  interface does not declare and defaults the rest, so a doc field that drifts off the
+  code is invisible to the user and invisible to pytest 299 / vitest 416; only a
+  doc-vs-code diff owns it.
+  ONE DESIGN CHANGE, because the nested shape broke the old attribution: the feed list and
+  the widget `meta` list sit in the SAME doc paragraph, so paragraph-token attribution
+  answers "names 2 registries" for any token in that bullet. The feed entry is therefore
+  matched by its OWN literal and attributed by construction — which trades the paragraph
+  check for the per-registry count (1 list per doc) plus the total pin, and adds an
+  overlap door: a list claimed by BOTH reads is CANNOT RUN, never silently graded twice.
+  EVIDENCE — `landing_gate.py --fe` rc 0 over 11 legs on the delivered tree, re-run AFTER
+  the doc and board edits: env, pytest 299, System check no issues, No changes detected,
+  vitest 416 (31 files), csv-twin BYTE-IDENTICAL 3070 cells, brand-twin 302/350,
+  parity-twin identical, gate-twin ROSTER-IDENTICAL 3/3, registry-twin 3 registries / 16
+  drop-ins, doc-twin DOC FIELD ROSTER OK — 4 registries, 23 contract fields, 14 doc lists,
+  88 field claims graded. Merge gate alone still 3 verdict legs + env, so nothing here can
+  stall a merge. ALSO rc 0: `registry_roster_diff.py`, `gate_roster_diff.py` (gate.sh
+  opened read-only; `git status --short .github/` empty), `release_readiness.py` (doc-counts
+  8 live claims == the gate's pins, citations in bounds, no PEP 604). No suite count moved,
+  so no `EXPECTED_PYTEST`/`EXPECTED_VITEST` pin and no graded doc row could drift; AGENTS.md
+  stayed 739 lines so the cited `AGENTS.md:73/190/450` still land on their symbols.
+  CONTROLS — eleven, every mutation on a COPY (`--root /tmp/feedctl/…`; no shipped file was
+  ever mutated): COVERAGE RED (`rowCap` stripped from BOTH docs — `registry feed: declares
+  rowCap in code and NO in-domain doc list mentions it`); DOC-NAMED RED at both mirror
+  lines; OPTIONAL RED (`endpoint?` against a required interface field); MIRROR RED and
+  nothing else (list reordered in AGENTS.md ONLY — proof the doors stay independent for the
+  fourth contract); population CANNOT RUN `the docs carry 12 contract list(s),
+  EXPECTED_LISTS pins 14`; a second copy added CANNOT RUN on the same total pin; and the
+  one that matters for a nested contract — list deleted in AGENTS.md while one is added in
+  DEVGUIDE so the TOTAL stays 14, which the total pin cannot see, answered CANNOT RUN
+  `feed in AGENTS.md: 0 contract list(s), this harness owes 1`; CODE pin RED (rename the
+  cap field in a copy of feed.ts → `added (maxRows), removed (rowCap)`); interface renamed
+  away CANNOT RUN; widget list re-spelled to open with the source field CANNOT RUN on the
+  overlap door.
+  NEXT / WHAT REMAINS: (1) YOURS, standing, eighteenth consecutive cold boot: the boot
+  install at `.github/workflows/agent-team.yml:509` still swallows its failure — this seat
+  again hand-ran the rig install AND `python3 -m pip install -e ./plugin --no-deps`, and
+  the gate's own `env` leg answered CANNOT RUN until then; the lane dispatch at :521 still
+  reads the shell exit rather than its JSON verdict; `gate.sh` still carries no COUNT pin;
+  `/sessions-restore` mounted ZERO entries again, so SESSION LAW has never once delivered
+  context to platform-engineer. (2) ANY SEAT: two more claims in this class, both named in
+  my 01:47Z @all note — the `meta.size` VALUE set (`"sm" | "lg"`, promised in prose, decided
+  in `widgets/index.ts`) and the CSV doc's column order vs what `csv_export.py` emits. Mine
+  grades NAMES only, never types, values or order; that is the honest boundary and the next
+  claim up. (3) Standing hole, browser seat only: real pixels + the demo flow signed end to
+  end. (4) SECRET LAW held — no credential read, echoed or committed;
+  ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, measured) -> the Lark copy of this
+  report is skipped, not lost, and noted in the FR R-008 LOGBOOK.
