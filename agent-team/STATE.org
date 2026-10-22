@@ -1,0 +1,58 @@
+#+TITLE: STATE.org — cross-session state (Owner pastes back at session start)
+
+* DONE
+- [2026-10-22 Thu] Team rebuilt per Owner ruling ("Team doesn't exist —
+  you gotta rebuild"): CANDIDATES.org copied VERBATIM from
+  khaalidrafi/agent-team.el templates/CANDIDATES.org; this STATE.org
+  written from scratch. Both on ai/teamify — NO merge without the Owner.
+- [2026-10-22 Thu] Harness repair (run 39752778724 evidence): minimax
+  lane URL fixed (goose doubled /v1 -> 404 every turn), qwen3.8-27b@groq
+  added as 4th relief lane, Telegram mirror made non-fatal (its push
+  races painted healthy runs "failure"), probe table echoes to stdout,
+  Owner global AGENTS.md baked as top layer of every harness config.
+
+* IN-FLIGHT
+- TEST-CHAIN (Owner order 2026-10-22 09:22Z #admincraft): 3-turn
+  machinery validation — T1 check-in + docs/CHAIN-TEST.md line, T2 one
+  harness improvement noted, T3 verify board/chat + close the log.
+  OBJECTIVE-STATE flips to COMPLETE by the Lead after turn 3, then the
+  parked feature order is restored.
+
+* READY-FOR-HUMAN-REVIEW
+- ai/teamify: agent-team/CANDIDATES.org + agent-team/STATE.org — awaiting
+  Owner review before any merge.
+- ai/main harness-repair commits (workflow lanes, Dockerfile law bake,
+  TEAM-CONTROL test switch) — normal history, reviewable in place.
+
+* DEFERRED
+- Parked feature order (restored after TEST-CHAIN): verify-cool-chat-2 ->
+  COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE ->
+  R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008
+  widgets -> R-007 RBAC.
+- ROSTER DUTY full GET /v1/models dump: needs GOMODEL_MASTER_KEY (see
+  BLOCKED) — recorded SKIPPED until then; CANDIDATES.org remains the
+  character source, MEMBERS.org the seat ranks.
+
+* BLOCKED
+- JEV judgment lane: GOMODEL_MASTER_KEY secret is ABSENT from repo
+  Actions secrets — finalize falls back to local rules (gate-safe, law:
+  never block the chain on a judgment lane). Owner informed 2026-10-22.
+- JEV self-judgment path: TYPESAFE_API_KEY also absent — any JEV SKIPPED
+  records are for the Owner's manual call.
+- Telegram mirror destination: TELEGRAM_CHAT_ID not set; fallback
+  TELEGRAM_OWNER_ID is set but may 403 until the bot has an active chat
+  with the Owner. Mirror is now non-fatal either way.
+
+* TEAM-STAFFING
+- Rotation parks on qwen3.8-flash@qoder — quota-dead (daily limit, run
+  39752778724). Fallback chain after repair: zai/glm-4.7-flash@goose ->
+  minimax-m3.1-flash:free@goose (URL fixed) -> qwen3.8-27b@groq (new).
+- Seats chosen BY FIT (Owner law 2026-10-21 17:47Z); MEMBERS.org carries
+  the ranks; CANDIDATES.org the character inventory.
+
+* HIRING-LOG
+- [2026-10-22 Thu] qwen3.8-27b@groq relief hire (Lead; GROQ_API_KEY
+  present in repo secrets, probed every run since 2026-10-21).
+
+* AUTONOMY
+  AUTO
