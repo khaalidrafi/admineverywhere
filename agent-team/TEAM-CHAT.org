@@ -6111,3 +6111,105 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   Read your turn brief as usual — nothing changes for how you author;
   what changed is WHO reviews (QA, not the next seat) and who the
   merger answers to (the Lead).
+
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 20:07 UTC]
+:END:
+  FEATURE-ORDER had no unclaimed row to take, so this segment spent itself on the
+  one thing that currently stops EVERY delivered row from landing: the duty-reviewer
+  router reads the pending slot in the wrong ID SPACE, so the single slot is poisoned
+  and nothing can ever be approved again — by any seat, including mine.
+  BRIEF vs CONTROL (worth a Lead edit): my turn brief's WORK ORDER still says
+  TEST-CHAIN MODE with the feature order parked, while the line the chain reads
+  verbatim — agent-team/TEAM-CONTROL.org:6 — says FEATURE-ORDER was restored at the
+  TEST-CHAIN close. I followed TEAM-CONTROL (Lead-owned, authoritative) and wrote
+  NOTHING to docs/CHAIN-TEST.md, which belongs to the closed test objective.
+  ITEM: none flipped. All 11 FEATURE-ORDER rows already carry :DELIVERED:
+  (agent-team/TODOS.org:176, :489, :663, :719, :887, :1847, :2058, :2539, :2743,
+  :3079, :3332) and the board carries no chain-machinery headline, so this turn took
+  the work order's fallback — "the smallest verifiable improvement that serves the
+  objective". DONE stays the Lead's gate; #+OBJECTIVE-STATE untouched.
+  THE MEASUREMENT (four facts, each read off the shipped tree, nothing inferred):
+  1. THE SLOT IS WRITTEN IN SEAT SPACE. .github/workflows/agent-team.yml:824
+     `AUTHOR_ID=$(printf '%s' "$SEAT" | cut -d' ' -f1)` and :847 write
+     `... | author=${AUTHOR_ID} | ...`; SEAT is steps.control.outputs.seat, i.e. the
+     pointer grammar at :276-288 whose arms assign NEXT_SEAT=platform-engineer,
+     quality-assurance-engineer, visiting-engineer — seat ids.
+  2. THE READERS COMPARE AGAINST MEMBER SPACE. .github/scripts/turn_segment.sh:54
+     `[ "${PENDING_AUTHOR:-}" = "$QA_MEMBER" ]` with QA_MEMBER="deepseek-v4.1-flash@qoder"
+     (:50); the merger repeats the same test for EXPECTED_REVIEWER (agent-team.yml:726)
+     and uses it for the same-member refusal (:744, `"${REVIEW_MEMBER:-y}"`). A MEMBER
+     id always carries "@" and a SEAT id always ends "-engineer" (the format law at
+     agent-team/MEMBERS.org:2-8) — the two sets do not intersect.
+  3. SO BOTH ARMS ARE DEAD CODE. The QA-authored hand-off to the VISITING lane
+     (REVIEW-LOG law 2, agent-team/REVIEW-LOG.org:15-18) can never fire, and neither can
+     the merger's own refused-same-member: a QA-authored pending is routed back to the
+     QA lane on every single run, and the collision is graded as an ordinary rejection.
+  4. AND A REJECTION IS NOW TERMINAL, NOT TRANSIENT. `rejected` RETAINS the branch in
+     the slot (agent-team.yml:853/:856 — the Lead's correct implementation of REVIEW-LOG
+     law 4) and that write runs AFTER the author-branch park (:847), so the retained
+     branch overwrites the new one: while ai/turn-20261022-1904 sits in the slot
+     (TEAM-CONTROL.org:13, author=quality-assurance-engineer), no branch — mine included
+     — can ever be queued, reviewed or landed.
+  LIVE TWICE, NOT ONCE: agent-team/REVIEW-LOG.org:29 records that branch's first
+  self-rejection (rejected, reviewer-equals-author, 19:46Z) and THIS run's review phase
+  re-rejected the same branch for the same reason (VERDICT: REJECTED in .turn-review.txt,
+  the ephemeral per-run capture). The chain reads healthy while it lands nothing: a
+  non-empty author branch still counts as PROGRESS, so #+STALL-COUNT stays 0
+  (TEAM-CONTROL.org:10). Same class as the bootstrap deadlock the platform seat measured
+  at 18:41Z (Lead-fixed in ba00442), one door further down the pipeline.
+  SECONDARY, SAME LANE (smaller, but it eats the same law): the duty reviewer pins
+  `--model deepseek-v4.1-flash` (turn_segment.sh:245) and this run's review output opens
+  `Model "deepseek-v4.1-flash" is not available right now; using "qfmodel" instead` —
+  so the :REVIEWER: the merger grades is the identity REQUESTED, not the one that sat in
+  the chair, which is what refused-wrong-reviewer is supposed to police.
+  WHAT LANDED (commit 57a7b4c on ai/turn-20261022-1950, base ad91672):
+  - scripts/chain_review_check.py — the law as ONE command, read-only against the two
+    Lead-owned files (neither was opened for write; the harness's controls mutate
+    COPIES via --root). Four legs: AUTHOR-SPACE (the space the slot's author= is written
+    in, derived from the writer's own source AND cross-checked against the value the
+    live slot carries, so a parser that drifts says CANNOT RUN instead of inventing a
+    verdict), ROUTER-SPACE / MERGER-SPACE (every author= comparison must read that
+    space; the site population is PINNED 1 + 2, DEVGUIDE *ELEVENTH law*, so a silently
+    vanished check is a refusal, never a green), LIVE-ROUTE (replays the router on the
+    branch queued right now and refuses when it hands a branch to its own author's seat).
+    Deliberately NOT named `*_diff.py`: that glob IS the landing gate's twin roster
+    (scripts/landing_gate.py:210) and this grades the CHAIN, not a pair of artifacts.
+  - docs/review-routing-fix.patch — the fix, UNAPPLIED (.github/* and
+    .github/scripts/* are Lead-owned; precedent docs/session-loop-fix.patch). It stays
+    in the slot's own space rather than rewriting the writer: a QA_SEAT literal beside
+    each comparison, and `${REVIEW_SEAT}` in the refusal — that output already exists at
+    agent-team.yml:209 and the merger never reads it.
+  - AGENTS.md ## Commands: the two lines that run the check.
+  VERDICTS MEASURED: the shipped tree is RED rc 1 with all four problems named (the
+  defect is real); the same tree with the patch applied to a COPY is rc 0 GREEN;
+  `--selftest` runs 9 controls rc 0 — ROUTER-SPACE, MERGER-SPACE and LIVE-ROUTE each
+  proved able to fire, and the parse guards proved able to refuse (a slot value from the
+  other space, a vanished author= write, a vanished comparison site, a missing router).
+  A check that can only ever say RED is not a check (DEVGUIDE *EIGHTH law).
+  GATES ON THE DELIVERED TREE: `python3 scripts/landing_gate.py` rc 0 — 4 legs matched
+  the pinned roster (env, pytest 299 passed, System check no issues, no migration drift);
+  gate_roster_diff, registry_roster_diff, doc_field_roster_diff rc 0; release_readiness
+  rc 0 (86 path citations, 90 line bounds, 15 symbol claims, doc-quoted counts still
+  equal to the gate's pins after the AGENTS.md edit).
+  LANE: the relief seat's FOURTH arm ran — qoder, `TURN_RESULT=qoder run OK
+  (lane: qwen3.8-flash@qoder)` (the generated .turn-inside.sh:121, relief case :95). The
+  three goose arms ahead of it exited non-zero this run; the container's GOOSE_MODEL is
+  nvidia/nemotron-3.5-lightning:free, which is none of the three bodies this seat
+  declares (agent-team/MEMBERS.org:16-19) — the pointer at TEAM-CONTROL.org:9 says
+  zai/glm-4.7-flash@goose, so the seat's declared lane did not deliver this segment.
+  GITHUB_RUN_ID is unset inside the seat container (measured), so the run id above is
+  this branch's base.
+  ROLE_LARK_WEBHOOK is empty in this env (length 0, measured) — the Lark copy of this
+  report is SKIPPED, not lost, and no URL was invented.
+  RESULT: DONE (one chain-machinery delivery: a re-runnable check plus an unapplied
+  Lead patch; no Lead-owned file written, no board flip, no completion claim).
+  NEXT (the Lead's two edits, which no seat may make): apply
+  docs/review-routing-fix.patch, then clear or re-route #+PENDING-REVIEW at
+  TEAM-CONTROL.org:13. With the routing fixed, the queued branch goes to the VISITING
+  lane on the next run — which is what law 2 asked for, and what the QA seat's
+  FR-R003-FE delivery (and every row under FEATURE-ORDER) is waiting on.
