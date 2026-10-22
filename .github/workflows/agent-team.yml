@@ -249,6 +249,7 @@ jobs:
             openrouter/minimax-m3.1-flash:free@goose*) NEXT_SEAT=relief-engineer ;;
             codebuddy/deepseek-v4.1-flash@codebuddy*)  NEXT_SEAT=software-engineer ;;
             qoder/deepseek-v4.1-flash@qoder*)          NEXT_SEAT=quality-assurance-engineer ;;
+            codebuddy/glm-5.3@codebuddy*)              NEXT_SEAT=visiting-engineer ;;        # PAID visiting burn (Owner 2026-10-22 ~16:08Z)
             *)                                         NEXT_SEAT=unknown ;;
           esac
           echo "seat=$NEXT_SEAT" >> "$GITHUB_OUTPUT"
@@ -766,6 +767,35 @@ jobs:
                 echo "TURN_RESULT=BLOCKED (qoder-ds+codebuddy+groq+qoder lanes all failed — check the harness)"
               fi
               ;;
+            visiting-engineer)
+              # codebuddy/glm-5.3@codebuddy — PAID VISITING MEMBER (Owner
+              # order 2026-10-22 ~16:08Z: burn the 250 expiring CodeBuddy
+              # credits at 50/day until 2026-10-27). --model glm-5.3
+              # verified against the codebuddy CLI's own --help (supported
+              # ids include deepseek-v4.1-flash, glm-5.3, glm-5.3-flash,
+              # kimi-k3, gpt-6-astra, gpt-5.6-*). One visiting turn per
+              # day, NOT in the standing rotation — the Lead points #+TURN
+              # here for the daily burn; the advance rejoins the rotation
+              # at software-engineer. If the paid lane fails, the segment
+              # still runs on the proven free lanes but the result SAYS
+              # the burn did not happen — a visit is never faked.
+              if env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" \
+                   codebuddy -p "$BRIEF" -y --model glm-5.3; then
+                echo "TURN_RESULT=codebuddy PAID run OK (lane: codebuddy/glm-5.3@codebuddy — visiting burn)"
+              elif env HOME=/usr/local/lib/qoder-home \
+                   qoder -p "$BRIEF" --output-format json \
+                   --permission-mode bypassPermissions --max-turns 100; then
+                echo "TURN_RESULT=PAID LANE FAILED — fell back to qoder (lane: qoder/qwen3.8-flash@qoder); visiting burn did NOT happen"
+              elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
+                   OPENAI_API_KEY="$ZAI_API_KEY" \
+                   OPENAI_HOST="https://api.z.ai" \
+                   OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
+                   goose run --no-session -t "$BRIEF"; then
+                echo "TURN_RESULT=PAID LANE FAILED — fell back to zai (lane: zai/glm-4.7-flash@goose); visiting burn did NOT happen"
+              else
+                echo "TURN_RESULT=BLOCKED (visiting paid lane + free fallbacks all failed — check the harness)"
+              fi
+              ;;
             *)
               echo "TURN_RESULT=BLOCKED (unknown seat ${SEAT} — rotation case gap)"
               ;;
@@ -904,6 +934,7 @@ jobs:
             relief-engineer)            NEXT="codebuddy/deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;
             software-engineer)          NEXT="qoder/deepseek-v4.1-flash@qoder (QA Engineer)" ;;
             quality-assurance-engineer) NEXT="qoder/qwen3.8-flash@qoder (Platform Engineer)" ;;
+            visiting-engineer)          NEXT="codebuddy/deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;  # visiting rejoins rotation; free burn continues
             *)                          NEXT="unknown (Lead: fix #+TURN in agent-team/TEAM-CONTROL.org)" ;;
           esac
           git checkout -f ai/main
