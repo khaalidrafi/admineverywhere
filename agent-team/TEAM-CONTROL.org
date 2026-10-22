@@ -76,7 +76,7 @@
   finalize posts the chain verdict + this segment's new TEAM-CHAT.org
   entries to secret DISCORD_WEBHOOK_TEAM_ADMINCRAFT (silent until the
   Owner creates the channel webhook and sets the secret).
-#+LAST-BLOCKED-NOTIFY: 1792582649
+#+LAST-BLOCKED-NOTIFY: 1792684740
 * Chain law (Lead — Owner revert order 2026-10-21 ~12:44Z)
 
 The repo-root AGENTS.md is RESTORED (Owner: "Did you remove admincraft's
