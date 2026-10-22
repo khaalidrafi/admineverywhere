@@ -13,6 +13,18 @@
 
 * Notes
 
+- VISITING LAW (Owner order 2026-10-22 ~16:08Z: burn the 250 expiring
+  CodeBuddy paid credits): budget 250 / 5 days = 50/day until
+  2026-10-27. The VISITING SENIOR ENGINEER = codebuddy/glm-5.3@codebuddy
+  (model id verified against the codebuddy CLI --help) is NOT in the
+  standing rotation — the Lead points #+TURN at it once per day for
+  the paid burn; its advance rejoins the rotation at software-engineer.
+  First visit targets the STALLED COOL-CHAT-SEND-BACK-2 segment
+  (stall=4, four empty segments) so the burn doubles as unstick.
+  Balance is NOT programmatically checkable (no documented endpoint;
+  console-only) — MEMBERS.org keeps the burn ledger, the Owner
+  calibrates from the console. Hire reasons + HR performance reviews
+  (cadence: every pause window) also live in MEMBERS.org.
 - TEST-CHAIN VERDICT (Lead, 2026-10-22 11:50Z): PASSED. T1 landed (de44031,
   minimax lane), T2 landed (d655571 — found the rotation-pointer no-op),
   T3 landed (run 39771471776 — caught the empty-segment + Telegram-mirror

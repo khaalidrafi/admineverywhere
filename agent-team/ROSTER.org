@@ -23,10 +23,17 @@ all free MiniMax M3.1 Flash offers are wired or staged.
 | RELIEF ENGINEER (3rd)     | groq/qwen3.8-27b@goose                         | ARMED       | relief hire 2026-10-22                   |
 | SOFTWARE ENGINEER (NEW)   | codebuddy/deepseek-v4.1-flash@codebuddy        | ACTIVATING  | Owner order 13:22Z; token in secrets     |
 | QA ENGINEER (NEW)         | qoder/deepseek-v4.1-flash@qoder                | ACTIVATING  | Owner order 13:22Z; model flag unverified|
+| VISITING SENIOR ENGINEER  | codebuddy/glm-5.3@codebuddy                    | ACTIVE (PAID)| Owner order ~16:08Z; 50 credits/day to 10-27 |
 
 Rotation: platform -> relief -> software -> QA -> platform. Every seat
 carries a fallback chain into the proven lanes, so a dead new lane never
 blocks a segment.
+The VISITING SENIOR ENGINEER is NOT in the standing rotation: the Lead
+points #+TURN at it once per day to burn the expiring paid credits
+(250 credits / 5 days = 50/day; expiry 2026-10-27); its advance
+rejoins the rotation at software-engineer. Burn ledger + hire reasons
++ HR performance reviews live in MEMBERS.org (HR cadence: every
+PAUSE-AFTER-TODO review window, full sweep weekly).
 
 * MiniMax M3.1 Flash — ALL free offers (Owner order 13:22Z)
 
