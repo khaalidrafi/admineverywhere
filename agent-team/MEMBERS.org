@@ -3,14 +3,20 @@
 # (.github/workflows/agent-team.yml). CI CHAIN SEATS (dispatchable
 # model@body pairs; bodies preinstalled in docker/harness):
 #
-#   * qwen3.8-flash@qoder  [ACTIVE — the rotation parks here]
-#     Body PROVEN on this team's CI (proof run 3977554903 agent-team.el;
-#     PAT auth, no browser). Selected BY FIT per Owner law 17:47Z.
-#   * zai/glm-4.7-flash@goose [DORMANT — self-heals when ZAI_API_KEY is
-#     set in THIS repo's secrets; secret values are write-only and cannot
-#     be copied from agent-team.el]
+#   * qwen3.8-flash@qoder  [ACTIVE — CI seat: platform-engineer]
+#     PROVEN on this team's CI (proof run 39477554903; TEST-T1..T3
+#     landed 2026-10-22). Selected BY FIT per Owner law 17:47Z.
+#   * minimax-m3.1-flash:free@goose [ACTIVE — relief hire 05:33Z, PROVEN:
+#     TEST-T1 de44031 + TEST-T2 d655571 landed 2026-10-22; lane URL fixed
+#     in run 39752778724]
+#   * zai/glm-4.7-flash@goose [ARMED — ZAI_API_KEY landed in THIS repo's
+#     secrets 2026-10-22; rotation seat relief-engineer; first live proof
+#     pending]
+#   * qwen3.8-27b@groq [ARMED — relief hire 2026-10-22, GROQ_API_KEY;
+#     probed every run; first live proof pending]
 #   * every other pair below stays ranked for the EM's manual dispatches;
-#     CI chain seats are added as keys land.
+#     CI chain seats are added as keys land (values write-only — a body
+#     activates when its key lands in THIS repo's secrets).
 #
 
 # BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on

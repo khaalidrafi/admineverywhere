@@ -5,12 +5,37 @@
 
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
-#+OBJECTIVE: TEST-CHAIN (Owner order 2026-10-22 09:22Z #admincraft): validate the full machinery in 3 turns — turn 1 TEST-T1 (check-in + docs/CHAIN-TEST.md line), turn 2 TEST-T2 (one harness improvement noted), turn 3 TEST-T3 (verify board/chat state + close the log); every turn must land with the landing gate green; the Lead flips OBJECTIVE-STATE after turn 3 and restores the parked feature order (verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC)
+#+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; one TODO per segment; the seat flips its item PENDING with :DELIVERED: evidence; the chain then PAUSES for Lead review (PAUSE-AFTER-TODO law, Owner order 2026-10-22 #admincraft)
 #+TURN: qwen3.8-flash@qoder (Acting Platform Engineer)
 #+STALL-COUNT: 0
+#+PAUSE-AFTER-TODO: ON
+#+CHAIN-PAUSE:
 
 * Notes
 
+- TEST-CHAIN VERDICT (Lead, 2026-10-22 11:50Z): PASSED. T1 landed (de44031,
+  minimax lane), T2 landed (d655571 — found the rotation-pointer no-op),
+  T3 landed (run 39771471776 — caught the empty-segment + Telegram-mirror
+  bugs, both fixed same day). Full loop proven: worker -> gate -> auto-merge
+  -> self-dispatch -> fallback chain. Machinery hardened in 3428567
+  (empty-segment law) and this commit (real rotation + pause law).
+- PAUSE LAW (Owner order 2026-10-22 #admincraft: "After completing a TODO,
+  pause and summarize which role did what"): PAUSE-AFTER-TODO is ON.
+  When a segment delivers a TODO (:DELIVERED: evidence on the board),
+  finalize arms #+CHAIN-PAUSE, the chain stops, and the roles' reports
+  reach the Owner on Telegram + Discord. The Lead clears #+CHAIN-PAUSE
+  to resume the next item in FEATURE-ORDER.
+- REAL ROTATION (Lead fix from the T2 finding): #+TURN now maps one arm
+  per CI seat — platform-engineer <-> relief-engineer alternate every
+  turn; an unknown pointer REFUSES (BLOCKED) instead of silently running
+  the wrong lane.
+- HIRING VERDICT (Lead, 2026-10-22 11:50Z, evidence in ROSTER.org):
+  2 CI seats PROVEN (qwen3.8-flash@qoder; minimax-m3.1-flash:free@goose),
+  2 ARMED awaiting first live proof (zai/glm-4.7-flash@goose — key landed;
+  qwen3.8-27b@groq — relief hire). Probe job liveness-tests 4 lanes every
+  run. Full candidate file on ai/teamify (3d9606d) awaits the Owner's
+  review-merge; lane keys for further bodies live in khaalidrafi/agent-team.el
+  secrets (values write-only — each body activates when its key lands here).
 - TEST-CHAIN (Lead, Owner order 2026-10-22 09:22Z): 3-turn machinery test
   live. Harness repaired same day: minimax lane URL fixed (goose doubled
   /v1 -- run 39752778724), qwen3.8-27b@groq added as 4th relief lane,
