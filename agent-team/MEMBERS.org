@@ -110,7 +110,7 @@
   BURN LEDGER (Lead updates per run):
   | date       | member                      | segment        | credits spent | note                          |
   |------------+-----------------------------+----------------+---------------+-------------------------------|
-  | 2026-10-22 | codebuddy/glm-5.3@codebuddy | FR-R001-FE     | ~50 budget    | dispatched 16:28Z, pause window |
+  | 2026-10-22 | codebuddy/glm-5.3@codebuddy | FR-R001-FE     | ~50 (burned)  | 16:28Z dispatch; PAID run OK, 0 commits (empty) |
 
 * HR PERFORMANCE REVIEWS (Owner order 2026-10-22 ~16:08Z: "regularly review your members' performance and record that in that file, just like a real HR would")
 
@@ -130,7 +130,7 @@
   | groq/qwen3.8-27b@goose                   | 0 yet              | ARMED 10-22; relief fallback, unexercised                   | PROBE   |
   | codebuddy/deepseek-v4.1-flash@codebuddy  | 0 commits          | lane ran OK twice (ee5ed18, 0611493) but segments EMPTY     | WATCH   |
   | qoder/deepseek-v4.1-flash@qoder          | 0 yet              | ACTIVE; --model flag unverified                             | PROBE   |
-  | codebuddy/glm-5.3@codebuddy (visiting)   | 0 yet              | first visit dispatching 2026-10-22, 50-credit budget        | PROBE   |
+  | codebuddy/glm-5.3@codebuddy (visiting)   | 0 commits          | visit 1: PAID lane VERIFIED (run OK, ~50 credits burned) but segment EMPTY — session artifact review before visit 2 | WATCH |
 
 # BODY SHAPES OUTPUT (standing, owner ruling 2026-10-19): the same brain on
 different bodies produces different work. model@Goose and model@OpenCode are
