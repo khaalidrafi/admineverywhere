@@ -15,7 +15,7 @@ import {
   resolveApiUrl,
   saveBranding as apiSaveBranding,
 } from "./api";
-import { injectBrandCss } from "./branding";
+import { applyBrand as applyBrandDom } from "./branding";
 import { deleteSecret, loadSecret, saveSecret } from "./secrets";
 import type { RoleClaims } from "./rbac";
 import type { AdminSchema, AppConfig, Brand } from "./types";
@@ -31,6 +31,11 @@ export interface AppState {
   schemaLoading: boolean;
   backendDown: boolean;
 }
+
+/** index.html's shipped tab icon — what a brand with no favicon file gets,
+ *  so previewing an uploaded icon can be reverted by re-applying the old
+ *  brand rather than leaking the draft's data URL into the tab. */
+const BUNDLED_FAVICON = "/icon.png";
 
 const DEFAULT_BRAND: Brand = {
   appName: "Admincraft",
@@ -102,14 +107,17 @@ function brandWithResolvedAssets(cfg: AppConfig, brand: Brand): Brand {
 
 /** Apply a brand everywhere it lives: store (UI text/logos), tab title,
  *  favicon, runtime CSS variables, and the native window title in Tauri.
- *  Launcher/dock names are baked at build time (see the branding skill). */
+ *  Launcher/dock names are baked at build time (see the branding skill).
+ *  The DOM half (title + injected CSS) is branding.ts's `applyBrand`, so the
+ *  boot path, the save path and the editor's live preview all theme the app
+ *  through the SAME code — a preview that only reached the CSS left the
+ *  sidebar logo/tagline and the tab icon on the old identity. */
 export function applyBrand(brand: Brand): void {
   app.update((a) => ({ ...a, brand }));
-  document.title = brand.appName;
   const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
-  if (favicon && brand.favicon) favicon.href = brand.favicon;
-  injectBrandCss(brand);
-  void setNativeWindowTitle(brand.appName);
+  if (favicon) favicon.href = brand.favicon || BUNDLED_FAVICON;
+  applyBrandDom(brand);
+  void setNativeWindowTitle(brand.appName || "Admin");
 }
 
 async function setNativeWindowTitle(title: string): Promise<void> {

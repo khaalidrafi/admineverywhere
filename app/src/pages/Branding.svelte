@@ -20,9 +20,9 @@
    */
   import { get } from "svelte/store";
   import { ApiError } from "../lib/api";
-  import { app, saveBrand, toast } from "../lib/stores";
+  import { app, applyBrand, saveBrand, toast } from "../lib/stores";
   import type { Brand } from "../lib/types";
-  import { BRAND_DEFAULTS, applyBrand, revertBrand } from "../lib/branding";
+  import { BRAND_DEFAULTS } from "../lib/branding";
 
   const COLOR_KEYS: { key: keyof Brand["colors"]; label: string; hint: string }[] = [
     { key: "primary", label: "Primary", hint: "buttons, links, active nav" },
@@ -32,7 +32,12 @@
     { key: "text", label: "Text", hint: "all text" },
   ];
 
-  const orig: Brand = structuredClone(get(app).brand);
+  // What the app is branded with RIGHT NOW: the brand the editor booted
+  // from, replaced by the server's brand after a successful save. The
+  // preview's revert target, so leaving the page after a save restores the
+  // SAVED identity — an unmount that always re-applied the boot snapshot
+  // visually rolled the save back.
+  let orig: Brand = structuredClone(get(app).brand);
 
   // Twin of brandstore.FALLBACK_ASSET_URL's path (the plugin mounts its
   // branding endpoints under "admincraft/" — see plugin/src/admincraft/urls.py).
@@ -116,7 +121,12 @@
       const payload = payloadBrand();
       payload.logo = await assetPayload("logo");
       payload.favicon = await assetPayload("favicon");
-      await saveBrand(payload);
+      const resolved = await saveBrand(payload);
+      orig = resolved;
+      // the draft now carries the SERVER's asset URLs, so the next preview
+      // keystroke re-themes the stored logo/favicon rather than the bundled
+      // file the draft booted with
+      draft = { ...draft, logo: resolved.logo, favicon: resolved.favicon };
       logoUpload = null;
       faviconUpload = null;
       toast("success", "Brand saved — applied live");
@@ -131,10 +141,19 @@
     }
   }
 
-  /** Live-preview: apply draft on every change, revert on unmount. */
+  /** Live-preview: apply the draft across the WHOLE brand surface (store, so
+   *  the sidebar logo/tagline follow; tab title; tab icon; runtime CSS; the
+   *  native window title under Tauri) on every change, and re-apply the brand
+   *  the app actually has on unmount — same fan-out, so nothing previews that
+   *  the revert cannot restore. */
+  const previewBrand: Brand = $derived({
+    ...draft,
+    logo: logoUpload ?? draft.logo,
+    favicon: faviconUpload ?? draft.favicon,
+  });
   $effect(() => {
-    applyBrand(draft);
-    return () => revertBrand(orig);
+    applyBrand(previewBrand);
+    return () => applyBrand(orig);
   });
 
   const previewLogo = $derived(logoUpload ?? draft.logo ?? "");

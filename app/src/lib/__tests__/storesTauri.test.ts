@@ -222,6 +222,19 @@ describe("applyBrand — the native window title follows the live brand", () => 
     expect(invoke).not.toHaveBeenCalled();
     expect(document.title).toBe("Windowcraft");
   });
+
+  it("an empty appName never blanks the live title on either surface", async () => {
+    tauriMode(true);
+    setTitle.mockResolvedValue(undefined);
+    document.title = "Windowcraft";
+    const { applyBrand } = await freshStores();
+
+    applyBrand({ ...BRAND, appName: "" });
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(document.title, "the tab must carry the fallback, not \"\"").toBe("Admin");
+    expect(setTitle).toHaveBeenCalledWith("Admin");
+  });
 });
 
 describe("initApp — boot: bundled files first, server brand wins", () => {

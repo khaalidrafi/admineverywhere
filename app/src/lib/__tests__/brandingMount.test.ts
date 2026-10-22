@@ -9,6 +9,7 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushSync, mount, unmount } from "svelte";
+import { get } from "svelte/store";
 import Branding from "../../pages/Branding.svelte";
 import { app } from "../stores";
 import { BRAND_DEFAULTS } from "../branding";
@@ -257,5 +258,114 @@ describe("Branding editor mounted (runtime branding API)", () => {
     routePut({ status: 200, body: { brand: SERVED, rev: 6 } });
     await clickSave(root);
     expect(putCall().body.logo).toBeUndefined();
+  });
+});
+
+/** The surface the pure-module proof (branding.test.ts) cannot see: the editor
+ *  must push an edit through the SAME fan-out boot and save use — store (the
+ *  sidebar name/logo/tagline read `$app.brand`), tab title, tab icon — and the
+ *  unmount must restore the brand the app ACTUALLY carries, which after a
+ *  successful save is the saved one, not the snapshot the editor booted with. */
+describe("Branding editor — the live preview rides the whole brand surface", () => {
+  const iconHref = () => document.querySelector<HTMLLinkElement>("link[rel='icon']")?.href ?? "";
+
+  function withIconLink(href: string) {
+    const link = document.createElement("link");
+    link.rel = "icon";
+    link.href = href;
+    document.head.appendChild(link);
+    return link;
+  }
+
+  afterEach(() => {
+    document.querySelector("link[rel='icon']")?.remove();
+  });
+
+  it("an identity edit reaches the app store, not only the injected CSS", () => {
+    const root = render();
+    setValue(textInputs(root)[0], "Khaalid HQ");
+    flushSync(() => {});
+
+    expect(document.title).toBe("Khaalid HQ");
+    expect(get(app).brand.appName, "$app.brand is what Sidebar/Shell render").toBe("Khaalid HQ");
+  });
+
+  it("a fresh favicon upload previews into the tab icon and unmount puts the old one back", async () => {
+    const link = withIconLink("/icon.png");
+    routePut({ status: 200, body: { brand: SERVED, rev: 1 } });
+    const root = render();
+    const fileInput = [...host!.querySelectorAll<HTMLInputElement>('input[type="file"]')][1]!;
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
+    Object.defineProperty(fileInput, "files", {
+      value: [new File([png], "icon.png", { type: "image/png" })],
+    });
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    await flushAsync();
+
+    expect(iconHref(), "the tab icon must follow the pending upload").toMatch(/^data:image\/png;base64,/);
+
+    unmount(instance!);
+    instance = null;
+    expect(iconHref(), "leaving the editor restores the icon the app really has").toBe(link.href);
+  });
+
+  it("a configured favicon rides the brand and comes back on unmount", () => {
+    withIconLink("/pre-existing.png");
+    const served: Brand = { ...SERVED, favicon: "http://api.test/admincraft/branding/asset/icon.png" };
+    render(served);
+    flushSync(() => {});
+    expect(iconHref()).toBe("http://api.test/admincraft/branding/asset/icon.png");
+
+    setValue(textInputs(host!)[0], "Retitled");
+    flushSync(() => {});
+    expect(iconHref(), "an unrelated edit must not drop the served icon").toBe(
+      "http://api.test/admincraft/branding/asset/icon.png",
+    );
+
+    unmount(instance!);
+    instance = null;
+    expect(iconHref(), "the revert re-applies the brand the app carries, icon included").toBe(
+      "http://api.test/admincraft/branding/asset/icon.png",
+    );
+  });
+
+  it("a brand with no favicon lands the shipped icon instead of leaving a stale one", () => {
+    withIconLink("/pre-existing.png");
+    const served: Brand = { ...SERVED, favicon: "http://api.test/stale.ico" };
+    render(served);
+    flushSync(() => {});
+    expect(iconHref()).toBe("http://api.test/stale.ico");
+
+    unmount(instance!);
+    instance = null;
+    render(SERVED); // a live brand that carries no icon at all
+    flushSync(() => {});
+    expect(iconHref(), "no icon in the brand means the bundled one, not the previous write").toContain(
+      "/icon.png",
+    );
+  });
+
+  it("clearing the name mid-typing never blanks the live tab title", () => {
+    const root = render();
+    setValue(textInputs(root)[0], "");
+    flushSync(() => {});
+
+    expect(document.title, "an empty draft name uses the shipped fallback, not \"\"").toBe("Admin");
+    expect(get(app).brand.appName).toBe("");
+  });
+
+  it("leaving the editor after a save keeps the SAVED brand — no visual rollback", async () => {
+    routePut({ status: 200, body: { brand: { ...SERVED, appName: "Renamed" }, rev: 7 } });
+    const root = render();
+    setValue(textInputs(root)[0], "Renamed");
+    await clickSave(root);
+
+    expect(get(app).brand.appName).toBe("Renamed");
+    unmount(instance!);
+    instance = null;
+
+    expect(document.title, "the revert target is the saved brand, not the boot snapshot").toBe("Renamed");
+    expect(get(app).brand.appName).toBe("Renamed");
+    expect(runtimeCss()).toContain("--brand-primary: #ff0000");
   });
 });
