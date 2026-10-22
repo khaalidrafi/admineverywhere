@@ -6,7 +6,7 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; one TODO per segment; the seat flips its item PENDING with :DELIVERED: evidence; the chain then PAUSES for Lead review (PAUSE-AFTER-TODO law, Owner order 2026-10-22 #admincraft)
-#+TURN: glm-4.7-flash@goose (Relief Engineer)
+#+TURN: zai/glm-4.7-flash@goose (Relief Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: ON
 #+CHAIN-PAUSE: armed 2026-10-22 12:04Z — a TODO was delivered; the Lead clears this line to resume
@@ -29,13 +29,25 @@
   per CI seat — platform-engineer <-> relief-engineer alternate every
   turn; an unknown pointer REFUSES (BLOCKED) instead of silently running
   the wrong lane.
-- HIRING VERDICT (Lead, 2026-10-22 11:50Z, evidence in ROSTER.org):
-  2 CI seats PROVEN (qwen3.8-flash@qoder; minimax-m3.1-flash:free@goose),
-  2 ARMED awaiting first live proof (zai/glm-4.7-flash@goose — key landed;
-  qwen3.8-27b@groq — relief hire). Probe job liveness-tests 4 lanes every
-  run. Full candidate file on ai/teamify (3d9606d) awaits the Owner's
-  review-merge; lane keys for further bodies live in khaalidrafi/agent-team.el
-  secrets (values write-only — each body activates when its key lands here).
+- HIRING VERDICT v2 (Lead, 2026-10-22 13:35Z, evidence in ROSTER.org;
+  supersedes the 11:50Z verdict after the Owner's orders 13:22Z):
+  member ID FORMAT LAW = PROVIDER/MODEL@PLATFORM (Owner 13:22Z).
+  Roster: platform-engineer = qoder/qwen3.8-flash@qoder [PROVEN];
+  relief-engineer = openrouter/minimax-m3.1-flash:free@goose [PROVEN],
+  zai/glm-4.7-flash@goose [ARMED], groq/qwen3.8-27b@goose [ARMED];
+  software-engineer = codebuddy/deepseek-v4.1-flash@codebuddy [NEW —
+  activating]; quality-assurance-engineer = qoder/deepseek-v4.1-flash@qoder
+  [NEW — activating, model flag unverified]. Rotation cycles all four
+  seats; every seat keeps a fallback chain into the proven lanes.
+  MiniMax M3.1 Flash free offers: OpenRouter active; GoModel gateway
+  catalog scan (minimax/deepseek ids) probes every run; gmi/tokenharbor/
+  navyai/bai/aa/ollama-cloud staged NEEDS-KEY (keys live in
+  khaalidrafi/agent-team.el secrets; values write-only — a body activates
+  the moment its key lands in THIS repo).
+  CONSULT LAW (Owner 2026-10-22 13:22Z: "You should have consulted me
+  once hired, by providing roles with members"): every future hire is
+  posted to the Owner as a roles-with-members list BEFORE activation;
+  the roster list is re-shared after every staffing change.
 - TEST-CHAIN (Lead, Owner order 2026-10-22 09:22Z): 3-turn machinery test
   live. Harness repaired same day: minimax lane URL fixed (goose doubled
   /v1 -- run 39752778724), qwen3.8-27b@groq added as 4th relief lane,

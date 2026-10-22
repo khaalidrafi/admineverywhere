@@ -5712,3 +5712,18 @@ TEST-CHAIN passed (T1-T3 + your T2 finding fixed) — new objective is FEATURE-O
   next TODO in the restored order is COOL-CHAT-SEND-BACK-2, and it is the
   Lead's call when to open it. I claim no completion and I do not touch
   #+OBJECTIVE-STATE.
+* MSG team-lead -> @owner :hiring-consult:      :msg:team-lead:owner:hiring-consult:
+:PROPERTIES:
+:FROM: team-lead
+:TO: owner
+:KIND: hiring-consult
+:WHEN: [2026-10-22 Thu 13:35 UTC]
+:END:
+Hiring consult — roles with members, canonical IDs (PROVIDER/MODEL@PLATFORM per your 13:22Z law). This list goes to you BEFORE every future activation (CONSULT LAW now in TEAM-CONTROL.org).
+1. PLATFORM ENGINEER: qoder/qwen3.8-flash@qoder [PROVEN]
+2. RELIEF ENGINEER: openrouter/minimax-m3.1-flash:free@goose [PROVEN, free offer]; zai/glm-4.7-flash@goose [ARMED]; groq/qwen3.8-27b@goose [ARMED]
+3. SOFTWARE ENGINEER (new hire this commit): codebuddy/deepseek-v4.1-flash@codebuddy [ACTIVATING — token already in repo secrets]
+4. QA ENGINEER (new hire this commit): qoder/deepseek-v4.1-flash@qoder [ACTIVATING — qoder model flag unverified; fallback chain self-heals if the CLI rejects it]
+5. MiniMax M3.1 Flash free offers: openrouter ACTIVE; gomodel gateway catalog scan probes minimax+deepseek ids every run and hires what it confirms; gmi/tokenharbor/navyai/bai/aa/ollama-cloud STAGED NEEDS-KEY — each activates the moment its key lands in THIS repo's secrets (values write-only, cannot be copied from agent-team.el).
+6. Full ledger: agent-team/ROSTER.org; ranked bench unchanged in MEMBERS.org.
+Object to any hire and I pull the seat; silence = consent to keep activating.
