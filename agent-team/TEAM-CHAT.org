@@ -5396,3 +5396,65 @@
      in this seat's env (measured). The board is deliberately untouched — T3 left
      no board item to flip, and the feature items stay parked until you restore
      them.
+
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-22 Thu 11:08 UTC]
+:END:
+  TURN 5 (post-chain, harness) — the objective's landed evidence became a COMMAND.
+  RESULT: DONE.
+  1. WHAT WAS PROSE IS NOW RE-RUNNABLE. Until this turn the whole TEST-CHAIN record was
+     a prose claim: "T1 landed at a0dd163, the chat is append-only, the board is intact."
+     Nothing measured it, so the next reader had to trust me. scripts/chain_test_check.py
+     (NEW) grades that claim from the tree: each of T1/T2/T3 has a NAMED commit that is an
+     ancestor of the main ref; every chat headline carries the FROM and a complete
+     :PROPERTIES: drawer (:FROM:, :TO:, :KIND:, :WHEN:, :END:); inside the objective's
+     window every historical chat version is a BYTE PREFIX of the current file (no entry
+     edited, none dropped) and over the WHOLE history no entry ever disappears (identity =
+     routing + :WHEN:, so a body may be reworded but never removed); the run log holds one
+     well-formed line per turn whose every run id resolves to a real commit and whose date
+     agrees with that turn's chat entry; and all 14 parked board items are still headlines.
+     Measured on the delivered tree: `python3 scripts/chain_test_check.py` rc 0 — 3 turns
+     landed (T1 a0dd1639, T2 7b54938d, T3 813cf6a0), 110 chat messages, 4 run lines,
+     3 summary lines, 5 objective-window commits all byte-prefixes, 2 historical bodies
+     reworded (lines 645, 704) with none dropped, 14 parked items present, 20 board
+     headlines, 0 ONGOING.
+  2. EVERY LEG IS PROVED ABLE TO FAIL (DEVGUIDE *EIGHTH harness law — a green
+     self-report is not evidence). `python3 scripts/chain_test_check.py --selftest` rc 0 —
+     8 controls, each run against a COPY in a temp dir, each landing its own red:
+     dropped chat entry -> rc 1 (NO-DROP); edited chat entry -> rc 1 (APPEND-ONLY); broken
+     drawer -> rc 1 (CHAT-FORMAT); deleted board item -> rc 1 ("is no longer a headline");
+     broken run id -> rc 1 ("does not resolve to a commit"); unclosed log summary -> rc 1
+     ("section is missing"); missing control file -> rc 2 (CANNOT RUN); turns never landed
+     -> rc 1 ("none is an ancestor of"). The shipped tree is untouched by the controls.
+  3. EXPECTATIONS ARE PINNED, NOT DERIVED FROM THE GRADED TREE. The only value derived
+     on purpose is the objective's base commit: the first TEAM-CONTROL.org commit that
+     carries '#+OBJECTIVE: TEST-CHAIN' (base 490ffa03) — a hard-coded SHA would rot on the
+     next rebase. Every count the harness asserts is a literal in the harness.
+  4. NOT NAMED *_diff.py, DELIBERATELY. That glob IS the landing gate's twin roster
+     (scripts/landing_gate.py EXPECTED_TWINS = 6, cross-checked against the scripts/*_diff.py
+     files on disk): an unwired *_diff.py would register as roster drift, and this grades
+     the CHAIN, not a pair of artifacts. The gate roster was NOT touched.
+  5. GATES ON THE DELIVERED TREE — all green. `python3 scripts/landing_gate.py` rc 0 over
+     the 4 pinned legs (env django 5.2.18, pytest 299 passed, System check identified no
+     issues, No changes detected) — GATE GREEN; `python3 scripts/release_readiness.py` rc 0
+     (0.1.2 in 5 carriers, 85 repo path citations, 88 bounded citations, 15 symbol claims,
+     8 live suite-count claims equal to the pins, 10 .py files parse with no PEP 604, 5
+     release inputs present) — RELEASE READINESS GREEN. The new command is documented in
+     AGENTS.md (## Commands) and docs/DEVGUIDE.md, and docs/CHAIN-TEST.md carries a Turn-5
+     bullet naming the command, its evidence classes and the 8 controls.
+  6. FILES CHANGED: scripts/chain_test_check.py (NEW), AGENTS.md (+9), docs/DEVGUIDE.md
+     (+12), docs/CHAIN-TEST.md (+11), agent-team/TEAM-CHAT.org (this entry, append-only).
+     Deliberately NOT touched: the board (no TEST-CHAIN item to flip; the feature items stay
+     parked until you restore them), agent-team/TEAM-CONTROL.org, .github/workflows/*,
+     .gitattributes, .github/scripts/* (Lead-owned).
+  7. LANE: minimax-m3.1-flash:free@goose (GOOSE_MODEL=minimax/minimax-m3.1-flash:free,
+     GOOSE_PROVIDER=openai). The Lark copy of this report is SKIPPED, not lost:
+     ROLE_LARK_WEBHOOK is empty in this seat's env (measured), and no URL was invented.
+  8. THE ASK IS STILL YOURS (unchanged from turn 4): flip #+OBJECTIVE-STATE and restore
+     the parked feature order. This turn adds the tool that PROVES the order can be
+     restored — it now refuses a restored order whose board items were deleted — but the
+     state flip and the order itself remain the Lead's gate. I claim no completion.
