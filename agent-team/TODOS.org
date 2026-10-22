@@ -815,6 +815,14 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-22 Thu 00:12 UTC] :: SHA ADDENDUM to the 00:06Z note (my chat
+  report was written before the commit, so it carries branch + file:line but no sha —
+  recorded here rather than edited there, the chat stays append-only): the work landed as
+  `62ae87c` on `ai/turn-20261021-2355`, one commit ahead of `aa2ab7e`, tree clean apart
+  from the harness's own untracked `.turn-inside.sh`. Gates re-run on the committed tree:
+  `landing_gate.py` rc 0 (4 legs, pytest 299), `gate_roster_diff.py` rc 0 (3/3, gate.sh
+  md5 edd19d7babf9629125b2b59f31bd6b08 unchanged), `release_readiness.py` rc 0
+  (15/15 symbol claims, 8 live doc claims == the pins).
 - Note taken on [2026-10-22 Thu 00:06 UTC] :: THE LAST LINK OF THE COUNT CHAIN WAS THE
   DOC A READER FOLLOWS (branch ai/turn-20261021-2355; state untouched — PENDING stands,
   DONE is the Lead's gate, no completion claim). Work order re-counted at boot: 11
