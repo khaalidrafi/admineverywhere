@@ -1,7 +1,9 @@
 /** chat.ts tests — SSE parser edge cases + schema prompt builder + setup state. */
 import { describe, expect, it, vi } from "vitest";
 import { buildSchemaPrompt, chatEndpoint, createSSEParser, systemPrompt } from "../chat";
+import { normalizeOpenAPI } from "../openapi";
 import type { AdminSchema } from "../types";
+import fixture from "./fixtures/openapi.json";
 
 describe("createSSEParser", () => {
   const collect = () => {
@@ -145,6 +147,21 @@ describe("buildSchemaPrompt", () => {
     };
     const prompt = buildSchemaPrompt(schema);
     expect(prompt).toBe("Available models (fields in parentheses; fk = foreign key to that model):\n");
+  });
+
+  it("grades the LIVE builder against the REAL normalized fixture", () => {
+    // The deleted legend-less schemaSummary was tested here instead; a builder
+    // that no product file calls can stay green forever, so the fixture-backed
+    // assertions now run against the one path the panel actually sends.
+    const schema = normalizeOpenAPI(fixture);
+    const prompt = buildSchemaPrompt(schema);
+    const lines = prompt.split("\n");
+    expect(lines[0]).toBe("Available models (fields in parentheses; fk = foreign key to that model):");
+    // one line per discovered model, under the legend — actions never add a line
+    expect(lines).toHaveLength(schema.models.length + 1);
+    expect(schema.models).toHaveLength(5);
+    expect(prompt).toContain("- Product [/api/products/]:");
+    expect(prompt).toContain("category(fk->categories)");
   });
 });
 
