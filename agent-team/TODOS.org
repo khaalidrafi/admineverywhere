@@ -12,7 +12,7 @@
 # CHAT-PREVIEW. Headlines carry the new IDs; :DELIVERED: evidence bodies,
 # git branch names, and TEAM-CHAT/REVIEW-LOG/MEMBERS history keep the IDs
 # as they were then (historical-record law).
-** PENDING FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
+** DONE FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
 :LOGBOOK:
 - Note taken on [2026-10-21 Wed 10:25 UTC] :: LIVE-HTTP proof (seat
   platform-engineer, ai/main 317351e): demo rig booted on 127.0.0.1:8021,
@@ -750,7 +750,7 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
   /api/orders/bulk_flag/), audit entries rendered in a record sub-view
   sharing the R-001 history UI (GET /api/audit/?object_type=&object_id=).
 :END:
-** PENDING FR R-002 document independent-enum pattern                          :DOC:
+** DONE FR R-002 document independent-enum pattern                          :DOC:
 :LOGBOOK:
 - Note taken on [2026-10-23 Fri 19:20 UTC] :: :DELIVERED: NIGHT-2 ITEM 1 RE-DELIVERY
   (seat software-engineer, lane per rotation pointer agent-team/TEAM-CONTROL.org:9 =
@@ -863,7 +863,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   that kanban over them (R-004) needs the R-001 machine. No code change in
   scope; anything found while writing gets reported, not silently fixed.
 :END:
-** PENDING FR R-004 kanban view                                                  :FE:
+** DONE FR R-004 kanban view                                                  :FE:
 :LOGBOOK:
 - Note taken on [2026-10-23 Fri 19:58 UTC] :: :DELIVERED: FREE-ENUM (patch) AXIS,
   PROVEN ON THE WIRE (seat platform-engineer, branch ai/turn-20261023-1935, base
