@@ -159,8 +159,35 @@ regression in the rendering rule goes red on one side and names itself.
    copy — the file must match what the user is looking at).
 5. Do NOT touch `normalizeOpenAPI` for a per-API special case; if an export
    is not in the document, the button does not exist. That is the feature.
+6. When you move either layer's WIRING (the button gate, the columns it hands
+   over, the path `fetchCsv` receives), re-run
+   `app/src/lib/__tests__/csvMount.test.ts` — it mounts the real page and grades
+   the rendered half, which no per-side unit test can see.
 
 ## 6. Proving it
+
+- Mounted wire proof (2026-10-23): `app/src/lib/__tests__/csvMount.test.ts` mounts
+  the real `ModelPage` over the captured fixture with `fetch` stubbed and the
+  download captured at `URL.createObjectURL`, because §1–§5's contract lives in
+  the RENDERED half and every prior test called its subject directly. Five tests:
+  both buttons render only where the document proves them (strip `exportPath` and
+  "Full export" vanishes with zero requests in a 150 ms window); layer 1 sends
+  ZERO fetches and writes exactly the table's own rendered columns of the current
+  page, decimals unre-flowed, one BOM; layer 2 GETs the DISCOVERED
+  `/api/orders/export/` with `Accept: text/csv, */*;q=0.8` + the token header and
+  passes the server's bytes through with its BOM kept single; rename the
+  endpoint in the schema and the click follows to `/api/orders/download/` (a
+  hard-coded `apiUrl + "export"` cannot pass that); a 403 toasts and downloads
+  nothing. Five controls run live, each killing exactly one test and restored
+  byte-identical (`md5sum -c`): un-gating the button, `fetchCsv` ignoring its
+  `path` argument, `csvBlobParts` losing BOM-idempotence, layer 1 exporting
+  `model.fields` instead of the handed columns, and layer 1 calling the server.
+  Blindness measured, not claimed: with this file moved out of the suite (baseline
+  432 passed / 33 files), the first, second, fourth and fifth mutations left the
+  shipped suite GREEN — the wiring had no test at all — while `csvBlobParts` was
+  already caught by `csv.test.ts`'s own idempotence case, so the mounted test adds
+  the end-to-end half of that rule (the SERVER's BOM arriving single in the
+  downloaded file), not a second copy of the unit assertion.
 
 - Re-runnable harness (2026-10-21): `python3 scripts/csv_twin_diff.py` feeds one
   generated matrix (sentinel strings + float switch points + N random cells,
