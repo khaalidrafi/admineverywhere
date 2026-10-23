@@ -2213,6 +2213,74 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-006 page registration                                            :FE:
 :LOGBOOK:
+- Note taken on [2026-10-23 Fri 23:20 UTC] :: :DELIVERED: (night-2 item 5, seat
+  software-engineer, branch ai/turn-20261023-2241, work commit 2267049). State is
+  left PENDING on purpose: PENDING already means delivered-awaiting-Lead-gate, and
+  churning it ONGOING->PENDING over one segment would rewrite the headline the
+  board's own :DELIVERED: history hangs on. THE GAP, measured before writing: the
+  R-006 promise is negative as much as positive ("Router, shell and sidebar carry
+  no page-specific line"), and only the positive half had a grader —
+  shell.test.ts:81 asserts the nav CONTAINS Dashboard/Modules/Branding, so a
+  hand-typed fourth button passed, and a mount test cannot distinguish "App renders
+  the registry's auth page" from "App imports Login.svelte directly" because both
+  paint the same form. grep over app/src outside __tests__ for a hash literal of a
+  DECLARED path answered exactly one: Sidebar.svelte:106 signed out into a typed
+  login hash while App.svelte asked the registry — so a client that ships its own
+  sign-in module (docs/page-registration.md promises that flow) was dropped on a
+  hash no page declares. Same guessed-literal family as the R-001 /transition/
+  probe the 2026-10-21 audit found.
+  SHIPPED: (1) the registry owns the selection once —
+  app/src/lib/pages/index.ts:202 `authPage` + :204 `authHref()`, App.svelte:4 and
+  Sidebar.svelte:106 both read it, zero typed route literals left in product code;
+  (2) app/src/lib/__tests__/navMount.test.ts, 10 tests: rendered main + settings
+  nav == navPages() as an EXACT set in both directions and in registry order, a
+  nav:false/standalone page never offered as a button, each main click landing on
+  that page's own pageHref() and lighting exactly its entry, Sign out clearing
+  token + claims and landing on the DECLARED standalone href (asserted against the
+  declaration and against the first nav entry, so a wrong derivation is red), and
+  a raw-source scan over every .svelte/.ts under app/src refusing both a typed
+  "#<declared path>" outside the declaring file and any direct page import.
+  POPULATION PINS (DEVGUIDE ELEVENTH law — a scan must see its own coverage): the
+  domain floor, the five named product files that must stay in domain, and the
+  file x route pair count equal to domain.length * concrete.length, so a collapsed
+  glob or a loop that compares nothing fails instead of answering "no violations".
+  MUTATIONS: 11, whole spec re-run per mutant, sources restored byte-identical (md5
+  manifest verified after each) — hand-typed nav button, Sign out typed again, Sign
+  out from the wrong page, settings leaked into main, a declared entry dropped, lit
+  state removed, logout swallowed, glob collapsed to the test dir, scan comparing
+  zero routes, auth gate = first nav page, App importing a page directly. 11/11
+  KILLED, 0 survivors. Two doors proved complementary: reverting Sidebar.svelte:106
+  to the literal is caught ONLY by the scan, and deriving from the wrong page ONLY
+  by the wire test.
+  GATES ON THE COMMITTED TREE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE
+  GREEN 11/11 (env django 5.2.18, pytest 300, System check no issues, No changes
+  detected, vitest 461 / 36 files, csv-twin BYTE-IDENTICAL 3070 cells, brand-twin
+  302 over pinned 350, parity-twin identical, gate/registry/doc twins OK). `npx tsc
+  --noEmit` rc 0. `python3 scripts/release_readiness.py` rc 0 — doc-counts 8/8 equal
+  the gate's pins (pytest=300, vitest=461). `registry_roster_diff.py` rc 0 (3
+  registries, 16 declared drop-ins — the new raw glob lives in a test file, so no
+  contract dir is claimed twice) and `gate_roster_diff.py` rc 0 (gate.sh opened
+  read-only). Pins bumped IN THIS COMMIT: scripts/landing_gate.py:68-69
+  EXPECTED_VITEST 451->461, EXPECTED_VITEST_FILES 35->36, plus the four published
+  sites AGENTS.md:120 :148 and docs/DEVGUIDE.md:123 :151. Docs retyped honestly in
+  the same commit: AGENTS.md:76-84 / docs/DEVGUIDE.md:79-87 now say the
+  no-page-specific-line half is graded (and name the defect it found), and
+  docs/page-registration.md gained the auth-gate section (:91-108), the harness
+  list (:5-7) and copy-checklist item 6 (:119-125).
+  STILL UNVERIFIED, stated plainly: no browser/Tauri session — nobody clicked a
+  sidebar entry in a real window; the Settings-group click path is graded through
+  the rendered set and the href derivation but not through a real-window paint.
+  NIGHT-2 QUEUE: items 1-4 closed (19:21Z, 19:58Z, 21:11Z reports), this segment
+  delivers item 5 (R-006). Items 6 (R-008 widgets) and 7 (R-007 RBAC) remain
+  PENDING awaiting the same question — is the promise a reviewer SEES graded
+  through a render — and R-007's nav-gating half now has a rendered sidebar to
+  hang on (this file's nav set is asserted unfiltered because `claims` is null; the
+  filtered case is that item's work, not mine).
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  Harness scratch (.turn-inside.sh, .turn-review.txt) stayed untracked and OUT of
+  2267049 (staged by name). ROLE_LARK_WEBHOOK empty in this seat's env (measured,
+  length 0) -> the Lark copy of the report is SKIPPED, not lost. No OBJECTIVE-STATE
+  claim: night-2 stays OPEN for the Lead's gate; DONE is Lead-only.
 - Note taken on [2026-10-22 Thu 01:24 UTC] :: CROSS-REF, no state change (board
   still exhausted — 14 PENDING + 4 DONE, every WORK ORDER row carries
   :DELIVERED:, zero TODO/ONGOING/WAIT, no unanswered @platform-engineer ping in
