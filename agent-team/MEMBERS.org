@@ -50,13 +50,19 @@
      governance-rewrite trap catch, CSP regression catch, and it runs
      the full gate loop (git/pytest/vitest) inside the harness. Fit
      law: this seat runs the loop, not invent design.
-  3. ROLE: RELIEF ENGINEER (primary) — openrouter/minimax-m3.1-flash:free@goose [PROVEN]
-     WHY: MiniMax M3.1 Flash is the fast agentic coding tier and the
-     free promo (Owner burn order; expires 2026-10-25) makes it the
-     cheapest REAL work on the team. Delivered TEST-T1 (de44031) and
-     TEST-T2 (d655571) where T2 found a genuine machinery bug (the
-     rotation-pointer no-op). Field reviews rank M3.1 Flash a solid
-     cheap coder; OpenRouter free lane costs nothing per turn.
+  3. ROLE: RELIEF ENGINEER (primary) — openrouter/poolside/laguna-s-2.1:free@goose [ARMED — swap 2026-10-23]
+     WHY: Relief swap 2026-10-23 executing DE TEAM-UPDATE #2 ASK: the
+     old primary openrouter/minimax-m3.1-flash:free [PROVEN — retired
+     honorably: TEST-T1 de44031, TEST-T2 d655571 where T2 found a
+     genuine machinery bug (the rotation-pointer no-op)] was DELISTED
+     from OpenRouter at the source — the M3.1 free period ENDED
+     2026-10-22 (probe 404 18:16Z + DE live catalog check 19:10Z;
+     no local fault). laguna-s-2.1:free is alive in the live catalog
+     (429 daily-cap on 18:16Z probe = exists, quota-limited); it is
+     the closest like-for-like replacement on the same OPENROUTER key.
+     The MiniMax M3.1 mandate's remaining lanes (MiniMax Agent free
+     until 2026-10-25, Cline) stay per CANDIDATES.org — Cline waits
+     on the Owner's CLINE_API_KEY.
   4. ROLE: RELIEF ENGINEER (fallback 2) — zai/glm-4.7-flash@goose [ARMED]
      WHY: GLM lineage (sibling of the proven GLM-5.3 brains) on the
      URL pattern this team already debugged into a proven lane shape
