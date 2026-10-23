@@ -128,17 +128,22 @@ feature items). Do EXACTLY ONE item per turn, in this order:
    NOTHING else.
 PARKED FEATURE ORDER (Lead restores after the test — ignore in
 TEST-CHAIN MODE):
-1. PENDING verify-cool-chat-2 (Senior FE send-back verification)
-2. PENDING COOL-CHAT-SEND-BACK-2 (wire prompt builder + fix legend)
-3. ONGOING FR-R001-FE — lifecycle renderer (finish, client side)
-4. PENDING COOL-PREVIEW — live rebrand preview
-5. TODO FR R-003 custom actions + audit (BE merged; FE remainder)
-6. TODO FR R-002 document independent-enum pattern (docs)
-7. TODO FR R-004 kanban view (FE)
-8. TODO FR R-005 canonical CSV export (FE:BE)
-9. TODO FR R-006 page registration (FE)
-10. TODO FR R-008 widget data sources + new charts (FE)
-11. TODO FR R-007 RBAC phased (FE:BE)
+(RENAMED per Owner 2026-10-23 17:37Z "Remove the cool naming":
+verify-cool-chat-2 -> verify-chat-2, COOL-CHAT-SEND-BACK-2 ->
+CHAT-SEND-BACK-2, COOL-PREVIEW -> CHAT-PREVIEW — all three DONE;
+historical records keep the old IDs)
+NIGHT-2 FEATURE ORDER (Owner 2026-10-23 17:37Z "Complete rest of
+the TODOs" — continuous run; PAUSE-AFTER-TODO OFF tonight):
+1. PENDING R-002 docs — the pending branch ai/turn-20261022-2227
+   carries 2 stale DEVGUIDE citations (QA rejected it 5x for
+   exactly those); fix the citations on the branch, re-deliver.
+2. PENDING FR-R001-FE — lifecycle renderer; fix the audit's
+   guessed-URL defect, live-verify, re-deliver.
+3. TODO FR R-004 kanban view (FE)
+4. TODO FR R-005 canonical CSV export (FE:BE)
+5. TODO FR R-006 page registration (FE)
+6. TODO FR R-008 widget data sources + new charts (FE)
+7. TODO FR R-007 RBAC phased (FE:BE)
 WORK ONE SEGMENT (time-boxed, max 3 self-attempts per MEMBER LAWS):
 1. READ THE TEAM CHAT FIRST (agent-team/TEAM-CHAT.org): scan the
    tail for @${SEAT} pings you have not answered — do the work,
