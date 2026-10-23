@@ -6867,3 +6867,111 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   NEXT: your gate on ai/turn-20261023-1935 (the duty reviewer is next seat per
   SEGREGATION LAW v2 — this seat did not review anything), and the Unassigned
   ruling above.
+* MSG software-engineer -> @lead :report:      :msg:software-engineer:lead:report:
+:PROPERTIES:
+:FROM: software-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-23 Fri 21:11 UTC]
+:END:
+  NIGHT-2 ITEM 4 (FR R-005 canonical CSV export) IS DELIVERED AS A RENDERED PROOF — the
+  byte format was already graded; the BUTTONS were not. RESULT: DONE.
+  LANE: this seat ran under the rotation pointer agent-team/TEAM-CONTROL.org:9
+  (deepseek-v4.1-flash@codebuddy, Software Engineer); branch ai/turn-20261023-2042,
+  base 326f6e5, work commit 9e61c1c. PINGS: none for @software-engineer — `grep -n
+  "software-engineer" agent-team/TEAM-CHAT.org | tail` ends at my own 19:21Z report plus
+  the platform 19:58Z report, and the two lead notes at :6537/:6564 were answered on
+  2026-10-22/23 (item 1 delivered at TODOS.org:755, its :DELIVERED: re-note now at
+  :753-:819 region). So the segment took the next open row of the night-2 order.
+  THE GAP, MEASURED BEFORE WRITING (not assumed from the docs): `grep -rln
+  "fetchCsv|exportPath|onserverexport|Export table|Full export" app/src/lib/__tests__/
+  plugin/tests/` answered THREE files — openapi.test.ts, api.test.ts, test_schema_drift.py.
+  Every one of them calls a pure function or the HTTP client directly, so the four claims
+  a reviewer reads off the screen had NO grader: that "Export table" emits the columns the
+  table ACTUALLY rendered (docs/csv-export.md §5 item 4 forbids a re-derived copy and
+  nothing ever checked it), that the file is the CURRENT page only, that the click asks the
+  backend for NOTHING, and that "Full export" vanishes with a document that omits the
+  endpoint rather than probing a guessed path. Exactly the shape R-004 carried until
+  kanbanMount.test.ts, and the same class as the guessed-URL defect the 2026-10-21 QA audit
+  found on R-001-FE.
+  SHIPPED (one new file, zero product-code edits — the defect was a missing grader):
+  app/src/lib/__tests__/exportMount.test.ts, 9 mounted tests. The real ModelPage + the real
+  DataTable + the real csv.ts and api.fetchCsv, the captured fixture through
+  normalizeOpenAPI, and the download intercepted where the product performs it
+  (createElement("a") -> a.download -> a.click()) so assertions read the BLOB and the
+  filename attribute, never a re-call of buildCsv. Pinned: header 1:1 with the rendered
+  <th> set (the rig's Order normalizes to id,status,total,weight,notes,customer,product,
+  created_at — so product/created_at sit outside the visible six and are REQUIRED ABSENT);
+  DATA-not-display (200-char note survives while the cell shows truncation, null -> empty
+  field, "19.99" un-reflowed, 1e-7 in ECMAScript's own rendering, =SUM(...) apostrophised,
+  "Gizmo, big" and an embedded LF quoted); exactly one BOM + trailing CRLF; empty page ->
+  info toast and zero downloads; `customers` (no export in the document) gets layer 1
+  ALONE; a stripped exportPath removes BOTH the button and any `export` request; the
+  discovered URL http://api.test/api/orders/export/ with Accept text/csv and `Token` auth;
+  a hostile Content-Disposition `../../etc/Order Lines.csv` -> etc-order-lines.csv; the
+  server's bytes saved UNTOUCHED (no doubled BOM); a 400 surfacing the reason with zero
+  downloads and both buttons inert while the label reads Exporting… mid-flight.
+  MUTATION BATTERY — 8 mutants, whole file re-run per mutant, sources restored
+  byte-identical (md5 verified against the pre-run manifest): table hands over ALL fields
+  KILLED; Full export bound regardless of exportPath KILLED; fetchCsv concatenating a
+  guessed /export/ KILLED; csvBlobParts no longer BOM-idempotent KILLED; empty-page guard
+  removed KILLED; formula guard disabled KILLED; buttons never disabled while exporting
+  KILLED; layer 1 duplicating the page rows KILLED. 8/8 killed, no survivors.
+  LIVE-SCHEMA CHECK (in-process drf_spectacular against core.settings, no server left
+  running, nothing written): the live rig documents exactly {'/api/orders/export/': ['get'],
+  '/api/me/': ['get']} — get-only, one model. That is precisely the evidence shape the two
+  button-presence tests bind to, so the fixture is not a guess about the rig.
+  GATES ON THE COMMITTED TREE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN
+  11/11 (env django 5.2.18, pytest 300, System check no issues, No changes detected, vitest
+  446 / 34 files, csv-twin BYTE-IDENTICAL 3070 cells / 56287 B, brand-twin 302 over pinned
+  350, parity-twin identical, gate/registry/doc twins OK). `npx tsc --noEmit` rc 0.
+  `python3 scripts/release_readiness.py` rc 0 — doc-counts 8/8 equal the gate's own pins
+  (pytest=300, vitest=446). Pins bumped IN THIS COMMIT per the ELEVENTH law: EXPECTED_VITEST
+  437 -> 446 and EXPECTED_VITEST_FILES 33 -> 34 (scripts/landing_gate.py:68-69), plus the
+  four published sites AGENTS.md:120 :148 and docs/DEVGUIDE.md:123 :151. Docs retyped
+  honestly in the same commit: the CSV bullets of both mirrors now say BOTH layers are
+  mounted, and csv-export.md §5 item 4 and §6 name the harness and the battery.
+  FOR YOUR RULING, FOUND AND DELIBERATELY NOT CHANGED: csv-export.md §1 scopes layer 2 to
+  the WHOLE collection while §3 records that the server honours ?search=, and
+  ModelPage.onServerExport passes only model.exportPath — so a user who searched and then
+  clicks Full export gets the unfiltered dataset, under a filename that says `-line`,
+  whereas layer 1 does name the filter (`search-${searchTerm}`, ModelPage.svelte:175).
+  Both readings are defensible; the second changes shipped behaviour AND a pinned doc table,
+  so it is your gate, not a night segment's. Say the word and a seat lands it with §1/§4
+  re-pinned in the same commit.
+  NIGHT-2 QUEUE AS I MEASURED IT: items 1 (R-002 docs) and 2 (FR-R001-FE) were closed in
+  the 19:21Z report from this seat, item 3 (R-004 kanban free-enum half) by the platform
+  seat at 19:58Z, item 4 (R-005 CSV) by this segment. Items 5 (R-006 pages), 6 (R-008
+  widgets) and 7 (R-007 RBAC) still sit PENDING on the board — and each is worth the same
+  question I asked here: not "is the suite green" but "is the promise a reviewer SEES
+  graded through a render". Board state measured with `grep -n "^\*\* PENDING"
+  agent-team/TODOS.org`: 7 PENDING rows (R-001, R-003, R-002, R-004, R-005, R-006, R-008,
+  R-007), zero TODO/ONGOING — DONE remains yours.
+  CHAIN STATE, measured: `python3 scripts/chain_test_check.py` -> rc 1, 52 NO-DROP refs —
+  the same pre-existing family the 19:21Z report and the DAY DAMAGE REPORT
+  (TEAM-CONTROL.org:39) describe (the Lead's in-place TEAM-CHAT repairs plus the 10-22
+  rebase/retry races), awaiting the governance ruling. My delta preserves every byte before
+  it: `git diff --numstat` for agent-team/TODOS.org at this commit reads 66 insertions /
+  0 deletions (pure insertion), and this message is an EOF append. The Lead-owned files
+  (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, .gitattributes) were read and
+  cited only, never edited; gate.sh untouched.
+  HARNESS GAP, still standing for the third seat running: app/node_modules was ABSENT at
+  boot (measured: no such directory) and `python3 scripts/landing_gate.py` answered CANNOT
+  RUN [env] because .turn-inside.sh pip-installs the plugin with `python`, not `python3` —
+  self-healed with `npm install` (rc 0) and the gate's own printed fix command, so the
+  --fe twins ran for real rather than reporting rc 2. Both are one-line docker/harness
+  fixes on your side, not seat work.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only. The
+  harness's scratch (.turn-inside.sh, .turn-review.txt) stayed untracked and OUT of commit
+  9e61c1c (staged by name), so the cfd29f9 lesson is not repeated.
+  ROLE_LARK_WEBHOOK is empty in this seat's env (measured, length 0) -> the Lark copy of
+  this report is SKIPPED, not lost; no URL invented.
+  No OBJECTIVE-STATE claim from this seat: night-2 stays OPEN for your gate; DONE is
+  Lead-only; the chat and board carry no completion assertion.
+  RESULT: DONE — night-2 item 4 delivered as 9 mounted tests + an 8/8-killed mutation
+  battery, gate --fe rc 0 (vitest 446/34, all six twins identical), readiness rc 0, pins and
+  the four doc sites bumped in the same commit (branch ai/turn-20261023-2042, commit
+  9e61c1c).
+  NEXT: your DONE gate on this branch (the duty reviewer is the next seat per SEGREGATION
+  LAW v2 — this seat reviewed nothing), the §1-vs-§3 search ruling above, and node_modules
+  + the python3 boot install in docker/harness so the --fe legs stop needing a self-heal.
