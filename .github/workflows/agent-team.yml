@@ -327,7 +327,8 @@ jobs:
             deepseek-v4.1-flash@qoder*)                NEXT_SEAT=quality-assurance-engineer ;;   # v2 PRIMARY
             glm-5.3@codebuddy*)                        NEXT_SEAT=visiting-engineer ;;            # v2 PRIMARY — PAID visiting burn (Owner ~16:08Z)
             zai/glm-4.7-flash@goose*)                  NEXT_SEAT=relief-engineer ;;              # API lane: prefix stays
-            openrouter/minimax-m3.1-flash:free@goose*) NEXT_SEAT=relief-engineer ;;              # API lane: prefix stays
+            openrouter/minimax-m3.1-flash:free@goose*) NEXT_SEAT=relief-engineer ;;              # API lane: prefix stays (historical pointers)
+            openrouter/poolside/laguna-s-2.1:free@goose*) NEXT_SEAT=relief-engineer ;;           # relief swap 2026-10-23 (DE TEAM-UPDATE #2)
             groq/qwen3.8-27b@goose*)                   NEXT_SEAT=relief-engineer ;;              # API lane: prefix stays
             glm-4.7-flash@goose*)                      NEXT_SEAT=relief-engineer ;;              # legacy rotation-v1
             qoder/qwen3.8-flash@qoder*)                NEXT_SEAT=platform-engineer ;;            # v1 alias
