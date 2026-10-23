@@ -800,6 +800,14 @@ jobs:
           MERGE_TARGET=""
           if [ -n "$PENDING_BRANCH" ] && git ls-remote --exit-code --heads origin "$PENDING_BRANCH" >/dev/null 2>&1; then
             git fetch origin "$PENDING_BRANCH" || true
+            # BR-09 stale-slot-sha fix (Lead, night-2 2026-10-23): the slot
+            # freezes the discovery-time sha; a re-delivery advances the tip
+            # and the slot then names a dead tree (2227 carried sha=1a87144
+            # while tip cfd29f9 sat under judgment — flagged by the software
+            # seat's night-2 segment). Resolve the CURRENT tip so the control
+            # write and the review brief always name the tree actually judged.
+            SLOT_TIP=$(git ls-remote origin "refs/heads/$PENDING_BRANCH" 2>/dev/null | cut -f1 || true)
+            if [ -n "$SLOT_TIP" ]; then PENDING_SHA="$SLOT_TIP"; fi
             # EMPTY-SEGMENT LAW (unchanged): zero commits beyond main =
             # husk, delete, never merge.
             AHEAD=$(git rev-list --count "origin/ai/main..origin/$PENDING_BRANCH" 2>/dev/null || echo 0)
