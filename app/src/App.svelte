@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { app, initApp, loadAiSettings, loadSchema } from "./lib/stores";
-  import { standalonePages } from "./lib/pages";
+  import { authPage } from "./lib/pages";
   import Shell from "./components/Shell.svelte";
   import Toaster from "./components/Toaster.svelte";
   import ErrorBanner from "./components/ErrorBanner.svelte";
 
   // The auth screen is a registered page too (meta.standalone) — no static
-  // import here, so a client that ships its own login drops in a file.
-  const authPage = standalonePages[0];
+  // import here, so a client that ships its own login drops in a file. The
+  // same declaration drives the sidebar's Sign out href (lib/pages authPage).
 
   onMount(async () => {
     await initApp();
