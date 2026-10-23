@@ -73,7 +73,15 @@ Product constraints — do not relax:
   exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`
   — the same glob contract, applied to routes: `app/src/lib/pages/index.ts`
   validates it, injects the router's route table and the sidebar entry. Router,
-  shell and sidebar carry no page-specific line.
+  shell and sidebar carry no page-specific line — and that half is now graded, not
+  asserted: `app/src/lib/__tests__/navMount.test.ts` pins the rendered nav to the
+  declared nav EXACTLY (a hand-typed button is as red as a missing one), routes
+  every nav click through `pageHref()`, sends Sign out to the href of the page the
+  registry marks standalone (`authPage`/`authHref()` in the registry — the login
+  route was hand-typed in the sidebar until this harness fired on it), and scans
+  every raw `.svelte`/`.ts` under `app/src/` for a hand-typed `#<declared path>`
+  or a direct page import, with its own file/route pair count pinned so a
+  collapsed domain cannot answer "no violations".
 - The three drop-in registries (widgets, pages, actions) are ONE contract with THREE
   glob dirs, and the failure mode is a test that grades a module nobody imports:
   `python3 scripts/registry_roster_diff.py` pins which files glob, refuses one dir
@@ -117,7 +125,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (451 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (461 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -145,7 +153,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 451 vitest
+cd app && npm test                          # 461 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
