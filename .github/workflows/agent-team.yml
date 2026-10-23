@@ -185,6 +185,8 @@ jobs:
           # (invisible in logs fetched via API) — echo it to stdout too.
           cat "$GITHUB_STEP_SUMMARY" || true
 
+      - uses: actions/checkout@v4
+
       - name: Probe codebuddy lane (real CLI in the harness image — Owner order 2026-10-23)
         continue-on-error: true
         env:
