@@ -43,8 +43,10 @@ another field.**
    (`demo-backend/shop/models.py:73`, `:78-83`) and the R-001 API (`docs/order-lifecycle.md`). A free
    enum carries neither. The client cannot tell them apart from the enum list — see §3.
 4. **Do not set `blank=True` on a choices field unless an empty state is real.**
-   It changes the emitted schema shape (`BlankEnum`, §2 case C) and today silently
-   degrades the client's select (§4, known gap).
+   It changes the emitted schema shape (`BlankEnum`, §2 case C). The client used
+   to degrade such a select to free text (§4 — closed 2026-10-22: unions are now
+   resolved and the rig ships a case-C field to keep that pinned), but the
+   schema churn it causes is still a reviewable cost.
 
 ## 2. What the schema actually emits (measured on drf-spectacular 0.30)
 
@@ -126,21 +128,42 @@ The guardrails, as checks a reviewer can run on a diff:
    the backend actually exposes `/transition/` + `/history/` for it — otherwise the
    UI offers buttons the server rejects.
 
-## 4. Known gap found while writing this (reported, not fixed)
+## 4. The case-C gap, found here and now closed (FE segment 2026-10-22)
 
-`openapi.ts` `deref()` follows a **top-level `$ref` only** (`app/src/lib/openapi.ts:26-32`). A
-blank-allowing choice field arrives as `{"oneOf": [PriorityEnum, BlankEnum]}` (§2 case
-C), which no branch of `fieldTypeOf` recognises, so it falls through to the
-schemaless default `"text"` (`app/src/lib/openapi.ts:70-72`) — **the select silently degrades to a
-free-text input**, with no error anywhere. The demo rig has no `blank=True` choices
-field, so the shipped fixture never shows the shape; a real customer API very likely
-does.
+`deref()` (`app/src/lib/openapi.ts:26-32`) follows a **top-level `$ref` only** —
+which is correct for its own job, but a
+blank-allowing choice field arrives as `{"oneOf": [PackagingEnum, BlankEnum]}`
+(§2 case C), which no branch of `fieldTypeOf` used to recognise, so it fell
+through to the schemaless default `"text"` — **the select silently degraded to a
+free-text input**, with no error anywhere. The demo rig had no `blank=True` choices
+field, so the shipped fixture never showed the shape; a real customer API very
+likely does.
 
-The fix belongs to the FE seat, not to this doc item: resolve `oneOf` members in
-`fieldTypeOf`/`propToField` (union of the non-`Blank`/`Null` component's `enum`, and
-treat `BlankEnum`/`NullEnum` as the existing `nullable`/optional signal), plus a
-fixture capture that contains such a field so it stays pinned. Reported in
-`agent-team/TEAM-CHAT.org` as item-6 evidence.
+CLOSED, exactly as this section prescribed:
+
+- The normalizer reads through unions now — `isBlankNullSentinel` /
+  `unionMembers` / `effectiveSchema` (`app/src/lib/openapi.ts:39-63`) sit behind
+  `deref()` (`app/src/lib/openapi.ts:26-31`) and are applied in `fieldTypeOf`
+  (`app/src/lib/openapi.ts:66`) and `propToField`
+  (`app/src/lib/openapi.ts:109`). `BlankEnum`/`NullEnum` (by component name or by
+  their literal `{enum:[""]}` / `{enum:[null]}` shape) are treated as the
+  optional signal, never as choices; the first non-sentinel member answers for
+  the type, so inline unions, `$ref` unions and `anyOf` nullable plain types all
+  resolve.
+- The rig now carries the shape for real: `Product.packaging`
+  (`demo-backend/shop/models.py:49`) is a `blank=True` choices field, and its schema
+  emits `oneOf: [PackagingEnum, BlankEnum]` in both the `Product` and
+  `ProductRequest` components. `plugin/tests/test_schema_drift.py`
+  (`test_blank_choices_union_documented`) refuses a rig that stops emitting it,
+  so the server half of the proof cannot rot silently.
+- The client half is pinned twice over: 7 synthetic cases + one live-fixture
+  case in `app/src/lib/__tests__/openapi.test.ts` (`union members` describe,
+  :115) — and the fixture (`app/src/lib/__tests__/fixtures/openapi.json`) was
+  recaptured from the running rig's `/api/schema/` in the same commit, with the
+  drift gate comparing paths + components against the live document.
+- Guardrail 4 (§1) still stands as advice — an unnecessary `blank=True` churns
+  the schema shape — but "unnecessary" no longer means "invisible": the field
+  now renders as the select it declares.
 
 ## 5. Copy checklist for a client project + how to reproduce the measurements
 
