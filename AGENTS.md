@@ -206,11 +206,14 @@ python3 scripts/chain_test_check.py            # 0 ok / 1 a claim is false / 2 c
 python3 scripts/chain_test_check.py --selftest # 10 controls: every leg proved able to fail
 
 # the chain's SESSION collect->restore loop (Owner order 2026-10-21 18:27Z) as a
-# check, read-only against the Lead-owned workflow: every store the collect tar
-# takes is restored to its OWN path, no lane opts out with --no-session, the
-# goose session store is covered by the collect list, the restore dir is mounted
+# check, read-only against the Lead-owned turn script WHEREVER IT LIVES — the workflow
+# inline, or the .github/scripts/turn_segment.sh the workflow runs since eaf34bd
+# extracted the over-long block: every store the collect tar takes is restored to its
+# OWN path, no lane opts out with --no-session, the goose session store is covered, the
+# restore dir is mounted, and a script the chain does not run (or a second one competing
+# with the first) is refused instead of silently graded
 python3 scripts/chain_session_check.py        # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/chain_session_check.py --selftest # 8 controls: every leg proved able to fail
+python3 scripts/chain_session_check.py --selftest # 11 controls: every leg proved able to fail
 
 # the cool-chat send-back's FIVE specced checks as ONE command — governance
 # (TEAM.md's MEMBER IDS reversal + its two rule headings), the color sweep of
