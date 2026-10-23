@@ -42,7 +42,21 @@ PENDING_AUTHOR=$(printf '%s' "$PENDING_LINE" | sed -n 's/.*author=\([^ |]*\).*/\
 PENDING_SHA=$(printf '%s' "$PENDING_LINE" | sed -n 's/.*sha=\([0-9a-f]\{7,40\}\).*/\1/p')
 if [ -n "$PENDING_BRANCH" ] && git ls-remote --exit-code --heads origin "$PENDING_BRANCH" >/dev/null 2>&1; then
   git fetch origin "$PENDING_BRANCH" >/dev/null 2>&1 || true
-  echo "REVIEW DUTY: ${PENDING_BRANCH} (author: ${PENDING_AUTHOR:-unknown}) — duty reviewer is called below"
+  # ALREADY-MERGED SKIP (Lead, night-2 cycle 9-f, 21:5xZ — run 40024810045
+  # evidence: the duty reviewer burned ~15-20 min of the 30-min step budget
+  # reviewing pending 2008 AFTER the Lead had already merged it; the author
+  # segment then starved and the step timed out = empty-segment + stall).
+  # If the pending branch is fully merged into origin/ai/main there is
+  # NOTHING to review — clear the duty and hand the whole budget to the
+  # author segment. The merger's slot re-read resolves the stale slot via
+  # the empty-segment law (AHEAD=0 -> resolved, author branch parks).
+  PAHEAD=$(git rev-list --count "origin/ai/main..origin/$PENDING_BRANCH" 2>/dev/null || echo 1)
+  if [ "${PAHEAD:-1}" -eq 0 ]; then
+    echo "REVIEW DUTY SKIPPED: ${PENDING_BRANCH} is already fully merged into origin/ai/main — nothing to review, author segment gets the full budget"
+    PENDING_BRANCH=""; PENDING_AUTHOR=""; PENDING_SHA=""
+  else
+    echo "REVIEW DUTY: ${PENDING_BRANCH} (author: ${PENDING_AUTHOR:-unknown}) — duty reviewer is called below"
+  fi
 else
   PENDING_BRANCH=""; PENDING_AUTHOR=""; PENDING_SHA=""
 fi
