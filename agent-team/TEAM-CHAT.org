@@ -6692,3 +6692,94 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   of its entries.
   NEXT: your gate on this branch (ai/turn-20261023-0013) and on the four
   delivered FEATURE-ORDER entries; items 1-4 above are yours to dispatch.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-23 Fri 19:58 UTC]
+:END:
+  NIGHT-2 ITEM 3 CLOSED ON THE WIRE: the kanban board's free-enum (patch) half of
+  docs/independent-enums.md §6 is now declared, mounted, live-verified and
+  mutation-killed. RESULT: DONE.
+  LANE: the qoder arm ran for this seat (rotation pointer
+  agent-team/TEAM-CONTROL.org:9 = qwen3.8-flash@qoder, Platform Engineer); branch
+  ai/turn-20261023-1935, base 2d31062. PINGS: none for @platform-engineer — the
+  chat tail before this entry is my own 00:37Z report (:6588) and the two
+  lead -> @software-engineer notes; nothing unanswered.
+  THE GAP I CLOSED (measured, not assumed):
+  - Every mounted kanban test rode the ORDERS lifecycle axis. Guardrail 1 — "a
+    drop on a free-enum column is a plain PATCH of that one field, touching
+    nothing else" — existed only inside `planMove` (pure), never on the wire.
+  - The registry's own consistency leg was blind to a second axis: old
+    kanban.test.ts:176 skipped anything that was not orders
+    (`modelId === "orders" ? ORDERS : undefined; if (!model) continue;`), so a
+    declaration could rot and stay green.
+  WHAT LANDED (one commit, 7 files, +257/-12):
+  1. app/src/lib/kanban.ts — `kanbanAxes` gained
+     `products: { field: "packaging", via: "patch" }`, the rig's own blank=True
+     free enum (demo-backend/shop/models.py:49). Both axis kinds are now declared
+     in the reference app, which is exactly the half of your 2026-10-20 note (2)
+     that the rig has since made possible WITHOUT a migration or a schema change.
+  2. app/src/lib/__tests__/kanbanMount.test.ts +4 mounted tests: columns come from
+     that field's own choices with the empty state visible in Unassigned; the
+     keyboard move PATCHes the literal `{"packaging":"crate"}` to the DISCOVERED
+     /api/products/11/; the drag pair sends the identical one-key PATCH and its
+     own column stays inert with zero writes; a schema lacking the declared field
+     gets NO toggle, NO page_size probe, NO toast (named refusal, not a blank).
+     The products route answers 404 to /transition/ so a mis-routed move cannot
+     wear a green assertion.
+  3. app/src/lib/__tests__/kanban.test.ts +1: axis POPULATION pinned (orders +
+     products) and EVERY declaration graded against the captured document —
+     columns == that field's choices, never the BlankEnum sentinel, a patch axis
+     never on a lifecycle field. The old "no other model gets a board" leg is now
+     "no UNdeclared model gets a board", filtered on the registry and guarded
+     against a vacuous sweep.
+  4. Docs + pin, same commit: kanban row in AGENTS.md and DEVGUIDE mirrors now
+     says the patch half is MOUNTED; independent-enums §6 closes as shipped and
+     graded; EXPECTED_VITEST 432 -> 437 in scripts/landing_gate.py with the four
+     published count sites retyped (ELEVENTH law).
+  LIVE-TRANSPORT CHECK (demo rig 127.0.0.1:8044, admin token, stopped after, db
+  removed — tree pristine):
+  - /api/products/{id}/ is get/put/patch/delete and the ONLY transition endpoint
+    on the API is /api/orders/{id}/transition/ — `patch` is the only legal kind for
+    products, DISCOVERED not assumed.
+  - PATCH {"packaging":"crate"} on a record whose packaging was "" -> 200 with
+    EXACTLY one field changed ({'packaging': ('', 'crate')}).
+  - PATCH {"packaging":"spaceship"} -> 400 `"spaceship" is not a valid choice.`
+  - POST /api/products/<id>/transition/ -> 404 (what the client's refusal avoids).
+  - Record restored to its seeded value.
+  MUTATION BATTERY (6 mutants, whole kanban pair re-run per mutant, sources
+  restored by copy and verified byte-identical): ALL KILLED — products axis
+  deleted (6), patch body widened to a whole-row spread (3), ModelPage mis-routes
+  a patch move to transitionRecord (2), reachableColumns offers the current column
+  (3), resolveAxis ignores a refusal (5), board stops naming the move kind (1).
+  GATE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 (pytest 300,
+  System check no issues, No changes detected, vitest 437 / 33 files, csv/brand/
+  parity/gate/registry/doc twins IDENTICAL). `npx tsc --noEmit` rc 0.
+  `scripts/release_readiness.py` rc 0 — doc-counts 8/8 at pytest=300/vitest=437.
+  FOR YOUR RULING (found, deliberately NOT changed): a blank=True free enum means
+  the empty state is one a user must be able to LEAVE, but Unassigned is
+  display-only by the 2026-10-20 ruling (card not draggable, select disabled,
+  pinned by kanbanMount's own test). With `packaging` declared, 2 of the 10 seeded
+  products on the first page are exactly that state — the reference board now shows
+  records no input can decide, while the PATCH that would decide them is
+  live-legal (200 measured above). Narrow fix on offer: allow the move when the
+  axis is `patch` AND the value is empty, keep an out-of-set value read-only. I did
+  not take it: it overturns a documented ruling and re-pins an existing test, which
+  is your gate, not a night segment's. Say the word and a seat lands it with the
+  test re-pinned in the same commit.
+  CHAIN STATE, measured: `scripts/chain_test_check.py` rc 1 with 25 NO-DROP refs —
+  identical to the DAY DAMAGE REPORT count at this base (TEAM-CONTROL.org:39),
+  pre-existing and yours; my delta is one LOGBOOK insertion and this EOF append, no
+  existing byte touched. `app/node_modules` was PRESENT this run (76 entries) so
+  the --fe twins ran for real, no self-install needed on the FE side; the plugin
+  boot-install the .turn-inside.sh does was enough for pytest.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  ROLE_LARK_WEBHOOK is empty in this seat's env (measured, length 0) -> the Lark
+  copy of this report is SKIPPED, not lost; no URL invented. No OBJECTIVE-STATE
+  claim: night-2 items 1-3 are delivered and await your DONE gate; items 4-7 stay
+  on your queue.
+  NEXT: your gate on ai/turn-20261023-1935 (the duty reviewer is next seat per
+  SEGREGATION LAW v2 — this seat did not review anything), and the Unassigned
+  ruling above.
