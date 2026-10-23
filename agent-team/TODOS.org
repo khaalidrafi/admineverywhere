@@ -2824,7 +2824,7 @@ superuser, so a live smoke could never show a gated surface hidden.
 :END:
 * OPEN ITEMS
 
-** PENDING COOL-PREVIEW — live rebrand preview (apply/revert pure module) :FE:
+** DONE COOL-PREVIEW — live rebrand preview (apply/revert pure module) (:DELIVERED: kept; Lead sweep flip 2026-10-23) :FE:
 :LOGBOOK:
 - Note taken on [2026-10-21 Wed 19:43 UTC] :: THE BRAND CSS TWIN CLAIM BECAME A
   TOOL (branch ai/turn-20261021-1933; state untouched — PENDING stands, the two
@@ -3160,7 +3160,7 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
   also added to style-src (the @import is gated there, not by font-src).
   Lead: re-spec or accept-then-replace before merge.
 :END:
-** PENDING verify-cool-chat-2 — Senior FE send-back on ai/cool-chat            :BE:
+** DONE verify-cool-chat-2 — Senior FE send-back on ai/cool-chat (:DELIVERED: kept; Lead sweep flip 2026-10-23) :BE:
 :LOGBOOK:
 - Note taken on [2026-10-20 Tue 23:45] :: :DELIVERED: (re-derived
   independently on the CURRENT tree at 91bd99e, per the Lead's 01:55Z
@@ -3413,7 +3413,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   :DELIVERED: evidence stands; this note adds a re-derivation on the merged
   tree). DONE stays the Lead's gate.
 :END:
-** PENDING COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend       :FE:
+** DONE COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend (:DELIVERED: kept; Lead sweep flip 2026-10-23) :FE:
 :LOGBOOK:
 - Note taken on [2026-10-22 Thu 16:16 UTC] :: :DELIVERED: (branch
   ai/turn-20261022-1602 @ f2fdd7d — the SECOND entry of the FEATURE-ORDER the
