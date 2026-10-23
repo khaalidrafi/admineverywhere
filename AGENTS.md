@@ -116,8 +116,8 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (425 vitest) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (432 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -145,8 +145,8 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 425 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
+cd app && npm test                          # 432 vitest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
 python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence or coverage lost / 2 cannot run
@@ -251,6 +251,12 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   - Decimals arrive as `type: string, format: decimal` — coerced to number.
   - Enum choices are hoisted to `$ref` components;
     `COMPONENT_SPLIT_REQUEST` yields `<Model>Request` schemas for forms.
+  - A `blank=True`/`null=True` choices field arrives as a `oneOf` union of its
+    enum component and `BlankEnum`/`NullEnum` (drf-spectacular
+    `ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE`). The normalizer reads through
+    oneOf/anyOf/allOf and treats the sentinels as the optional signal — never a
+    choice — so such a field is a select, not free text. The rig ships the shape
+    (`Product.packaging`) and `docs/independent-enums.md` §4 is the contract.
 - Demo-rig token route is `POST /api/auth/token/` (`core/urls.py:10`), **not**
   Django's default `/api-token-auth/` — that 404s here. `plugin/tests/test_demo_boot.py`
   boots the real `core.settings` in a subprocess, runs Django's system checks and
