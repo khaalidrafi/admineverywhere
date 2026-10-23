@@ -752,6 +752,63 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
 :END:
 ** PENDING FR R-002 document independent-enum pattern                          :DOC:
 :LOGBOOK:
+- Note taken on [2026-10-23 Fri 19:20 UTC] :: :DELIVERED: NIGHT-2 ITEM 1 RE-DELIVERY
+  (seat software-engineer, lane per rotation pointer agent-team/TEAM-CONTROL.org:9 =
+  deepseek-v4.1-flash@codebuddy; branch ai/turn-20261022-2227 @ cfd29f9, base 1a87144) —
+  :RESULT: DONE for the member scope; DONE stays Lead-only.
+  WHAT WAS REJECTED: the duty reviewer (deepseek-v4.1-flash@qoder, REVIEW-LOG.org:109/:119
+  :rejected:) and the Lead's independent audit (TEAM-CHAT.org:6537 :audit-red:, corrected
+  at :6564) named ONE mechanical defect on my R-002 re-delivery: my own +5-line
+  EXPECTED_CLAIMS comment in scripts/release_readiness.py shifted the two symbols
+  docs/DEVGUIDE.md cites, while the citations stayed — :1126 cited leg_doc_counts() at
+  release_readiness.py:686 (moved to 691) and :1128 cited gate_pins() at :650 (moved to
+  655). No content was in dispute; the instruction was "re-point, keep every pin".
+  WHAT LANDED (commit cfd29f9, one commit, per the Lead's fix-mechanism of 23:58Z — the
+  same branch, not a new one): DEVGUIDE :686 -> :691 and :650 -> :655; the harness scratch
+  .turn-review.txt (another lane's review transcript, swept into the product tree by a
+  host-side `git add -A`) dropped from the tree; every pin kept as shipped.
+  MEASURED BY THIS SEGMENT, on a detached worktree at the branch tip (not trusted from
+  prose, `python3 -m pip install -e ./plugin --no-deps` first — the standing docker/harness
+  gap, reported not edited):
+  - `python3 scripts/release_readiness.py` -> rc 0: targets 16 symbol claims over 15
+    citations, "every cited range carries the name its own doc line spells"; doc-counts
+    8/8 equal the gate's own pins (pytest=300, vitest=432).
+  - `python3 scripts/landing_gate.py` -> rc 0, GATE GREEN 4/4 (env django 5.2.18,
+    pytest `300 passed`, System check no issues, makemigrations --check No changes).
+  So the defect the two rejections named is closed and the branch is merge-ready.
+  REVIEW STATE — THE POINTER IS THE BLOCKER, NOT THE CODE (Lead-owned, read-only here):
+  the QA duty lane DID grade this tip in the current run and returned `VERDICT: APPROVED`
+  (harness capture .turn-review.txt, untracked per-run artifact — it reviewed the tip and
+  noted "the stated head 1a87144 was superseded by tip cfd29f9"), yet agent-team/REVIEW-LOG.org
+  carries NO approved entry for cfd29f9 and 12 consecutive `:review-missing:` entries for
+  this branch tonight (REVIEW-LOG.org:1598-:1708, reviewer=unknown, verdict=none, 17:55Z ->
+  18:45Z), because agent-team/TEAM-CONTROL.org:13 #+PENDING-REVIEW still names
+  sha=1a87144ced5ef62c3bbce745b8cf3d76a92f1ad4 while origin/ai/turn-20261022-2227 tip is
+  cfd29f9b53b9f92a03d8f0340eda38082ddc93b1. TEAM-CONTROL.org:10 stall=4, climbing toward
+  the BR-01 auto-halt at 12. A seat cannot re-point the slot or write the log; naming it
+  for the Lead's pointer update.
+  ITEM 2 OF THE NIGHT-2 ORDER, MEASURED ALREADY CLOSED ON ai/main (so no rework authored):
+  the "guessed-URL defect" is the 2026-10-21 21:05 FR-R003-FE finding (TEAM-CHAT.org:1055)
+  and its fix is on the trunk — `fetchAudit` throws with ZERO requests when no discovered
+  path is handed to it (app/src/lib/api.ts:349-350), the normalizer binds
+  transitionPath/historyPath only on POST / `get && !post` evidence
+  (app/src/lib/openapi.ts:183-199), and the encoding gap the 10-22 17:07 QA audit found is
+  pinned on main at app/src/lib/__tests__/actions.test.ts:265-270 (pk `a b/c` must reach
+  `/api/orders/a%20b%2Fc/{transition,history}/`), with the wire-level absence window at
+  app/src/lib/__tests__/lifecycleMount.test.ts:231. grep over app/src (non-test) finds no
+  hand-written model endpoint left: `"/api/…` survives only as the settings DEFAULTS in
+  app/src/lib/stores.ts:58 and the plugin's fixed /admincraft/branding/ surface.
+  SCOPE OF THIS SEGMENT: agent-team/TODOS.org (this note) + one chat report at
+  TEAM-CHAT.org EOF. Zero product file touched, so no twin pair and no --fe run; no
+  Lead-owned file (.github/*, TEAM-CONTROL.org, .gitattributes) opened. BOARD STATE:
+  R-002 stays PENDING (flip was already made; DONE is the Lead's gate), no completion claim.
+  CHAIN STATE, measured before this append: `python3 scripts/chain_test_check.py` -> rc 1,
+  50 APPEND-ONLY/NO-DROP hits, pre-existing from the Lead's in-place TEAM-CHAT.org:5528
+  repairs and the 10-22 rebase/retry races (TEAM-CONTROL.org DAY DAMAGE REPORT); this note
+  adds none — the append is a new entry at EOF only.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  ROLE_LARK_WEBHOOK empty in this seat's env (measured with [ -z ]) -> the Lark copy of the
+  report is SKIPPED, not lost, noted here per instruction 8.
 CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 - State "PENDING" from "ONGOING" [2026-10-20 Tue 21:18]
 - Note taken on [2026-10-20 Tue 21:18] :: :DELIVERED: (seat
