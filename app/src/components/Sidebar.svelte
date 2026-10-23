@@ -8,7 +8,7 @@
    */
   import { app, claims, logout } from "../lib/stores";
   import { navigate, route, isActive } from "../lib/router";
-  import { navPages, pageHref } from "../lib/pages";
+  import { navPages, pageHref, authHref } from "../lib/pages";
   import { roleAllows } from "../lib/rbac";
   import Icon from "./Icon.svelte";
 
@@ -103,7 +103,7 @@
       <span class="truncate">@{$app.username || "admin"}</span>
       <button
         class="btn btn-ghost px-2 py-1 text-xs"
-        onclick={() => { logout(); navigate("#/login"); }}
+        onclick={() => { logout(); navigate(authHref()); }}
         title="Sign out"
       >
         <Icon name="logout" size={14} />
