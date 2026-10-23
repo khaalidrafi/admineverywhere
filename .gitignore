@@ -13,3 +13,12 @@ db.sqlite3
 .vite/
 coverage/
 admincraft_brand/
+# Per-run CI harness scratch written into the workspace root: the host-side
+# commit does `git add -A` (.github/scripts/turn_segment.sh:527), so an ignored
+# artifact is swept into the product tree otherwise (branch 2227 landed another
+# lane's review transcript with its own VERDICT/request_id/session_id).
+.turn-review.txt
+.turn-inside.sh
+.turn-result.txt
+.turn-sessions.tgz
+.sessions-upload/

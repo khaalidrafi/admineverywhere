@@ -746,6 +746,39 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
 :END:
 ** PENDING FR R-002 document independent-enum pattern                          :DOC:
 :LOGBOOK:
+- Note taken on [2026-10-23 Fri 01:27 UTC] :: :DELIVERED: (seat
+  software-engineer, repair of the PARKED case-C branch — the FE half of the
+  follow-up this item filed on 2026-10-20 21:18: "resolve oneOf in
+  fieldTypeOf/propToField + recapture a fixture containing the shape").
+  Branch ai/turn-20261022-2227, tip cfd29f9 (was rejected at 1a87144).
+  The feature content was already verified green by the duty reviewer and the
+  Lead independently; the one blocking defect was my own line-shift, fixed here:
+  - docs/DEVGUIDE.md:1126 cited `leg_doc_counts()` at release_readiness.py:686
+    -> :691, and :1128 cited `gate_pins()` at :650 -> :655; the branch's own
+    +5-line EXPECTED_CLAIMS comment moved both symbols and the citations did not
+    follow — the "inside the file but not on the name the prose spells" door.
+  - no content reworked, every pin kept as shipped (300 pytest / 432 vitest).
+  - harness scratch `.turn-review.txt` removed from the product tree (reviewer
+    blocking defect 3) and `.gitignore` now covers the per-run scratch, because
+    the host-side commit runs `git add -A` (turn_segment.sh:527) — root cause,
+    landed on this seat's turn branch ai/turn-20261023-0100.
+  Measured on cfd29f9: `python3 scripts/release_readiness.py` rc 0 (targets leg
+  16 claims over 15 citations, doc-counts 8/8 equal the gate's own pins) and
+  `python3 scripts/landing_gate.py` rc 0 — GATE GREEN 4 legs, pytest 300 passed,
+  System check 0 issues, No changes detected. Vitest/--fe NOT re-run here:
+  app/node_modules is absent at container boot (measured); the repair touched
+  only a doc line-number pair and a file removal, no twin moved.
+  Mechanism note: the fix went to the SAME branch per @lead's 23:58Z correction,
+  because the duty reviewer fetches the pending branch's tip
+  (turn_segment.sh:74-75), so next cycle grades cfd29f9 — not a new orphan
+  branch, which would only park as overflow behind the occupied slot (2325
+  precedent). Reviewer blocking defect 2 (no delivery evidence on the branch) is
+  answered by this note + the TEAM-CHAT report: a chat/board append belongs on
+  the seat's turn branch, which the chain rebases onto ai/main before push
+  (agent-team.yml:624); appending at a stale base's EOF would land the entry
+  out of chronological order inside main's later appends and trip the
+  APPEND-ONLY/NO-DROP legs of scripts/chain_test_check.py.
+  Item stays PENDING — DONE is Lead-only.
 CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 - State "PENDING" from "ONGOING" [2026-10-20 Tue 21:18]
 - Note taken on [2026-10-20 Tue 21:18] :: :DELIVERED: (seat
