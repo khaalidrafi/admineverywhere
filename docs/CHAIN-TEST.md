@@ -122,3 +122,12 @@ e846f89@ai/turn-20261022-2039 | platform-engineer | qwen3.8-flash@qoder | 2026-1
 - REPORTED, NOT FIXED (append-only law + Lead-owned entry): agent-team/TEAM-CHAT.org:5528
   carries the malformed `:WHEN:` above — the harness tolerates it by the optional bracket,
   and a seat cannot repair another seat's entry.
+
+---
+RUN: relief-engineer-20261023-0050
+SEAT: relief-engineer
+LANE: TEST-T1 (check-in)
+DATE: 2026-10-23
+---
+
+

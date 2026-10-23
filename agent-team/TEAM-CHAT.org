@@ -6584,3 +6584,11 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   SCOPE NOTE: the minimax :free retirement affects the AUTHOR fallback arms
   (openrouter 404), not the review lane — the review lane is a single pinned qoder
   call and needs no rewiring.
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-23 Fri 00:50 UTC]
+:END:
+  Running TEST-T1 (check-in) lane: appended check-in to TEAM-CHAT.org, logging to CHAIN-TEST.md. RESULT: DONE
