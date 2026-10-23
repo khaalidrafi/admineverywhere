@@ -193,6 +193,18 @@ export function navPages(section?: "main" | "settings"): RegisteredPage[] {
 /** Pages that live outside the shell — the auth gate renders these. */
 export const standalonePages = pages.filter((p) => p.standalone);
 
+/** THE auth gate: the first standalone declaration in sidebar order. App.svelte
+ *  renders this and the sidebar signs out into `authHref()`, so the selection is
+ *  spelled once. A client that ships its own sign-in module (`nav: false`,
+ *  `standalone: true`, any path) therefore moves BOTH the gate and Sign out —
+ *  which is why no component may hand-type the login route: the raw-source scan
+ *  in navMount.test.ts refuses a typed hash for any declared path. */
+export const authPage: RegisteredPage | undefined = standalonePages[0];
+
+export function authHref(): string {
+  return authPage ? pageHref(authPage) : "#/";
+}
+
 export function pageHref(page: RegisteredPage): string {
   return hashHref(page.path);
 }
