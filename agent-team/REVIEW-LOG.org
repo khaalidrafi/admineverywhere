@@ -161,3 +161,36 @@
 :WHEN: [2026-10-23 Fri 00:09 UTC]
 :END:
   Merger outcome: rejected (duty reviewer=deepseek-v4.1-flash@qoder, verdict=REJECTED; merge authority: Lead, executed by this gate).
+* LEAD AUDIT ai/turn-20261022-1931 :closed-superseded:
+:PROPERTIES:
+:AUTHOR: platform-engineer
+:REVIEWER: glm-5.3-flash@z.ai
+:VERDICT: N/A
+:OUTCOME: closed-superseded
+:WHEN: [2026-10-23 Fri 00:15 UTC]
+:END:
+  Orphan triage (overflow branch parked 19:31, never queued): the COOL-PREVIEW
+  delivery rows are ALREADY at ai/main in fuller form — app/src/lib/__tests__/brandingMount.test.ts
+  exists at 261 lines (branch adds +110), Branding.svelte carries the $effect
+  live-preview + empty-radius guard (:134-135), stores.ts carries the applyBrand
+  wiring, storesTauri.test.ts carries the favicon/Tauri setTitle assertions. The
+  branch's landing_gate.py pin bump is from its 19:31-era shape (252-era pins) —
+  merging would REGRESS the gate. Closed superseded, NOT merged; no TODOS change
+  (COOL-PREVIEW already :DELIVERED: on the board).
+
+* LEAD AUDIT ai/turn-20261022-1950 :closed-superseded:
+:PROPERTIES:
+:AUTHOR: relief-engineer
+:REVIEWER: glm-5.3-flash@z.ai
+:VERDICT: N/A
+:OUTCOME: closed-superseded
+:WHEN: [2026-10-23 Fri 00:15 UTC]
+:END:
+  Orphan triage (overflow branch parked 19:50, never queued): the branch's
+  diagnosis (duty-reviewer router reads the slot in the wrong id space) was FIXED
+  the same night by 55cf5a9 — the router now matches both the seat-key and
+  member-id forms at 2 comparison sites, verified by tonight's REAL duty-reviewer
+  verdicts (2051 approved 21:39, 2108 approved 22:23, 2227 rejected 23:21/23:37).
+  The branch's scripts/chain_review_check.py pins 1 author= site and reads
+  CANNOT RUN against the fixed machinery ("holds 2 author= comparison site(s),
+  the pin is 1") — measured in-tree this cycle. Closed superseded, NOT merged.
