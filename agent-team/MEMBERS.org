@@ -120,6 +120,7 @@
   | date       | member                      | segment        | credits spent | note                          |
   |------------+-----------------------------+----------------+---------------+-------------------------------|
   | 2026-10-22 | glm-5.3@codebuddy | FR-R001-FE     | ~50 (burned)  | 16:28Z dispatch; PAID run OK, 0 commits (empty) |
+| 2026-10-23 | glm-5.3@codebuddy | VISITING LAW termination burn | ~0-50 | 02:01Z dispatch per night-watch termination law; lane DNS-dead since 21:07Z — honest failure expected, attempt is the record |
 
 * HR PERFORMANCE REVIEWS (Owner order 2026-10-22 ~16:08Z: "regularly review your members' performance and record that in that file, just like a real HR would")
 
