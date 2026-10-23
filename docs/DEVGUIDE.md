@@ -224,14 +224,22 @@ python3 scripts/chain_test_check.py --selftest # 10 controls: every leg proved a
 # THE CHAIN'S SESSION collect->restore loop as one command — the Owner's SESSION LAW
 # (18:27Z) says each turn's CLI session files are collected, uploaded and restored into
 # the next turn, so a seat RESUMES instead of starting cold. Graded READ-ONLY against
-# the Lead-owned workflow: every store the collect tar takes is restored to its OWN path
+# the Lead-owned turn script wherever it lives: the .turn-inside.sh heredoc sat INLINE
+# in the workflow until eaf34bd extracted the segment step into
+# .github/scripts/turn_segment.sh because GitHub refuses an inline block over 21000
+# chars — a harness that reads only one of those shapes goes blind (rc 2) at the exact
+# moment the chain moves. Every store the collect tar takes is restored to its OWN path
 # (the tar is rooted at /, so each member keeps its absolute path inside the archive),
 # no lane runs the CLI with --no-session, the collect list covers the goose session
-# store, and the restore dir is mounted and created. The tree is RED until the Lead
-# applies docs/session-loop-fix.patch — the --selftest control proves that the patch
-# turns it GREEN, so the finding and its fix are measured, not asserted.
+# store, the restore dir is mounted and created, and a script the workflow does not run
+# — or a second heredoc competing with the first — is refused, never graded as if it
+# were the live one. The tree is RED until the Lead lands the three repairs
+# docs/session-loop-fix.patch proposes; the --selftest baseline now BUILDS those repairs
+# on a copy instead of `git apply`-ing that patch (the patch pinned the pre-extraction
+# indentation, so when the block moved the patch stopped applying and all eight controls
+# died before grading anything). Either way the fix is measured, not asserted.
 python3 scripts/chain_session_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
-python3 scripts/chain_session_check.py --selftest # 8 controls: every leg proved able to fail
+python3 scripts/chain_session_check.py --selftest # 11 controls: every leg proved able to fail
 
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
