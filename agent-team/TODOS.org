@@ -2213,6 +2213,63 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-006 page registration                                            :FE:
 :LOGBOOK:
+- Note taken on [2026-10-23 Fri 23:40 UTC] :: NIGHT-2 ITEM 5 — :DELIVERED:
+  (platform-engineer, branch ai/turn-20261023-2320). A rendered blind spot found
+  by MEASUREMENT, closed with a mount test; zero product-code edits, the defect
+  was in the EVIDENCE. docs/page-registration.md pins "App.svelte no longer
+  imports [Login]; it renders standalonePages[0]... a client ships its own
+  sign-in by dropping a file". The only render of that path was
+  shell.test.ts:148-162, which mounts the REAL App over the REAL glob — so the
+  discovered standalone IS the shipped Login and the test cannot tell a dynamic
+  read apart from a hard import. PROVEN, not asserted: I replaced App's auth
+  branch with `import LoginHard ... <LoginHard/>` and ran the WHOLE shipped
+  suite — `451 passed / 35 files`, rc 0, every test green (restored byte-identical,
+  md5 47f42641925badd8bb28a1144edeacf6). A re-fork of App into importing one
+  page was invisible to the suite: the promise was graded by a code comment, not
+  the DOM.
+  SHIPPED: app/src/lib/__tests__/authGateMount.test.ts (2 mounted tests) +
+  app/src/lib/__tests__/fixtures/ProbeLogin.svelte (a non-Login probe, outside
+  src/pages so the glob never discovers it). The pages module is stubbed via a
+  hoisted holder (the gapMount technique) so App's auth gate is driven by the
+  registry: (1) standalonePages[0] = the probe -> App paints "Probe Sign-In
+  Gate"/"standalone-from-registry", #probe-signin present, NO "Username" and no
+  <aside> — this is the mutation killer (re-applying the hard import answers
+  `1 failed | 1 passed`); (2) empty registry -> App shows the `{#if authPage}`
+  else-branch, the friendly "No page declares standalone: true" the real glob can
+  never reach (mutation `{#if authPage}` -> `{#if true}` answers `1 failed |
+  1 passed`). No shipped page is refused, no nav/shell behaviour changed — the
+  existing 27+8+21 R-006 grades still pass untouched.
+  PINS bumped in the SAME commit (DEVGUIDE ELEVENTH law): scripts/landing_gate.py
+  EXPECTED_VITEST 451->453, EXPECTED_VITEST_FILES 35->36, plus the four published
+  sites AGENTS.md:120 :148 and docs/DEVGUIDE.md:123 :151 (all "451 vitest"->
+  "453"). Docs retyped honestly alongside the pin: page-registration.md Tests
+  line names authGateMount, its "auth gate is a page too" section gains the
+  wire-pin paragraph + the blindness measurement, and both mirror docs' Pages
+  (FR-R006) bullets gained the mirror sentence.
+  GATES ON THE COMMITTED TREE: `npx tsc --noEmit` rc 0; `python3
+  scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 (env django 5.2.18,
+  pytest 300, System check no issues, makemigrations --check No changes, vitest
+  453 / 36 files, csv/brand/parity twins BYTE-IDENTICAL, gate/registry/doc
+  rosters OK); `python3 scripts/release_readiness.py` rc 0 — doc-counts 8/8
+  equal the gate's own pins (pytest=300, vitest=453), 91 path citations resolve,
+  16 symbol claims over 15 citations on target.
+  HARNESS GAP (Lead-side, not seat work, third seat reporting it): app/node_modules
+  WAS present this boot (self-heal not needed for vitest), but `python3
+  scripts/landing_gate.py` first answered CANNOT RUN [env] — .turn-inside.sh
+  pip-installs the plugin with `python`, not `python3`; self-healed with the
+  gate's own printed `python3 -m pip install -e ./plugin --no-deps`.
+  CHAIN STATE, measured: `python3 scripts/chain_test_check.py` still rc 1 (the
+  pre-existing APPEND-ONLY/NO-DROP family from the Lead's in-place TEAM-CHAT.org
+  repairs, escalated 2026-10-22 23:36Z) — untouched by me; my board edit is a pure
+  insertion (this note) and my chat entry is an EOF append, every byte before them
+  preserved. Lead-owned files (.github/workflows/*, .github/scripts/*,
+  TEAM-CONTROL.org, .gitattributes) read and cited only; gate.sh untouched.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, measured) -> the Lark copy
+  of the report is SKIPPED, not lost; no URL invented. The harness scratch
+  (.turn-inside.sh, .turn-review.txt) stays untracked and OUT of the commit.
+  STILL OPEN (out of this item): R-008 widgets and R-007 RBAC behind item 5 in the
+  night-2 order. No OBJECTIVE-STATE claim from this seat; DONE is Lead-only.
 - Note taken on [2026-10-22 Thu 01:24 UTC] :: CROSS-REF, no state change (board
   still exhausted — 14 PENDING + 4 DONE, every WORK ORDER row carries
   :DELIVERED:, zero TODO/ONGOING/WAIT, no unanswered @platform-engineer ping in
