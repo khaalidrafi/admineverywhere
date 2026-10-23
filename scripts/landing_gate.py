@@ -65,8 +65,8 @@ GREEN, RED, CANNOT = 0, 1, 2
 # shrank = coverage lost, grew = the pin went stale, both must be red until the
 # tree and its claimed population agree.
 EXPECTED_PYTEST = 300
-EXPECTED_VITEST = 451
-EXPECTED_VITEST_FILES = 35
+EXPECTED_VITEST = 453
+EXPECTED_VITEST_FILES = 36
 
 # THE SAME LAW, APPLIED TO THE ROSTER ITSELF. The pin above grades the COUNTS the
 # legs print; it said nothing about which LEGS run, so the parent gate could pass a
