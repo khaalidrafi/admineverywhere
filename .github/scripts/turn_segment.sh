@@ -231,7 +231,15 @@ if [ -d /sessions-restore ]; then
   fi
 fi
 # The plugin is the code under test: link it fast (deps baked).
-python -m pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true
+# Lead fix 21:2xZ cycle 9-e (seat harness-gap report, third seat running):
+# bare `python` does not exist in the turn container (only python3) and the
+# swallowed error made every seat rediscover the missing rig. Also preflight
+# app/node_modules — three seats in a row self-healed an empty husk with a
+# manual npm install before the FE gate legs could run.
+python3 -m pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true
+if [ -d /workspace/app ] && [ ! -d /workspace/app/node_modules/.bin ]; then
+  (cd /workspace/app && npm install --no-audit --no-fund -q 2>/dev/null) || true
+fi
 # -------------------------------------------------------------
 # REVIEW PHASE (SEGREGATION LAW v2, Owner 18:14Z + 18:55Z): the
 # DUTY REVIEWER is a capable member ROLE, not the turn seat — the
