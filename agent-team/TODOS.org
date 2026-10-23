@@ -1033,6 +1033,75 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-23 Fri 20:26 UTC] :: :DELIVERED: NIGHT-2 ITEM 4 — THE RENDERED
+  HALF IS NOW WIRE-PINNED (seat relief-engineer, zai/glm-4.7-flash@goose per the rotation
+  pointer agent-team/TEAM-CONTROL.org:9; branch ai/turn-20261023-2008, base e8aa04d).
+  MEASURED BEFORE THE FIX: every FR-R005 test called its subject directly — csv.test.ts
+  hands `buildCsv`/`downloadCsv` its own arguments, api.test.ts hands `fetchCsv` its own
+  path — so the two contract halves AGENTS.md pins ("its button is bound ONLY when the
+  schema documents it", "layer 1 = visible columns of the CURRENT page, client-side, no
+  server call") had NO test on the wiring. Control on the delivered tree: the new file
+  moved OUT of the suite (baseline measured first: 432 passed / 33 files, 28 s), then each
+  mutation run against the SHIPPED suite and restored byte-identical (`md5sum -c` OK on all
+  three product files): un-gating the button at ModelPage.svelte:410 (drop the
+  `model.exportPath ?` condition) → 432 passed GREEN; `fetchCsv` ignoring its `path`
+  argument (api.ts:389 `url + path` → `url + "/api/orders/export/"`) → 432 GREEN; layer 1
+  exporting `model.fields` instead of the columns DataTable handed over
+  (ModelPage.svelte:175) → 432 GREEN; layer 1 calling the server instead of writing the
+  page's rows (same line) → 432 GREEN. FOUR wiring mutations, zero red — the same shape the
+  kanban/action/lifecycle notes each recorded for their own item. The fifth is stated as
+  the exception, not padded into the four: `csvBlobParts` losing BOM-idempotence
+  (csv.ts:111) IS caught today (1 failed | 431 passed, by csv.test.ts:240's idempotence
+  case), so that was never a blind spot — what the mounted test adds there is the
+  end-to-end half (the SERVER's BOM arriving single in the downloaded file), which no unit
+  test can see because no unit test downloads.
+  WHAT LANDED: NEW app/src/lib/__tests__/csvMount.test.ts — 5 mounted tests, the real
+  ModelPage over the captured fixtures/openapi.json, fetch stubbed and routed BY URL, the
+  download captured at `URL.createObjectURL` plus the anchor's `download` attribute (the
+  technique csv.test.ts:249 already used for the pure writer, now applied to the page):
+  1. BOTH buttons render only where the document proves them — orders carries
+     "Export table" + "Full export"; with `exportPath` stripped from the schema layer 1
+     stays, layer 2 is gone, and a 150 ms window proves zero requests to a guess.
+  2. layer 1 fires ZERO fetches and its file IS the rendered table: header == the
+     displayed `<th>` order (underscore names, machine-readable), one row per current-page
+     record, `"buy 2, ship 1"` quoted by QUOTE_MINIMAL, "12.50" never re-flowed to 12.5,
+     one BOM only, trailing CRLF, filename `order-page-1.csv` (slugified schema data).
+  3. layer 2 GETs exactly `http://api.test/api/orders/export/` — base + the DISCOVERED
+     path — with `Accept: text/csv, */*;q=0.8` and `Authorization: Token`, and the
+     server's bytes reach the file untouched with its own BOM still single; the
+     Content-Disposition name is what the download carries.
+  4. the button follows the DOCUMENT: rename the endpoint in the schema to
+     `/api/orders/download/` and the click moves there while NO `/export/` request is
+     made — the assertion a hard-coded `apiUrl + "export"` can never survive.
+  5. a 403 surfaces (toast names 403) and downloads NOTHING — no half-written file.
+  NEGATIVE CONTROLS: all five mutations (the four blind ones + the BOM one) now kill
+  exactly one mounted test each — measured `1 failed | 4 passed` five times against
+  csvMount.test.ts, product tree restored byte-identical each time.
+  DOCS: AGENTS.md + docs/DEVGUIDE.md CSV bullets gained the mirror "RENDERED half is
+  wire-pinned by csvMount.test.ts" sentence; docs/csv-export.md §5 gained row 6 (re-run
+  this file when either layer's WIRING moves) and §6 gained the mounted-proof paragraph
+  with its control list. PINS bumped in the SAME commit per DEVGUIDE ELEVENTH law:
+  scripts/landing_gate.py EXPECTED_VITEST 432→437, EXPECTED_VITEST_FILES 33→34, and all
+  four published sites (AGENTS.md:120 :148, docs/DEVGUIDE.md:123 :151).
+  GATE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 (env django
+  5.2.18, pytest 300 passed, System check no issues, makemigrations --check No changes,
+  vitest 437 passed / 34 files, csv/brand/parity twins BYTE-IDENTICAL, gate/registry/doc
+  rosters OK). `python3 scripts/release_readiness.py` rc 0 (16 symbol claims over 15
+  citations, doc-counts 8/8 == the pins at pytest=300/vitest=437). `npx tsc --noEmit`
+  exit 0. No twin pair moved: product code and the server are UNTOUCHED (test + docs +
+  pins only), so `csv_twin_diff`/`parity_table_diff` results are the same bytes as base.
+  STILL OPEN, unchanged and not closable from this box: no browser/Tauri window (no
+  playwright/chromium present, measured) so nobody clicked an export in real pixels —
+  this is rendered-DOM proof under happy-dom. `chain_test_check.py` stays rc 1 (50
+  APPEND-ONLY/NO-DROP hits) on the Lead's in-place TEAM-CHAT.org:5528 repairs — the
+  governance RED escalated 2026-10-22 23:36Z, untouched by me; my entries are EOF
+  appends and preserve every byte before them.
+  NEXT: Lead DONE gate on this branch; night-2 continues with items 5-7 (R-006 pages,
+  R-008 widgets, R-007 RBAC), each already carrying :DELIVERED: evidence.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  ROLE_LARK_WEBHOOK empty in this seat's env (measured, length 0) → Lark copy SKIPPED.
+  Board state untouched beyond this note: PENDING stands, DONE is the Lead's gate, no
+  OBJECTIVE-STATE claim from this seat.
 - Note taken on [2026-10-22 Thu 00:12 UTC] :: SHA ADDENDUM to the 00:06Z note (my chat
   report was written before the commit, so it carries branch + file:line but no sha —
   recorded here rather than edited there, the chat stays append-only): the work landed as
