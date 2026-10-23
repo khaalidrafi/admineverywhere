@@ -139,7 +139,12 @@ REQUIRED_CLAIMS = {
 # it caught the bump while the prose was still being written, because the citation was
 # spelled in plain parens and the scanner only reads backticked ones (see DEVGUIDE
 # TENTH law: an unscanned citation is an ungraded claim).
-EXPECTED_CLAIMS = 15
+# Measured a SIXTH time: the case-C closure rewrote docs/independent-enums.md §4 and
+# answered 14 — the rewritten prose had dropped the live `deref()` claim. The claim was
+# RESTORED (the citation is still true, the function still follows a top-level $ref) and
+# the section's new `unionMembers()`/`propToField()` citations entered on target, so the
+# deliberate population is 16 — a two-place edit, applied in this same commit.
+EXPECTED_CLAIMS = 16
 
 # `name()` spellings only. Control words that are commonly written with parens in
 # prose (`if (x)`, `for (let i)`) are not claims about the cited code.

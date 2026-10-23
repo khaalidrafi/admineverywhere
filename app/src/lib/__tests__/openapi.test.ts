@@ -112,6 +112,81 @@ describe("field type mapping (Order)", () => {
   });
 });
 
+describe("union members (FR-R002 case C — blank/nullable fields)", () => {
+  /** Minimal doc: /api/things/ whose `priority` arrives as the oneOf union
+   *  drf-spectacular emits for a choices field with blank=True. */
+  function docWithUnion(prop: any) {
+    return {
+      paths: {
+        "/api/things/": {
+          get: { responses: { "200": { content: { "application/json": { schema: { $ref: "#/components/schemas/Thing" } } } } } },
+          post: { requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/ThingRequest" } } } } },
+        },
+      },
+      components: {
+        schemas: {
+          Thing: { properties: { id: { type: "integer", readOnly: true }, priority: prop } },
+          ThingRequest: { properties: { priority: prop } },
+          PriorityEnum: { enum: ["low", "high"], type: "string" },
+          BlankEnum: { enum: [""] },
+          NullEnum: { enum: [null] },
+        },
+      },
+    };
+  }
+  const blankUnion = { oneOf: [{ $ref: "#/components/schemas/PriorityEnum" }, { $ref: "#/components/schemas/BlankEnum" }] };
+
+  it("resolves a oneOf $ref union to enum with the real choices", () => {
+    const field = normalizeOpenAPI(docWithUnion(blankUnion)).byId.things.byName.priority;
+    expect(field.type).toBe("enum");
+    expect(field.choices).toEqual(["low", "high"]);
+  });
+
+  it("does NOT degrade the union to free text (the filed defect)", () => {
+    // Before the fix this fell through fieldTypeOf's schemaless default and the
+    // select silently became a text input — docs/independent-enums.md §4.
+    expect(normalizeOpenAPI(docWithUnion(blankUnion)).byId.things.byName.priority.type)
+      .not.toBe("text");
+  });
+
+  it("treats BlankEnum as the optional signal, never a choice", () => {
+    const choices = normalizeOpenAPI(docWithUnion(blankUnion)).byId.things.byName.priority.choices!;
+    expect(choices).not.toContain("");
+  });
+
+  it("handles inline (non-$ref) oneOf unions", () => {
+    const field = normalizeOpenAPI(
+      docWithUnion({ oneOf: [{ type: "string", enum: ["a", "b"] }, { enum: [""] }] }),
+    ).byId.things.byName.priority;
+    expect(field.type).toBe("enum");
+    expect(field.choices).toEqual(["a", "b"]);
+  });
+
+  it("reads through anyOf nullability for a plain type", () => {
+    const field = normalizeOpenAPI(
+      docWithUnion({ anyOf: [{ type: "string", format: "date" }, { $ref: "#/components/schemas/NullEnum" }] }),
+    ).byId.things.byName.priority;
+    expect(field.type).toBe("date");
+  });
+
+  it("reads a nullable integer union through to the number type", () => {
+    const field = normalizeOpenAPI(
+      docWithUnion({ oneOf: [{ type: "integer" }, { $ref: "#/components/schemas/NullEnum" }] }),
+    ).byId.things.byName.priority;
+    expect(field.type).toBe("number");
+  });
+
+  it("the LIVE rig fixture carries the shape: Product.packaging is a select", () => {
+    // Captured from the demo backend's /api/schema/ — the rig gained a
+    // blank=True choices field precisely so this shape stays pinned by fixture,
+    // not only by synthetic docs.
+    const packaging = schema.byId.products.byName.packaging;
+    expect(packaging).toBeDefined();
+    expect(packaging.type).toBe("enum");
+    expect(packaging.choices).toEqual(["box", "crate", "pallet"]);
+  });
+});
+
 describe("label field heuristics", () => {
   it("picks name for Product/Category/Customer", () => {
     expect(schema.byId.products.labelField).toBe("name");
