@@ -185,15 +185,15 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   This segment re-derived it on the CURRENT tree, verification not re-implementation.
   MUTATION BATTERY (4 mutants, each applied to the product source on this box, whole
   witness run after each, files restored from copies — never git checkout):
-  - KILLED M1 — restore the shipped defect in fetchAudit (app/src/lib/api.ts:351
-    `if (!opts.path) throw …` replaced by `opts.path ?? "/api/audit/"`): 2 tests RED —
+  - KILLED M1 — restore the shipped defect in fetchAudit (app/src/lib/api.ts:349-351
+    (`throw` at :350) replaced by `opts.path ?? "/api/audit/"`): 2 tests RED —
     "a backend that documents no audit model is refused with zero network calls" and
-    "the refusal names the missing evidence" (app/src/lib/__tests__/actions.test.ts:212-228).
+    "the refusal names the missing evidence" (app/src/lib/__tests__/actions.test.ts:214-228, the two `it`s at :214 and :225).
   - KILLED M2 — delete the ModelPage gate (app/src/pages/ModelPage.svelte:287-290,
     `if (logModel)` + `path: logModel.listPath` → unconditional call with an
     undiscovered path): the WIRE test "the sub-view's audit half reads the DISCOVERED
     path, and a schema without it reads nothing" goes RED
-    (app/src/lib/__tests__/lifecycleMount.test.ts:185) — killed on the toast/no-probe
+    (app/src/lib/__tests__/lifecycleMount.test.ts:182) — killed on the toast/no-probe
     assertion, so the degradation-with-silence promise is graded, not decorative.
   - KILLED M3 — the full pre-fix shape (fallback AND no gate): 2 files RED, all three
     witnesses, i.e. the exact defect the audit caught cannot return un-noticed.
@@ -201,7 +201,7 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
     the test demands a NAMED refusal, not merely "no request".
   After the battery `git status app/src` is CLEAN — product source untouched by this
   segment; the evidence is the only content of it. Third surface carrying the same law
-  checked by read: app/src/pages/Activity.svelte:35-44 fetches only when
+  checked by read: app/src/pages/Activity.svelte:34-44 fetches only when
   findAuditModel() resolves and passes `path: model.listPath` — no guessed segment.
   MEASURED: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 legs (env
   django 5.2.18, pytest 299 passed, System check no issues, No changes detected, vitest
