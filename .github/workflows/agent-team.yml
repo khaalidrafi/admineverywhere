@@ -258,7 +258,7 @@ jobs:
       review_seat: ${{ steps.seg.outputs.review_seat }}         # duty reviewer that ran (quality-assurance-engineer | visiting-engineer)
       review_member: ${{ steps.seg.outputs.review_member }}     # duty reviewer's member ID (merger enforces the duty-role law)
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 50   # raised 35->50 (Lead, cycle 9-f): must exceed the seg step's 45 so the step's own timeout is what fails first, with artifacts still collected
     continue-on-error: true
     env:
       QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
@@ -620,7 +620,7 @@ jobs:
       - name: Run the turn (one segment, preinstalled agent in container)
         id: seg
         if: steps.control.outputs.mode == 'work'
-        timeout-minutes: 30   # raised from 22 (night-watch 20:50Z): the duty-review call runs the full landing gate in-container (~15-20 min) and a hung lane blew the old budget — the step died MID-REVIEW with empty outputs and the merger wiped the queued branch; a hung harness still fails THIS step, not the rotation
+        timeout-minutes: 45   # raised 30->45 (Lead, night-2 cycle 9-f, run 40024810045 evidence): review (~15-20 min) + author segment (~25-30 min) cannot both fit 30 — the step timed out at 30 min with nothing delivered. The turn_segment.sh already-merged skip frees the budget when the review is moot; 45 covers the real-review + real-author worst case. A hung harness still fails THIS step, not the rotation.
         env:
           SEG_SEAT: ${{ steps.control.outputs.seat }}
         run: bash .github/scripts/turn_segment.sh
