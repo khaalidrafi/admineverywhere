@@ -106,9 +106,11 @@ BOARD_ITEMS = (
     "FR R-008 widget data sources + new charts",
     "FR-R007-LIVE",
     "FR R-007 RBAC phased",
-    "COOL-PREVIEW",
-    "verify-cool-chat-2",
-    "COOL-CHAT-SEND-BACK-2",
+    # Owner 2026-10-23 17:37Z "Remove the cool naming": the three DONE
+    # chat items were renamed on the board (history keeps the old IDs).
+    "CHAT-PREVIEW",
+    "verify-chat-2",
+    "CHAT-SEND-BACK-2",
 )
 EXPECTED_BOARD_ITEMS = 14
 
