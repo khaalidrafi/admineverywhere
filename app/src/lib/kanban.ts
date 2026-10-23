@@ -46,9 +46,18 @@ export interface KanbanAxis {
 export const UNASSIGNED = "__unassigned__";
 
 /** Declared axes, keyed by model id (the url segment), exactly like the
- *  transition registry — never by field name. */
+ *  transition registry — never by field name.
+ *
+ *  Both kinds of axis are declared here on purpose: the reference app carries a
+ *  lifecycle model AND a free enum (`Product.packaging` in the demo rig, the
+ *  `blank=True` choices field docs/independent-enums.md §4 documents), so the
+ *  `patch` half of this contract has a real schema to ride on instead of living
+ *  only in a synthetic unit fixture. A customer API without that field gets no
+ *  board — `axisProblem()` refuses the declaration nameably and `resolveAxis()`
+ *  returns null — which is the same silent degrade every other registry does. */
 export const kanbanAxes: Record<string, KanbanAxis> = {
   orders: { field: "status", via: "transition" },
+  products: { field: "packaging", via: "patch" },
 };
 
 export interface ResolvedAxis {
