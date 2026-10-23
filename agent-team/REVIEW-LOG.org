@@ -1574,3 +1574,13 @@
 :WHEN: [2026-10-23 Fri 16:52 UTC]
 :END:
   Merger outcome: review-missing (duty reviewer=unknown, verdict=none; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261022-2227 :review-missing:
+:PROPERTIES:
+:AUTHOR: software-engineer
+:REVIEWER: unknown
+:VERDICT: none
+:OUTCOME: review-missing
+:WHEN: [2026-10-23 Fri 16:59 UTC]
+:END:
+  Merger outcome: review-missing (duty reviewer=unknown, verdict=none; merge authority: Lead, executed by this gate).
