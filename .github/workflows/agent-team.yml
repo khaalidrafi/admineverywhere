@@ -406,6 +406,13 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           GOMODEL_MASTER_KEY: ${{ secrets.GOMODEL_MASTER_KEY }}
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          # Provider keys into the container (Owner 2026-10-23 19:58Z
+          # "configure it properly in gomodel"): the config references
+          # ${ZAI_API_KEY}/${GROQ_API_KEY}/${OPENROUTER_API_KEY} — without
+          # these the gateway boots keyless and serves no usable provider.
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           set -u
           if [ -z "${GH_PAT:-}" ]; then
@@ -429,8 +436,8 @@ jobs:
             -e CONFIGURED_PROVIDER_MODELS_MODE=allowlist \
             -e FAILOVER_RETRY_ON_STATUSES=4xx,5xx \
             -e FAILOVER_MAX_ATTEMPTS=5 \
-            -e RETRY_MAX_RETRIES=1 \
-            -e RETRY_INITIAL_BACKOFF=3s \
+            -e RETRY_MAX_RETRIES=3 \
+            -e RETRY_INITIAL_BACKOFF=5s \
             -e CIRCUIT_BREAKER_SCOPE=model \
             -e HTTP_RESPONSE_HEADER_TIMEOUT=30 \
             -e CACHE_REFRESH_INTERVAL=21600 \
@@ -439,6 +446,7 @@ jobs:
             -e PROVIDER_PROMPT_CACHE_PLANNER_ENABLED=false \
             -e GOMODEL_DEMO_MODE=false \
             -e GOMODEL_MASTER_KEY -e JEV_API_KEY \
+            -e ZAI_API_KEY -e GROQ_API_KEY -e OPENROUTER_API_KEY \
             enterpilot/gomodel >/dev/null
           ok=""
           for i in $(seq 1 30); do
@@ -1043,6 +1051,10 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           GOMODEL_MASTER_KEY: ${{ secrets.GOMODEL_MASTER_KEY }}
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          # Same provider-key pass as the turn-job boot block (see above).
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           set -u
           if [ -z "${GH_PAT:-}" ]; then
@@ -1066,8 +1078,8 @@ jobs:
             -e CONFIGURED_PROVIDER_MODELS_MODE=allowlist \
             -e FAILOVER_RETRY_ON_STATUSES=4xx,5xx \
             -e FAILOVER_MAX_ATTEMPTS=5 \
-            -e RETRY_MAX_RETRIES=1 \
-            -e RETRY_INITIAL_BACKOFF=3s \
+            -e RETRY_MAX_RETRIES=3 \
+            -e RETRY_INITIAL_BACKOFF=5s \
             -e CIRCUIT_BREAKER_SCOPE=model \
             -e HTTP_RESPONSE_HEADER_TIMEOUT=30 \
             -e CACHE_REFRESH_INTERVAL=21600 \
@@ -1076,6 +1088,7 @@ jobs:
             -e PROVIDER_PROMPT_CACHE_PLANNER_ENABLED=false \
             -e GOMODEL_DEMO_MODE=false \
             -e GOMODEL_MASTER_KEY -e JEV_API_KEY \
+            -e ZAI_API_KEY -e GROQ_API_KEY -e OPENROUTER_API_KEY \
             enterpilot/gomodel >/dev/null
           ok=""
           for i in $(seq 1 30); do
