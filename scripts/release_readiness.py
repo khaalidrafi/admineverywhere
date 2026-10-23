@@ -138,8 +138,11 @@ REQUIRED_CLAIMS = {
 # doc-count paragraph cites this leg's own two entry points, and the leg answered 15 —
 # it caught the bump while the prose was still being written, because the citation was
 # spelled in plain parens and the scanner only reads backticked ones (see DEVGUIDE
-# TENTH law: an unscanned citation is an ungraded claim).
-EXPECTED_CLAIMS = 15
+# TENTH law: an unscanned citation is an ungraded claim). Measured a SIXTH time: the
+# control-roster paragraph cites two entry points here, the scan went 15 -> 17 and this
+# literal followed IN THE SAME COMMIT — and because the note itself pushed this literal
+# off its old line, the six doc citations into this file were re-measured beside it.
+EXPECTED_CLAIMS = 17
 
 # `name()` spellings only. Control words that are commonly written with parens in
 # prose (`if (x)`, `for (let i)`) are not claims about the cited code.
@@ -182,6 +185,28 @@ DOC_PIN_NAMES = {"pytest": "EXPECTED_PYTEST", "vitest": "EXPECTED_VITEST"}
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.
 DOC_NUM = re.compile(r"(\d+)\s+(pytest|vitest)\b|\b(pytest|vitest)\s+(\d+)")
+
+# ------------------------------------------------------------------ CONTROL ROSTERS
+# A `--selftest` roster size published as an INSTRUCTION is the same class as a
+# suite count: the reader copies the line, and a control that vanished from the
+# harness leaves the doc promising a proof that no longer exists (a shrunken
+# roster prints a SHORTER "SELFTEST OK", which is exactly the hole
+# EXPECTED_CONTROLS was added to close). Closed table of those live claims:
+# (doc, anchor that must be unique in that doc, harness owning the pin).
+DOC_CONTROL_CLAIMS = [
+    ("AGENTS.md", "scripts/chain_test_check.py --selftest", "scripts/chain_test_check.py"),
+    ("AGENTS.md", "scripts/chain_session_check.py --selftest", "scripts/chain_session_check.py"),
+    ("AGENTS.md", "scripts/cool_chat_check.py --selftest", "scripts/cool_chat_check.py"),
+    ("docs/DEVGUIDE.md", "scripts/chain_test_check.py --selftest", "scripts/chain_test_check.py"),
+    ("docs/DEVGUIDE.md", "scripts/chain_session_check.py --selftest", "scripts/chain_session_check.py"),
+]
+EXPECTED_DOC_CONTROL_CLAIMS = 5
+
+# `N controls` and `N control(s)`; "controls run on copies" and "eight controls"
+# match nothing here, which is why this shape was measured over both graded
+# sections before the leg was written (5 claims, all of them the --selftest
+# comment a reader copies).
+DOC_CTRL_NUM = re.compile(r"(\d+)\s+controls?\b|\bcontrols?\s+(\d+)")
 
 TOP_DIRS = {p.name for p in ROOT.iterdir() if p.is_dir()}
 CITE_TOK = re.compile(r"`([^`\n]+)`")
@@ -770,6 +795,140 @@ def leg_doc_counts(log):
            len(graded) + len(ungraded), " and ".join(DOC_LIVE_SECTIONS)))
 
 
+def ctrl_nums(line):
+    """Every control-roster count on one doc line, either word order."""
+    return [int(m.group(1) or m.group(2)) for m in DOC_CTRL_NUM.finditer(line)]
+
+
+def section_ctrl_claims(text, lo, hi):
+    out = []
+    lines = text.split("\n")
+    for n in range(lo, hi + 1):
+        for num in ctrl_nums(lines[n - 1]):
+            out.append((n, num))
+    return out
+
+
+def harness_control_pin(script):
+    """One harness's pinned roster size, read from its source AND its own roster.
+
+    Three views, never a re-spelled number: the literal in the file, the same
+    constant on the imported module, and `len(module.CONTROLS)`. The third is what
+    makes a deleted control a refusal of THIS harness rather than a quieter
+    SELFTEST OK two commits later.
+    """
+    src = read(script)
+    m = re.search(r"^EXPECTED_CONTROLS\s*=\s*(\d+)\s*$", src, re.M)
+    if not m:
+        raise CannotRun("%s publishes no `EXPECTED_CONTROLS` literal — the docs quote "
+                        "a roster size this harness does not owe, so there is nothing to "
+                        "grade the quote against. Pin the roster (ELEVENTH law) before "
+                        "the claim can be measured" % script)
+    parsed = int(m.group(1))
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_control_pin_%s" % re.sub(r"\W", "_", script), str(ROOT / script))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    except Exception as exc:
+        raise CannotRun("%s cannot be imported to read its own control pin (%s: %s)"
+                        % (script, type(exc).__name__, exc))
+    live = getattr(mod, "EXPECTED_CONTROLS", None)
+    if live != parsed:
+        raise CannotRun("%s reads %r from its source text but %r from the imported "
+                        "module — the pin is computed, so the number the harness enforces "
+                        "is not the number the docs could quote" % (script, parsed, live))
+    roster = getattr(mod, "CONTROLS", None)
+    if roster is None:
+        raise CannotRun("%s carries EXPECTED_CONTROLS but no CONTROLS roster — the pin "
+                        "grades nothing" % script)
+    if len(roster) != parsed:
+        raise CannotRun("%s pins %d control(s) but its roster holds %d — a vanished "
+                        "control must stop the run, not shorten it"
+                        % (script, parsed, len(roster)))
+    return parsed
+
+
+def leg_doc_control_counts(log):
+    """What the docs TELL A READER each selftest proves must equal what it runs.
+
+    Same shape as leg_doc_counts, second population: a `--selftest` comment is an
+    instruction — the reader runs it and reads "SELFTEST OK — N control(s)" — and
+    before this leg nothing compared that N to the harness's own pin. Measured on
+    this tree: cool_chat_check.py carried 12 controls with NO EXPECTED_CONTROLS at
+    all, so the published `12 controls` in AGENTS.md had no literal behind it and a
+    deleted control would have answered `SELFTEST OK — 11 control(s)`, rc 0.
+    """
+    if len(DOC_CONTROL_CLAIMS) != EXPECTED_DOC_CONTROL_CLAIMS:
+        raise CannotRun("DOC_CONTROL_CLAIMS lists %d live claim(s), "
+                        "EXPECTED_DOC_CONTROL_CLAIMS pins %d — a row deleted from the "
+                        "table drops that number out of the compare and the doc drifts "
+                        "unmeasured, so a deliberate change is a two-place edit "
+                        "(release_readiness.py:EXPECTED_DOC_CONTROL_CLAIMS)"
+                        % (len(DOC_CONTROL_CLAIMS), EXPECTED_DOC_CONTROL_CLAIMS))
+    pins = {}
+    for _rel, _anchor, script in DOC_CONTROL_CLAIMS:
+        if script not in pins:
+            pins[script] = harness_control_pin(script)
+    docs = sorted({rel for rel, _a, _s in DOC_CONTROL_CLAIMS})
+    texts = {rel: read(rel) for rel in docs}
+    graded = []
+    findings = []
+    for rel, anchor, script in DOC_CONTROL_CLAIMS:
+        lines = texts[rel].split("\n")
+        hits = [n for n, ln in enumerate(lines, 1) if anchor in ln]
+        if len(hits) != 1:
+            raise CannotRun("anchor %r matched %d line(s) in %s — this leg reads a "
+                            "particular comment, and an anchor that no longer names "
+                            "exactly one of them has no claim to grade"
+                            % (anchor, len(hits), rel))
+        at = hits[0]
+        nums = set(ctrl_nums(lines[at - 1]))
+        if not nums:
+            findings.append("%s:%d still carries the anchor but states no control count — "
+                            "the live claim left the compare, so a reader runs a "
+                            "selftest whose proof size is missing" % (rel, at))
+            continue
+        if len(nums) > 1:
+            findings.append("%s:%d states two control counts (%s) in the one line a "
+                            "reader must follow — nothing here can say which is the "
+                            "live claim" % (rel, at,
+                                            ", ".join(str(x) for x in sorted(nums))))
+            continue
+        stated = nums.pop()
+        graded.append((rel, at, script))
+        owe = pins[script]
+        if stated != owe:
+            why = ("the doc is stale: it was not bumped when the roster moved"
+                   if stated < owe else
+                   "the doc is ahead of the harness: controls were never added to match")
+            findings.append("%s:%d says `%d controls`, %s pins %d — %s. Bump the doc, "
+                            "the pin and the roster in the SAME commit as the control "
+                            "that changes the proof" % (rel, at, stated, script, owe, why))
+    table = {(rel, at) for rel, at, _script in graded}
+    ungraded = []
+    for rel in docs:
+        for header in DOC_LIVE_SECTIONS:
+            lo, hi = section_span(texts[rel], header, rel)
+            for (at, num) in section_ctrl_claims(texts[rel], lo, hi):
+                if (rel, at) not in table:
+                    ungraded.append("%s:%d `%d controls`" % (rel, at, num))
+    if ungraded:
+        findings.append("live control-count claim(s) inside the graded sections that the "
+                        "table does not read: %s — a number a reader follows and no "
+                        "compare grades is the drift this leg exists for, so add the row "
+                        "or move the sentence out of ## Layout / ## Commands"
+                        % ", ".join(sorted(set(ungraded))))
+    if findings:
+        raise LegRed("; ".join(findings))
+    log("control-rosters %d live claim(s) over %d doc(s) equal the harnesses' own pins "
+        "(%s); %d claim(s) scanned inside %s, none ungraded, no roster size re-spelled "
+        "in this harness"
+        % (len(graded), len(docs),
+           ", ".join("%s=%d" % (s, pins[s]) for s in sorted(pins)),
+           len(graded) + len(ungraded), " and ".join(DOC_LIVE_SECTIONS)))
+
+
 def leg_scripts_ast(log):
     d = ROOT / "scripts"
     if not d.is_dir():
@@ -825,6 +984,7 @@ def main(argv):
     legs = [(leg_carriers, (opts.expect, log)), (leg_tag, (log,)),
             (leg_citations, (log,)), (leg_citation_lines, (log,)),
             (leg_citation_targets, (log,)), (leg_doc_counts, (log,)),
+            (leg_doc_control_counts, (log,)),
             (leg_scripts_ast, (log,)), (leg_inputs, (log,))]
     failures = []
     for fn, args in legs:
@@ -841,8 +1001,8 @@ def main(argv):
         print("RELEASE READINESS RED (%d leg(s))" % len(failures))
         return RED
     print("RELEASE READINESS GREEN — carriers, tag, citations (paths, line "
-          "numbers and targets), doc-quoted suite counts, harness grammar and "
-          "release inputs each asserted their own fact")
+          "numbers and targets), doc-quoted suite counts and control rosters, "
+          "harness grammar and release inputs each asserted their own fact")
     return GREEN
 
 

@@ -1125,9 +1125,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whole law is about, arriving from the doc side: a seat that adds tests and bumps the
   pin leaves a repo telling the next reader a suite size no gate owes, and a seat that
   edits the doc without the pin has re-numbered every report written from it.
-  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:686`) grades the docs' LIVE
+  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:711`) grades the docs' LIVE
   count claims against the pins, read from the gate's own source rather than re-spelled
-  here — `gate_pins()` (`scripts/release_readiness.py:650`) parses each literal AND imports
+  here — `gate_pins()` (`scripts/release_readiness.py:675`) parses each literal AND imports
   the module, and the two views must agree, because a pin that has become a computed
   value is a number a doc cannot honestly quote. Six doors, in two verdict words:
   a doc that states a different count than the pin is RED naming doc:line, the number,
@@ -1136,7 +1136,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   twins); a count claim inside a graded section that the table does not read is RED
   (an instruction nobody grades is the drift this leg exists for); and an anchor that
   matches two lines, a section header that is duplicated, a table shorter than
-  `EXPECTED_DOC_CLAIMS` (`scripts/release_readiness.py:173`), a kind that stopped being
+  `EXPECTED_DOC_CLAIMS` (`scripts/release_readiness.py:176`), a kind that stopped being
   covered or a pin whose two views disagree is `CANNOT RUN` — the harness no longer
   knows what it is reading, so it has no verdict about the tree.
   WHY A CLOSED TABLE AND NOT A SCAN: "is this number a live instruction or a historical
@@ -1146,7 +1146,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   fire on all of them — the TENTH law's ruling applies: a leg that fires on a correct
   sentence is worse than no leg. So the domain is STRUCTURAL, not semantic: everything
   inside `## Layout` and `## Commands` is an instruction and must be in the table
-  (`DOC_LIVE_SECTIONS`, `scripts/release_readiness.py:177`), everything outside them is a
+  (`DOC_LIVE_SECTIONS`, `scripts/release_readiness.py:180`), everything outside them is a
   record and is out of domain. That is also why the Lead-owned CI header is NOT here —
   `.github/workflows/build-all.yml:4` still advertises the pre-gate counts and is
   cited, not edited.
@@ -1162,6 +1162,46 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   doc rows, which is the proof the harness reads the LIVE pin and not a copy of it; both
   `vitest` rows retyped to `pytest` → CANNOT RUN `grades pytest but not vitest`; a second
   `## Commands` header → CANNOT RUN.
+  THE SAME LEG, SECOND POPULATION — THE CONTROL ROSTERS THE DOCS PUBLISH. A `--selftest`
+  comment is an instruction of exactly this kind: the reader runs it and reads
+  "SELFTEST OK — N control(s)" as the proof size, so N is a number a reader follows. The
+  first count leg graded pytest/vitest only, and the rosters drifted in the open:
+  `scripts/cool_chat_check.py --selftest` printed 12 controls from `len(CONTROLS)` with
+  NO `EXPECTED_CONTROLS` literal at all, so deleting a control there answered
+  `SELFTEST OK — 11 control(s)`, rc 0 — the hole EXPECTED_CONTROLS was created to close
+  elsewhere, still standing in this harness (measured, not assumed). Two things landed:
+  the pin (`EXPECTED_CONTROLS` in `scripts/cool_chat_check.py`, with the roster-length
+  refusal at the top of its `selftest()` like its siblings) and
+  `leg_doc_control_counts()` (`scripts/release_readiness.py:852`), which grades the
+  `# N controls` comments inside `## Layout` / `## Commands` against each harness's OWN
+  literal — `harness_control_pin()` (`scripts/release_readiness.py:812`) reads three
+  views and refuses any disagreement: the source text must assign the pin as a plain
+  integer, the imported module must say the same number (so a computed pin is CANNOT
+  RUN, never a doc quote), and the module's `CONTROLS` roster must hold exactly that
+  many rows (so a vanished control is refused even when nobody runs `--selftest`).
+  The claim table is `DOC_CONTROL_CLAIMS` with its own population pin
+  `EXPECTED_DOC_CONTROL_CLAIMS`, the count shape is `(\d+)\s+controls?\b|\bcontrols?\s+(\d+)`
+  — measured over both graded sections before the leg was written, because the same
+  section says "controls run on copies" and "all eight controls", and a leg that fires on
+  prose is worse than no leg (TENTH law).
+  CONTROLS, 11, each on a fresh COPY of the tree (`.git` included, because `leg_tag`
+  runs before this leg and a copy without history is CANNOT RUN before it can be
+  measured): doc retyped 12 → 11 → RED `says 11 controls`; the number deleted from the
+  sentence → RED `states no control count`; a `# 99 controls` claim added inside
+  `## Commands` with no table row → RED `the table does not read`; a row deleted from the
+  table → CANNOT RUN `EXPECTED_DOC_CONTROL_CLAIMS pins 5`; the pin bumped without its
+  roster → CANNOT RUN `pins 13 control(s) but its roster holds 12`; pin AND roster both
+  lowered to 11 → RED `the doc is ahead of the harness`; both grown to 13 → RED
+  `the doc is stale`; a control deleted while the pin stayed 12 → CANNOT RUN
+  `its roster holds 11`; the pin rewritten as `len(CONTROLS)` → CANNOT RUN `publishes no
+  EXPECTED_CONTROLS literal`; a second assignment below the literal → CANNOT RUN
+  `reads 12 from its source text but 7 from the imported module`; the pin renamed away
+  entirely → CANNOT RUN naming the harness that owes no roster. Two of these FAILED on
+  the driver's first version — not on the leg: both expected-text strings were written
+  from the sentence I meant rather than the sentence the code prints, which is the same
+  lesson the citation leg's control 5 recorded (a stale mutation string runs against an
+  unmutated tree). Fixed by asserting each mutation's own target text before replacing
+  it, and reading the printed verdict back instead of the intended one.
   SEAT RULE, one doc wider: a pin is not the end of the chain. Ask who else QUOTES the
   pinned number — the file a reader copies from is part of the contract, and the cheap
   way to keep it honest is a closed table of its live claims plus a domain defined by

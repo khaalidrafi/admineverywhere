@@ -749,7 +749,14 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    `AGENTS.md` or `docs/DEVGUIDE.md` that differs from it — a pin bumped without its docs
    is RED, and so is a doc retyped without the pin (DEVGUIDE *ELEVENTH law*, last link;
    narrative counts elsewhere are dated records and out of domain, the Lead-owned CI
-   header included).
+   header included). The SAME leg now grades the other number a `--selftest` line
+   publishes: each `# N controls` comment inside those sections must equal that
+   harness's own `EXPECTED_CONTROLS` — read from its source, from the imported module
+   AND against the length of its `CONTROLS` roster, so a control that vanishes from
+   `chain_test_check.py`, `chain_session_check.py` or `cool_chat_check.py` is refused
+   even in a run that never invokes `--selftest` (and `cool_chat_check.py` had no pin
+   at all when this landed, which is why the third view is the roster itself).
+   DEVGUIDE *ELEVENTH law* carries the 11 controls, run on tree copies.
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.

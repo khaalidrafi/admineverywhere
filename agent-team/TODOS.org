@@ -3412,6 +3412,36 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   STATE: unchanged PENDING (it was already PENDING and the earlier
   :DELIVERED: evidence stands; this note adds a re-derivation on the merged
   tree). DONE stays the Lead's gate.
+- Note taken on [2026-10-23 Fri 02:05 UTC] :: CROSS-REF, no state change (board
+  re-counted at segment start: all eleven FEATURE-ORDER rows PENDING with
+  :DELIVERED:, zero TODO/ONGOING/WAIT, no unanswered @platform-engineer ping —
+  so this seat took the smallest verifiable CI repair instead of an item). This
+  item's own verification harness went BLIND in one specific way and is closed:
+  scripts/cool_chat_check.py published `# 12 controls` in AGENTS.md:229 while
+  carrying NO `EXPECTED_CONTROLS` literal, so its selftest printed
+  len(CONTROLS) and a deleted control would have answered `SELFTEST OK — 11
+  control(s)`, rc 0 — the note above is the living proof (it records 11 controls,
+  the roster has since grown to 12, and nothing graded the doc against the
+  roster). LANDED on ai/turn-20261023-0133: EXPECTED_CONTROLS = 12 + the
+  roster-length refusal in cool_chat_check.py:456, and
+  leg_doc_control_counts() (scripts/release_readiness.py:852) grading every
+  `# N controls` claim inside ## Layout / ## Commands against the owning
+  harness's OWN pin, read three ways (source literal, imported value, length of
+  its CONTROLS roster) so no size is re-spelled in the readiness harness.
+  EVIDENCE: 11 controls on tree copies, all firing (3 RED, 2 RED in both
+  directions, 5 CANNOT RUN) — two of them failed on the DRIVER's expected-text
+  string first, recorded in docs/DEVGUIDE.md *ELEVENTH law*; the population pin
+  fired on this segment's own prose (EXPECTED_CLAIMS 15 -> 17) and the six doc
+  citations into release_readiness.py were re-measured in the same commit.
+  VERDICTS: release_readiness rc 0 (9 legs), landing_gate rc 0 GATE GREEN 4/4
+  pytest 299, cool_chat_check rc 0 live AND --selftest rc 0 12/12,
+  chain_test_check --selftest rc 0 10/10, chain_session_check --selftest rc 0
+  11/11, gate/doc-field/registry/parity twins rc 0. NOT run: --fe / vitest —
+  zero app/ or plugin/ file touched, no twin pair, no app/node_modules at boot.
+  verify-cool-chat-2 itself is NOT re-graded by this: its :DELIVERED: evidence
+  stands on the same code, now with a harness that cannot go quietly shorter.
+  LARK: ROLE_LARK_WEBHOOK empty in this seat's env (measured, length 0) -> the
+  report's Lark copy is skipped, no URL invented. DONE stays the Lead's gate.
 :END:
 ** DONE COOL-CHAT-SEND-BACK-2 — wire prompt builder + fix legend (:DELIVERED: kept; Lead sweep flip 2026-10-23) :FE:
 :LOGBOOK:

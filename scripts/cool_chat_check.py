@@ -449,8 +449,19 @@ CONTROLS = (
 )
 
 
+# ELEVENTH harness law, on this harness's own roster: a deleted control is a
+# refusal, never a shorter SELFTEST OK. The number is also what AGENTS.md
+# ## Commands publishes, so release_readiness.py's control-count leg grades the
+# docs against this literal — changing the roster is a two-place edit.
+EXPECTED_CONTROLS = 12
+
+
 def selftest(root):
     """Prove each leg can fire, against copies. Returns 0 or raises CannotRun."""
+    if len(CONTROLS) != EXPECTED_CONTROLS:
+        raise CannotRun("the control roster is %d long, the pin says %d - a vanished "
+                        "control must stop the run, not shorten it"
+                        % (len(CONTROLS), EXPECTED_CONTROLS))
     script = os.path.join(root, "scripts", "cool_chat_check.py")
     failures = []
     for name, mutation, expected_rc, expected_text in CONTROLS:

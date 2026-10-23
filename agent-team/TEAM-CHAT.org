@@ -6692,3 +6692,107 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   of its entries.
   NEXT: your gate on this branch (ai/turn-20261023-0013) and on the four
   delivered FEATURE-ORDER entries; items 1-4 above are yours to dispatch.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-23 Fri 02:05 UTC]
+:END:
+  A published selftest roster size is now GRADED where a reader picks it up.
+  RESULT: DONE.
+  BOARD STATE, re-counted not inherited: the FEATURE-ORDER is exhausted for a seat —
+  all eleven rows (verify-cool-chat-2, COOL-CHAT-SEND-BACK-2, FR-R001-FE, COOL-PREVIEW,
+  R-003, R-002, R-004, R-005, R-006, R-008, R-007) are PENDING and each already carries
+  :DELIVERED: evidence (measured by a pass over agent-team/TODOS.org splitting every
+  item body: 11/11, zero TODO/ONGOING/WAIT). No chain-machinery headline exists to
+  flip, so per instruction 2 this segment took the smallest verifiable CI repair that
+  serves the objective, and DONE stays your gate. No unanswered @platform-engineer
+  ping in the tail: the newest entries are your two to @software-engineer
+  (agent-team/TEAM-CHAT.org:6537, :6564) and my own 00:37Z report (:6588).
+  THE DEFECT (measured, not assumed): the ELEVENTH law's population rule was applied
+  to three harnesses and NOT to a fourth. AGENTS.md:229 publishes
+  `cool_chat_check.py --selftest # 12 controls` as an INSTRUCTION, and
+  scripts/cool_chat_check.py carried NO EXPECTED_CONTROLS literal at all (grep for the
+  name returns chain_session_check.py:689, chain_slot_check.py:611,
+  chain_test_check.py:652 — never cool_chat_check.py), while its selftest printed
+  len(CONTROLS). So deleting a control there answered `SELFTEST OK — 11 control(s)`,
+  rc 0, and the doc kept promising the 12-control proof. release_readiness.py graded
+  only pytest/vitest counts (DOC_PIN_NAMES, two kinds), so the class was half-covered.
+  WHAT LANDED (4 files, ZERO Lead-owned file touched):
+  - scripts/cool_chat_check.py:456 EXPECTED_CONTROLS = 12 + the roster-length refusal
+    at the top of its selftest(), mirroring its siblings.
+  - scripts/release_readiness.py:852 leg_doc_control_counts() grades every
+    `# N controls` comment inside ## Layout / ## Commands against the OWNING harness's
+    own literal — table DOC_CONTROL_CLAIMS (:196) with its population pin
+    EXPECTED_DOC_CONTROL_CLAIMS = 5 (:203), so a doc row that moves alone is RED and a
+    claim that joins the graded sections unlisted is RED naming it.
+  - scripts/release_readiness.py:812 harness_control_pin() reads THREE views and
+    refuses any disagreement: the source literal, the imported module's value, and
+    len(module.CONTROLS). The third is what makes a vanished control a refusal even in
+    a run that never invokes --selftest — the coverage the old two-view read could not
+    see. No roster size is re-spelled in the readiness harness.
+  - docs/DEVGUIDE.md *ELEVENTH law* carries the record + the 11 controls; AGENTS.md's
+    CI paragraph names the new claim class beside the suite-count one.
+  THE COUNT SHAPE IS A MEASUREMENT, not a guess: `(\d+)\s+controls?\b|\bcontrols?\s+(\d+)`
+  was run over both graded sections BEFORE the leg was written — 5 claims, all of them
+  the --selftest comment — because the same sections say "controls run on copies" and
+  "all eight controls", and a leg that fires on correct prose is worse than no leg
+  (TENTH law).
+  CONTROLS, 11, each on a fresh COPY of the tree (the copy must carry .git: leg_tag
+  runs first and a history-less copy is CANNOT RUN before the new leg can be measured):
+  3 RED (doc retyped 12 -> 11; the number deleted from the sentence; a `# 99 controls`
+  claim added with no table row), 1 CANNOT RUN (table row deleted -> pins 5), 2 RED in
+  BOTH directions (pin AND roster lowered to 11 -> `the doc is ahead`; grown to 13 ->
+  `the doc is stale`), 5 CANNOT RUN (pin bumped without its roster; a control deleted
+  under a 12-pin; the pin rewritten as len(CONTROLS); a second assignment below the
+  literal; the pin renamed away). ALL 11 FIRED — but two FAILED on the driver's first
+  version, and both were the DRIVER not the leg: the expected-text strings were written
+  from the sentence I meant instead of the sentence the code prints (rc and message
+  were correct both times). Honest record, same lesson the citation leg's control 5
+  logged.
+  THE PIN FIRED ON ITS OWN AUTHOR, SIXTH MEASUREMENT: the DEVGUIDE paragraph I added
+  cites two entry points of release_readiness.py, the targets leg answered
+  CANNOT RUN `17 symbol claim(s) … against a pinned population of 15`, EXPECTED_CLAIMS
+  moved 15 -> 17 in the same commit — and because that comment itself pushed the
+  literal off its old line, the SIX doc citations into that file were re-measured
+  beside it (708 -> 711, 650 -> 675 …; the two new ones verified by the targets leg
+  itself, the four non-`name()` ones by grep). DEVGUIDE:650/686 were stale on arrival:
+  the first run of release_readiness after my leg landed answered RED naming exactly
+  those two — the third-door class the doc already documents, caught by the harness and
+  not by me.
+  VERDICTS: release_readiness.py rc 0 GREEN (9 legs now, incl. the new one);
+  landing_gate.py rc 0 GATE GREEN 4/4 (env django 5.2.18, pytest 299 passed, System
+  check 0 issues, No changes detected) — the dep preflight first answered CANNOT RUN
+  `No module named 'admincraft'` and I ran the fix IT printed (pip install -e ./plugin
+  --no-deps), which is the point of that leg; cool_chat_check.py rc 0 live AND
+  --selftest rc 0 12/12; chain_test_check --selftest rc 0 10/10; chain_session_check
+  --selftest rc 0 11/11; gate_roster_diff / doc_field_roster_diff / registry_roster_diff
+  / parity_table_diff all rc 0. NOT run: --fe / vitest — zero app/ or plugin/ file
+  touched, no twin pair, and app/node_modules is absent at boot (the standing
+  docker/harness gap; the csv/brand twins answer rc 2 here).
+  STILL YOURS (unchanged from my 00:37Z report, now with the measurement you need for
+  item 4): the two open REDs both live behind Lead-owned files. (a)
+  chain_session_check.py rc 1 — RESTORE (usr/local/lib/qoder-home/.qoder collected and
+  never restored), 10x NO-OPT-OUT (the goose lanes pass --no-session), GOOSE-STORE not
+  collected; every fix is in .github/scripts/turn_segment.sh, read-only to a seat.
+  (b) chain_test_check.py rc 1 — 25 APPEND-ONLY + the same 25 NO-DROP. I traced it to
+  the first divergent byte, not to a count: agent-team/TEAM-CHAT.org:5528, where an
+  in-place repair changed `:WHEN: 2026-10-22 Wed 11:24 UTC` -> `[2026-10-22 Thu 11:24
+  UTC]`. Both legs fire because WHEN is IDENTITY-BEARING (parse_messages keys a message
+  on from/to/kind + WHEN, scripts/chain_test_check.py:213) — so a body reword is
+  tolerated by NO-DROP while a timestamp repair is not, and one entry poisons every
+  commit whose history carries the old text. That is a real governance finding, not a
+  harness bug, and the ruling (authorise format repairs, or repair by re-append) is
+  yours; a seat cannot edit another seat's entry and I edited none.
+  (c) The `.turn-inside.sh` / `.turn-review.txt` scratch is untracked at the repo root
+  again in THIS run (git status shows both) — a `.gitignore` line (not .gitattributes)
+  is the one-command close, still your call, deliberately left out of this branch so it
+  carries one concern.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  ROLE_LARK_WEBHOOK is empty in this env (measured, length 0) -> the Lark copy of this
+  report is SKIPPED, not lost; no URL invented. No OBJECTIVE-STATE claim: FEATURE-ORDER
+  waits on your DONE gate and this segment authored none of its entries.
+  NEXT: your gate on this branch (ai/turn-20261023-0133); items (a)-(c) above are yours
+  to dispatch, and with eleven of eleven rows carrying :DELIVERED: the chain has no
+  seat-open work left in the FEATURE-ORDER — it pauses for your review by law.
