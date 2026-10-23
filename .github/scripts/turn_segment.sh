@@ -291,12 +291,17 @@ case "$SEAT" in
     # HOST=https://openrouter.ai/api/v1 produced
     # .../api/v1/v1/chat/completions -> 404 on EVERY turn.
     # Mirrors the proven zai-lane pattern (HOST + BASE_PATH).
-    elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
+    # Relief swap 2026-10-23 (DE TEAM-UPDATE #2 ASK + probe 404 + live
+    # catalog check 19:10Z: minimax-m3.1-flash:free DELISTED from
+    # OpenRouter — the M3.1 free period ended Oct 22). Replacement:
+    # poolside/laguna-s-2.1:free — alive in the catalog, probed every
+    # run (429 daily-cap evidence 18:16Z = exists, quota-limited).
+    elif env GOOSE_PROVIDER=openai GOOSE_MODEL=poolside/laguna-s-2.1:free \
          OPENAI_API_KEY="$OPENROUTER_API_KEY" \
          OPENAI_HOST="https://openrouter.ai" \
          OPENAI_BASE_PATH="/api/v1/chat/completions" \
          goose run --no-session -t "$BRIEF"; then
-      echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose — promo hire 05:33Z)"
+      echo "TURN_RESULT=goose run OK (lane: laguna-s-2.1:free@goose — relief swap 2026-10-23)"
     # Lead lane add 2026-10-22: qwen3.8-27b@groq — GROQ_API_KEY is
     # in repo secrets (probed every run); gives the chain a 4th,
     # independent brain when qoder quota + zai rate-limit die.
@@ -321,12 +326,14 @@ case "$SEAT" in
          OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
          goose run --no-session -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
-    elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
+    # Relief swap 2026-10-23 (DE TEAM-UPDATE #2): minimax :free delisted
+    # at source — poolside/laguna-s-2.1:free takes the slot.
+    elif env GOOSE_PROVIDER=openai GOOSE_MODEL=poolside/laguna-s-2.1:free \
          OPENAI_API_KEY="$OPENROUTER_API_KEY" \
          OPENAI_HOST="https://openrouter.ai" \
          OPENAI_BASE_PATH="/api/v1/chat/completions" \
          goose run --no-session -t "$BRIEF"; then
-      echo "TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose)"
+      echo "TURN_RESULT=goose run OK (lane: laguna-s-2.1:free@goose — relief swap 2026-10-23)"
     elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
          OPENAI_API_KEY="$GROQ_API_KEY" \
          OPENAI_HOST="https://api.groq.com" \
@@ -380,14 +387,16 @@ case "$SEAT" in
          OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
          goose run --no-session -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
-    elif env GOOSE_PROVIDER=openai GOOSE_MODEL=minimax/minimax-m3.1-flash:free \
+    # Relief swap 2026-10-23 (DE TEAM-UPDATE #2): minimax :free delisted
+    # at source — poolside/laguna-s-2.1:free takes the slot.
+    elif env GOOSE_PROVIDER=openai GOOSE_MODEL=poolside/laguna-s-2.1:free \
          OPENAI_API_KEY="$OPENROUTER_API_KEY" \
          OPENAI_HOST="https://openrouter.ai" \
          OPENAI_BASE_PATH="/api/v1/chat/completions" \
          goose run --no-session -t "$BRIEF"; then
-      echo "TURN_RESULT=goose run OK (lane: openrouter/minimax-m3.1-flash:free@goose)"
+      echo "TURN_RESULT=goose run OK (lane: openrouter/laguna-s-2.1:free@goose)"
     else
-      echo "TURN_RESULT=BLOCKED (codebuddy+qoder-ds+zai+minimax lanes all failed — check the harness)"
+      echo "TURN_RESULT=BLOCKED (codebuddy+qoder-ds+zai+laguna lanes all failed — check the harness)"
     fi
     fi
     ;;
