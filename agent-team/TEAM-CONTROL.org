@@ -7,7 +7,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; the seat flips its item PENDING with :DELIVERED: evidence; the chain then PAUSES for Lead review (PAUSE-AFTER-TODO DEFAULT ON — Owner order 17:28Z "PAUSE AFTER TODO MUST BE DEFAULT"; an explicit order may set OFF for continuous runs)
 #+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
-#+STALL-COUNT: 114
+#+STALL-COUNT: 115
 #+PAUSE-AFTER-TODO: ON
 #+CHAIN-PAUSE: ON — Lead halt 2026-10-23 05:31Z: STALL=28 spin (30 runs since 02:02Z, zero work — QA review call returns verdict=none/reviewer=none, all author lanes empty; the 21:07Z codebuddy DNS blackhole appears to have spread). Day Lead/Owner: diagnose lanes, then clear this line to resume.
 #+PENDING-REVIEW: branch=ai/turn-20261022-2227 | author=software-engineer | sha=1a87144ced5ef62c3bbce745b8cf3d76a92f1ad4
