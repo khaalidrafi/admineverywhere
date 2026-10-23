@@ -117,7 +117,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (432 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (437 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -145,7 +145,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 432 vitest
+cd app && npm test                          # 437 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
@@ -327,6 +327,15 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whole-row PUT). Drag-and-drop is mouse-only by nature, so every column a drop
   would accept is also offered by a per-card "Move to" `<select>` — keyboard and
   screen-reader users get the identical move set, illegal targets are disabled.
+  BOTH kinds of axis are declared in the reference app: `orders` through the
+  machine, `products` on the rig's free enum `Product.packaging` `via: "patch"` —
+  because `kanbanMount.test.ts` grades that half on the WIRE (the literal
+  `{"packaging":"crate"}` body from both the select and a drag pair, the
+  DISCOVERED detail path, zero `/transition/` probes, and no board at all when a
+  customer schema does not carry the declared field). `kanban.test.ts` pins the
+  registry's own population and grades EVERY declaration against the captured
+  document, so an axis that rots or a model that vanishes is red rather than
+  quietly untested.
 - CSV export (FR-R005) keeps its two layers uncollapsed: DataTable "Export
   table" = visible columns of the CURRENT page, client-side, no server call;
   "Full export" = `GET <listPath>export/` line-level (child rows repeat parent
