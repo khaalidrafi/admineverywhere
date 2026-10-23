@@ -1130,6 +1130,16 @@ jobs:
           OUTCOME="${{ steps.merge.outputs.outcome }}"
           GATE="${{ steps.gate.outputs.gate }}"
           STALL=$(grep -oP '^\#\+STALL-COUNT:\s*\K\d+' "$CTL" | head -1 || true); STALL=${STALL:-0}
+          # LEAD FIX (BR-07, 2026-10-23): a Lead-armed #+CHAIN-PAUSE must
+          # stop the SELF-DISPATCH too — the turn job honors it (mode=paused)
+          # but finalize kept dispatching: stall 28 -> 137, ~109 no-work runs
+          # burned during the 2026-10-23 day. Same grammar as the turn
+          # control step: any non-empty value pauses except literal "OFF".
+          CHAINPAUSE=$(grep -oP '^\#\+CHAIN-PAUSE:\s*\K.*' "$CTL" | head -1 | xargs || true)
+          CHAIN_PAUSED=no
+          if [ -n "$CHAINPAUSE" ] && ! printf '%s' "$CHAINPAUSE" | grep -qi '^off$'; then
+            CHAIN_PAUSED=yes
+          fi
           # PROGRESS under SEGREGATION LAW (Owner 18:14Z): a green approved
           # merge is progress; so is a REAL authored branch (non-empty,
           # awaiting next-run review — the merge lands one run later).
@@ -1144,7 +1154,9 @@ jobs:
           if [ "${AUTHOR_AHEAD:-0}" -gt 0 ]; then PROGRESS=yes; fi
           case "$RESULT" in *BLOCKED*) PROGRESS=no ;; esac
           if [ "$PROGRESS" = "yes" ]; then NEW=0; else NEW=$((STALL+1)); fi
-          if [ "$NEW" != "$STALL" ]; then
+          # BR-07: a paused chain is not "working with no progress" — the
+          # turn did not run, so the stall counter freezes while paused.
+          if [ "$NEW" != "$STALL" ] && [ "$CHAIN_PAUSED" = "no" ]; then
             # Race-proof (Lead pushes can move ai/main mid-run — same class
             # as the 15:57Z fetch-first rejection): reset, re-apply, commit.
             git fetch origin ai/main
@@ -1172,6 +1184,27 @@ jobs:
           fi
           if [ "$NEW" -ge 4 ] && [ "$DECISION" = "dispatch" ]; then
             DECISION="backoff-dispatch"   # slow-poll: transient dead lanes recover on their own
+          fi
+          # BR-07: an armed #+CHAIN-PAUSE overrides any dispatch decision
+          # (kill-switch / tests-red / objective states still win above).
+          if [ "$CHAIN_PAUSED" = "yes" ]; then
+            case "$DECISION" in
+              dispatch|backoff-dispatch) DECISION="chain-paused" ;;
+            esac
+          fi
+          # BR-01 hard floor (Lead 2026-10-23): a dead-lane backoff may not
+          # poll forever — at stall 12 (~1h of 5-min polls) the chain arms
+          # #+CHAIN-PAUSE ITSELF with a dated reason and halts. The Lead
+          # (or Owner) diagnoses lanes, then clears the line to resume.
+          if [ "$NEW" -ge 12 ] && [ "$DECISION" = "backoff-dispatch" ]; then
+            DECISION="stall-halt"
+            git fetch origin ai/main
+            git reset --hard origin/ai/main
+            grep -q '^#+CHAIN-PAUSE:' "$CTL" || printf '#+CHAIN-PAUSE:\n' >> "$CTL"
+            sed -i "s|^#+CHAIN-PAUSE:.*|#+CHAIN-PAUSE: armed $(date -u '+%Y-%m-%d %H:%M')Z — AUTO stall-halt at stall=${NEW}: 12+ no-progress backoff segments; diagnose lanes, then clear this line to resume|" "$CTL"
+            git add "$CTL"
+            git commit -m "ci-chain: AUTO stall-halt armed at stall=${NEW} (BR-01 hard floor)" || true
+            git push origin "ai/main" || echo "::warning::stall-halt push failed — next run re-arms"
           fi
           # PAUSE-AFTER-TODO (Owner order 2026-10-22 #admincraft: "After
           # completing a TODO, pause and summarize which role did what"):
