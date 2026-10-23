@@ -156,7 +156,9 @@ regression in the rendering rule goes red on one side and names itself.
    both twins in the same commit and diff a download against a server export
    of the same rows.
 4. Wire layer 1 to the table's own derived column list (never a re-derived
-   copy — the file must match what the user is looking at).
+   copy — the file must match what the user is looking at). That wiring is
+   graded against the rendered `<th>` set, not against a copy of the rule:
+   `app/src/lib/__tests__/exportMount.test.ts`.
 5. Do NOT touch `normalizeOpenAPI` for a per-API special case; if an export
    is not in the document, the button does not exist. That is the feature.
 6. When you move either layer's WIRING (the button gate, the columns it hands
@@ -273,6 +275,35 @@ regression in the rendering rule goes red on one side and names itself.
   the client twin, BOM idempotency, filename slug safety (a model named
   `../../etc/x` cannot steer a save path), and the live-schema
   discovery/`fetchCsv` contract against a mocked fetch.
+- `app/src/lib/__tests__/exportMount.test.ts` — **both layers rendered** (added
+  2026-10-23, night-2 item 4). Everything above graded a pure function or the
+  HTTP client directly, so the promises a reviewer reads off the screen were
+  unproven: that "Export table" emits the columns the table actually rendered,
+  that the file is the current page only, that the click asks the backend for
+  nothing, that "Full export" disappears with the document that omits the
+  endpoint, and that what lands on disk is the server's byte stream. The harness
+  mounts the real `ModelPage` against the real `DataTable` and the captured
+  fixture, and intercepts the download where the product performs it
+  (`createElement("a") → a.download → a.click()`), so the assertions read the
+  **blob** and the filename attribute, never a re-call of `buildCsv`. Nine
+  tests: header 1:1 with the rendered `<th>` set (with `product`/`created_at`
+  outside the visible slice required absent), DATA-not-display (200-char note
+  un-truncated, null → empty field, `"19.99"` un-reflowed, `1e-7` in
+  ECMAScript's own form, `=SUM(…)` apostrophised, `"Gizmo, big"` and an
+  embedded LF quoted), one BOM at the head and a trailing CRLF, the empty page
+  posting an info toast with zero downloads, layer 1 present and layer 2 absent
+  for `customers`, a stripped `exportPath` removing BOTH the button and any
+  `export` request, the discovered path + `Accept: text/csv` + `Token` header +
+  a hostile `Content-Disposition` (`../../etc/Order Lines.csv` →
+  `etc-order-lines.csv`), the server's bytes saved untouched with a single BOM,
+  and a 400 surfacing the reason while both buttons sit inert and the label
+  reads `Exporting…`. Mutation battery, whole file re-run per mutant, sources
+  restored byte-identical (md5 verified): table hands over all fields → killed;
+  "Full export" bound regardless of `exportPath` → killed; `fetchCsv`
+  concatenating a guessed `/export/` → killed; `csvBlobParts` no longer
+  BOM-idempotent → killed; empty-page guard removed → killed; formula guard
+  disabled → killed; buttons never `disabled` while exporting → killed; layer 1
+  exporting the page twice → killed.
 - Cross-layer diff: log into the demo rig, open Orders, export the table and
   the full export, and diff the parent columns of any overlapping row — they
   are byte-identical. The rig is now the fixture for that claim rather than an
