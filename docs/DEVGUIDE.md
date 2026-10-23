@@ -120,7 +120,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (432 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (437 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -148,7 +148,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 432 vitest
+cd app && npm test                          # 437 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
@@ -361,7 +361,13 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   ids, pk order, search honoured, `pagination_class=None`) and its button is
   bound **only when the schema documents it** — `normalizeOpenAPI` sets
   `model.exportPath` on `get && !post` at that path, and `fetchCsv` calls
-  base + the discovered path, never `apiUrl + "export"`. The writer twins
+  base + the discovered path, never `apiUrl + "export"`. The RENDERED half is
+  wire-pinned by `app/src/lib/__tests__/csvMount.test.ts` — it mounts the real
+  page, captures the download at `URL.createObjectURL` and proves both buttons
+  exist only where the document proves them, that layer 1 sends ZERO requests
+  over the table's own rendered columns, and that a renamed export endpoint moves
+  the click with it (a hard-coded `apiUrl + "export"` fails that test by design).
+  The writer twins
   (`app/src/lib/csv.ts` ↔ `demo-backend/shop/csv_export.py`) are
   byte-identical for the same rows — RFC 4180/CRLF/QUOTE_MINIMAL, null→empty,
   lowercase booleans, decimals never re-flowed, formula guard on text keyed by
