@@ -1463,7 +1463,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   URL so the shipped logo survives the first save, and that an empty app name
   is refused with zero requests. Typing re-themes live and unmount reverts —
   the DOM half of the "visual verification of live preview" line on
-  COOL-PREVIEW. Four mutants (client guard, defaults fill-in, verbatim errors,
+  CHAT-PREVIEW (née COOL-PREVIEW). Four mutants (client guard, defaults fill-in, verbatim errors,
   filename branch) each failed one named test.
 - Brand assets keep their RELATIVE path across all three layers — one twin
   contract, like `brandToCss`/`render_css`. Every shipped `brand.json`

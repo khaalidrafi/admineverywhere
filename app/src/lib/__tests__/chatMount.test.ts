@@ -1,4 +1,4 @@
-/** COOL-CHAT-SEND-BACK-2 live-path proof — the system prompt that ACTUALLY
+/** CHAT-SEND-BACK-2 live-path proof (née COOL-CHAT-SEND-BACK-2) — the system prompt that ACTUALLY
  *  leaves the panel, not a hand-written string fed to systemPrompt().
  *
  *  chat.test.ts unit-tests buildSchemaPrompt and systemPrompt in isolation;
