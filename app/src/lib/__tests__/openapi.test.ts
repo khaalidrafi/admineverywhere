@@ -249,3 +249,104 @@ describe("lifecycle discovery (FR-R001)", () => {
     expect(out.models.map((m) => m.id)).toEqual(["orders"]);
   });
 });
+
+/** FR-R002 §2 case C — a blank=True / null=True choices field is emitted as a
+ * oneOf union with BlankEnum/NullEnum. Before the normalizer read through
+ * unions such a field fell to the schemaless "text" default and the form
+ * silently degraded its select into a free-text input (docs/independent-enums
+ * .md §4). Seven synthetic shapes here (the union grammar is wider than what one
+ * rig emits) plus one assertion against the captured fixture, so the shape the
+ * server really answers stays pinned too. */
+describe("union members (FR-R002 case C)", () => {
+  function docWithUnion(prop: any, components: any = {}, propName = "kind") {
+    return {
+      paths: {
+        "/api/gadgets/": {
+          get: { responses: { "200": { content: { "application/json": { schema: { $ref: "#/components/schemas/Gadget" } } } } } },
+          post: { requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/GadgetRequest" } } } } },
+        },
+      },
+      components: {
+        schemas: {
+          Gadget: { properties: { id: { type: "integer", readOnly: true }, [propName]: prop } },
+          GadgetRequest: { properties: { [propName]: prop }, required: [] },
+          ...components,
+        },
+      },
+    };
+  }
+  const field = (prop: any, components: any = {}, propName = "kind") =>
+    normalizeOpenAPI(docWithUnion(prop, components, propName)).byId.gadgets.byName[propName];
+
+  const PACKAGING = { enum: ["box", "crate", "pallet"], type: "string" };
+  const BLANK = { enum: [""] };
+
+  it("resolves a $ref union of an enum component and BlankEnum into a select", () => {
+    const f = field({ oneOf: [{ $ref: "#/components/schemas/PackagingEnum" }, { $ref: "#/components/schemas/BlankEnum" }] },
+                    { PackagingEnum: PACKAGING, BlankEnum: BLANK });
+    expect(f.type).toBe("enum");
+    expect(f.choices).toEqual(["box", "crate", "pallet"]);
+  });
+
+  it("never offers the blank sentinel as a choice, and never calls the field nullable", () => {
+    const f = field({ oneOf: [{ $ref: "#/components/schemas/PackagingEnum" }, { $ref: "#/components/schemas/BlankEnum" }] },
+                    { PackagingEnum: PACKAGING, BlankEnum: BLANK });
+    expect(f.choices).not.toContain("");
+    // RecordForm renders an "—" option for every enum, so the blank state is
+    // already expressible; the sentinel's whole job is to mark the field optional.
+    expect(f.required).toBe(false);
+    // blank=True is the EMPTY STRING, not null: a field the server declared
+    // non-nullable must not be sent an explicit null (that 400s — see
+    // RecordForm.buildPayload, and recordFormMount.test.ts for the wire proof)
+    expect(f.nullable).toBe(false);
+  });
+
+  it("resolves an inline union (no $ref members) the same way", () => {
+    const f = field({ oneOf: [PACKAGING, BLANK] });
+    expect(f.type).toBe("enum");
+    expect(f.choices).toEqual(["box", "crate", "pallet"]);
+  });
+
+  it("treats a {enum:[null]} NullEnum as the optional signal, not a choice", () => {
+    const f = field({ anyOf: [{ $ref: "#/components/schemas/KindEnum" }, { $ref: "#/components/schemas/NullEnum" }] },
+                    { KindEnum: { enum: ["a", "b"], type: "string" }, NullEnum: { enum: [null] } });
+    expect(f.type).toBe("enum");
+    expect(f.choices).toEqual(["a", "b"]);
+    expect(f.nullable).toBe(true);
+  });
+
+  it("reads a nullable plain type through a union instead of collapsing it to json", () => {
+    // {oneOf:[{type:string},{enum:[null]}]} is array-shaped to fieldTypeOf;
+    // without reading through, "array" would map it to the json editor.
+    const f = field({ oneOf: [{ type: "string", format: "date" }, { enum: [null] }] });
+    expect(f.type).toBe("date");
+    expect(f.nullable).toBe(true);
+  });
+
+  it("still name-matches an FK through its union", () => {
+    // a nullable/blank FK is the same union grammar on an integer member; the
+    // name-matching heuristic must not lose the relation because the type
+    // arrived wrapped.
+    const f = field({ oneOf: [{ type: "integer" }, { enum: [""] }] }, {}, "gadget");
+    expect(f.type).toBe("fk");
+    expect(f.fkModel).toBe("gadgets");
+  });
+
+  it("degrades a sentinel-only union to free text instead of inventing choices", () => {
+    const f = field({ oneOf: [{ $ref: "#/components/schemas/BlankEnum" }] }, { BlankEnum: BLANK });
+    expect(f.type).toBe("text");
+    expect(f.choices).toBeUndefined();
+    expect(f.nullable).toBe(false); // a blank sentinel alone never means null
+  });
+
+  it("the captured fixture resolves Product.packaging as the enum it declares", () => {
+    const f = schema.byId.products.byName.packaging;
+    expect(f.type).toBe("enum");
+    expect(f.choices).toEqual(["box", "crate", "pallet"]);
+    expect(f.required).toBe(false);
+    // the document really carries the union, not a hand-written shortcut
+    const raw = (fixture as any).components.schemas.ProductRequest.properties.packaging;
+    expect(raw.oneOf.map((m: any) => m.$ref.split("/").pop()))
+      .toEqual(["PackagingEnum", "BlankEnum"]);
+  });
+});

@@ -7,7 +7,9 @@ Heuristics, deliberately MVP:
 - models = paths with GET+POST and a trailing slash, no '{id}'
 - FK = integer/number/string property whose name matches another model's
   singular/id (drf-spectacular emits FKs as bare `type: integer`)
-- enum = property $ref to a component carrying `enum: [...]`
+- enum = property $ref to a component carrying `enum: [...]`; a blank/nullable
+  choices field arrives as a oneOf union with BlankEnum/NullEnum and is read
+  through — the sentinel is never a choice, and only NullEnum sets `nullable`
 - forms are driven by <Model>Request components; response <Model> adds
   readOnly fields (id, created_at)
 */
@@ -31,8 +33,62 @@ function deref(doc: any, node: any): [string, any] {
   return [null as any, node ?? {}];
 }
 
-function fieldTypeOf(doc: any, propName: string, prop: any,
+/** drf-spectacular splits a `blank=True` / `null=True` choices field into a
+ * oneOf/anyOf/allOf union of its enum component with `BlankEnum` / `NullEnum`
+ * (either a `$ref` to that component or its literal `{enum: [""]}` /
+ * `{enum: [null]}` shape). The sentinel carries no type information and never
+ * becomes a choice: every enum select and FK dropdown already ships an "—"
+ * option, and a blank field is absent from `required`.
+ *
+ * The two sentinels are NOT interchangeable, and the difference is a wire fact:
+ * `null=True` means the server accepts JSON null, so `nullable` is true and
+ * buildPayload sends an explicit null to clear the value. `blank=True` alone
+ * means it accepts the EMPTY STRING — such a field is usually still
+ * non-nullable, so a null there earns a DRF 400 and buildPayload must omit the
+ * empty value instead (AGENTS.md: "never send null in a non-nullable field"). */
+function sentinelKinds(name: string | null, schema: any): ("blank" | "null")[] {
+  if (name === "BlankEnum") return ["blank"];
+  if (name === "NullEnum") return ["null"];
+  const values = schema?.enum;
+  if (!Array.isArray(values) || values.length === 0) return [];
+  if (values.every((v: any) => v === null)) return ["null"];
+  if (values.every((v: any) => v === "" || v === null)) return ["blank", "null"];
+  return [];
+}
+
+function isBlankNullSentinel(name: string | null, schema: any): boolean {
+  return sentinelKinds(name, schema).length > 0;
+}
+
+/** The property's union members, each with its own `$ref` followed — or null
+ * when the property is not a union at all. */
+function unionMembers(doc: any, prop: any): { name: string | null; schema: any }[] | null {
+  for (const key of ["oneOf", "anyOf", "allOf"] as const) {
+    const members = prop?.[key];
+    if (Array.isArray(members) && members.length > 0) {
+      return members.map((m: any) => {
+        const [name, schema] = deref(doc, m);
+        return { name, schema };
+      });
+    }
+  }
+  return null;
+}
+
+/** The property as the form should see it: top-level `$ref` followed, then the
+ * first union member that is not a blank/null sentinel. Reading through the
+ * union is what keeps such a field an enum instead of falling to the
+ * schemaless `"text"` default. */
+function effectiveSchema(doc: any, prop: any): any {
+  const [, resolved] = deref(doc, prop);
+  const members = unionMembers(doc, resolved);
+  if (!members) return resolved;
+  return members.find((m) => !isBlankNullSentinel(m.name, m.schema))?.schema ?? resolved;
+}
+
+function fieldTypeOf(doc: any, propName: string, rawProp: any,
                      names: Map<string, string>): FieldSpec["type"] {
+  const prop = effectiveSchema(doc, rawProp);
   const [refName, resolved] = deref(doc, prop);
 
   // enum via $ref (drf-spectacular hoists TextChoices into components)
@@ -73,12 +129,28 @@ function fieldTypeOf(doc: any, propName: string, prop: any,
   }
 }
 
-function propToField(doc: any, propName: string, prop: any, requiredSet: Set<string>,
+function propToField(doc: any, propName: string, rawProp: any, requiredSet: Set<string>,
                      names: Map<string, string>, readOnly: boolean): FieldSpec {
-  const [refName, resolved] = deref(doc, prop);
-  let type = fieldTypeOf(doc, propName, prop, names);
+  const prop = effectiveSchema(doc, rawProp);
+  const [, resolved] = deref(doc, prop);
+  const type = fieldTypeOf(doc, propName, rawProp, names);
   let choices: string[] | undefined;
-  if (type === "enum") {
+  let optional = Boolean(rawProp?.nullable ?? prop?.nullable);
+  const members = unionMembers(doc, deref(doc, rawProp)[1]);
+  if (members) {
+    const real = members.filter((m) => !isBlankNullSentinel(m.name, m.schema));
+    // only a NULL sentinel makes the field nullable — a blank one is the empty
+    // string, and an omitted value is what a non-nullable server expects
+    if (real.length < members.length
+        && members.some((m) => sentinelKinds(m.name, m.schema).includes("null"))) {
+      optional = true;
+    }
+    if (type === "enum") {
+      choices = real.flatMap((m) => (Array.isArray(m.schema?.enum) ? m.schema.enum : []))
+        .map(String);
+      if (!choices.length) choices = (resolved?.enum ?? []).map(String);
+    }
+  } else if (type === "enum") {
     choices = ((prop as any).enum ?? resolved?.enum ?? []).map(String);
   }
   const field: FieldSpec = {
@@ -86,7 +158,7 @@ function propToField(doc: any, propName: string, prop: any, requiredSet: Set<str
     type,
     required: !readOnly && requiredSet.has(propName),
     readOnly,
-    nullable: Boolean(prop.nullable),
+    nullable: optional,
     format: prop.format,
   };
   if (choices) field.choices = choices;

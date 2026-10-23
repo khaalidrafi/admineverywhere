@@ -1824,6 +1824,15 @@
                     "product"
                 ]
             },
+            "PackagingEnum": {
+                "enum": [
+                    "box",
+                    "crate",
+                    "pallet"
+                ],
+                "type": "string",
+                "description": "* `` - Not decided\n* `box` - Box\n* `crate` - Crate\n* `pallet` - Pallet"
+            },
             "PaginatedAuditEntryList": {
                 "type": "object",
                 "required": [
@@ -2076,6 +2085,17 @@
                         "format": "date",
                         "nullable": true
                     },
+                    "packaging": {
+                        "description": "Free enum that allows the empty state (FR-R002 case C).\n\n* `` - Not decided\n* `box` - Box\n* `crate` - Crate\n* `pallet` - Pallet",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PackagingEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
+                    },
                     "category": {
                         "type": "integer"
                     }
@@ -2113,6 +2133,17 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true
+                    },
+                    "packaging": {
+                        "description": "Free enum that allows the empty state (FR-R002 case C).\n\n* `` - Not decided\n* `box` - Box\n* `crate` - Crate\n* `pallet` - Pallet",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PackagingEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
                     },
                     "category": {
                         "type": "integer"
@@ -2154,6 +2185,17 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true
+                    },
+                    "packaging": {
+                        "description": "Free enum that allows the empty state (FR-R002 case C).\n\n* `` - Not decided\n* `box` - Box\n* `crate` - Crate\n* `pallet` - Pallet",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PackagingEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
                     },
                     "category": {
                         "type": "integer"

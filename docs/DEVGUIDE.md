@@ -119,8 +119,8 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (299 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (425 vitest) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (434 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -148,9 +148,9 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 425 vitest
+cd app && npm test                          # 434 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 299 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -253,6 +253,14 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   - Decimals arrive as `type: string, format: decimal` — coerced to number.
   - Enum choices are hoisted to `$ref` components;
     `COMPONENT_SPLIT_REQUEST` yields `<Model>Request` schemas for forms.
+  - A `blank=True`/`null=True` choices field arrives as a `oneOf` union with
+    `BlankEnum`/`NullEnum` (FR-R002 case C). The normalizer reads through
+    oneOf/anyOf/allOf (`effectiveSchema`) so such a field stays an enum select
+    instead of degrading to free text; the sentinel is never a choice, and only
+    a **null** sentinel sets `nullable` — `blank=True` means the empty string,
+    so `buildPayload` omits it, and a null there would earn a DRF 400. The rig
+    ships the shape (`Product.packaging`), the recaptured fixture carries it,
+    and `docs/independent-enums.md` §4 is the contract.
 - The client typechecks CLEAN: `cd app && npx tsc --noEmit` exits 0 (it was 7
   errors until 2026-10-21 — one in shipped code, `listRecords` returned
   `Promise<Page>` while `app/src/lib/types.ts:92` declares `Page<T>` with no default, so
@@ -854,8 +862,8 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   a middle ground of backticked-identifier-only claims scanned 13 and fired on 3, still
   false in every one of the three: `drf_spectacular/hooks.py:89-91` is cited for
   `StatusEnum`, which is data that code *produces* at line 91 and never spells, and
-  `demo-backend/shop/models.py:87` is cited for `Order` by **lexical containment** —
-  line 87 is a field inside `class Order`, so the citation is correct without the word
+  `demo-backend/shop/models.py:111` is cited for `Order` by **lexical containment** —
+  line 111 is a field inside `class Order`, so the citation is correct without the word
   appearing on it. A leg that fires on a correct citation is worse than no leg: it
   trains the reader to ignore the verdict. Same-line-only is the other half of the
   scope: prose that names the symbol on the *next wrapped line* would cross-attribute

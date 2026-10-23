@@ -139,3 +139,35 @@ class TestProofFixtureDrift:
         assert set(e) == {"get"}, f"export must be get-only, found {sorted(e)}"
         m = paths.get("/api/me/", {})
         assert set(m) == {"get"}, f"me must be get-only (a POST would hide claims-binding), found {sorted(m)}"
+
+    def test_blank_choices_union_documented(self, live_schema):
+        """FR-R002 §2 case C: the rig still SHIPS a blank=True choices field, so
+        the oneOf-with-BlankEnum shape the client normalizer resolves stays in
+        the captured document instead of surviving only in a hand-written test
+        fixture. This is the server half of the proof — without it, dropping the
+        field would silently shrink the client's resolved-union coverage to
+        synthetic cases only, and the drift tests above would happily compare an
+        empty domain (docs/independent-enums.md §4)."""
+        comps = live_schema.get("components", {}).get("schemas", {})
+        for name in ("Product", "ProductRequest"):
+            prop = comps.get(name, {}).get("properties", {}).get("packaging")
+            assert prop is not None, (
+                f"{name}.packaging is gone — the rig no longer documents the "
+                "blank=True choices shape, so the client's union resolution "
+                "is unexercised by the captured schema"
+            )
+            members = prop.get("oneOf") or prop.get("anyOf")
+            assert isinstance(members, list) and len(members) == 2, (
+                f"{name}.packaging no longer emits a two-member union, found "
+                f"{json.dumps(prop)[:200]}"
+            )
+            refs = [m.get("$ref", "").split("/")[-1] for m in members]
+            assert "BlankEnum" in refs, (
+                f"{name}.packaging union lost its BlankEnum sentinel ({refs}) — "
+                "the optional half of case C is no longer documented"
+            )
+            real = [r for r in refs if r != "BlankEnum"]
+            assert real and comps.get(real[0], {}).get("enum"), (
+                f"{name}.packaging union has no enum-bearing member beside the "
+                f"sentinel ({refs}) — a select cannot be resolved from it"
+            )

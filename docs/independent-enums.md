@@ -29,8 +29,8 @@ another field.**
 ## 1. Server-side pattern (Django / DRF)
 
 1. **One `Choices` class per semantic field, nested in its model, never shared.**
-   `demo-backend/shop/models.py:63-70` declares `class Order.Status(models.TextChoices)`
-   and only `Order` uses it (`demo-backend/shop/models.py:87`). A second concept gets a second class
+   `demo-backend/shop/models.py:86-93` declares `class Order.Status(models.TextChoices)`
+   and only `Order` uses it (`demo-backend/shop/models.py:111`). A second concept gets a second class
    (`class PaymentMethod(models.TextChoices)`), even if the values temporarily match.
    Reusing one choices tuple across two unrelated fields is what turns two
    independent enums into one accidental dependency.
@@ -40,11 +40,11 @@ another field.**
    relabelling a choice does not change the schema shape.
 3. **Lifecycle order lives in the machine, not in the schema.** A status field that
    is lifecycle-governed carries `STATUS_ORDER` + `TRANSITIONS` on the model
-   (`demo-backend/shop/models.py:73`, `:78-83`) and the R-001 API (`docs/order-lifecycle.md`). A free
+   (`demo-backend/shop/models.py:97`, `:102-107`) and the R-001 API (`docs/order-lifecycle.md`). A free
    enum carries neither. The client cannot tell them apart from the enum list — see §3.
 4. **Do not set `blank=True` on a choices field unless an empty state is real.**
-   It changes the emitted schema shape (`BlankEnum`, §2 case C) and today silently
-   degrades the client's select (§4, known gap).
+   It changes the emitted schema shape (`BlankEnum`, §2 case C) and the client now
+   reads that union (§4) — but the schema churn is still a reviewable cost.
 
 ## 2. What the schema actually emits (measured on drf-spectacular 0.30)
 
@@ -97,8 +97,8 @@ feeding the hook synthetic schemas (no app changes; recipe in §5):
 ## 3. Client contract (what the thin client does, and must keep doing)
 
 - Each field's options come from **that field's own** schema entry: enum detection at
-  `app/src/lib/openapi.ts:39-40` (inline `enum`, or a `$ref` resolving to a component
-  that carries `enum`), choices copied per field at `app/src/lib/openapi.ts:81-92`. `FieldSpec.choices`
+  `app/src/lib/openapi.ts:95-96` (inline `enum`, or a `$ref` resolving to a component
+  that carries `enum`), choices copied per field at `app/src/lib/openapi.ts:137-155`. `FieldSpec.choices`
   is per-field — no option list is ever merged, cached by name, or shared across
   models.
 - `RecordForm` renders **one select per enum field** straight from `f.choices`
@@ -126,21 +126,46 @@ The guardrails, as checks a reviewer can run on a diff:
    the backend actually exposes `/transition/` + `/history/` for it — otherwise the
    UI offers buttons the server rejects.
 
-## 4. Known gap found while writing this (reported, not fixed)
+## 4. Case C, found here and closed by the FE segment (2026-10-23)
 
-`openapi.ts` `deref()` follows a **top-level `$ref` only** (`app/src/lib/openapi.ts:26-32`). A
-blank-allowing choice field arrives as `{"oneOf": [PriorityEnum, BlankEnum]}` (§2 case
-C), which no branch of `fieldTypeOf` recognises, so it falls through to the
-schemaless default `"text"` (`app/src/lib/openapi.ts:70-72`) — **the select silently degrades to a
-free-text input**, with no error anywhere. The demo rig has no `blank=True` choices
-field, so the shipped fixture never shows the shape; a real customer API very likely
-does.
+`deref()` (`app/src/lib/openapi.ts:28-34`) follows a **top-level `$ref` only** — correct
+for its own job, but a blank-allowing choice field arrives as
+`{"oneOf": [PackagingEnum, BlankEnum]}` (§2 case C), which no branch of `fieldTypeOf`
+recognised, so it fell through to the schemaless default `"text"`
+(`app/src/lib/openapi.ts:126-128`) — **the select degraded to a free-text input**, with no
+error anywhere. The demo rig had no `blank=True` choices field, so the shipped fixture
+never showed the shape; a real customer API very likely does.
 
-The fix belongs to the FE seat, not to this doc item: resolve `oneOf` members in
-`fieldTypeOf`/`propToField` (union of the non-`Blank`/`Null` component's `enum`, and
-treat `BlankEnum`/`NullEnum` as the existing `nullable`/optional signal), plus a
-fixture capture that contains such a field so it stays pinned. Reported in
-`agent-team/TEAM-CHAT.org` as item-6 evidence.
+Closed as this section prescribed, and pinned on both sides of the wire:
+
+- The normalizer reads unions through — `sentinelKinds()` / `unionMembers()` /
+  `effectiveSchema()` (`app/src/lib/openapi.ts:49-88`), applied in `fieldTypeOf()`
+  (`app/src/lib/openapi.ts:91`) and `propToField()` (`app/src/lib/openapi.ts:139`).
+  `oneOf`, `anyOf` and `allOf` all resolve, by `$ref` member or inline shape.
+- **The two sentinels are not the same signal.** `BlankEnum` means the field
+  accepts the empty string; `NullEnum` means it accepts JSON `null`. Only the
+  second sets `FieldSpec.nullable`, because `blank=True` fields are usually still
+  non-nullable and `RecordForm.buildPayload` must OMIT an empty value there —
+  sending it `null` is the documented DRF 400. (This distinction was found by the
+  mount test, not in review: the first cut treated any sentinel as nullable and
+  the create case's exact-payload assertion failed with `packaging: null`.)
+- The rig now ships the shape for real: `Product.packaging`
+  (`demo-backend/shop/models.py:52`) is a `blank=True` choices field whose schema
+  emits `oneOf: [PackagingEnum, BlankEnum]` on `Product`, `ProductRequest` and
+  `PatchedProductRequest`, and the fixture was recaptured from that schema
+  (`app/src/lib/__tests__/fixtures/openapi.json`). `plugin/tests/test_schema_drift.py`
+  (`test_blank_choices_union_documented`) refuses a rig that stops emitting it, so
+  the server half of the proof cannot rot silently.
+- The client half is pinned three times over: seven synthetic union shapes and one
+  fixture assertion in `app/src/lib/__tests__/openapi.test.ts` (the
+  `union members (FR-R002 case C)` block), and the wire-level proof in
+  `app/src/lib/__tests__/recordFormMount.test.ts` — a mounted ModelPage asserts
+  `#f-packaging` is a `SELECT` carrying `["", "box", "crate", "pallet"]` (the "—"
+  IS the blank state, so the sentinel never joins the choices) and that picking a
+  value PUTs it.
+- Guardrail 4 (§1) still stands as advice: an unnecessary `blank=True` churns the
+  schema shape. But "unnecessary" no longer means "invisible" — the field now
+  renders as the select it declares.
 
 ## 5. Copy checklist for a client project + how to reproduce the measurements
 

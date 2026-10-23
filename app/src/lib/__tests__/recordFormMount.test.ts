@@ -356,6 +356,29 @@ describe("mounted RecordForm — the bytes the CRUD spec actually sends", () => 
     expect(mockFetch.mock.calls.some((c) => c[1]?.method === "PUT" && /\/api\/products\/7\/$/.test(String(c[0])))).toBe(false);
   });
 
+  it("renders the blank=True choices field as the select it declares (FR-R002 case C)", async () => {
+    // The consequence the gap was about: {oneOf:[PackagingEnum,BlankEnum]} used
+    // to reach RecordForm as an unrecognized shape and fall through to a
+    // free-text <input>, so a user could type any string into a choices field
+    // and the server would 400 it. The select's own "—" option is the blank
+    // state; BlankEnum never becomes a choice.
+    route();
+    const { host } = render();
+    await awaitTable(host, "Cold Brew Kit");
+    click(host, "button[title='Edit']");
+    const el = openForm(host).querySelector("#f-packaging");
+    expect(el?.tagName, "packaging degraded to an <input>").toBe("SELECT");
+    expect([...(el as HTMLSelectElement).options].map((o) => o.value)).toEqual(["", "box", "crate", "pallet"]);
+
+    // untouched blank stays OMITTED, never an explicit null — that half of the
+    // wire contract is pinned by the create case below, whose exact-payload
+    // assertion failed the moment buildPayload treated this field as nullable
+    choose(host, "packaging", "crate");
+    submitForm(host);
+    await awaitWrite((u) => /\/api\/products\/7\/$/.test(u));
+    expect(bodyOf((u) => /\/api\/products\/7\/$/.test(u)).packaging).toBe("crate");
+  });
+
   it("refuses to carry an open form into another module", async () => {
     route();
     const { host } = render();

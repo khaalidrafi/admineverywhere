@@ -26,6 +26,22 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    class Packaging(models.TextChoices):
+        """A FREE enum — no lifecycle machine, no ordering meaning (R-002 §1:
+        one nested Choices class per semantic field, never shared across
+        models). The class itself carries no empty value; `blank=True` on the
+        field below is what adds the real "not decided" state."""
+
+        BOX = "box", "Box"
+        CRATE = "crate", "Crate"
+        PALLET = "pallet", "Pallet"
+
+    # FR-R002 §2 case C lives here on purpose: a blank=True choices field is
+    # emitted as {oneOf: [PackagingEnum, BlankEnum]}, the schema shape that used
+    # to degrade the client's select to free text. The rig ships it so the shape
+    # stays pinned in the fixture (docs/independent-enums.md §4).
+    PACKAGING_CHOICES = [("", "Not decided")] + Packaging.choices
+
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
@@ -33,6 +49,13 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     launch_date = models.DateField(null=True, blank=True)
+    packaging = models.CharField(
+        max_length=20,
+        choices=PACKAGING_CHOICES,
+        blank=True,
+        default="",
+        help_text="Free enum that allows the empty state (FR-R002 case C).",
+    )
 
     def __str__(self):
         return self.name
