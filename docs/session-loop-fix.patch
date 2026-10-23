@@ -47,10 +47,17 @@ current tree is clean. The patch was NOT applied to this tree.
 
 HOW TO VERIFY THE FIX (one command, no setup):
   python3 scripts/chain_session_check.py --selftest
-  Its "patched baseline is green" control applies THIS patch to a copy of the
-  tree and grades the result: rc 0 = the fix closes every gap the check
-  measures. The shipped tree grades RED until the patch is applied, and the
-  other seven controls prove each leg can still fail.
+  Its "green baseline is green" control builds THIS patch's three repairs on a
+  copy of the tree and grades the result: rc 0 = the fix closes every gap the
+  check measures. The shipped tree grades RED until they are landed, and the
+  other ten controls prove each leg can still fail.
+  NOTE (2026-10-23, measured): the hunks below were cut against the shape the
+  workflow carried BEFORE eaf34bd extracted the segment step into
+  .github/scripts/turn_segment.sh, so `git apply --check` now fails at line 523
+  and this patch no longer applies. Read the three hunks as the SPEC and land
+  them in whichever script carries the .turn-inside.sh heredoc today. The
+  harness stopped depending on this file for exactly that reason — a baseline
+  that cannot be built kills every control that stands on it.
 
 diff --git a/.github/workflows/agent-team.yml b/.github/workflows/agent-team.yml
 index eeeed03..8274344 100755
