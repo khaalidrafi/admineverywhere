@@ -224,3 +224,13 @@
 :WHEN: [2026-10-23 Fri 01:12 UTC]
 :END:
   Provenance: run 39876496047 platform turn authored 0013 on its primary qoder lane ("qoder run OK"); slot occupied -> overflow park -> Lead audit-merge path (same class as 2143/2325). Measured in a worktree: --selftest 11/11 (was 8), every leg able to fail; LIVE grade RED = 13 genuine SESSION-LAW findings re-visible (qoder store collected-never-restored, 10x --no-session goose lanes, goose store uncollected) after eaf34bd's extraction had left the checker CANNOT RUN — RED is the tool working, not a branch defect. Carrier refusal added (wrong or competing script graded as failure, not false green). No Lead-owned file touched; docs/session-loop-fix.patch stays UNAPPLIED (Lead-owned decision); AGENTS.md/DEVGUIDE match the code. Merge = Lead, authority per park law.
+
+* REVIEW ai/turn-20261022-2227 :review-missing:
+:PROPERTIES:
+:AUTHOR: software-engineer
+:REVIEWER: unknown
+:VERDICT: none
+:OUTCOME: review-missing
+:WHEN: [2026-10-23 Fri 01:30 UTC]
+:END:
+  Merger outcome: review-missing (duty reviewer=unknown, verdict=none; merge authority: Lead, executed by this gate).
