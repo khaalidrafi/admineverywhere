@@ -95,7 +95,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     continue-on-error: true
     steps:
       - name: Probe accountable seats (direct provider keys)
@@ -184,6 +184,53 @@ jobs:
           # Lead fix 2026-10-22: the table went only to the step summary
           # (invisible in logs fetched via API) — echo it to stdout too.
           cat "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Probe codebuddy lane (real CLI in the harness image — Owner order 2026-10-23)
+        continue-on-error: true
+        env:
+          CODEBUDDY_AUTH_TOKEN: ${{ secrets.CODEBUDDY_AUTH_TOKEN }}
+        run: |
+          SUMMARY="$GITHUB_STEP_SUMMARY"
+          echo "" >> "$SUMMARY"
+          echo "### CodeBuddy lane probe (the lane itself: CLI + token + model)" >> "$SUMMARY"
+          echo "" >> "$SUMMARY"
+          if [ -z "$CODEBUDDY_AUTH_TOKEN" ]; then
+            echo "| codebuddy lane | SKIP | - | CODEBUDDY_AUTH_TOKEN not set in repo secrets |" >> "$SUMMARY"
+            cat "$SUMMARY" || true
+            exit 0
+          fi
+          # 0) raw network vantage (splits network-blackhole from API/auth trouble)
+          NET=$(curl -s -o /dev/null -m 15 -w 'HTTP %{http_code} in %{time_total}s' https://www.codebuddy.ai 2>&1 || echo "connect FAILED")
+          # 1) same harness image the turn job uses (gha cache: cheap when warm)
+          docker buildx build --load \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            -f docker/harness/Dockerfile \
+            -t agent-harness:local \
+            . > /tmp/harness-build.log 2>&1 || { echo "| codebuddy lane | SKIP | - | harness image build failed (see build log) |" >> "$SUMMARY"; tail -5 /tmp/harness-build.log; cat "$SUMMARY" || true; exit 0; }
+          # 2) the EXACT lane invocation from .github/scripts/turn_segment.sh,
+          #    shrunk to a ping (--max-turns 2), wrapped in a hard timeout so a
+          #    blackhole lane cannot eat the job budget
+          docker run --rm --entrypoint bash \
+            -e CODEBUDDY_AUTH_TOKEN -e CODEBUDDY_IS_SANDBOX=1 \
+            agent-harness:local -lc '
+              timeout 300 codebuddy -p "Reply with the single word: alive" -y --permission-mode bypassPermissions --max-turns 2 --model deepseek-v4.1-flash > /tmp/cb-probe.log 2>&1
+              echo "RC=$?" >> /tmp/cb-probe.log
+              tail -3 /tmp/cb-probe.log
+            ' > /tmp/cb-out.log 2>&1
+          CBLOG=$(cat /tmp/cb-out.log 2>/dev/null || echo "(no output captured)")
+          # 3) grade with the lane's own failure-marker set
+          if printf '%s' "$CBLOG" | grep -qE 'ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|网络请求超时|502 Bad Gateway'; then
+            VERDICT="LANE DEAD (network marker present)"
+          elif printf '%s' "$CBLOG" | grep -q 'RC=0'; then
+            VERDICT="LANE ALIVE"
+          else
+            VERDICT="LANE UNKNOWN (no marker, nonzero rc)"
+          fi
+          SNIPPET=$(printf '%s' "$CBLOG" | head -c 120 | tr '\n' ' ' | tr -d '|' | tr -d '\`')
+          echo "| codebuddy lane (deepseek-v4.1-flash) | https://www.codebuddy.ai via CLI | $NET | $VERDICT — $SNIPPET |" >> "$SUMMARY"
+          echo "" >> "$SUMMARY"
+          cat "$SUMMARY" || true
 
   # ONE TURN OF WORK. Reads agent-team/TEAM-CONTROL.org:
   #   #+KILL-SWITCH: ON           -> stop everything, exit green.
