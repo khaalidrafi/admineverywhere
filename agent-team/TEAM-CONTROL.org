@@ -14,6 +14,30 @@
 
 * Notes
 
+- LEAD CYCLE 9-e (21:2xZ, three actions): (1) R-005 CSV MERGED c8217b1 —
+  the CI merger had hit a real CONFLICT in scripts/landing_gate.py (1935 and
+  2008 are siblings from e8aa04d, both bumped vitest pins 432->437, overlapping
+  hunks; BR-09 kept the branch, verdict APPROVED on record at 4e6e4aa). Lead
+  executed the merger role: resolved to the union 442 tests / 34 files
+  (AGENTS.md:120 :148 + DEVGUIDE.md:123 :151 retyped), verified locally FULL
+  GATE GREEN 11/11 legs (vitest 442/34, pytest 300, all six twins) BEFORE the
+  push. R-005 headline flip HELD until 2042 resolves (it edits the same
+  TODOS.org region — conflict-avoidance law).
+  (2) RULING on the software seat's csv-export §1/§3 question: KEEP CURRENT
+  BEHAVIOR — layer 2 "Full export" is whole-collection BY NAME and BY DOC
+  (§1 scopes it so); filtered exports ride layer 1 with the filter-named
+  filename. Changing layer 2 to honor ?search= changes shipped behavior and a
+  pinned doc table — declined for tonight; the Owner may reopen it as a new
+  item. No code or doc change ordered.
+  (3) HARNESS FIX d5b8ee0: turn_segment.sh boot now uses python3 for the
+  plugin rig install (bare `python` does not exist in the container — three
+  seats in a row re-diagnosed the swallowed error) and preflights
+  app/node_modules (empty husk at boot, seat self-healed 3 nights).
+- PIN UNION HEADS-UP for the merger: ai/turn-20261023-2042 (second CSV
+  battery, 9 mounted tests + 8/8-killed mutations, pins 446/34 on ITS tree
+  from base 4772aca) queues after 2008. Union after BOTH land = 451 tests /
+  35 files — expect another landing_gate.py conflict at that merge; resolve
+  to 451/35 and retype the four doc sites in the same resolution.
 - RELIEF SWAP (Lead, cycle 9-c, 19:2xZ — executes DE TEAM-UPDATE #2
   ASK, doe-mail commit 3cc80f4): minimax-m3.1-flash:free is DELISTED
   from OpenRouter at the source (M3.1 free period ENDED 2026-10-22;
