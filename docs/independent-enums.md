@@ -211,3 +211,11 @@ when R-004 lands:
   exposes `/transition/`);
 - a drop on a free-enum column is a plain `PATCH` of that one field — and must touch
   nothing else on the record (guardrail 1).
+
+Both kinds of axis are shipped and graded, not just stated. `kanbanAxes` declares
+`orders` (`via: "transition"`) and `products` (`via: "patch"`, on the `packaging` field
+§4 documents), so the free-enum rule above has a live schema to be tested against rather
+than a synthetic fixture only; `app/src/lib/__tests__/kanbanMount.test.ts` pins the exact
+one-key PATCH body, the discovered detail path and the absence of any `/transition/`
+probe for that board, and `kanban.test.ts` refuses a declaration that contradicts this
+section — including a `BlankEnum` empty state ever becoming a column.
