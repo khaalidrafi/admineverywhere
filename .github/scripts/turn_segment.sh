@@ -128,12 +128,12 @@ feature items). Do EXACTLY ONE item per turn, in this order:
    NOTHING else.
 PARKED FEATURE ORDER (Lead restores after the test — ignore in
 TEST-CHAIN MODE):
-(RENAMED per Owner 2026-10-23 17:37Z "Remove the cool naming":
+(RENAMED per Owner 2026-10-23 17:37Z 'Remove the cool naming':
 verify-cool-chat-2 -> verify-chat-2, COOL-CHAT-SEND-BACK-2 ->
 CHAT-SEND-BACK-2, COOL-PREVIEW -> CHAT-PREVIEW — all three DONE;
 historical records keep the old IDs)
-NIGHT-2 FEATURE ORDER (Owner 2026-10-23 17:37Z "Complete rest of
-the TODOs" — continuous run; PAUSE-AFTER-TODO OFF tonight):
+NIGHT-2 FEATURE ORDER (Owner 2026-10-23 17:37Z 'Complete rest of
+the TODOs' — continuous run; PAUSE-AFTER-TODO OFF tonight):
 1. PENDING R-002 docs — the pending branch ai/turn-20261022-2227
    carries 2 stale DEVGUIDE citations (QA rejected it 5x for
    exactly those); fix the citations on the branch, re-deliver.
