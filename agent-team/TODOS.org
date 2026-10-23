@@ -1033,6 +1033,12 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
+- Note taken on [2026-10-23 Fri 20:38 UTC] :: SHA ADDENDUM to the 20:26Z note (it was
+  written before the commit, so it carries branch + base but no sha): the work landed as
+  `ba28659` on `ai/turn-20261023-2008`, one commit ahead of `e8aa04d`, tree clean apart
+  from the harness's own untracked `.turn-inside.sh`/`.turn-review.txt`. Gates re-run on
+  the committed tree: `landing_gate.py --fe` rc 0 (GATE GREEN 11/11, vitest 437/34),
+  `release_readiness.py` rc 0, `npx tsc --noEmit` exit 0.
 - Note taken on [2026-10-23 Fri 20:26 UTC] :: :DELIVERED: NIGHT-2 ITEM 4 — THE RENDERED
   HALF IS NOW WIRE-PINNED (seat relief-engineer, zai/glm-4.7-flash@goose per the rotation
   pointer agent-team/TEAM-CONTROL.org:9; branch ai/turn-20261023-2008, base e8aa04d).
