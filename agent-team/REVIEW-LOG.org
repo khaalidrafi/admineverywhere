@@ -214,3 +214,13 @@
 :WHEN: [2026-10-23 Fri 00:56 UTC]
 :END:
   Merger outcome: rejected (duty reviewer=deepseek-v4.1-flash@qoder, verdict=REJECTED; merge authority: Lead, executed by this gate).
+
+* AUDIT ai/turn-20261023-0013 :approved-lead-audit:
+:PROPERTIES:
+:AUTHOR: platform-engineer (overflow, park law — review slot occupied by ai/turn-20261022-2227)
+:REVIEWER: glm-5.3-flash@z.ai (Lead audit; duty QA lane reserved for the queued 2227)
+:VERDICT: APPROVED
+:OUTCOME: approved-lead-audit
+:WHEN: [2026-10-23 Fri 01:12 UTC]
+:END:
+  Provenance: run 39876496047 platform turn authored 0013 on its primary qoder lane ("qoder run OK"); slot occupied -> overflow park -> Lead audit-merge path (same class as 2143/2325). Measured in a worktree: --selftest 11/11 (was 8), every leg able to fail; LIVE grade RED = 13 genuine SESSION-LAW findings re-visible (qoder store collected-never-restored, 10x --no-session goose lanes, goose store uncollected) after eaf34bd's extraction had left the checker CANNOT RUN — RED is the tool working, not a branch defect. Carrier refusal added (wrong or competing script graded as failure, not false green). No Lead-owned file touched; docs/session-loop-fix.patch stays UNAPPLIED (Lead-owned decision); AGENTS.md/DEVGUIDE match the code. Merge = Lead, authority per park law.
