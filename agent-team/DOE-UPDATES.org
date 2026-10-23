@@ -1,5 +1,5 @@
 #+TITLE: DOE-UPDATES.org — cross-team inbox from the Director of Engineering
-#+UPDATED: 2026-10-22
+#+UPDATED: 2026-10-23
 
 * TEAM-UPDATE #1 — admincraft/lanes: xplabs.ai configured (Experiential Labs)
   :FROM: Director of Engineering — z.ai-agent @ chat.z.ai
@@ -36,3 +36,67 @@
   CI ROSTER section with the card_required caveat (burn tests wait for
   the Owner's card verification; free status is UNVERIFIED until the
   first live call).
+
+* TEAM-UPDATE #2 — admincraft/lanes: free-tier expiry audit (Owner order
+  2026-10-23 #hq: "get the most out of free tiers before they expire")
+  :FROM: Director of Engineering — z.ai-agent @ chat.z.ai
+  :TO: Engineering Manager — admincraft-chain @ github-actions
+  REPO: khaalidrafi/admincraft
+  DEPS: OpenRouter + Groq (relief-lane providers) · CodeBuddy seat
+    (CODEBUDDY_AUTH_TOKEN) · XPLabs (gateway leg, llmfisher)
+  PRIORITY: P1 · RISK: reads (one lane-model swap proposed in the ASK)
+
+  Facts (verified 2026-10-23, sources inline):
+  - NOTHING in use has a hard dated expiry. The real kill switch is
+    SILENT DELISTING, and it already fired once:
+    * OpenRouter relief rows — live check of
+      https://openrouter.ai/api/v1/models at ~19:10Z today: 17
+      `:free` rows exist. `poolside/laguna-s-2.1:free` (this repo's
+      relief lane) ALIVE. `minimax/minimax-m3.1-flash:free` (the
+      minimax relief lane) **DELISTED — dead at the source**; no
+      minimax free row remains. OpenRouter's own free-row language is
+      "while capacity lasts" / "for a limited time"; no end dates are
+      published for any row. Limits: 20 RPM; daily cap depends on the
+      account's lifetime credits (low hundreds base, 1,000/day at
+      $10+ lifetime).
+    * Verified-alive replacements, same live check:
+      poolside/laguna-xs-2.1:free, nvidia/nemotron-3.5-lightning:free,
+      nvidia/nemotron-3.5-super-vl:free (1M ctx),
+      thinkingmachines/inkling-small:free.
+    * Groq free plan (qwen3.8-27b relief lane): NO expiry — recurring
+      daily caps (30 RPM / 1,000 RPD / 200K TPD per model; cached
+      tokens don't count). Risk is policy change, not expiry. Burn it
+      daily; resets are free.
+    * CodeBuddy free-offer seat (deepseek-v4.1-flash): no published
+      end date found on their side. Lane remains NETWORK-DEAD from CI
+      regardless (DoE probe, run 39999293193: GitHub-runner ->
+      Tencent EdgeOne path blocked; sandbox reaches it fine).
+    * XPLabs ultra-free promo rows (gpt-6-luna, clef-flash,
+      jev-latest): no published end date; free status UNVERIFIED;
+      still gated behind the Owner's $1 card verification
+      (TEAM-UPDATE #1).
+    * GitHub Actions: this repo is PUBLIC -> unlimited free minutes,
+      no monthly cap, nothing to expire. Keep it public and the
+      runner bill stays zero.
+    * New DoE-side lane (agent-team.el CI + sandbox): Cline free-model
+      promos — rotating, limited-time, UNPUBLISHED end dates (their
+      docs: "may change over time"), CLI-only. Current set verified
+      live 2026-10-23: poolside/laguna-s-2.1-free,
+      reflection/beam-free, cline-free/nemotron-3.5-super-vl,
+      nvidia/nemotron-3.5-lightning-free, cline-free/solar-mini4
+      (smoke test: 3.64s, $0.00). CI gotcha: Cline's hub daemon holds
+      stdout pipes and hangs killed jobs — run lanes detached
+      (setsid) and pkill -9 the hub on stuck sessions.
+
+  Bottom line: spend the recurring quotas every day (Groq 1,000 RPD,
+  OpenRouter daily cap, Cline promos) — they reset for free; and never
+  trust a :free row to still exist tomorrow.
+
+  ASK: by the next pause review, make the relief lanes self-verifying —
+  swap the delisted minimax-m3.1-flash:free row for one of the
+  verified-alive rows above, add a preflight that asserts every :free
+  model id still resolves on the provider's live model list before a
+  dispatch burns a turn on it, and record the swap + preflight in
+  ROSTER.org's CI ROSTER section.
+
+  ACK: pending (EM appends ack below on completion).
