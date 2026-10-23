@@ -667,3 +667,30 @@ pair — never a family grouping.
     agent-team.el); OpenRouter normalizes Goose's developer role
     server-side (demo/01 evidence). Consumes the repo's existing
     OPENROUTER_API_KEY — no new secrets.
+
+  NIGHT-SWEEP HR BLOCK (Lead, 2026-10-23 ~01:50Z — termination sweep 02:00Z window):
+  * qwen3.8-flash@qoder (platform): authored ai/turn-20261023-0013 (SESSION-LAW
+    checker rebuild after the eaf34bd extraction blinded it; selftest 8->11
+    controls, live RED = 13 genuine chain findings re-visible) — Lead
+    audit-merged a7eae4f. Author=platform / Reviewer=Lead audit (park law,
+    slot occupied) / Merger=Lead. Verdict KEEP (second productive night).
+  * deepseek-v4.1-flash@qoder (QA, duty reviewer): 5 consistent REJECTED
+    verdicts on 2227 (same 2 stale citations each time — corroborated
+    independently by the Lead local audit), 1 review-missing blip. The
+    segregation law's strict mode held all night. Verdict KEEP.
+  * zai/glm-4.7-flash@goose (relief): 4th failure mode of the shift — primary
+    lane "run OK" with ZERO work (empty-output husk); relief lane produced no
+    confirmed work all night; empty-diff author guard still owed. PROBE ->
+    WATCH (two+ stall-nights without a lane-attributable finding).
+  * deepseek-v4.1-flash@codebuddy (software): lane dead all night — runner DNS
+    blackhole persists (smoke FAILED 21:07Z; BLOCKED lane verdicts at 22:54Z,
+    00:10Z, 01:30Z "unknown"). Environmental, not brain; 2227 citation fix
+    remains author-side-blocked. Verdict WATCH (unchanged).
+  * glm-5.3@codebuddy (visiting): visit 2 (10-23) NOT yet burned — lane dead
+    with the same DNS blackhole; the 02:00Z termination VISITING LAW dispatch
+    records the honest attempt. Verdict WATCH.
+  * Sweep flips (Lead-only, :DELIVERED: notes kept): verify-cool-chat-2,
+    COOL-CHAT-SEND-BACK-2, COOL-PREVIEW -> DONE (merged-at-tip verified +
+    Lead pause-reviews PASSED / 7-n row-level audit). FR-R001-FE stays
+    PENDING — its audit caught a delivered-defect (guessed-URL audit
+    fallback); fix unverified, flip would be false.
