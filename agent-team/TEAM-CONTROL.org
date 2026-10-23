@@ -9,7 +9,7 @@
 #+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
 #+STALL-COUNT: 28
 #+PAUSE-AFTER-TODO: ON
-#+CHAIN-PAUSE: armed 2026-10-23 02:04Z — a TODO was delivered; the Lead clears this line to resume
+#+CHAIN-PAUSE: ON — Lead halt 2026-10-23 05:31Z: STALL=28 spin (30 runs since 02:02Z, zero work — QA review call returns verdict=none/reviewer=none, all author lanes empty; the 21:07Z codebuddy DNS blackhole appears to have spread). Day Lead/Owner: diagnose lanes, then clear this line to resume.
 #+PENDING-REVIEW: branch=ai/turn-20261022-2227 | author=software-engineer | sha=1a87144ced5ef62c3bbce745b8cf3d76a92f1ad4
 
 * Notes
