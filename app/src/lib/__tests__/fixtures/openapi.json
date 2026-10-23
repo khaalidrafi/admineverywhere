@@ -8,7 +8,7 @@
         "/api/audit/": {
             "get": {
                 "operationId": "audit_list",
-                "description": "Append-only audit log (FR-R003): GET list + POST append, nothing else.\n\nNo update/delete mixins exist, so PUT/PATCH/DELETE answer 405 by\nconstruction — the log can only grow. Entries read newest-first\n(triage order — the R-003 ordering ruling; R-001's history replays\noldest-first). Optional ``?object_type=`` / ``?object_id=`` filters\nback the record sub-view and the R-007 activity-log screen. POST\nnever trusts the client with ``actor``: perform_create derives it\nfrom the authenticated request.",
+                "description": "Append-only audit log (FR-R003): GET list + POST append, nothing else.\n\nNo update/delete mixins exist, so PUT/PATCH/DELETE answer 405 by\nconstruction \u2014 the log can only grow. Entries read newest-first\n(triage order \u2014 the R-003 ordering ruling; R-001's history replays\noldest-first). Optional ``?object_type=`` / ``?object_id=`` filters\nback the record sub-view and the R-007 activity-log screen. POST\nnever trusts the client with ``actor``: perform_create derives it\nfrom the authenticated request.",
                 "parameters": [
                     {
                         "name": "page",
@@ -43,7 +43,7 @@
             },
             "post": {
                 "operationId": "audit_create",
-                "description": "Append-only audit log (FR-R003): GET list + POST append, nothing else.\n\nNo update/delete mixins exist, so PUT/PATCH/DELETE answer 405 by\nconstruction — the log can only grow. Entries read newest-first\n(triage order — the R-003 ordering ruling; R-001's history replays\noldest-first). Optional ``?object_type=`` / ``?object_id=`` filters\nback the record sub-view and the R-007 activity-log screen. POST\nnever trusts the client with ``actor``: perform_create derives it\nfrom the authenticated request.",
+                "description": "Append-only audit log (FR-R003): GET list + POST append, nothing else.\n\nNo update/delete mixins exist, so PUT/PATCH/DELETE answer 405 by\nconstruction \u2014 the log can only grow. Entries read newest-first\n(triage order \u2014 the R-003 ordering ruling; R-001's history replays\noldest-first). Optional ``?object_type=`` / ``?object_id=`` filters\nback the record sub-view and the R-007 activity-log screen. POST\nnever trusts the client with ``actor``: perform_create derives it\nfrom the authenticated request.",
                 "tags": [
                     "audit"
                 ],
@@ -984,7 +984,7 @@
         "/api/orders/{id}/history/": {
             "get": {
                 "operationId": "orders_history_list",
-                "description": "Append-only, timestamped lifecycle trail, oldest first. The creation entry has from_status=\"\"; actor is null for system/seed moves. Deliberately NOT paginated — clients always get the full trail.",
+                "description": "Append-only, timestamped lifecycle trail, oldest first. The creation entry has from_status=\"\"; actor is null for system/seed moves. Deliberately NOT paginated \u2014 clients always get the full trail.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1447,7 +1447,7 @@
                     },
                     "object_type": {
                         "type": "string",
-                        "description": "Loose target type, e.g. 'order' — no FK, any model audits here.",
+                        "description": "Loose target type, e.g. 'order' \u2014 no FK, any model audits here.",
                         "maxLength": 120
                     },
                     "object_id": {
@@ -1468,7 +1468,7 @@
                     },
                     "data": {
                         "nullable": true,
-                        "description": "Structured payload (reason, bulk provenance, diff — action-defined)."
+                        "description": "Structured payload (reason, bulk provenance, diff \u2014 action-defined)."
                     },
                     "created_at": {
                         "type": "string",
@@ -1497,7 +1497,7 @@
                     "object_type": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "Loose target type, e.g. 'order' — no FK, any model audits here.",
+                        "description": "Loose target type, e.g. 'order' \u2014 no FK, any model audits here.",
                         "maxLength": 120
                     },
                     "object_id": {
@@ -1513,7 +1513,7 @@
                     },
                     "data": {
                         "nullable": true,
-                        "description": "Structured payload (reason, bulk provenance, diff — action-defined)."
+                        "description": "Structured payload (reason, bulk provenance, diff \u2014 action-defined)."
                     }
                 },
                 "required": [
@@ -1560,7 +1560,7 @@
             },
             "BulkFlagRequestRequest": {
                 "type": "object",
-                "description": "Body for POST /api/orders/bulk_flag/ — many orders, one reason.",
+                "description": "Body for POST /api/orders/bulk_flag/ \u2014 many orders, one reason.",
                 "properties": {
                     "reason": {
                         "type": "string",
@@ -1724,7 +1724,7 @@
                         "type": "number",
                         "format": "double",
                         "nullable": true,
-                        "description": "Shipping weight in kg. Arrives over JSON as a number (FloatField, not DecimalField) — both CSV layers must render it alike."
+                        "description": "Shipping weight in kg. Arrives over JSON as a number (FloatField, not DecimalField) \u2014 both CSV layers must render it alike."
                     },
                     "notes": {
                         "type": "string"
@@ -1807,7 +1807,7 @@
                         "type": "number",
                         "format": "double",
                         "nullable": true,
-                        "description": "Shipping weight in kg. Arrives over JSON as a number (FloatField, not DecimalField) — both CSV layers must render it alike."
+                        "description": "Shipping weight in kg. Arrives over JSON as a number (FloatField, not DecimalField) \u2014 both CSV layers must render it alike."
                     },
                     "notes": {
                         "type": "string"
@@ -1823,6 +1823,15 @@
                     "customer",
                     "product"
                 ]
+            },
+            "PackagingEnum": {
+                "enum": [
+                    "box",
+                    "crate",
+                    "pallet"
+                ],
+                "type": "string",
+                "description": "* `` - Not decided\n* `box` - Box\n* `crate` - Crate\n* `pallet` - Pallet"
             },
             "PaginatedAuditEntryList": {
                 "type": "object",
@@ -2033,7 +2042,7 @@
                         "type": "number",
                         "format": "double",
                         "nullable": true,
-                        "description": "Shipping weight in kg. Arrives over JSON as a number (FloatField, not DecimalField) — both CSV layers must render it alike."
+                        "description": "Shipping weight in kg. Arrives over JSON as a number (FloatField, not DecimalField) \u2014 both CSV layers must render it alike."
                     },
                     "notes": {
                         "type": "string"
@@ -2076,6 +2085,17 @@
                         "format": "date",
                         "nullable": true
                     },
+                    "packaging": {
+                        "description": "Free enum that allows the empty state (FR-R002 case C).\n\n* `` - Not decided\n* `box` - Box\n* `crate` - Crate\n* `pallet` - Pallet",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PackagingEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
+                    },
                     "category": {
                         "type": "integer"
                     }
@@ -2113,6 +2133,17 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true
+                    },
+                    "packaging": {
+                        "description": "Free enum that allows the empty state (FR-R002 case C).\n\n* `` - Not decided\n* `box` - Box\n* `crate` - Crate\n* `pallet` - Pallet",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PackagingEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
                     },
                     "category": {
                         "type": "integer"
@@ -2154,6 +2185,17 @@
                         "type": "string",
                         "format": "date",
                         "nullable": true
+                    },
+                    "packaging": {
+                        "description": "Free enum that allows the empty state (FR-R002 case C).\n\n* `` - Not decided\n* `box` - Box\n* `crate` - Crate\n* `pallet` - Pallet",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PackagingEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
                     },
                     "category": {
                         "type": "integer"
@@ -2197,7 +2239,7 @@
             },
             "TransitionRequestRequest": {
                 "type": "object",
-                "description": "Body for POST /api/orders/<id>/transition/ — the target state.\n\nKept as an explicit serializer so the OpenAPI contract documents the\nrequest body (the thin client derives everything from the schema).",
+                "description": "Body for POST /api/orders/<id>/transition/ \u2014 the target state.\n\nKept as an explicit serializer so the OpenAPI contract documents the\nrequest body (the thin client derives everything from the schema).",
                 "properties": {
                     "transition": {
                         "allOf": [
