@@ -865,6 +865,82 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-004 kanban view                                                  :FE:
 :LOGBOOK:
+- Note taken on [2026-10-23 Fri 19:58 UTC] :: :DELIVERED: FREE-ENUM (patch) AXIS,
+  PROVEN ON THE WIRE (seat platform-engineer, branch ai/turn-20261023-1935, base
+  2d31062 — NIGHT-2 ITEM 3). THE GAP: every mounted kanban test rode the orders
+  LIFECYCLE axis, so docs/independent-enums.md §6 guardrail 1 ("a drop on a
+  free-enum column is a plain PATCH of that one field — and must touch nothing
+  else") was proven only inside `planMove`, never on the wire; and the registry's
+  own consistency leg could not see a second axis at all (old kanban.test.ts:176:
+  `modelId === "orders" ? ORDERS : undefined; if (!model) continue;` — anything
+  but orders was skipped, so a rotting declaration answered green).
+  WHAT LANDED:
+  - app/src/lib/kanban.ts — `kanbanAxes` gained `products: { field: "packaging",
+    via: "patch" }`, the rig's own blank=True free enum
+    (demo-backend/shop/models.py:49, component PackagingEnum [box crate pallet]).
+    Both axis kinds are now declared in the reference app — the half of the
+    2026-10-20 note (2) that the rig has since made possible WITHOUT a migration.
+  - app/src/lib/__tests__/kanbanMount.test.ts +4 mounted tests (12 in the file):
+    the board groups by that field's OWN choices with the empty state visible in
+    Unassigned; the keyboard move PATCHes the literal `{"packaging":"crate"}` to
+    the DISCOVERED /api/products/11/, every OTHER column reachable and the current
+    one inert; the drag pair sends the identical one-key PATCH and dropping on its
+    own column is inert (zero writes); and a schema that does not carry the
+    declared field gets NO toggle, NO page_size probe and NO toast — the refusal
+    is a named degrade (`axisProblem`), not a silent blank. The products route
+    answers 404 to `/transition/`, so a mis-routed free-enum move cannot pass.
+  - app/src/lib/__tests__/kanban.test.ts +1: the shipped axis POPULATION is pinned
+    (orders + products) and EVERY declaration is graded against the captured
+    document — columns must equal that field's own choices, must not contain the
+    BlankEnum sentinel, and a patch axis must not be a lifecycle field. The old
+    "no other fixture model gets a board" leg became "no UNdeclared fixture model
+    gets a board", filtered on the registry itself and guarded against a vacuous
+    sweep (`undeclared.length > 0`).
+  LIVE-TRANSPORT CHECK (demo rig on 127.0.0.1:8044 with the admin token, stopped
+  after, db removed): the document lists /api/products/{id}/ as
+  get/put/patch/delete and the ONLY transition endpoint on the API is
+  /api/orders/{id}/transition/ — so `patch` is the only legal axis kind for
+  products, discovered rather than assumed; `PATCH {"packaging":"crate"}` on a
+  record whose packaging was "" returned 200 with EXACTLY ONE field changed
+  (`{'packaging': ('', 'crate')}`); `{"packaging":"spaceship"}` -> 400
+  `"spaceship" is not a valid choice.` (server stays the authority); `POST
+  /api/products/<id>/transition/` -> 404, which is exactly what the client's
+  refusal exists to avoid. The record was restored to its seeded value.
+  MUTATION BATTERY (6 mutants, whole kanban pair re-run per mutant, sources
+  restored by copy and verified byte-identical): ALL KILLED — delete the products
+  axis (6 failures incl. the population pin), patch body -> whole-row spread (3),
+  ModelPage routes a patch move through transitionRecord (2), reachableColumns
+  offers the current column too (3), resolveAxis ignores a refusal (5), the board
+  stops naming the move kind (1). No mutant survived.
+  MEASURED: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 (env
+  django 5.2.18, pytest 300 passed, System check no issues, No changes detected,
+  vitest 437 passed / 33 files, csv/brand/parity/gate/registry/doc twins all
+  IDENTICAL); `npx tsc --noEmit` rc 0; `scripts/release_readiness.py` rc 0
+  (doc-counts 8/8 equal the gate's pins at pytest=300/vitest=437);
+  `scripts/chain_test_check.py` rc 1 with 25 pre-existing NO-DROP refs, identical
+  to the DAY DAMAGE REPORT count at this base — this note is an insertion into one
+  LOGBOOK drawer and a chat EOF append, no existing byte touched.
+  PINS: EXPECTED_VITEST 432 -> 437 in scripts/landing_gate.py in the SAME commit as
+  the added tests (ELEVENTH law), with the four published sites retyped in
+  AGENTS.md + docs/DEVGUIDE.md ## Layout/## Commands. Docs updated in the same
+  commit: the kanban row in BOTH mirrors now says the patch half is mounted, and
+  docs/independent-enums.md §6 closes as shipped-and-graded instead of "when R-004
+  lands". Zero Lead-owned file touched (.github/*, TEAM-CONTROL.org,
+  .gitattributes read-only); no migration, no rig content change.
+  FOUND, REPORTED NOT CHANGED (design ruling owed, Lead): a blank=True free enum
+  means the empty state is one a user must be able to LEAVE, yet the Unassigned
+  column is display-only by the 2026-10-20 ruling (card not draggable, select
+  disabled — pinned by kanbanMount's own test). With `packaging` declared, 2 of the
+  10 seeded products on the first page sit in exactly that state, so the reference
+  board shows records no input can decide while the one-key PATCH that would
+  decide them is live-legal (200 above). The narrow fix is to let an Unassigned
+  card move when the axis is `patch` AND the value is empty, keeping an
+  out-of-set value read-only — not taken, because it overturns a documented
+  ruling and re-pins an existing test. Pinged in TEAM-CHAT for the ruling.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  ROLE_LARK_WEBHOOK empty in this seat's env (measured) -> Lark copy SKIPPED,
+  noted here per instruction 8. State untouched: PENDING stands, DONE is the
+  Lead's gate, no OBJECTIVE-STATE claim.
 - Note taken on [2026-10-21 Wed 13:09 UTC] :: SURVIVING MUTANT CLOSED (seat
   platform-engineer; again no open board item — `grep -nE '^\*+ .*(TODO|
   ONGOING|WAIT)' agent-team/TODOS.org` = 0 hits and no unanswered
