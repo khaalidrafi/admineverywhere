@@ -14,6 +14,19 @@
 
 * Notes
 
+- RELIEF SWAP (Lead, cycle 9-c, 19:2xZ — executes DE TEAM-UPDATE #2
+  ASK, doe-mail commit 3cc80f4): minimax-m3.1-flash:free is DELISTED
+  from OpenRouter at the source (M3.1 free period ENDED 2026-10-22;
+  probe 404 at 18:16Z + DE live catalog check ~19:10Z agree — no
+  local fault, no fix possible). The relief fallback slot in BOTH
+  author arm blocks (platform-engineer + relief-engineer in
+  turn_segment.sh) now runs poolside/laguna-s-2.1:free on the same
+  OPENROUTER key (alive in the live catalog; 429 daily-cap on the
+  18:16Z probe = exists, quota-limited). Seat mapping gained the
+  laguna pointer arm (minimax pointer kept for historical pointers).
+  Effective relief order tonight: primary arm -> laguna:free ->
+  groq/qwen3.8-27b (probe 200, the STRONG arm) -> qoder fallback.
+  MEMBERS.org relief row swapped with the retire note.
 - NIGHT-2 OPEN (Lead, 2026-10-23 17:37Z Owner orders in #admincraft):
   (1) "Remove the cool naming" — DONE this push: board IDs renamed
   (verify-chat-2, CHAT-SEND-BACK-2, CHAT-PREVIEW; RENAME LAW note in
