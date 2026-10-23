@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""cool_chat_check.py — the cool-chat send-back's verdict as ONE command.
+"""chat_feature_check.py — the chat send-back's verdict as ONE command.
 
-WHY this exists (measured, not assumed). The board item "verify-cool-chat-2"
+WHY this exists (measured, not assumed). The board item "verify-chat-2"
 (agent-team/TODOS.org) carries FOUR specced checks, and until now every one of
 them lived only in prose: a seat's chat entry and a :LOGBOOK: note. Prose is
 not re-runnable (DEVGUIDE *EIGHTH harness law: a GATE that lives as prose is a
 check nobody can re-run), and this repo has already paid for that shape once —
 the very same item's own log records that BOTH merge-blocking findings of the
-cool-chat send-back slipped past a GREEN suite:
+chat send-back slipped past a GREEN suite:
 
   * "buildSchemaPrompt (chat.ts:48) ships with 5 tests and no caller, while
     the live prompt path stays ChatPanel.svelte:69 -> schemaSummary", and
@@ -53,10 +53,10 @@ Verdicts follow the house convention: 0 = OK, 1 = RED (a claim is false),
 false red for a tree it has not measured).
 
 Controls run against copies via --root, so the shipped tree is only read:
-  cp -r . /tmp/x && python3 scripts/cool_chat_check.py --root /tmp/x
+  cp -r . /tmp/x && python3 scripts/chat_feature_check.py --root /tmp/x
 
 And the harness proves it can FAIL, against a copy, with no hand-holding:
-  python3 scripts/cool_chat_check.py --selftest
+  python3 scripts/chat_feature_check.py --selftest
 
 It is deliberately NOT named `*_diff.py`: that glob is the landing gate's twin
 roster (scripts/landing_gate.py: EXPECTED_TWINS) and this grades no PAIR of
@@ -451,10 +451,10 @@ CONTROLS = (
 
 def selftest(root):
     """Prove each leg can fire, against copies. Returns 0 or raises CannotRun."""
-    script = os.path.join(root, "scripts", "cool_chat_check.py")
+    script = os.path.join(root, "scripts", "chat_feature_check.py")
     failures = []
     for name, mutation, expected_rc, expected_text in CONTROLS:
-        tmp = tempfile.mkdtemp(prefix="cool-chat-control-")
+        tmp = tempfile.mkdtemp(prefix="chat-feature-control-")
         target = os.path.join(tmp, "tree")
         try:
             shutil.copytree(root, target, symlinks=True,
@@ -485,7 +485,7 @@ def selftest(root):
 
 def main(argv):
     parser = argparse.ArgumentParser(
-        description="Grade the cool-chat send-back's five specced checks.")
+        description="Grade the chat send-back's five specced checks.")
     parser.add_argument("--root", default=".",
                         help="the tree to grade (default: this repo)")
     parser.add_argument("--selftest", action="store_true",
