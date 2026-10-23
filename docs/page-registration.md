@@ -3,7 +3,8 @@
 Reference implementation: `app/src/lib/pages/index.ts` (registry) +
 `app/src/lib/router.ts` (matcher) + `app/src/pages/Modules.svelte` (a module
 added by the mechanism itself). Tests: `app/src/lib/__tests__/pages.test.ts`
-(contract, 27) and `shell.test.ts` (rendered DOM, 8).
+(contract, 27), `shell.test.ts` (rendered DOM, 8) and `authGateMount.test.ts`
+(the auth gate rendered against a stubbed registry, 2).
 
 ## Why this exists
 
@@ -93,6 +94,16 @@ empty at HEAD, so a declaration that breaks the shipped app fails the suite.
 it renders `standalonePages[0]` while there is no token, and the shell refuses
 to render a standalone page inside itself. A client that ships its own sign-in
 screen drops in a file and flips `nav: false, standalone: true`.
+
+That "no static import" claim is graded THROUGH the render, not only by grep:
+`authGateMount.test.ts` stubs the pages module so the discovered standalone slot
+holds a non-Login probe component, mounts the real `App`, and asserts the probe's
+DOM appears while none of Login's markup does — so reverting `App` to a hard
+`import Login` is red (measured: the shipped suite stayed 451/35 green over that
+mutation before this test existed). A second case empties the registry and pins
+the `{#if authPage}` else-branch — the friendly "No page declares
+`standalone: true`" message the real glob can never reach, because Login is
+always discovered.
 
 ## Copy checklist (adding a module)
 
