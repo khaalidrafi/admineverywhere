@@ -173,13 +173,34 @@ describe("kanban axis is declared, never guessed", () => {
   });
 
   it("keeps every shipped declaration consistent with the transition registry", () => {
+    // The registry is product code, so EVERY declaration in it is graded against
+    // the captured document — not only the orders one, which is all the previous
+    // loop could see (anything else was `continue`d away, so a second axis could
+    // rot without a single assertion firing). The population is pinned too: an
+    // axis deleted from the registry un-wires whichever half of this contract
+    // only that model exercised, and a comparison cannot see its own coverage
+    // (DEVGUIDE ELEVENTH harness law).
+    const live = normalizeOpenAPI(fixture);
+    expect(Object.keys(kanbanAxes).sort()).toEqual(["orders", "products"]);
     for (const [modelId, declared] of Object.entries(kanbanAxes)) {
-      const model = modelId === "orders" ? ORDERS : undefined;
-      if (!model) continue;
-      expect(axisProblem(model, kanbanAxes)).toBeNull();
+      const model = live.byId[modelId];
+      expect(model, `axis names "${modelId}", which the captured document does not carry`).toBeTruthy();
+      expect(axisProblem(model, kanbanAxes), `"${modelId}.${declared.field}" is refused`).toBeNull();
+      const axis = resolveAxis(model, kanbanAxes)!;
+      expect(axis.field).toBe(declared.field);
+      expect(axis.via).toBe(declared.via);
+      expect(axis.columns.length).toBeGreaterThan(0);
       if (declared.via === "transition") {
         expect(hasLifecycle(modelId)).toBe(true);
         expect(getStatusField(modelId)).toBe(declared.field);
+      } else {
+        // a free-enum axis must NOT be a lifecycle field, and its columns are
+        // that field's OWN choices — never another field's set, and never the
+        // BlankEnum sentinel turned into a board column (§3 guardrails 1 + 2,
+        // §4: the empty state is the optional signal, not a choice)
+        expect(getStatusField(modelId)).not.toBe(declared.field);
+        expect(axis.columns).toEqual(model.byName[declared.field].choices);
+        expect(axis.columns).not.toContain("");
       }
     }
   });
@@ -310,8 +331,28 @@ describe("against the real drf-spectacular fixture", () => {
     expect(axis!.columns).toEqual(["pending", "paid", "shipped", "refunded"]);
   });
 
-  it("no other fixture model gets a board, enum fields or not", () => {
-    for (const model of schema.models.filter((m) => m.id !== "orders")) {
+  it("products gets a FREE-ENUM board — its own choices, no lifecycle in sight", () => {
+    const axis = resolveAxis(schema.byId.products);
+    expect(axis).not.toBeNull();
+    expect(axis!.field).toBe("packaging");
+    expect(axis!.via).toBe("patch");
+    expect(axis!.columns).toEqual(["box", "crate", "pallet"]);
+    // BlankEnum is the optional signal, never a board column (§4), so the empty
+    // state cannot appear as a draggable choice beside the real ones
+    expect(axis!.columns).not.toContain("");
+    // and the rig documents no state machine for products, which is what makes a
+    // `patch` axis legal here rather than a bypass (guardrail 1)
+    expect(schema.byId.products.transitionPath).toBeUndefined();
+  });
+
+  it("no UNdeclared fixture model gets a board, enum fields or not", () => {
+    // The point of this leg is the GUESS it forbids: a model carrying enum
+    // fields still gets nothing until an axis is DECLARED for it. Graded against
+    // the shipped registry, so the day a second axis is declared honestly (see
+    // the products case above) the leg narrows instead of going false.
+    const undeclared = schema.models.filter((m) => !kanbanAxes[m.id]);
+    expect(undeclared.length).toBeGreaterThan(0); // a vacuous sweep is not a test
+    for (const model of undeclared) {
       expect([model.id, resolveAxis(model)]).toEqual([model.id, null]);
     }
   });
