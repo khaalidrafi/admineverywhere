@@ -3,7 +3,8 @@
 Reference implementation: `app/src/lib/pages/index.ts` (registry) +
 `app/src/lib/router.ts` (matcher) + `app/src/pages/Modules.svelte` (a module
 added by the mechanism itself). Tests: `app/src/lib/__tests__/pages.test.ts`
-(contract, 27) and `shell.test.ts` (rendered DOM, 8).
+(contract, 27), `shell.test.ts` (rendered DOM, 8) and `navMount.test.ts` (the nav a
+reviewer SEES == the nav the glob declared, plus the raw-source fork scan, 10).
 
 ## Why this exists
 
@@ -90,9 +91,20 @@ empty at HEAD, so a declaration that breaks the shipped app fails the suite.
 ## The auth gate is a page too
 
 `Login.svelte` declares `standalone: true`. `App.svelte` no longer imports it;
-it renders `standalonePages[0]` while there is no token, and the shell refuses
-to render a standalone page inside itself. A client that ships its own sign-in
-screen drops in a file and flips `nav: false, standalone: true`.
+it renders `authPage` — the registry's own name for the first standalone
+declaration — while there is no token, and the shell refuses to render a
+standalone page inside itself. A client that ships its own sign-in screen drops
+in a file and flips `nav: false, standalone: true`, and BOTH halves of the auth
+flow move with it: `App.svelte` renders that page and the sidebar's Sign out
+routes into `authHref()`.
+
+That second half was a defect, found by the harness that now pins it: the
+sidebar signed out into a hand-typed login hash while the sign-in page's declared
+path was only consulted by `App.svelte`. A client renaming its gate (say
+`standalone: true, path: "/signin"`) was dropped on a hash no page declares —
+the same guessed-literal family as the R-001 `/transition/` probe and a
+concatenated action URL. The registry exports the selection once
+(`authPage`/`authHref()`), so no component can spell a route the glob owns.
 
 ## Copy checklist (adding a module)
 
@@ -104,6 +116,13 @@ screen drops in a file and flips `nav: false, standalone: true`.
    must appear in `pages` without any test naming it.
 5. If it is refused, the Modules page says why; fix the declaration, not the
    registry.
+6. Never type another page's route or import a page module by name. The
+   rendered nav is compared to `navPages()` as an exact set in both directions,
+   and `navMount.test.ts` scans every raw `.svelte`/`.ts` under `app/src/` for a
+   `#<declared path>` literal or a direct page import — so a nav entry typed by
+   hand, a stale auth hash, or a re-added `import Dashboard from …` is RED with
+   the file and line named. Build hrefs from `pageHref()`; take the auth route
+   from `authHref()`.
 
 ## Component tests became possible (the enabler)
 
