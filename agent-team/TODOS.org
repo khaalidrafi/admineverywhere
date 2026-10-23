@@ -1107,7 +1107,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   lifecycle-governed field fires POST /transition/, a drop on a free enum
   is a plain single-field PATCH that touches nothing else (guardrail 1).
 :END:
-** PENDING FR R-005 canonical CSV export                                     :FE:BE:
+** DONE FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
 <<<<<<< HEAD
 - Note taken on [2026-10-23 Fri 20:38 UTC] :: SHA ADDENDUM to the 20:26Z note (it was
