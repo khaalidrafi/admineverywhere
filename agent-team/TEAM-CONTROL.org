@@ -212,7 +212,7 @@
   finalize posts the chain verdict + this segment's new TEAM-CHAT.org
   entries to secret DISCORD_WEBHOOK_TEAM_ADMINCRAFT (silent until the
   Owner creates the channel webhook and sets the secret).
-#+LAST-BLOCKED-NOTIFY: 1792709691
+#+LAST-BLOCKED-NOTIFY: 1792714229
 * Chain law (Lead — Owner revert order 2026-10-21 ~12:44Z)
 
 The repo-root AGENTS.md is RESTORED (Owner: "Did you remove admincraft's
@@ -260,4 +260,4 @@ Agent law:
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.
-#+LAST-CHAT: 9f49f29d2687
+#+LAST-CHAT: 295d82a09064
