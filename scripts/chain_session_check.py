@@ -19,10 +19,15 @@ of the TEST-CHAIN objective measured the loop and found it never closes:
 
 A finding delivered as prose is a finding the next reader has to trust.
 The fix itself is a patch (docs/session-loop-fix.patch) that a seat may NOT
-apply: .github/workflows/* is Lead-owned. So the seat can only hand over
+apply: the chain's own files are Lead-owned. So the seat can only hand over
 something the Lead can run: a check that grades the loop from the tree.
 
-This harness grades the loop against the Lead-owned workflow, READ-ONLY:
+This harness grades the loop against the Lead-owned chain, READ-ONLY. The
+inner .turn-inside.sh is taken from whichever file writes it - the workflow
+inline (the shape before 2026-10-22) or the segment script the workflow runs
+(eaf34bd extracted the over-long inline block). A carrier the workflow does
+not run, or a second heredoc competing with the first, is refused: grading
+the wrong script would be a false green.
 
   COLLECT       the collect block exists and takes a plausible population of
                 stores (a tar list that lost its members collects nothing).
@@ -37,7 +42,7 @@ This harness grades the loop against the Lead-owned workflow, READ-ONLY:
   GOOSE-STORE   the collect list covers the goose session store - measured
                 live where a store exists, otherwise against the pinned
                 goose >= 1.5x layout.
-  MOUNT         the workflow mounts a restore dir at /sessions-restore and
+  MOUNT         the chain mounts a restore dir at /sessions-restore and
                 creates the source dir it mounts from.
 
 Verdicts follow the house convention: 0 = OK, 1 = RED (a claim is false),
@@ -45,9 +50,12 @@ Verdicts follow the house convention: 0 = OK, 1 = RED (a claim is false),
 false red for a tree it has not measured).
 
 The shipped tree is RED on purpose: the defect is real and the fix is the
-Lead's to apply. That is why the controls build their baseline from the
-DELIVERED PATCH applied to a copy - a check that can only ever say RED is
-not a check (DEVGUIDE *EIGHTH harness law, applied to the harness itself).
+Lead's to apply. That is why the controls build their own green baseline -
+the three repairs, reconstructed on a COPY from whatever shape the carrier
+holds (the delivered patch pinned the old one and stopped applying when the
+block was extracted, which silently killed all eight controls) - because a
+check that can only ever say RED is not a check (DEVGUIDE *EIGHTH harness
+law, applied to the harness itself).
 
   python3 scripts/chain_session_check.py                 # grade this tree
   python3 scripts/chain_session_check.py --root /tmp/x   # grade another tree
@@ -66,7 +74,11 @@ import tempfile
 # The PROMISE, not the disk. A harness that derives its expectations from
 # the tree it grades proves nothing.
 WORKFLOW_REL = ".github/workflows/agent-team.yml"
-PATCH_REL = "docs/session-loop-fix.patch"
+# The segment step used to be one inline block in the workflow. GitHub refuses
+# an inline `run:` over 21000 chars, so it was extracted into this script
+# (commit eaf34bd, 2026-10-22) and the workflow now only runs it. The session
+# loop lives wherever the heredoc lives, so BOTH shapes are read.
+SEGMENT_REL = ".github/scripts/turn_segment.sh"
 
 # The restore mount the chain uses (Owner order 18:27Z).
 RESTORE_MOUNT = "/sessions-restore"
@@ -90,6 +102,7 @@ COLLECT_POPULATION_FLOOR = 3
 
 # ------------------------------------------------------------- file shapes
 HEREDOC_OPEN_RE = re.compile(r"cat\s+>\s+\"?\$PWD/\.turn-inside\.sh\"?\s*<<'([A-Z_]+)'")
+SEGMENT_CALL_RE = re.compile(r"bash\s+\S*\.github/scripts/turn_segment\.sh")
 TAR_OPEN_RE = re.compile(r"^\s*tar\s+czf\s+\S+\s+-C\s+/\s*\\?\s*$")
 CP_RE = re.compile(r"^\s*cp\s+-a\s+(?P<src>\S+)\s+(?P<dst>\S+)\b")
 MOUNT_RE = re.compile(r"/sessions-restore:ro")
@@ -113,14 +126,14 @@ def read(root, rel):
         raise CannotRun("cannot read %s: %s" % (rel, exc))
 
 
-def inner_script(workflow_text):
-    """The .turn-inside.sh the workflow writes into the workspace.
+def heredoc_body(text, rel):
+    """The .turn-inside.sh heredoc inside `text`, or None if there is none.
 
-    The workflow embeds the script in a quoted heredoc, so the body is
-    taken verbatim between the heredoc's opening line and its terminator
-    and dedented - the shell never sees the YAML indentation.
+    The script is embedded in a quoted heredoc, so its body is taken verbatim
+    between the opening line and the terminator and dedented - the shell never
+    sees the YAML indentation the workflow shape used to add.
     """
-    lines = workflow_text.splitlines()
+    lines = text.splitlines()
     for index, line in enumerate(lines):
         match = HEREDOC_OPEN_RE.search(line)
         if not match:
@@ -132,11 +145,39 @@ def inner_script(workflow_text):
                 break
             body.append(candidate)
         else:
-            raise CannotRun("the %s heredoc in %s is never closed" % (marker, WORKFLOW_REL))
+            raise CannotRun("the %s heredoc in %s is never closed" % (marker, rel))
         indent = min((len(l) - len(l.lstrip()) for l in body if l.strip()), default=0)
         return "\n".join(l[indent:] if l.strip() else l for l in body)
-    raise CannotRun("%s writes no .turn-inside.sh heredoc - the chain's inner script "
-                    "is gone and this harness no longer understands its input" % WORKFLOW_REL)
+    return None
+
+
+def resolve_inner_script(root, workflow_text):
+    """(where, file text, inner script) for the chain's turn script.
+
+    TWO shipped shapes, and the harness must follow whichever the chain
+    actually uses: the heredoc used to sit inline in the workflow, and the
+    workflow now runs .github/scripts/turn_segment.sh instead (eaf34bd -
+    GitHub rejects the 31.5KB inline block). Reading only the first shape is
+    how this harness went blind on 2026-10-22, so a missing leg is a refusal,
+    never a silent pass.
+    """
+    inline = heredoc_body(workflow_text, WORKFLOW_REL)
+    segment_text = ""
+    extracted = None
+    if SEGMENT_CALL_RE.search(workflow_text):
+        segment_text = read(root, SEGMENT_REL)
+        extracted = heredoc_body(segment_text, SEGMENT_REL)
+    if inline is not None and extracted is not None:
+        raise Red("TWO carriers write the .turn-inside.sh heredoc - %s inline and %s, "
+                  "which %s runs: the loop cannot be graded from a script nobody "
+                  "executes" % (WORKFLOW_REL, SEGMENT_REL, WORKFLOW_REL))
+    if inline is not None:
+        return WORKFLOW_REL, workflow_text, inline
+    if extracted is not None:
+        return SEGMENT_REL, segment_text, extracted
+    raise CannotRun("neither %s nor the %s it runs writes a .turn-inside.sh heredoc - "
+                    "the chain's inner script is gone and this harness no longer "
+                    "understands its input" % (WORKFLOW_REL, SEGMENT_REL))
 
 
 def strip_comment(line):
@@ -322,15 +363,22 @@ def live_note(home):
 # ------------------------------------------------------------------- main
 def grade(root, home):
     workflow_text = read(root, WORKFLOW_REL)
-    script = inner_script(workflow_text)
+    carrier, carrier_text, script = resolve_inner_script(root, workflow_text)
+    # The container run, its mount and the restore dir it mounts from may sit in
+    # either turn-loop file, so the MOUNT leg reads both. Which script the chain
+    # actually runs is the carrier's business, decided above.
+    loop_text = "\n".join([workflow_text, carrier_text])
+    if carrier != SEGMENT_REL and os.path.exists(os.path.join(root, SEGMENT_REL)):
+        loop_text += "\n" + read(root, SEGMENT_REL)
 
     problems = []
     notes = []
+    notes.append("CARRIER: the .turn-inside.sh heredoc is written by %s" % carrier)
 
     copies = restore_copies(script)
     if not copies:
         raise CannotRun("%s copies nothing back into $HOME - the restore block is gone "
-                        "and this harness no longer understands its input" % WORKFLOW_REL)
+                        "and this harness no longer understands its input" % carrier)
     home_rel = home_rel_from_copies(copies)
     if not home_rel:
         raise CannotRun("the restore block never copies /sessions-restore/<home>/ into "
@@ -386,12 +434,14 @@ def grade(root, home):
     notes.append("GOOSE-STORE: expecting %s (%s)" % (", ".join(expected), source))
 
     # ---- 5. MOUNT: the restore dir is mounted and created
-    if not MOUNT_RE.search(workflow_text):
-        problems.append("MOUNT: %s never mounts a restore dir at %s - the collected "
-                        "sessions have no way back in" % (WORKFLOW_REL, RESTORE_MOUNT))
-    if not MKDIR_RESTORE_RE.search(workflow_text):
-        problems.append("MOUNT: %s never creates the source dir it mounts from - the mount "
-                        "would land on an empty host path" % WORKFLOW_REL)
+    if not MOUNT_RE.search(loop_text):
+        problems.append("MOUNT: neither %s nor %s mounts a restore dir at %s - the "
+                        "collected sessions have no way back in"
+                        % (WORKFLOW_REL, SEGMENT_REL, RESTORE_MOUNT))
+    if not MKDIR_RESTORE_RE.search(loop_text):
+        problems.append("MOUNT: no %s / %s creates the source dir it mounts from - the "
+                        "mount would land on an empty host path"
+                        % (WORKFLOW_REL, SEGMENT_REL))
     notes.append("MOUNT: %s mounted at %s" % (RESTORE_MOUNT, RESTORE_MOUNT))
 
     for note in live_note(home):
@@ -427,10 +477,21 @@ def main(argv):
 # ------------------------------------------------------------------ selftest
 # A check that cannot FAIL is not a check (DEVGUIDE *EIGHTH harness law,
 # applied to the harness itself). Every control below works on a COPY of
-# the tree and asserts the verdict it must produce. The baseline is the
-# DELIVERED PATCH applied to the copy: the shipped tree is RED (the defect
-# is real), so a green baseline has to be built before a control can prove
-# that a leg can go red. The shipped tree is never written to.
+# the tree and asserts the verdict it must produce. The shipped tree is
+# RED (the defect is real), so a green baseline has to be built before a
+# control can prove that a leg can go red. The shipped tree is never
+# written to.
+#
+# The baseline used to be docs/session-loop-fix.patch applied to the copy.
+# That patch targets the shape the workflow carried BEFORE eaf34bd extracted
+# the segment step into .github/scripts/turn_segment.sh, so `git apply` no
+# longer matched - and every control died in CANNOT RUN before grading
+# anything, which is how this harness reported rc 2 for a whole cycle while
+# the loop it exists to guard went unmeasured. The same three repairs are
+# therefore BUILT from the shipped text: indentation-agnostic (they land in
+# either carrier shape), idempotent (a repair already present is a no-op)
+# and a refusal naming the lost anchor when the text no longer looks like
+# either shape.
 def _read_file(root, rel):
     with open(os.path.join(root, rel), encoding="utf-8") as fh:
         return fh.read()
@@ -441,27 +502,89 @@ def _write_file(root, rel, text):
         fh.write(text)
 
 
-def _replace_once(root, rel, old, new):
+def _subn_file(root, rel, pattern, repl, count, missing):
+    """Regex-mutate a file once; a mutation that finds nothing is CANNOT RUN.
+
+    A control whose target text has moved is not a passing control - it
+    graded nothing. Silence here is the rot this harness already fell into.
+    """
     text = _read_file(root, rel)
-    if old not in text:
-        raise CannotRun("control: the text to mutate is not in %s" % rel)
-    _write_file(root, rel, text.replace(old, new, 1))
+    new, hits = re.subn(pattern, repl, text, count=count, flags=re.M)
+    if not hits:
+        raise CannotRun("control: %s - %s no longer carries that shape, so this "
+                        "control grades nothing" % (missing, rel))
+    _write_file(root, rel, new)
 
 
-def apply_patch(root):
-    """Apply the delivered proposal patch to a COPY (never to the shipped tree)."""
-    patch = os.path.join(root, PATCH_REL)
-    if not os.path.exists(patch):
-        raise CannotRun("the delivered patch %s is not in this tree - the baseline cannot "
-                        "be built" % PATCH_REL)
-    check = subprocess.run(("git", "apply", "--check", patch), cwd=root,
-                           capture_output=True, text=True)
-    if check.returncode != 0:
-        raise CannotRun("the delivered patch does not apply to this tree: %s"
-                        % check.stderr.strip()[:200])
-    done = subprocess.run(("git", "apply", patch), cwd=root, capture_output=True, text=True)
-    if done.returncode != 0:
-        raise CannotRun("the delivered patch failed to apply: %s" % done.stderr.strip()[:200])
+# The three repairs, as shipped shapes: each is anchored on the line the
+# chain actually writes, never on a literal indentation count.
+QODER_RESTORE_MARK = "/sessions-restore/usr/local/lib/qoder-home/.qoder"
+GOOSE_LEGACY_STORE_LINE = r'^([ \t]*)"\$\{HOME#/\}/\.config/goose/sessions" \\\n'
+QODER_RESTORE_ANCHOR = r'^[ \t]*cp -a /sessions-restore/\. "\$HOME/".*\n([ \t]*)fi[ \t]*\n'
+
+
+def carrier_rel(root):
+    """Which file carries the .turn-inside.sh heredoc on this tree."""
+    for rel in (WORKFLOW_REL, SEGMENT_REL):
+        if not os.path.exists(os.path.join(root, rel)):
+            continue
+        if heredoc_body(_read_file(root, rel), rel) is not None:
+            return rel
+    raise CannotRun("neither %s nor %s writes a .turn-inside.sh heredoc - the green "
+                    "baseline cannot be built" % (WORKFLOW_REL, SEGMENT_REL))
+
+
+def build_green(root):
+    """Close the three session-law gaps on a COPY of the tree."""
+    rel = carrier_rel(root)
+    text = _read_file(root, rel)
+
+    # 1. NO-OPT-OUT: a lane that runs the CLI with --no-session writes no
+    #    session file, so the flag has to leave every goose lane.
+    if "goose run --no-session" in text:
+        text = text.replace("goose run --no-session", "goose run")
+    elif 'goose run -t' not in text:
+        raise CannotRun("%s has no goose lane in either shape - the baseline cannot "
+                        "grade NO-OPT-OUT" % rel)
+
+    # 2. GOOSE-STORE: the collect list must hold the store goose 1.55 writes.
+    if '"${HOME#/}/.local/share/goose/sessions"' not in text:
+        match = re.search(GOOSE_LEGACY_STORE_LINE, text, re.M)
+        if not match:
+            raise CannotRun("%s no longer collects the goose store the way the harness "
+                            "parses it - the baseline cannot be built" % rel)
+        line = '%s"${HOME#/}/.local/share/goose/sessions" \\\n' % match.group(1)
+        text = text[:match.end()] + line + text[match.end():]
+
+    # 3. RESTORE: every collected store returns to ITS OWN path.
+    if QODER_RESTORE_MARK not in text:
+        match = re.search(QODER_RESTORE_ANCHOR, text, re.M)
+        if not match:
+            raise CannotRun("%s no longer ends its restore block where the harness "
+                            "attaches the second store - the baseline cannot be built" % rel)
+        ind = match.group(1)
+        block = (
+            '{0}if [ -d {1}/usr/local/lib/qoder-home/.qoder ]; then\n'
+            '{0}  mkdir -p /usr/local/lib/qoder-home/.qoder\n'
+            '{0}  cp -a {1}/usr/local/lib/qoder-home/.qoder/. \\\n'
+            '{0}    /usr/local/lib/qoder-home/.qoder/ 2>/dev/null || true\n'
+            '{0}fi\n').format(ind, RESTORE_MOUNT)
+        text = text[:match.end()] + block + text[match.end():]
+
+    _write_file(root, rel, text)
+
+    # The baseline must still be SHELL, not just text this harness likes.
+    inner = heredoc_body(text, rel)
+    with tempfile.NamedTemporaryFile("w", suffix=".sh", delete=False) as fh:
+        fh.write(inner)
+        probe = fh.name
+    try:
+        done = subprocess.run(("bash", "-n", probe), capture_output=True, text=True)
+        if done.returncode != 0:
+            raise CannotRun("the green baseline is not valid shell: %s"
+                            % done.stderr.strip()[:200])
+    finally:
+        os.unlink(probe)
 
 
 def control_no_change(root):
@@ -470,71 +593,118 @@ def control_no_change(root):
 
 def control_drop_restore_copy(root):
     """Take the qoder store out of the restore: the leg must fire."""
-    _replace_once(root, WORKFLOW_REL,
-                  "            if [ -d /sessions-restore/usr/local/lib/qoder-home/.qoder ]; then\n"
-                  "              mkdir -p /usr/local/lib/qoder-home/.qoder\n"
-                  "              cp -a /sessions-restore/usr/local/lib/qoder-home/.qoder/. \\\n"
-                  "                /usr/local/lib/qoder-home/.qoder/ 2>/dev/null || true\n"
-                  "            fi\n",
-                  "")
+    _subn_file(root, carrier_rel(root),
+               r'^[ \t]*if \[ -d ' + re.escape(QODER_RESTORE_MARK) + r' \]; then\n'
+               r'(?:.*\n)*?[ \t]*fi\n', "", 1,
+               "the second store's restore block is gone")
 
 
 def control_reintroduce_opt_out(root):
     """Put --no-session back on a lane: the leg must fire."""
-    _replace_once(root, WORKFLOW_REL,
-                  "                   goose run -t \"$BRIEF\"; then\n"
-                  "                echo \"TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose",
-                  "                   goose run --no-session -t \"$BRIEF\"; then\n"
-                  "                echo \"TURN_RESULT=goose run OK (lane: minimax-m3.1-flash:free@goose")
+    _subn_file(root, carrier_rel(root),
+               r'goose run -t "\$BRIEF"', 'goose run --no-session -t "$BRIEF"', 1,
+               "no goose lane to opt out")
 
 
 def control_drop_goose_store(root):
     """Take the goose store out of the collect list: the leg must fire."""
-    _replace_once(root, WORKFLOW_REL,
-                  "            \"${HOME#/}/.local/share/goose/sessions\" \\\n", "")
+    _subn_file(root, carrier_rel(root),
+               r'^[ \t]*"\$\{HOME#/\}/\.local/share/goose/sessions" \\\n', "", 1,
+               "the goose store is not in the collect list")
 
 
 def control_drop_mount(root):
     """Unmount the restore dir: the leg must fire."""
-    _replace_once(root, WORKFLOW_REL,
-                  "            -v \"$PWD/.sessions-restore\":/sessions-restore:ro \\\n", "")
+    _subn_file(root, carrier_rel(root),
+               r'^[ \t]*-v "\$PWD/\.sessions-restore":/sessions-restore:ro \\\n', "", 1,
+               "the restore mount is not there")
 
 
 def control_drop_collect(root):
     """Take the collect list away: the harness cannot understand its input."""
-    _replace_once(root, WORKFLOW_REL,
-                  "          tar czf \"$SESS\" -C / \\\n", "          true # tar czf \"$SESS\" -C / \\\n")
+    _subn_file(root, carrier_rel(root),
+               r'^([ \t]*)tar czf "\$SESS" -C / \\\n', r'\1true # tar czf "$SESS" -C / \\\n', 1,
+               "the collect tar is not there")
+
+
+def control_second_carrier(root):
+    """A heredoc in the workflow AND in the script it runs: nothing is graded."""
+    rel = _read_file(root, WORKFLOW_REL)
+    _write_file(root, WORKFLOW_REL,
+                rel + '\ncat > "$PWD/.turn-inside.sh" <<\'OTHER\'\ntrue\nOTHER\n')
+
+
+def control_inline_carrier(root):
+    """Move the heredoc back into the workflow and drop the pointer.
+
+    The other carrier shape. If the resolver only follows the extracted
+    script, this tree grades nothing - so the shape claim is graded here.
+    """
+    segment = _read_file(root, SEGMENT_REL).splitlines(True)
+    opener = next((index for index, line in enumerate(segment)
+                   if HEREDOC_OPEN_RE.search(line)), None)
+    if opener is None:
+        raise CannotRun("control: %s holds no .turn-inside.sh heredoc to move" % SEGMENT_REL)
+    marker = HEREDOC_OPEN_RE.search(segment[opener]).group(1)
+    closing = next((index for index in range(opener + 1, len(segment))
+                    if segment[index].strip() == marker), None)
+    if closing is None:
+        raise CannotRun("control: %s's heredoc never closes" % SEGMENT_REL)
+    block = "".join(segment[opener:closing + 1])
+    _write_file(root, SEGMENT_REL, "".join(segment[:opener] + segment[closing + 1:]))
+    workflow = _read_file(root, WORKFLOW_REL)
+    if not SEGMENT_CALL_RE.search(workflow):
+        raise CannotRun("control: %s does not run %s, so the carrier cannot be moved"
+                        % (WORKFLOW_REL, SEGMENT_REL))
+    _write_file(root, WORKFLOW_REL,
+                SEGMENT_CALL_RE.sub("true", workflow, count=1) + "\n" + block)
+
+
+def control_missing_carrier(root):
+    os.remove(os.path.join(root, SEGMENT_REL))
 
 
 def control_missing_workflow(root):
     os.remove(os.path.join(root, WORKFLOW_REL))
 
 
-# (name, mutation, expected rc, expected text, apply the patch first?)
+# (name, mutation, expected rc, expected text, build the green baseline first?)
 CONTROLS = (
-    ("patched baseline is green", control_no_change, 0, "SESSION-LOOP CHECK OK", True),
+    ("green baseline is green", control_no_change, 0, "SESSION-LOOP CHECK OK", True),
     ("shipped tree is red", control_no_change, 1, "RESTORE", False),
+    ("second carrier heredoc", control_second_carrier, 1, "TWO carriers", True),
+    ("heredoc back inline in the workflow", control_inline_carrier, 0,
+     "SESSION-LOOP CHECK OK", True),
     ("restore copy dropped", control_drop_restore_copy, 1, "RESTORE", True),
     ("--no-session reintroduced", control_reintroduce_opt_out, 1, "NO-OPT-OUT", True),
     ("goose store dropped", control_drop_goose_store, 1, "GOOSE-STORE", True),
     ("restore mount dropped", control_drop_mount, 1, "MOUNT", True),
     ("collect block dropped", control_drop_collect, 2, "CANNOT RUN", True),
-    ("workflow file missing", control_missing_workflow, 2, "CANNOT RUN", True),
+    ("carrier script missing", control_missing_carrier, 2, "CANNOT RUN", True),
+    ("workflow file missing", control_missing_workflow, 2, "CANNOT RUN", False),
 )
+
+# ELEVENTH harness law, on this harness's own roster: a deleted control is a
+# refusal, never a shorter SELFTEST OK.
+EXPECTED_CONTROLS = 11
 
 
 def selftest(root):
+    if len(CONTROLS) != EXPECTED_CONTROLS:
+        raise CannotRun("the control roster is %d long, the pin says %d - a vanished "
+                        "control must stop the run, not shorten it"
+                        % (len(CONTROLS), EXPECTED_CONTROLS))
     script = os.path.join(root, "scripts", "chain_session_check.py")
     failures = []
-    for name, mutation, expected_rc, expected_text, patched in CONTROLS:
+    for name, mutation, expected_rc, expected_text, green in CONTROLS:
         tmp = tempfile.mkdtemp(prefix="chain-session-control-")
         target = os.path.join(tmp, "tree")
         try:
             shutil.copytree(root, target, symlinks=True,
                             ignore=shutil.ignore_patterns("node_modules", "__pycache__",
                                                           ".pytest_cache", "dist", "build"))
-            if patched:
-                apply_patch(target)
+            if green:
+                build_green(target)
             mutation(target)
             proc = subprocess.run([sys.executable, script, "--root", target],
                                   capture_output=True, text=True)
