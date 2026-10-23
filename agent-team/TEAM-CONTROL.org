@@ -3,17 +3,46 @@
 # VERBATIM every run. The Lead is the only writer (seats: file:line
 # evidence in chat instead).
 
-#+KILL-SWITCH: ON
-# [Lead 2026-10-23 17:44Z] EMERGENCY BRAKE: finalize self-dispatch ignores #+CHAIN-PAUSE (new bug BR-07) — day burn stall 28->137, ~109 no-work runs. Kill until the dispatch predicate is fixed, then OFF + resume.
+#+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
-#+OBJECTIVE: FEATURE-ORDER (Lead restore 2026-10-22 per the TEST-CHAIN close, Owner's parked order): verify-cool-chat-2 -> COOL-CHAT-SEND-BACK-2 -> FR-R001-FE -> COOL-PREVIEW -> R-003 FE -> R-002 docs -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; the seat flips its item PENDING with :DELIVERED: evidence; the chain then PAUSES for Lead review (PAUSE-AFTER-TODO DEFAULT ON — Owner order 17:28Z "PAUSE AFTER TODO MUST BE DEFAULT"; an explicit order may set OFF for continuous runs)
+#+OBJECTIVE: FEATURE-ORDER night-2 (Owner 2026-10-23 17:37Z "Complete rest of the TODOs" — continuous night run like 2026-10-22): R-002 docs (software seat fixes the 2 stale DEVGUIDE citations on pending ai/turn-20261022-2227, re-delivers; QA re-reviews) -> FR-R001-FE (fix the audit's guessed-URL defect, live-verify, re-deliver) -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; the seat flips its item PENDING with :DELIVERED: evidence (PAUSE-AFTER-TODO OFF tonight per the same Owner order; board + checker IDs renamed per "remove the cool naming", see the RENAME LAW in TODOS.org)
 #+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
-#+STALL-COUNT: 141
-#+PAUSE-AFTER-TODO: ON
-#+CHAIN-PAUSE: ON — Lead halt 2026-10-23 05:31Z: STALL=28 spin (30 runs since 02:02Z, zero work — QA review call returns verdict=none/reviewer=none, all author lanes empty; the 21:07Z codebuddy DNS blackhole appears to have spread). Day Lead/Owner: diagnose lanes, then clear this line to resume.
+#+STALL-COUNT: 0
+#+PAUSE-AFTER-TODO: OFF
+#+CHAIN-PAUSE:
 #+PENDING-REVIEW: branch=ai/turn-20261022-2227 | author=software-engineer | sha=1a87144ced5ef62c3bbce745b8cf3d76a92f1ad4
 
 * Notes
+
+- NIGHT-2 OPEN (Lead, 2026-10-23 17:37Z Owner orders in #admincraft):
+  (1) "Remove the cool naming" — DONE this push: board IDs renamed
+  (verify-chat-2, CHAT-SEND-BACK-2, CHAT-PREVIEW; RENAME LAW note in
+  TODOS.org), scripts/cool_chat_check.py -> scripts/chat_feature_check.py
+  (selftest 12/12 green), chain_test_check BOARD_ITEMS, turn_segment.sh
+  work order, AGENTS.md, DEVGUIDE, chatMount.test.ts header. History
+  (TEAM-CHAT, REVIEW-LOG, MEMBERS, :DELIVERED: bodies, git branch names)
+  keeps the old IDs per historical-record law.
+  (2) "Complete rest of the TODOs" — 7 remain (R-002 via the 2227
+  citation fix, FR-R001-FE defect fix, R-004/005/006/008/007).
+  (3) Night run resumed 17:5xZ: KILL OFF, pause cleared, stall reset 0,
+  PAUSE-AFTER-TODO OFF (continuous), turn = software seat on item 1.
+- DAY-BURN ROOT CAUSE CLOSED (Lead, 2026-10-23 17:4xZ, BR-07+BR-01):
+  finalize's self-dispatch never checked #+CHAIN-PAUSE — the 05:31Z
+  pause halted turns but finalize kept dispatching: stall 28 -> 140,
+  ~110 no-work runs across the day. Fixed this push: (a) finalize
+  honors CHAIN-PAUSE (decision chain-paused; stall counter freezes
+  while paused); (b) BR-01 hard floor — at stall>=12 the chain arms
+  CHAIN-PAUSE ITSELF (AUTO stall-halt) instead of polling forever.
+  Emergency brake used: KILL-SWITCH ON 17:44Z-17:5xZ (verified: the
+  in-flight run honored it, no re-dispatch). DE's probe checkout fix
+  (b4f577e) rebased cleanly under the BR-07 fix.
+- DAY DAMAGE REPORT (Lead, 2026-10-23): every day run returned
+  review-missing/result none on pending ai/turn-20261022-2227 — the
+  runner-egress failure (BR-03) persisted all day. Also: chain prefix
+  check red (25 NO-DROP refs) — pre-existing from the 10-22 rebase+retry
+  races, not the day spin (verified identical at 015027a and 589b01b).
+  If lanes are still dead tonight, the new auto stall-halt stops the
+  chain at stall 12 instead of burning.
 
 - RELIEF LANE WATCH (Lead, 22:45Z — third degradation tonight): 18:52Z
   groq empty husk; 21:04Z all three zai/glm-4.7-flash@goose arms exited
