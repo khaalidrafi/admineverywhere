@@ -66,9 +66,19 @@ RUN npm install -g @tencent-ai/codebuddy-code \
 #     `cline "task" --json`; non-OAuth auth proven in sandbox 2026-10-22
 #     (`cline auth -p cline -k $KEY -m <model>` -> providers.json).
 #     DORMANT until CLINE_API_KEY (or DoE free-account creds) lands as a
-#     repo secret — the probe step SKIPs cleanly without it. -----------
-RUN npm install -g cline \
- && timeout 120 cline --version
+#     repo secret — the probe step SKIPs cleanly without it.
+#     10-ba BUILD LAW (run 40117823054 evidence): this bake built GREEN at
+#     17:26 (run 40116083108 probes) and FAILED at 17:58 (run 40117823054,
+#     npm install -g cline exit 1) — a flaky/driftering npm install of a
+#     DORMANT body must never brick the image and kill the whole chain
+#     (no image -> no turn, no review -> review-missing -> stall). One
+#     retry, then the body degrades to ABSENT with a loud marker; the
+#     proven bodies (qoder/codebuddy above) stay strict. ---------------
+RUN (npm install -g cline \
+  || (sleep 20 && npm install -g cline) \
+  || echo "CLINE-BODY-ABSENT (npm install failed twice - dormant lane, chain continues)") \
+ && (timeout 120 cline --version \
+  || echo "CLINE-BODY-UNVERIFIED (installed but --version failed - probe will grade it)")
 
 # NOTE (Lead 10-ay): mcode (@minimax-ai/code) is NOT baked here — its CLI
 # needs Node >= 22.19 while this image ships Debian bookworm Node 18, and a
