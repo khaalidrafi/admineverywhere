@@ -213,10 +213,14 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 # headline (a merge that folds two concurrent EOF appends eats the second entry's
 # header and CHAT-FORMAT cannot see the orphaned tail), the chat was never edited or
 # dropped inside the objective's window, the run log holds one well-formed line per
-# turn (every run id resolving to a real commit), and every parked board item is
-# still a headline — an order cannot be restored over a deleted item.
+# turn (every run id resolving to a real commit) AND every run-shaped line in that log
+# is one the harness actually reads (parse_log grades only a section named exactly
+# `runs`; a record that fell outside it is LOG-COVERAGE red, never a silently lower
+# count — the log re-opened that region twice and nothing measured the claim), and
+# every parked board item is still a headline — an order cannot be restored over a
+# deleted item.
 python3 scripts/chain_test_check.py            # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/chain_test_check.py --selftest # 13 controls: every leg proved able to fail
+python3 scripts/chain_test_check.py --selftest # 15 controls: every leg proved able to fail
 
 # the chain's SESSION collect->restore loop (Owner order 2026-10-21 18:27Z) as a
 # check, read-only against the Lead-owned turn script WHEREVER IT LIVES — the workflow
