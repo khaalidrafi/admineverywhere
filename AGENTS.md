@@ -44,7 +44,7 @@ Product constraints — do not relax:
   concatenated onto `apiUrl`; an unresolvable source renders a friendly
   empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
   the `$effect` cleanup kills the timer. Contract + checklist:
-  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`.
+  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`. The rendered half is graded too: `feedGridMount.test.ts` mounts the Dashboard grid against a live schema taking its widgets off the glob (not by import), so every fed widget must paint, a schema arriving after mount must wake it, and a feed nothing can serve must render its reason with no chart and no guessed URL.
 - RBAC (FR-R007) is claims-driven and degrades silently: `normalizeOpenAPI`
   binds `schema.mePath` ONLY when the document carries `GET …/me/` and no
   POST (exportPath law again — never a guessed `/api/me/`), the client
@@ -125,7 +125,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (461 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (467 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -153,7 +153,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 461 vitest
+cd app && npm test                          # 467 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
