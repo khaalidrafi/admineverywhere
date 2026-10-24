@@ -1,8 +1,11 @@
 """Seed demo data: demo users + shop data with 14 days of order history.
 
 Superuser: admin / admin123 (DEV ONLY — obviously never do this in prod).
-Role-holder: auditor / audit123 — non-superuser, Django Group `auditors`
-only, so FR-R007 role gating is demonstrable live, not just in tests.
+Role-holders: auditor / audit123 (Group `auditors` only) and manager /
+manager123 (Group `managers` only) — both non-staff, non-superuser, so
+FR-R007 role gating is demonstrable live in BOTH directions: the gated
+surfaces hidden for one and shown for the other because the claim matches,
+not because of the superuser bypass.
 Historical `created_at` values give ActivityChart something to draw.
 """
 import random
@@ -53,20 +56,29 @@ class Command(BaseCommand):
 
         # A superuser sees EVERY gated surface by design (rbac.ts:
         # isSuperuser -> allow), so a rig holding only `admin` can never
-        # demonstrate a hidden nav entry or button. Seed a second caller
-        # that holds exactly one role: `auditor` sees the auditors-gated
-        # screens and is denied the managers-only ones, live. DEV ONLY.
-        auditor, created = User.objects.get_or_create(
-            username="auditor", defaults={"email": "auditor@example.com"}
-        )
-        if created:
-            auditor.set_password("audit123")
-            auditor.save()
-        auditor.groups.set([groups["auditors"]])
+        # demonstrate a hidden nav entry or button. Seed two plain callers,
+        # one per direction of the gate, each holding exactly one role —
+        # every gated surface in the reference app requires `managers`
+        # (Modules, Branding, actions/bulk_flag.ts), so `auditor` alone only
+        # ever proves the rejection; the acceptance half would otherwise be
+        # provable only through the superuser bypass, which proves nothing
+        # about claims matching. DEV ONLY.
+        for username, role, password in (
+            ("auditor", "auditors", "audit123"),
+            ("manager", "managers", "manager123"),
+        ):
+            user, created = User.objects.get_or_create(
+                username=username, defaults={"email": f"{username}@example.com"}
+            )
+            if created:
+                user.set_password(password)
+                user.save()
+            user.groups.set([groups[role]])
         self.stdout.write(
             "demo logins: admin/admin123 (superuser, auditors+managers — sees "
-            "everything) · auditor/audit123 (non-superuser, auditors only — "
-            "managers-gated surfaces stay hidden)"
+            "everything, by bypass) · auditor/audit123 (non-superuser, auditors "
+            "only — managers-gated surfaces stay hidden) · manager/manager123 "
+            "(non-superuser, managers only — they show, because of the claim)"
         )
 
         Order.objects.all().delete()

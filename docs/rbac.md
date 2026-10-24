@@ -128,17 +128,23 @@ do not hold the role.
 | --- | --- | --- |
 | `admin` / `admin123` | superuser, holds `auditors` + `managers` | sees **everything** — superuser short-circuits `roleAllows()` |
 | `auditor` / `audit123` | non-staff, non-superuser, holds `auditors` **only** | the **rejection** path, live: the managers-only "Flag batch" button is absent from the Order table, and the **Modules** and **Branding** entries are absent from the sidebar (one per nav group) |
+| `manager` / `manager123` | non-staff, non-superuser, holds `managers` **only** | the **acceptance** path, live, WITHOUT the bypass: the same button and the same two entries appear because the claim matches. `admin` shows them too, but only because a superuser short-circuits `roleAllows()` — so before this login existed the rig could prove "hidden" and "shown by bypass", never "shown because the role was granted" |
 
-Both are DEV-ONLY demo credentials, same caveat as `admin123`. To watch
+All three are DEV-ONLY demo credentials, same caveat as `admin123`. To watch
 the gate rather than trust the unit test: `manage.py seed_demo`, log the
 client in with `auditor`'s token, open Orders and select rows — the batch
 button is gone; look at the sidebar — no Modules, no Branding (typing
 `#/modules` by hand still paints the inspector, and there both rows are
 marked `gated` with no Open button).
-Switch to `admin` and everything returns. `GET /api/me/` for each
-answers `["auditors"]` vs `["auditors","managers"]` (+ `is_superuser`
-false/true), which is the whole decision input — pinned by
-`test_seed_demo_gives_a_nonsuperuser_single_role_holder`.
+Switch to `manager` and they come back because the CLAIM matches
+(`roleAllows(["managers"], …)` reaches the `roles.some(...)` branch, not the
+superuser bypass); switch to `admin` and everything returns by bypass. `GET
+/api/me/` for the three answers `["auditors","managers"]` + `is_superuser`
+true, `["auditors"]` + false, `["managers"]` + false — which is the whole
+decision input, pinned by
+`test_seed_demo_gives_a_nonsuperuser_single_role_holder`,
+`test_seed_demo_gives_a_nonsuperuser_managers_holder` and
+`test_seed_demo_covers_both_gate_directions_without_a_superuser`.
 
 ## The line that must not blur
 
