@@ -1,5 +1,8 @@
 <script module lang="ts">
-  export const meta = { title: "Branding", path: "/branding", nav: "settings", icon: "gear", order: 90 };
+  /** R-007 live gate case: brand PUT is staff-only server-side, so the demo
+   *  rig's non-staff `auditor` gets no entry here — the nav REJECTION path a
+   *  superuser-only rig can never demonstrate (roleAllows short-circuits). */
+  export const meta = { title: "Branding", path: "/branding", nav: "settings", icon: "gear", order: 90, roles: ["managers"] };
 </script>
 
 <script lang="ts">
