@@ -2004,3 +2004,13 @@
 :WHEN: [2026-10-24 Sat 13:52 UTC]
 :END:
   Merger outcome: review-missing (duty reviewer=unknown, verdict=none; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261024-0527 :rejected:
+:PROPERTIES:
+:AUTHOR: platform-engineer
+:REVIEWER: deepseek-v4.1-flash@qoder
+:VERDICT: REJECTED
+:OUTCOME: rejected
+:WHEN: [2026-10-24 Sat 14:41 UTC]
+:END:
+  Merger outcome: rejected (duty reviewer=deepseek-v4.1-flash@qoder, verdict=REJECTED; merge authority: Lead, executed by this gate).
