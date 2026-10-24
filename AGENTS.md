@@ -219,9 +219,13 @@ python3 scripts/chain_test_check.py --selftest # 10 controls: every leg proved a
 # extracted the over-long block: every store the collect tar takes is restored to its
 # OWN path, no lane opts out with --no-session, the goose session store is covered, the
 # restore dir is mounted, and a script the chain does not run (or a second one competing
-# with the first) is refused instead of silently graded
+# with the first) is refused instead of silently graded — AND the duty reviewer's verdict
+# really reaches the merger: the arm's write path and the extractor's read path name ONE
+# file, the container mounts the host workspace under that path, and the extractor's own
+# pattern is replayed against every verdict literal the reviewer brief demands (three
+# review-missing runs 2026-10-24 recorded verdict=none while a reviewer lane was named)
 python3 scripts/chain_session_check.py        # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/chain_session_check.py --selftest # 11 controls: every leg proved able to fail
+python3 scripts/chain_session_check.py --selftest # 14 controls: every leg proved able to fail
 
 # the chat send-back's FIVE specced checks as ONE command — governance
 # (TEAM.md's MEMBER IDS reversal + its two rule headings), the color sweep of
