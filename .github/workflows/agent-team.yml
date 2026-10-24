@@ -723,6 +723,33 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
+      # 10-bb (Lead): the review lane's full transcript was parsed for the
+      # verdict token and then discarded — every rejection REASON was
+      # unobtainable from CI (evidence: 1632 rejected 4x, reasons invisible,
+      # triage went blind twice; only the parse line survives in job logs).
+      # The host parse at turn_segment.sh reads $PWD/.turn-review.txt, so the
+      # file is on the runner — persist it (secret-guarded) as an artifact.
+      - name: Stage review transcript for artifact (secret-guarded)
+        if: always()
+        run: |
+          if [ -s "$PWD/.turn-review.txt" ]; then
+            bash .github/scripts/secret-guard.sh file "$PWD/.turn-review.txt" || true
+            mkdir -p "$PWD/.review-upload"
+            cp "$PWD/.turn-review.txt" "$PWD/.review-upload/review-transcript.txt"
+            echo "review transcript captured ($(wc -c < "$PWD/.review-upload/review-transcript.txt") bytes)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "review transcript absent (no review duty or lane produced no output)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload review transcript artifact (30-day retention)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-transcript-${{ github.run_number }}
+          path: .review-upload/review-transcript.txt
+          retention-days: 30
+          if-no-files-found: ignore
+
       # Peer-mesh law: the seat's branch is auto-merged by `finalize` right
       # after this step; ONLY the control-file pointer lands on ai/main here.
       - name: Push work branch, advance rotation, commit control file
