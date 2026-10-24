@@ -150,8 +150,17 @@ HEADLINE_LINE = re.compile(r"^\* MSG ")
 # uppercase key (`:PROPERTIES:`, `:FROM: …`, `:END:`). Every body line the
 # FORMAT LAW writes is INDENTED by two spaces, so column-0 is what makes a
 # drawer line a drawer line — and what makes one outside a drawer region an
-# orphan.
-DRAWER_FIELD_RE = re.compile(r"^:[A-Z][A-Z0-9_-]*:")
+# orphan. The key must ALSO satisfy the field grammar — `:KEY:` alone, or
+# `:KEY:` + whitespace + value — because a BODY line can legally quote the
+# drawer order at column 0: run 40113340018 REJECTED the clean housekeeping
+# branch ai/turn-20261024-1632 on exactly that (a relief seat's TEST-T2 line
+# reporting the fold hazard, `:PROPERTIES:, :WHEN:, :FROM:, …`, was reported
+# AS a fold — the prefix read matched `:PROPERTIES:` and stopped). After that
+# `:KEY:` comes a COMMA, and a comma is neither end-of-line nor whitespace,
+# so the grammar read excludes the prose while every real field still
+# matches. The key itself is group(1) — report sites print it, not the
+# whole match (the value's first character is not part of the field).
+DRAWER_FIELD_RE = re.compile(r"^(:[A-Z][A-Z0-9_-]*:)(\s*$|\s+\S)")
 
 
 class CannotRun(Exception):
@@ -453,7 +462,7 @@ def main(argv):
     # the perspective of the earlier commit). So the orphan scan reads the
     # file structurally instead.
     for number, line, owner in orphans:
-        field = DRAWER_FIELD_RE.match(line).group(0)
+        field = DRAWER_FIELD_RE.match(line).group(1)
         problems.append(
             "CHAT-STRUCTURE line %d: drawer field `%s` sits outside any entry "
             "(folded into the message whose headline is at line %d) — an entry lost "
@@ -765,6 +774,27 @@ def control_blind_drawer_scan(root):
     _write_file(root, CHAT_REL, broken)
 
 
+def control_prose_lookalike(root):
+    """The false positive that rejected a clean branch: run 40113340018
+    (2026-10-24 17:25Z) REJECTED ai/turn-20261024-1632 — pure additive
+    housekeeping — because the relief seat's TEST-T2 body line quoting the
+    drawer order sat at column 0 and the prefix read called `:PROPERTIES:`
+    an orphan field, going red on prose. The grammar read excludes it. Live
+    folds neutralised FIRST — the same base protocol as control_folded_entry
+    — so the PAIR grades discrimination from one base: this control asserts
+    the problem text is ABSENT for the lookalike (!needle), its sibling
+    asserts a real orphan still fires (needle present)."""
+    text = _read_file(root, CHAT_REL)
+    lines = text.splitlines()
+    for number, _line, _owner in scan_orphan_drawers(text)[0]:
+        lines[number - 1] = "  " + lines[number - 1]
+    text = "\n".join(lines) + "\n"
+    if scan_orphan_drawers(text)[0]:
+        raise CannotRun("control prose-lookalike: the orphan lines could not be neutralised")
+    text += ":PROPERTIES:, :WHEN:, :FROM:, :TO:, :KIND:, :END:.\n"
+    _write_file(root, CHAT_REL, text)
+
+
 # (name, mutation, expected exit code, expected text in the output, extra argv)
 CONTROLS = (
     ("dropped chat entry", control_dropped_entry, 1, "NO-DROP", ()),
@@ -779,13 +809,14 @@ CONTROLS = (
     ("no chat date parses", control_unparseable_when, 2, "drawer parse is broken", ()),
     ("folded entry (no headline)", control_folded_entry, 1, "CHAT-STRUCTURE", ()),
     ("blind drawer scan", control_blind_drawer_scan, 2, "grades nothing", ()),
+    ("prose lookalike tolerated", control_prose_lookalike, 1, "!sits outside any entry", ()),
 )
 
 # The control roster is PINNED, not derived: a comparison cannot see its own
 # coverage, and `SELFTEST OK — N control(s)` printed N from len(CONTROLS), so
 # deleting a control deleted the proof and still answered OK (landing_gate's
 # MERGE_ROSTER law, applied to this harness's own legs).
-EXPECTED_CONTROLS = 12
+EXPECTED_CONTROLS = 13
 
 
 def selftest(root):
@@ -813,11 +844,20 @@ def selftest(root):
                 argv += ["--main", base or "ai/main"]
             proc = subprocess.run(argv, capture_output=True, text=True)
             out = proc.stdout + proc.stderr
-            if proc.returncode == expected_rc and expected_text in out:
+            # `!needle` = the text must be ABSENT: an exclusion (a shape the
+            # leg must NOT flag) can only be graded on a copy that is still
+            # red for other legs (every file mutation breaks the byte-prefix
+            # legs on the copy), so the assertion is the problem text's
+            # ABSENCE, never a green exit.
+            negated = expected_text.startswith("!")
+            needle = expected_text[1:] if negated else expected_text
+            hit = needle not in out if negated else needle in out
+            if proc.returncode == expected_rc and hit:
                 print("  control %-24s -> rc %d as expected (%s)" % (name, proc.returncode, expected_text))
             else:
-                failures.append("%s: expected rc %d containing %r, got rc %d: %s"
-                                % (name, expected_rc, expected_text, proc.returncode, out.strip()[:300]))
+                failures.append("%s: expected rc %d %s %r, got rc %d: %s"
+                                % (name, expected_rc, "without" if negated else "containing",
+                                   needle, proc.returncode, out.strip()[:300]))
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
     if failures:
