@@ -7922,3 +7922,106 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   avoids two partial fixes of the same lane); the merge-as-prefix ruling for
   chain_test_check's growing 31-ref family; 0527 registering when the queue
   reaches it; and the FR-R007-LIVE human E2E row, which still needs eyes.
+
+* MSG software-engineer -> @lead :report:      :msg:software-engineer:lead:report:
+:PROPERTIES:
+:FROM: software-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-24 Sat 09:32 UTC]
+:END:
+  TURN 2026-10-24 09:12Z, seat software-engineer, branch ai/turn-20261024-0912.
+  PINGS: none for @software-engineer — `grep -c "MSG .* -> @software-engineer"
+  agent-team/TEAM-CHAT.org` returns the same three historical leads (:6537 :audit-red,
+  :6564 :correction, both closed by my reports at :6695 and :7061); nothing new to
+  answer. Board is closed, so this segment took the CI-repair lane the idle law leaves
+  a seat, and specifically the one item the last two reports handed to "a seat": the
+  class of published-but-ungraded numbers that docs/CHAIN-TEST.md:119-121 flagged and
+  ai/turn-20261024-0809 named again — `--selftest # N controls` lines.
+
+  WHAT LANDED (work commit 96ebecb):
+  - scripts/release_readiness.py:845 `leg_control_counts()` — the fifth number class
+    the release harness refuses to leave as prose. For every `N controls` claim inside
+    `## Commands` of the two mirror docs it reads THREE views of one intent and demands
+    they be one number: the number a reader follows, the harness's own
+    `EXPECTED_CONTROLS` literal, and `len(CONTROLS)` counted from that harness's AST by
+    `control_roster()` (scripts/release_readiness.py:810). It never re-spells a count.
+    A fourth check is on the pin itself: the harness must literally contain the
+    `len(CONTROLS) != EXPECTED_CONTROLS` comparison, or the pin is a second number
+    nothing reads and the leg says so.
+  - scripts/chat_feature_check.py:455 + :460 — THE LIVE GAP THIS CLOSED. AGENTS.md's
+    Commands block instructs `12 controls` for that harness, and the harness had NO
+    `EXPECTED_CONTROLS` at all (chain_test_check, chain_session_check, chain_slot_check
+    all carry one). Deleting a control there printed a smaller N in its own
+    `SELFTEST OK` while the doc, and every report written from it, kept promising 12.
+    It now carries the family's pin and guard, test-first against the leg above.
+  - Population pinned by the ELEVENTH law applied to its own author:
+    `EXPECTED_CONTROL_CLAIMS = 5` (scripts/release_readiness.py:217) against the claims
+    actually discovered in-section, so a claim whose number is deleted or relocated out
+    of `## Commands` is CANNOT RUN, not quietly less coverage. `EXPECTED_CLAIMS`
+    16 -> 17 (:158) for the two DEVGUIDE citations the new paragraph adds — the target
+    leg caught that bump while the prose was being written, exactly as it did the sixth
+    time.
+  - DEVGUIDE ELEVENTH law extended with the new class and its seven controls
+    (docs/DEVGUIDE.md:1233 onward), and the two mirror docs' `release_readiness`
+    command comments retyped in the same commit (AGENTS.md:185-189,
+    docs/DEVGUIDE.md:196-201). No suite count moved: zero product code, zero tests.
+
+  MEASURED on the tree this commit produces:
+  - `python3 scripts/release_readiness.py` -> rc 0, the new line printing
+    `controls 5 live claim(s) over 3 harness(es) equal each harness's own pin
+    (chat_feature_check=12, chain_session_check=14, chain_test_check=10)`.
+  - 7 controls, all on a copy of the tree (/tmp/rrctrl), each file md5-verified back
+    to its original before the next: doc retyped 10->9 -> RED `says 9 controls,
+    scripts/chain_test_check.py pins 10`; the literal deleted from a harness ->
+    CANNOT RUN `publishes no EXPECTED_CONTROLS`; a control dropped from the roster with
+    the pin kept -> RED `pins 10 control(s) but its CONTROLS roster holds 9` AND, run
+    directly, that harness's own `--selftest` -> rc 2 `the control roster holds 9
+    entries, the pin says 10`; the pin's comparison neutered -> RED `is never compared
+    against len(CONTROLS)`; a claim's number deleted -> CANNOT RUN `carry 4 control
+    claim(s), the pin says 5`; a claim on a line naming no script -> CANNOT RUN `names
+    no scripts/*.py`; the pin bumped alone -> RED with the direction named
+    (doc-stale side). First two of those printed a DUPLICATED finding because AGENTS and
+    DEVGUIDE both claim the same harness; deduped in the leg, then re-run to rc 0/1 as
+    specced — a claim I would otherwise have shipped as prose.
+  - `python3 scripts/landing_gate.py --fe` -> GATE GREEN 11/11 (pytest 300, manage.py
+    check no issues, makemigrations No changes, vitest 484 passed / 39 files, csv-twin
+    BYTE-IDENTICAL 3070 cells / 56287 B, brand-twin 302 over pinned 350, parity-twin
+    identical, gate-twin ROSTER-IDENTICAL 3/3, registry-twin 3 registries / 16
+    drop-ins, doc-twin 88 field claims); `doc_field_roster_diff` /
+    `registry_roster_diff` / `gate_roster_diff` each rc 0;
+    `chat_feature_check.py --selftest` rc 0 (12 controls, the new pin not breaking the
+    roster it now guards) and its honest run rc 0.
+  - TWO REDs I did NOT cause and did NOT paper over: `chain_test_check.py` rc 1 with
+    32 `NO-DROP` commits, and `chain_session_check.py` rc 1 with the same 12 session
+    problems (RESTORE 1, NO-OPT-OUT 10, GOOSE-STORE 1) the platform seat measured at
+    08:09Z. Both are pre-existing on this branch — I reproduced the first against HEAD
+    in a detached `git worktree add --detach /tmp/headwt HEAD` (removed after) and got a
+    BYTE-IDENTICAL NO-DROP set (32 = 32, `diff` empty), plus the same 33 APPEND-ONLY
+    commits before and after my own append here, and my diff touches no chat entry of
+    another seat, no workflow, no product file.
+    The chat-prefix leg is reading merge-commit chat states as "reordered", which is a
+    machinery question for you, not a seat's re-delivery.
+  - Board diff: none. The board is closed and this work has no row to hang a LOGBOOK
+    on, so I added no line rather than inventing a headline (TODOS.org untouched;
+    `git diff --numstat` over it is empty for this commit).
+
+  LAW: SECRET LAW held — no credential read, echoed or committed; ROLE_LARK_WEBHOOK
+  tested by length only (len=0 in this seat's env), so the Lark copy of this report is
+  SKIPPED, not lost. Lead-owned files (.github/workflows/*, .github/scripts/*,
+  agent-team/TEAM-CONTROL.org, .gitattributes) read and cited only; harness scratch
+  (.turn-inside.sh, .turn-review.txt) left untracked and OUT of 96ebecb — the
+  gitignore that keeps that class out rides on the already-approved 0659 line.
+  SEGREGATION LAW: this seat reviewed nothing and merged nothing, ai/main was never
+  pushed, and the queue order (0836 ahead of mine) is yours.
+  RESULT: DONE — the last published-but-ungraded number in the two mirror docs is now
+  a graded claim (leg_control_counts, 3-view compare, population pinned to 5, 7
+  controls each able to fire), the chat_feature_check gap it was written for is closed
+  in the same commit, and landing_gate --fe is GREEN 11/11 at pytest 300 / vitest 484.
+  NEXT: the duty reviewer reviews ai/turn-20261024-0912 (note for that lane, from the
+  Lead's own 07:2xZ diagnosis still unfixed: this container has no demo-backend/.venv,
+  so rig-boot subprocess legs cannot pass there regardless of branch — preflight
+  PYTHONPATH=plugin/src or install setuptools in the review arm brief; on THIS seat's
+  env the gate ran on /usr/local/bin/python3 with django 5.2.18 and passed all 11
+  legs); the 32-commit NO-DROP reading in chain_test_check is yours to rule on;
+  and FR-R007-LIVE (agent-team/TODOS.org:3454) still needs eyes, not another seat.
