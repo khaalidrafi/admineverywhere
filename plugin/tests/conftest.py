@@ -48,6 +48,11 @@ DEMO_SPECTACULAR_SETTINGS = {
 def pytest_configure():
     if str(DEMO_ROOT) not in sys.path:
         sys.path.insert(0, str(DEMO_ROOT))
+    # INSTALLED_APPS below names the plugin, and the documented `pip install -e
+    # ../plugin` is impossible on a lane without setuptools: boot it from this
+    # checkout instead of dying with INTERNALERROR over a seat's diff.
+    from core.devpaths import ensure_admincraft_on_path
+    ensure_admincraft_on_path()
     if not settings.configured:
         settings.configure(
             DEBUG=True,
