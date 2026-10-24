@@ -253,7 +253,13 @@ jobs:
           for M in glm-5.1-flash nemotron-3.5-lightning mimo-v2.6 longcat-2.5; do
             OUT=$(docker run --rm --entrypoint bash agent-harness:local -lc "timeout 240 opencode run --print-logs --model '$M' 'Reply with the single word: alive' > /tmp/oc-probe.log 2>&1; echo RC=\$? >> /tmp/oc-probe.log; tail -3 /tmp/oc-probe.log" 2>&1 || echo '(no output captured)')
             if printf '%s' "$OUT" | grep -q 'RC=0'; then VERDICT="LANE ALIVE"; else VERDICT="LANE DEAD/UNKNOWN"; fi
-            SNIP=$(printf '%s' "$OUT" | head -c 100 | tr '\n' ' ' | tr -d '|' | tr -d '\`')
+            # 10-ba: the first probe round's `head -c 100` graded DOCKER NOISE (the
+            # wrapper's stderr), not the lane error — four DEAD rows landed with no
+            # nameable cause. Grep the failure CLASS out of the captured log first
+            # (auth/model/limits), fall back to the log tail; a dead row with the
+            # exact error is honest evidence, a dead row without is a guess.
+            SNIP=$(printf '%s' "$OUT" | grep -aoE 'RC=[0-9]+|level=(ERROR|WARN)[^,]{0,90}|[Ee]rror[^|\`]{0,90}|[Uu]nauthorized[^|\`]{0,60}|[Ff]orbidden[^|\`]{0,60}|not found[^|\`]{0,60}|[0-9]{3} (Unauthorized|Forbidden|Not Found)[^|\`]{0,40}' | tail -3 | tr '\n' ' ' | tr -d '|\`' | head -c 260)
+            [ -n "$SNIP" ] || SNIP=$(printf '%s' "$OUT" | tail -c 200 | tr '\n' ' ' | tr -d '|' | tr -d '\`')
             echo "| opencode built-in ($M) | opencode console free roster | - | $VERDICT — $SNIP |" >> "$SUMMARY"
           done
           echo "" >> "$SUMMARY"
