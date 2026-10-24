@@ -61,6 +61,22 @@ RUN export HOME=/usr/local/lib/qoder-home \
 RUN npm install -g @tencent-ai/codebuddy-code \
  && timeout 60 codebuddy --version
 
+# --- Cline body (wave-3 QA-6/QA-7 lane; Owner hire order 2026-10-24
+#     17:01Z "Hire built-in models from Opencode and cline"). Headless:
+#     `cline "task" --json`; non-OAuth auth proven in sandbox 2026-10-22
+#     (`cline auth -p cline -k $KEY -m <model>` -> providers.json).
+#     DORMANT until CLINE_API_KEY (or DoE free-account creds) lands as a
+#     repo secret — the probe step SKIPs cleanly without it. -----------
+RUN npm install -g cline \
+ && timeout 120 cline --version
+
+# NOTE (Lead 10-ay): mcode (@minimax-ai/code) is NOT baked here — its CLI
+# needs Node >= 22.19 while this image ships Debian bookworm Node 18, and a
+# runtime upgrade would risk the four PROVEN bodies above (own machinery
+# pass, with its own evidence, before touching the base Node). The Owner
+# carve-out 2026-10-24 17:11Z keeps the mcode lane paper-armed (ROSTER:
+# RE-ARMED free) until that bake lands.
+
 # --- Non-root run user (matches the Actions runner uid 1001) -----------
 RUN useradd -m -u 1001 agent
 
