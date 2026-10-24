@@ -179,7 +179,7 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   ef1e8a4 — conflict surface identified, trial rebase next per DIVERGENCE
   HANDLING; STOP + WAIT if it conflicts, Lead/Owner resolves.
 :END:
-*** PENDING FR-R001-FE — lifecycle renderer (client side)                :FE:
+*** DONE FR-R001-FE — lifecycle renderer (client side; Lead gate: fix content on main at api.ts:349/openapi.ts:183-199/actions.test.ts:263-270 via approved+merged path 965956e, verified 9-k 2026-10-24) :FE:
 :LOGBOOK:
 - Note taken on [2026-10-22 Thu 17:07 UTC] :: :DELIVERED: INDEPENDENT QA AUDIT OF
   THE CLIENT HALF (seat quality-assurance-engineer, first activation, lane
@@ -2208,7 +2208,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   gate clean: the demo rig's parent/child pair is Order -> OrderHistory, so
   (b) needs no new model and no migration.
 :END:
-** PENDING FR R-006 page registration                                            :FE:
+** DONE FR R-006 page registration (Lead gate: 2241 merged 9519ed1 QA APPROVED 5094fef + duplicate 2320 union-merged ffb23b5 QA APPROVED 1be09f3, gate green 463/37) :FE:
 :LOGBOOK:
 - Note taken on [2026-10-23 Fri 23:40 UTC] :: NIGHT-2 ITEM 5 — :DELIVERED:
   (platform-engineer, branch ai/turn-20261023-2320). A rendered blind spot found
