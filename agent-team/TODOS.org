@@ -492,8 +492,21 @@ CLOCK: [2026-10-18 Sun 21:19]
   been flipped; closed the orphan clock at the true commit time.
 :END:
 
-** PENDING FR R-003 custom actions + audit                                       :BE:FE:
+** DONE FR R-003 custom actions + audit                                       :BE:FE:
 :LOGBOOK:
+- State "DONE" from "PENDING" [2026-10-24 Sat 06:25 UTC]
+- Note taken on [2026-10-24 Sat 06:25 UTC] :: :LEAD-GATE: (Lead finalize — row verified complete by
+  Lead measure, no seat work outstanding: FR-R003-BE DONE (merged f5840aaf,
+  TODOS.org:515) + FR-R003-FE DONE (Lead audit-landing, TODOS.org:548,
+  :approved-lead-audit:); artifacts verified PRESENT on main
+  (app/src/actions/flag.ts, app/src/actions/bulk_flag.ts,
+  docs/custom-actions.md, actionMount.test.ts, lifecycleMount.test.ts — the
+  guessed-/api/audit/ defect closed by lifecycleMount pinning the refusal);
+  full 11-leg landing_gate.py --fe GREEN measured on the main tree this cycle
+  (pytest 300, vitest 478/39, six twins identical, tsc rc 0). Corroborated by
+  the software-engineer R-003-as-measured report (ai/turn-20261024-0454
+  @a19ddb5, benign-rejected as already-landed — its measurement record lives
+  on that branch). DONE is the Lead gate (law 8).
 - Note taken on [2026-10-21 Wed 10:25 UTC] :: LIVE-HTTP proof for the audit
   actions at ai/main 317351e — see the R-001 parent note of this segment:
   record flag + bulk_flag answered 2xx against the live rig, each wrote an
