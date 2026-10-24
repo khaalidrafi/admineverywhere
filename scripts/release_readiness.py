@@ -75,11 +75,11 @@ CITE_ALLOWLIST = {
 # citation whose line is legitimately out of range because it quotes a TOOL
 # MESSAGE instead of naming a location. An entry goes RED when the line starts
 # to land inside the file, so the exemption cannot outlive its reason.
-CITE_LINE_ALLOWLIST = {
-    "docs/widget-data.md:127": "docs/DEVGUIDE.md quotes this harness's own reject "
-                               "message from a control run — a quoted string, not "
-                               "a location claim",
-}
+# Empty by measurement: its only entry exempted DEVGUIDE's quote of a control
+# message naming docs/widget-data.md:127 while that file had 125 lines; a later
+# doc edit grew the file past 127, the leg said so, and the prose moved to a
+# number-free historical note instead of keeping the exemption alive.
+CITE_LINE_ALLOWLIST = {}
 
 # The same reverse bite for the TARGET leg, from BOTH ends (each measured as a
 # control, and both doors were found BY the controls — the first version of this
