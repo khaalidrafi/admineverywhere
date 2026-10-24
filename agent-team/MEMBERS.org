@@ -39,12 +39,23 @@
     pending; reviewer-2 for the parallel review lanes (DE note,
     Owner-approved 16:23Z); dispatch-only per QA law; same brain
     family as the proven Lead tier, no author-seat brain collision]
+    CREDIT LAW (Owner 16:34Z): glm-5.3@codebuddy is a PAID lane -
+    consumes credits. Dispatched review lanes ONLY; never the author
+    rotation, never idle burns; harness probes must exclude this seat.
   * ROLE: PLATFORM ENGINEER 2 (HIRED - Owner order 2026-10-24 16:25Z
     "just hire more from our excellent candidates")
     groq/qwen3.8-27b@goose [ACTIVATING - author-arm wiring + first
     live proof pending; promoted from the relief fallback chain where
     it is PROVEN (probe 200, the STRONG arm; saved relief segments
     twice per the RELIEF LANE WATCH evidence)]
+
+  * ROLE: QA ENGINEER 3 (HIRED - Owner order 2026-10-24 16:34Z
+    "hire even more"; wave 2)
+    groq/qwen3.8-27b@goose [ACTIVATING - reviewer-arm wiring + first
+    live proof pending; FREE lane, probe 200 ALIVE at 16:23Z; same
+    brain as PLATFORM ENGINEER 2 - acceptable, refusal law checks
+    member ids and rotation alternates; reviewer-3 depth for the
+    parallel review lanes]
 
 * HIRES WITH REASONS (Owner order 2026-10-22 ~16:08Z: hire list with reasons — model capability, performance, benchmarks, reviews)
 
