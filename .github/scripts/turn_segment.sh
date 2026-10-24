@@ -547,7 +547,23 @@ TURN_RESULT=$(sed 's/^TURN_RESULT=//' "$PWD/.turn-result.txt" | tail -1)
 # what it decided (the merger in finalize acts on these).
 REVIEW_VERDICT=$(grep -hoE 'VERDICT:[[:space:]]*(APPROVED|REJECTED)' "$PWD/.turn-review.txt" 2>/dev/null | tail -1 | sed 's/.*VERDICT:[[:space:]]*//' | awk '{print $1}')
 REVIEW_EVID=$(grep -hE 'VERDICT:' "$PWD/.turn-review.txt" 2>/dev/null | tail -1 | tr -d '\r\n"%' | cut -c1-200)
-echo "review verdict for ${PENDING_BRANCH:-none}: ${REVIEW_VERDICT:-none}"
+# HONEST REVIEW-LANE GUARD (Lead cycle 10-l; evidence: run 40073828746
+# turn job 120814481260 — the duty review RAN (74 turns, 1042s) but the
+# reviewer brain was substituted provider-side ("Model ... is not
+# available right now; using ... instead"), the report ended in prose
+# with no VERDICT: token, and the harness recorded a healthy run +
+# review-missing. The author lanes grep a CB_BAD network marker (the
+# blocks at the two docker-run sites); the review lane had no
+# equivalent. Substitution marker + no verdict token = lane-dead:
+# surfaced honestly so finalize labels the record and the stall law
+# can see the failure instead of polling review-missing noise.
+REVIEW_LANE_DEAD=0
+if [ -z "$REVIEW_VERDICT" ] && [ -n "$PENDING_BRANCH" ] \
+   && grep -q 'is not available right now; using' "$PWD/.turn-review.txt" 2>/dev/null; then
+  REVIEW_LANE_DEAD=1
+  echo "REVIEW LANE DEAD-MARKER: reviewer model substituted and no VERDICT token — recording lane-dead, not review-missing (job 120814481260 evidence)."
+fi
+echo "review verdict for ${PENDING_BRANCH:-none}: ${REVIEW_VERDICT:-none} lane_dead=${REVIEW_LANE_DEAD}"
 echo "pending_branch=${PENDING_BRANCH}" >> "$GITHUB_OUTPUT"
 echo "pending_author=${PENDING_AUTHOR}" >> "$GITHUB_OUTPUT"
 echo "pending_sha=${PENDING_SHA}" >> "$GITHUB_OUTPUT"
@@ -555,6 +571,7 @@ echo "review_verdict=${REVIEW_VERDICT}" >> "$GITHUB_OUTPUT"
 echo "review_evid=${REVIEW_EVID}" >> "$GITHUB_OUTPUT"
 echo "review_seat=${REVIEWER_SEAT}" >> "$GITHUB_OUTPUT"
 echo "review_member=${REVIEWER_MEMBER}" >> "$GITHUB_OUTPUT"
+echo "review_lane_dead=${REVIEW_LANE_DEAD}" >> "$GITHUB_OUTPUT"
 # HOST-SIDE COMMIT (run 39488529938: the seat EDITED + VERIFIED but
 # its sandbox denied git/pytest — the edits died in the container,
 # branch pushed empty, work lost). The host commits the workspace
