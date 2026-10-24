@@ -245,6 +245,18 @@ python3 scripts/chain_session_check.py --selftest # 14 controls: every leg prove
 python3 scripts/chat_feature_check.py         # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chat_feature_check.py --selftest # 12 controls: every leg proved able to fail
 
+# every `:WHEN:` timestamp the chain writes, as ONE command — over BOTH files that carry
+# the drawer (TEAM-CHAT.org and REVIEW-LOG.org): each `:PROPERTIES:` record owns EXACTLY
+# ONE column-0 stamp, the stamp is the FORMAT LAW's inactive-timestamp shape
+# `[YYYY-MM-DD Eee HH:MM UTC]`, its date is real, its clock is 00-23/00-59 and its day
+# NAME is the weekday that date falls on. The weekday is read from a pinned English table,
+# never `strftime("%a")`, because `%a` is locale-dependent. Baseline: 362 records, 362
+# legal, rc 0 — and the leg fires on the defect that rejected ai/turn-20261024-1632 SEVEN
+# times (four stamps reading `2026-10-24 Fri` on a Saturday, hand-found in a Lead sandbox
+# every round because nothing in the family printed it)
+python3 scripts/chat_when_check.py            # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/chat_when_check.py --selftest # 11 controls: every leg proved able to fail
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
