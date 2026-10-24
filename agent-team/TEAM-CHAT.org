@@ -8138,3 +8138,110 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   APPEND-ONLY red for 34 refs, the reviewer-arm preflight note above
   (setuptools is not the blocker in this lane), 0527 registering when the
   queue reaches it, and FR-R007-LIVE, which still needs eyes.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-24 Sat 16:35 UTC]
+:END:
+  IDLE-LAW TURN — CI-REPAIR LANE: THE NON-CLOBBER SLOT GUARD'S OWN READ IS
+  INERT, AND THAT IS THE MECHANISM BEHIND YOUR 10-am RACE. The board is
+  closed (agent-team/TEAM-CONTROL.org:8), the register is owned by the duty
+  reviewer's 0607 line (:13, last seen review-missing at 15:42Z — dbdcc5b),
+  the rotation pointer names this seat (#+TURN: qwen3.8-flash@qoder (Platform
+  Engineer)), and no @platform-engineer ping is outstanding:
+  `grep -nE '^\* MSG .*-> @platform-engineer' agent-team/TEAM-CHAT.org`
+  returns :42, :5595, :5936 — all your pre-objective dispatches. So this
+  segment took the lane your own LESSON pointed at.
+
+  THE FINDING (measured, and it names WHY the guard missed the 15:01Z clobber):
+  - .github/workflows/agent-team.yml:997 reads the slot with
+    `grep -E '^\#+PENDING-REVIEW:'`. In POSIX ERE `#+` means ONE-OR-MORE '#';
+    the live register line starts `#+PENDING-REVIEW: ` — a single hash then a
+    PLUS SIGN — which that pattern does not contain.
+  - Measured in THIS lane's interpreter (GNU grep 3.11, Debian trixie — the
+    harness image family): `grep -E -c '^\#+PENDING-REVIEW:' agent-team/TEAM-CONTROL.org`
+    -> 0 (rc 1), while the merger's OWN re-read at :793 uses the different
+    form `'^#\+PENDING-REVIEW:'` (escaped plus) -> 1. Same key, two pattern
+    dialects in one file, opposite results. Reproduced 3x for stability, and
+    cross-checked: `^#+` and `^\#` also both fail, `^\#\+` and `^#\+` both pass.
+  - Consequence at :1000: with CURSLOT permanently empty, the guard's
+    `[ -z "$CURSLOT" ]` disjunct is ALWAYS TRUE — the ed378d4 "NON-CLOBBER
+    SLOT GUARD" admits every write, including empty ones. A no-pending/
+    empty-write finalize blanks whatever the Lead parked. That is exactly the
+    shape of 27748d9 (15:01:07Z): its parent f87fccb carried the slot =
+    0607 (Lead advance fb1e48c, 14:53:22Z — 8 minutes BEFORE the writeback,
+    so the guard's own comment says it should have re-read 0607 after the
+    reset and REFUSED), yet its diff wipes the line:
+    `-#+PENDING-REVIEW: branch=ai/turn-20261024-0607 ...` / `+#+PENDING-REVIEW:`.
+    A live guard seeing a live CURSLOT would have refused; the CI lane's grep
+    evidently read the line as nothing too.
+  - Why scripts/chain_slot_check.py cannot see this: leg_blank_guard (:283)
+    is a TEXT read — it verifies a comparison and an operand EXIST in the
+    step body. A guard whose read silently matches nothing passes every text
+    law. The functional property — does the shipped command, executed, FIND
+    the shipped line — was graded by nothing.
+
+  WHAT LANDED (scripts/slot_reader_probe.py, new file, read-only, zero edits
+  to Lead-owned files): a functional probe that extracts each slot-touching
+  command FROM the workflow BY VARIABLE NAME (SLOT=, CURSLOT=, the guard sed
+  — never by line number) and EXECUTES it against the live control file, in
+  the same single-quoted shell form the runner uses. Verdicts: 0 = every
+  shipped reader finds the live register line; 1 = RED naming the reader and
+  quoting the clobber evidence; 2 = CANNOT RUN (workflow command unparsable,
+  or the register line count is not exactly one). Deliberately NOT named
+  `*_diff.py` — the landing gate's EXPECTED_TWINS roster would refuse an
+  unwired twin harness, and this probe belongs to the Lead's lane, not a
+  seat-merge leg.
+  Note the sed half is NOT broken: GNU sed BRE reads `\+` as the quantifier,
+  so the WRITE's address at :1001 matches the line (the probe grades this
+  too, and it passes — which is precisely why wipes land instead of no-op).
+
+  MEASURED on this tree:
+  - `python3 scripts/slot_reader_probe.py` -> rc 1:
+    `merger-reread FINDS`, `guard-curslot finds NOTHING -> guard sees empty
+    slot`, `guard-sed MOVES the live slot line`, `readers matching: 2 of 3`.
+  - THREE CONTROLS (all on mktemp copies, files verified back):
+    (1) honest run on a copy -> same rc 1 RED;
+    (2) REPAIR SIMULATION — changing only :997's pattern to the literal-plus
+        form already proven at :793 (`^#\+`) -> rc 0, "SLOT READERS OK 3/3";
+        the repair is one character-order in a Lead-owned file;
+    (3) register line deleted -> rc 2 CANNOT RUN naming the 0-vs-1 line count.
+  - `python3 scripts/chain_slot_check.py` -> rc 0, 4/4 legs (unchanged — this
+    is the hole the text leg cannot see, now visible to a command).
+  - `python3 scripts/landing_gate.py --fe` -> GATE GREEN 11/11 (pytest 300,
+    check no issues, makemigrations No changes, vitest 484/39, all six twins
+    identical); `release_readiness.py` -> rc 0 ("scripts 14 .py file(s) parse,
+    no PEP 604" — the new probe included); no doc site was retyped because
+    none cites this probe, and no suite count moves (zero tests added).
+
+  REPAIR FOR YOU (Lead-owned — .github/workflows/* is seat-forbidden, so this
+  is a command, not a diff): at agent-team.yml:997 replace `'^\#+PENDING-REVIEW:'`
+  with the form the same file already ships at :793 (`'^#\+PENDING-REVIEW:'`) —
+  or, best, make ALL slot readers one dialect (both greps `grep -E '^#\+...'`
+  or `grep -F '#+PENDING-REVIEW:'`). Then `python3 scripts/slot_reader_probe.py`
+  is the standing proof, and I suggest wiring it into the review-arm preflight
+  so a future reader-dialect edit is RED before a clobber cycle re-queues a
+  Lead advance. Your 10-am LESSON ("push advances early, re-assert if
+  clobbered") stays true but becomes unnecessary if the guard can actually see.
+
+  LAW: SECRET LAW held — no credential read, echoed or committed; env names
+  checked by presence only (ROLE_LARK_WEBHOOK empty in this seat's env -> the
+  Lark copy of this report is SKIPPED, not lost; QODER_PERSONAL_ACCESS_TOKEN
+  present, value never read). Lead-owned files (.github/workflows/*,
+  .github/scripts/*, TEAM-CONTROL.org, .gitattributes) read and cited only —
+  the broken line was diagnosed by running its command against its own file,
+  never by editing it. Harness scratch (.turn-*.sh/.turn-*.txt) verified
+  absent from `git status` before committing; the commit carries exactly one
+  new file plus this chat append. SEGREGATION LAW: this seat reviewed nothing,
+  merged nothing, never pushed ai/main; 0607 stays the duty reviewer's, and
+  my branch queues behind 0633 -> 0731 -> 1037 -> 1403 per oldest-first.
+  RESULT: DONE — the slot guard's inert read is measured, not theorized
+  (grep 3.11 rc 1 on the live register; 27748d9's diff proves the empty-write
+  path lands), the one-form repair is control-verified rc 0, and the class is
+  now re-runnable in one command (scripts/slot_reader_probe.py, 3 controls).
+  NEXT: your :997 repair (then the probe goes green on main by itself), the
+  standing 4 CHAT-STRUCTURE orphans (:6407/:7731 — repair stays Lead-only),
+  0607's verdict by the duty reviewer, and FR-R007-LIVE, whose live-wire half
+  the software seat measured at 15:40Z and whose browser half stays Owner's.
