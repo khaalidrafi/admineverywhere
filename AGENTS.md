@@ -126,7 +126,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (306 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (484 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
@@ -156,7 +156,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
 cd app && npm test                          # 484 vitest
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 306 pytest
 
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
 python3 scripts/csv_twin_diff.py            # 0 identical / 1 divergence or coverage lost / 2 cannot run
@@ -765,14 +765,20 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    scripts/landing_gate.py` re-runs all three behind a dep preflight, so a swallowed
    `pip install -e plugin` failure reports `CANNOT RUN` with the fix command instead of
    wearing pytest's exit 2 as a red tree — and each leg asserts its own output phrase,
-   because exit 0 alone never proved anything (DEVGUIDE *EIGHTH harness law*). The count
+   because exit 0 alone never proved anything (DEVGUIDE *EIGHTH harness law*). A lane
+   whose image has no setuptools cannot build that install at all, so since 2026-10-24
+   the preflight probes the interpreter as-is and then once more with this checkout's
+   `plugin/src` on PYTHONPATH, and the rig bootstraps the same way
+   (`demo-backend/core/devpaths.py`) — so `pytest plugin/tests`, the two Django legs and
+   the rig-booting subprocess tests answer for the branch in front of a reviewer
+   instead of dying on the environment. The count
    legs are graded against pinned literals `EXPECTED_PYTEST`/`EXPECTED_VITEST`/
-   `EXPECTED_VITEST_FILES` (`scripts/landing_gate.py:67`) — pre-fix the PARENT gate was
+   `EXPECTED_VITEST_FILES` (`scripts/landing_gate.py:73`) — pre-fix the PARENT gate was
    green over vanished coverage (measured: `297 passed`, rc 0), the same hole the twins
    were fixed for — so when a suite legitimately changes, bump the literal in the SAME
    commit as the diff (DEVGUIDE *ELEVENTH harness law*, extended to its own author).
    The LEG ROSTER is pinned the same way, by ordered labels (`MERGE_ROSTER` +
-   `FE_ROSTER`, `scripts/landing_gate.py:86`), checked before a single leg launches:
+   `FE_ROSTER`, `scripts/landing_gate.py:92`), checked before a single leg launches:
    pre-fix, deleting the `migrations` leg answered `GATE GREEN`, rc 0 — a vanished leg
    prints no count to argue with. A roster drift is `CANNOT RUN` (the harness is no
    longer this gate), never RED; the twin roster is cross-checked against the
@@ -788,7 +794,7 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    unit tests are green against their own fixture and therefore cannot see a
    divergence *between* the two. The fourth twin is the one a seat cannot see at
    all: `.github/scripts/gate.sh` (Lead-owned, what `finalize` actually replays) is
-   diffed command-by-command against `MERGE_COMMANDS` (`scripts/landing_gate.py:103`),
+   diffed command-by-command against `MERGE_COMMANDS` (`scripts/landing_gate.py:109`),
    which the merge legs themselves now execute — so "the landing gate runs the same"
    is measured, not asserted. Drift is RED naming `MISSING` / `UNDECLARED` / `ORDER
    changed` / `FAILURE NOT CAPTURED` (a leg that runs but whose `|| FAIL=1` is gone can
