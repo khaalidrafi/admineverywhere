@@ -222,14 +222,17 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 # THE TEST-CHAIN OBJECTIVE'S LANDED EVIDENCE as one command — the three scripted turns
 # (T1 check-in, T2 one harness improvement, T3 board/chat verification) each landed as
 # a commit on the main ref; the chat carries the FROM in EVERY headline and a complete
-# :PROPERTIES: drawer; inside the objective's window every historical chat version is a
+# :PROPERTIES: drawer AND no drawer line floats free of a headline (a merge folding two
+# concurrent EOF appends eats the second entry's header, and CHAT-FORMAT cannot see the
+# orphaned tail — it parses as the previous entry's body); inside the objective's window
+# every historical chat version is a
 # BYTE prefix of the current one (no entry edited, none dropped) and over the whole
 # history no entry ever disappears; the run log holds one well-formed line per turn
 # (`sha@branch | seat | lane | date`) whose every run id resolves to a real commit and
 # whose date agrees with that turn's chat entry; and every parked board item is still a
 # headline. A PROSE record of what a turn did is not re-runnable — this is.
 python3 scripts/chain_test_check.py            # 0 = ok, 1 = a claim is false, 2 = cannot run
-python3 scripts/chain_test_check.py --selftest # 10 controls: every leg proved able to fail
+python3 scripts/chain_test_check.py --selftest # 12 controls: every leg proved able to fail
 
 # THE CHAIN'S SESSION collect->restore loop as one command — the Owner's SESSION LAW
 # (18:27Z) says each turn's CLI session files are collected, uploaded and restored into
