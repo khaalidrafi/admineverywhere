@@ -30,6 +30,15 @@
 #     gmi/tokenharbor/navyai/bai/aa/ollama-cloud STAGED NEEDS-KEY (keys
 #     live in khaalidrafi/agent-team.el secrets; values write-only —
 #     each activates when its key lands in THIS repo).
+#     >>> SUPERSEDED — BURNED (Owner 2026-10-24 17:01Z "burn Minimax
+#     m3.1 to the ground, according to its performance!"): EVERY M3.1
+#     lane is persona non grata — no hire, no probe, no fallback, no
+#     staged-needs-key revival. Evidence on file: hallucination weak
+#     spot (CANDIDATES mandate note), openrouter delist at source
+#     2026-10-22, minimax-m3.1:free promo was already dying 10-25.
+#     Consequence: the mcode lane (whose ONLY free brain was M3.1
+#     Flash) goes DORMANT until MiniMax serves a replacement or an
+#     Owner key lands; MCODE_AUTH_JSON sealing is CANCELLED.
 #   * every other pair below stays ranked for the EM's manual dispatches.
 #
 
@@ -56,6 +65,52 @@
     brain as PLATFORM ENGINEER 2 - acceptable, refusal law checks
     member ids and rotation alternates; reviewer-3 depth for the
     parallel review lanes]
+
+  * HIRES WAVE 3 (Owner order 2026-10-24 17:01Z "Hire built-in models
+    from Opencode and cline") - built-in free-roster bodies, probe-first
+    activation (ACTIVATING = paper hire now, live probe + arm wiring
+    next cycles; a hire is never ARMED without a measured completion):
+
+  * ROLE: QA ENGINEER 4 (HIRED - Owner order 17:01Z, wave 3)
+    glm-5.1-flash@opencode [ACTIVATING - reviewer-4 depth; GLM lineage
+    = the team's proven brain family (Lead tier + relief fallback both
+    PROVEN on GLM blood); flash tier fits reviewer cadence; opencode
+    BUILT-IN roster = zero-key client free tier, body ALREADY in the CI
+    harness image; activation = bare-id probe pass + reviewer-arm wiring]
+  * ROLE: QA ENGINEER 5 (HIRED - Owner order 17:01Z, wave 3)
+    nemotron-3.5-lightning@opencode [ACTIVATING - reviewer-5 depth;
+    same model family DoE verified LIVE on the cline lane 2026-10-23;
+    opencode built-in, zero-key; speed tier for review lanes]
+  * ROLE: QA ENGINEER 6 (HIRED - Owner order 17:01Z, wave 3)
+    nvidia/nemotron-3.5-lightning-free@cline [ACTIVATING - reviewer-6
+    depth; the ONLY cline promo DoE smoke-verified LIVE 2026-10-23
+    (3.64s, $0.00) with a third-party NVIDIA upstream = provider
+    diversity; activation DEPENDS: cline CLI must be baked into the CI
+    harness Dockerfile + the DoE cardless-account creds sealed as a repo
+    secret (hub-daemon gotcha: setsid + pkill -9 on stuck sessions)]
+  * ROLE: QA ENGINEER 7 (HIRED - Owner order 17:01Z, wave 3)
+    poolside/laguna-s-2.1-free@cline [ACTIVATING - reviewer-7 depth;
+    laguna character PROVEN IN THIS TEAM (TEST-T1 de44031 + TEST-T2
+    d655571, relief primary 10-23) - same brain, NEW body (cline) =
+    lane diversity on known character; same cline activation deps as
+    QA-6]
+  * ROLE: PLATFORM ENGINEER 3 (HIRED - Owner order 17:01Z, wave 3)
+    mimo-v2.6@opencode [ACTIVATING - platform/relief depth; opencode
+    built-in zero-key; cross-body character data exists (cline tracker
+    lists mimo-v2.6-flash) - interned, not trusted, per the no-data law]
+  * ROLE: PLATFORM ENGINEER 4 (HIRED - Owner order 17:01Z, wave 3)
+    longcat-2.5@opencode [ACTIVATING - platform/relief depth; opencode
+    built-in zero-key; roster is explicitly "dynamic" - probe-first law
+    applies double to undated free tiers]
+
+  Wave-3 spare pool (INVENTORY, not hired - hire wave 4 on Owner word or
+  probe surplus): glm-5 · glm-5.1 · glm-5-flash · nemotron-3-super ·
+  nemotron-3.5-super-vl · step-3.5-flash · big-pickle(-free) @opencode;
+  cline-free/nemotron-3.5-super-vl · cline-free/solar-mini4 ·
+  reflection/beam-free @cline. Values law holds: gpt-* / gpt-oss / gemini
+  / grok ids stay values-EXCLUDED for accountable seats. minimax-m2
+  @opencode deliberately NOT hired this wave - sibling brain burned same
+  hour; needs a separate Owner word.
 
 * HIRES WITH REASONS (Owner order 2026-10-22 ~16:08Z: hire list with reasons — model capability, performance, benchmarks, reviews)
 
