@@ -2492,6 +2492,74 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-24 Sat 00:19 UTC] :: :DELIVERED: (night-2 item 6,
+  R-008: the feed contract's LIFECYCLE half is now graded through a render.
+  Cross-ref only, no state change — the headline stays PENDING because PENDING is
+  already "delivered, awaiting the Lead's gate"; DONE is Lead-only, and no
+  OBJECTIVE-STATE claim from this seat.
+  WHAT — branch ai/turn-20261023-2353, work commit 432629a. FOUND: every
+  widget-mount harness boots the schema BEFORE `mount()`
+  (`chartMount.test.ts:89` then `:96`; `widgetMount.test.ts:58`/`:73`), so the
+  reason the widgets use a schema-reactive `$effect` — AGENTS.md "Widgets render
+  from a schema-reactive `$effect`, not `onMount` (the schema arrives after
+  mount)" — was graded by NOTHING at render level. Reverting all five feed
+  widgets to `onMount` keeps 461 vitest green while the running app paints five
+  permanent skeletons, because `initApp()` hands over the schema after mount.
+  Same family as chatMount: a suite grading a module nobody renders.
+  THE HARNESS — `app/src/lib/__tests__/feedLifecycleMount.test.ts` (257 lines,
+  8 legs): skeleton + ZERO requests pre-schema (:118); the schema landing on a
+  LIVE instance starts the feed (:125); a live swap moves the request to the NEW
+  schema's discovered `listPath` AND leaves no old poll running (:152); a
+  mistyped `pollInterval: 100` in a real `<script module>` is floored to 5 s by
+  the RENDERED widget, not only by the unit over `validateWidgetData` (:178); a
+  swap that removes a pinned model renders `model "orders" is not in this API's
+  schema` with nothing left polling it (:193); a refused declaration
+  (`aggregate: "median"`) is a friendly empty with zero requests through a real
+  component (:215); and the harness pins its own domain (:243, :252) — the two
+  probes (`fixtures/FeedProbe.svelte`, `fixtures/BadDeclProbe.svelte`) are read
+  as raw text so a quietly-"fixed" 100->5000 cannot ungrade the floor leg, and
+  neither may leak into `app/src/widgets/`.
+  MUTATIONS — 10/10 killed, each on the live tree then reverted (tree verified
+  clean by `git status`): `$effect`->`onMount`, the stop fn not returned from the
+  `$effect`, the 5 s clamp deleted, the engine caching its first schema, the
+  unknown-aggregate refusal neutered, the refusal losing its reason, a missing
+  pinned model falling back to a GUESSED first model, the pre-schema guard
+  deleted, FeedProbe 100->5000, a probe leaked into the shipped glob.
+  GATES — `python3 scripts/landing_gate.py --fe` rc 0 over 11 legs (pytest 300,
+  System check no issues, No changes detected, vitest 469/37 files, csv-twin
+  3070 cells, brand-twin 302/350, parity-twin identical, gate-twin 3/3,
+  registry-twin 3 registries/16 drop-ins, doc-twin 4 registries/23 fields/14
+  lists/88 claims); `npx tsc --noEmit` 0; `release_readiness.py` rc 0. Pins
+  bumped IN THAT SAME COMMIT: `scripts/landing_gate.py:68-69` EXPECTED_VITEST
+  461->469, EXPECTED_VITEST_FILES 36->37, plus the four published sites
+  AGENTS.md:133 :161 and docs/DEVGUIDE.md:136 :164. docs/widget-data.md gained
+  the proof section and the checklist warning that the stop fn must really be
+  RETURNED.
+  COLLATERAL, caused by this delivery and fixed in the same commit: growing
+  docs/widget-data.md past line 127 made `release_readiness.py`'s
+  CITE_LINE_ALLOWLIST entry stale BY ITS OWN reverse-bite rule ("an entry goes
+  RED when the line starts to land inside the file"); removing that entry shifted
+  the file by 4 lines, so the two DEVGUIDE citations of `leg_doc_counts()`/
+  `gate_pins()` were retyped 691->687 and 655->651.
+  FOR THE MERGER (pin union): this branch and pending ai/turn-20261023-2320
+  (authGateMount, +2 tests/+1 file over ITS base, where it pins 453/36) both edit
+  the same two pin lines. Main is 461/36, so the union after BOTH land is 471
+  tests / 38 files — resolve `landing_gate.py` and the four doc sites to that, in
+  the resolution commit.
+  STILL UNVERIFIED, stated plainly: no browser/Tauri session — the late-schema
+  and swap legs are rendered in happy-dom against a stubbed fetch, so the real
+  `initApp()` ordering is proven by the same mechanism but not clicked in a
+  window; and a swap while a request is IN FLIGHT is covered only by the
+  "late response cannot resurrect" unit in `widgetFeed.test.ts:259`, not by a
+  rendered leg.
+  SECRET LAW held: no credential read, echoed or committed (lane markers checked
+  by NAME, and `env` never dumped — the 23:35Z report's rule `[ -z "$VAR" ]`
+  obeyed). `ROLE_LARK_WEBHOOK` is empty in this seat's env (measured with
+  `[ -z ]`) -> the Lark copy of the report is SKIPPED, not lost; recorded here.
+  Harness scratch (`scripts/.tmp-mutation-battery.*`, `.turn-inside.sh`,
+  `.turn-review.txt`) stayed untracked and OUT of 432629a, staged by name;
+  `.github/workflows/*`, `.github/scripts/*`, `TEAM-CONTROL.org` and
+  `.gitattributes` were read and cited only.
 - Note taken on [2026-10-22 Thu 01:44 UTC] :: :DELIVERED: (the FR-R008 feed
   contract is now a machine-checked artifact; cross-ref only, no state change,
   DONE stays the Lead's gate, no OBJECTIVE-STATE change, no completion claim.
