@@ -245,6 +245,22 @@ python3 scripts/chain_session_check.py --selftest # 14 controls: every leg prove
 python3 scripts/chat_feature_check.py         # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chat_feature_check.py --selftest # 12 controls: every leg proved able to fail
 
+# the SEGREGATION-LAW pending slot as ONE command, read-only against the Lead-owned
+# merger. The whole delivery loop hangs on one line of agent-team/TEAM-CONTROL.org,
+# and four separate times it was the reason nothing could land: an EMPTY slot could
+# never bootstrap (the park keyed on approved, which needs a pending to exist), the
+# merger compared a SEAT KEY against member ids, a timed-out segment step handed it an
+# empty parse and it believed "no-pending", and a slot the Lead had just re-queued was
+# blanked 20 seconds later by a write computed BEFORE its own `git reset --hard`. FOUR
+# LEGS grade those promises (merger-reread, park-bootstrap, verdict-retain,
+# blank-guard) and the merger's VERDICT ROSTER is closed before them: every literal
+# `OUTCOME="<x>"` the workflow writes must be a verdict a leg knows — 4 park-excluded
+# retain outcomes, `rejected` (retained by its own clause), 3 resolved. A verdict no
+# leg has heard of is CANNOT RUN, never a quieter green: `lane-dead` arrived as exactly
+# that ungraded fourth exclusion while the harness still pinned three
+python3 scripts/chain_slot_check.py           # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved able to fail
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 

@@ -32,13 +32,13 @@ workflow by hand:
 Findings 1-3 are fixed; #4 was hardened by the Lead in place (ed378d4 non-clobber
 slot guard), which differs from the delivered proposal patch (docs/pending-slot-fix.patch
 no longer `git apply`-clean against the shipped shape) and, while re-indenting the sed
-into the new guard, DROPPED the trailing `"$CTL"` file operand. The shipped writer is now
+into the new guard, DROPPED the trailing `"$CTL"` file operand. The writer was then
 `sed -i "s%...%...% "` with no file: GNU sed 4.9 errors "no input files" (rc 4) and
 edits NOTHING, the step runs without `set -e`, and the commit message still prints
-"next pending: ${NEWPENDING}" — so the slot's whole durability story is silently
-unenforced going forward. That fix lives in a Lead-owned file (.github/workflows/*,
-a seat may not edit), so this harness hands over what a seat CAN: the defect as a
-command, with file:line evidence and the one-token repair (add `"$CTL"`).
+"next pending: ${NEWPENDING}" — so every slot law below was silently unenforced. The
+Lead landed the one-token repair, so the shipped tree is GREEN on blank-guard; what a
+seat keeps is the COMMAND that grades all four laws read-only, plus the control that
+takes the operand back out and proves the leg can still fail.
 
 This harness grades the shipped workflow READ-ONLY. Four legs, one per claim
 above that the machinery is supposed to honor:
@@ -54,7 +54,19 @@ above that the machinery is supposed to honor:
                   AFTER its own `git reset --hard`, refuses to blank a slot it did
                   not read/resolve/park, and ACTUALLY WRITES — the write must carry
                   a file operand, or "no clobber" becomes "never write at all".
-                  The shipped tree is RED on this leg (the dropped `"$CTL"`).
+                  The Lead landed that operand, so the shipped tree is GREEN here
+                  and `sed operand stripped is red` is what proves the leg can fail.
+
+Before those legs run, the merger's VERDICT ROSTER is closed: every literal
+`OUTCOME="<x>"` in the workflow must be known — one of the four park-excluded
+retain outcomes, `rejected` (retained by its own clause), or one of the three
+resolved outcomes that legitimately park this run's branch. An outcome the
+machinery can write and no leg knows is CANNOT RUN naming it, because a green
+over an unknown verdict would be a green over a roster the harness no longer
+describes. This is how `lane-dead` (Lead cycle 10-l) got away ungraded once: the
+park gate gained a fourth exclusion while this file still pinned three, so the
+leg printed "all 3 retain outcome(s)" and the control anchored to the old gate
+line died, taking seven of the nine controls down with it (rc 2, `--selftest`).
 
 Verdicts follow the house convention (docs/DEVGUIDE.md *EIGHTH* + *ELEVENTH*
 harness laws): 0 = OK, 1 = RED (a claim is false), 2 = CANNOT RUN (the harness no
@@ -62,10 +74,10 @@ longer understands its own input - never a false red for a tree it has not
 measured). The leg roster is pinned, so a leg that vanishes is a refusal, not a
 quieter green.
 
-  python3 scripts/chain_slot_check.py                  # grade this tree (RED by design)
+  python3 scripts/chain_slot_check.py                  # grade this tree (0/1/2 verdicts)
   python3 scripts/chain_slot_check.py --root /tmp/copy # grade another tree
   python3 scripts/chain_slot_check.py --live           # also list dropped author branches
-  python3 scripts/chain_slot_check.py --selftest       # 9 controls, every leg able to fail
+  python3 scripts/chain_slot_check.py --selftest       # 11 controls, every leg able to fail
 
 Deliberately NOT named `*_diff.py`: that glob IS the landing gate's twin roster
 (`scripts/landing_gate.py` EXPECTED_TWINS cross-checks every `scripts/*_diff.py`
@@ -95,7 +107,32 @@ SLOT_KEY = "#+PENDING-REVIEW:"
 
 # The outcomes that must RETAIN the pending branch instead of parking a new one:
 # a branch the duty reviewer could not clear stays queued (REVIEW-LOG law 4).
-RETAIN_OUTCOMES = ("review-missing", "refused-same-member", "refused-wrong-reviewer")
+# `lane-dead` joined this list with the Lead's cycle 10-l hardening: the merger
+# calls a substituted review lane (no parseable VERDICT token) lane-dead rather
+# than review-missing, and the branch must stay pending for a real re-review.
+RETAIN_OUTCOMES = ("review-missing", "lane-dead", "refused-same-member",
+                   "refused-wrong-reviewer")
+
+# A REJECTED verdict retains through a SEPARATE clause (the park gate does not
+# exclude it; the `if [ "$OUTCOME" = "rejected" ]` block re-writes the old
+# pending) — that is the clause leg_verdict_retain grades.
+REJECTED_RETAIN = "rejected"
+
+# The outcomes that legitimately let THIS run's author branch park: the slot was
+# empty, the segment produced nothing to read, or the pending was approved and
+# merged. None of them may keep the old branch queued.
+RESOLVED_OUTCOMES = ("no-pending", "empty-segment", "approved")
+
+# Every verdict the merger can write, pinned as a CLOSED set. An outcome the
+# workflow can produce but this harness has never heard of is CANNOT RUN, not a
+# quiet green: `lane-dead` arrived exactly that way — the park gate gained a
+# fourth exclusion while this file still pinned three, so the leg kept printing
+# "all 3 retain outcome(s) are excluded" over a roster it no longer described,
+# and the control anchored to the old gate line died (`--selftest` rc 2, 7 of 9
+# controls never ran). A seat cannot watch a Lead-owned file for new literals;
+# it can refuse to grade a file containing one it does not know.
+OUTCOME_LITERALS = RETAIN_OUTCOMES + (REJECTED_RETAIN,) + RESOLVED_OUTCOMES
+EXPECTED_OUTCOMES = 8
 
 # The four claims above, pinned in order. A leg that disappears from the runner
 # is CANNOT RUN - a vanished leg prints no red to argue with.
@@ -119,6 +156,9 @@ ASSIGN_VAR_RE = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)="\$\(grep .*PENDING-RE
 # this regex FINDS the write, CTL_OPERAND_RE checks that it TARGETS the control file.
 SED_WRITE_RE = re.compile(r'^\s*sed -i .*PENDING-REVIEW')
 CTL_OPERAND_RE = re.compile(r'"\$CTL"')
+# A verdict the merger writes by hand (`OUTCOME="lane-dead"`), not one it forwards
+# from a step output (`OUTCOME="${{ ... }}"`), which the character class refuses.
+OUTCOME_ASSIGN_RE = re.compile(r'^\s*OUTCOME="([a-z][a-z-]*)"\s*$')
 
 
 class CannotRun(Exception):
@@ -270,14 +310,20 @@ def leg_verdict_retain(seg_body):
                         "law this leg grades is no longer expressed in the merger"
                         % SEGREGATE_STEP)
     joined = " ".join(clauses)
-    if "rejected" not in joined:
-        return [], ["verdict-retain: the retain clause never mentions `rejected` - a "
-                    "REJECTED branch drops out of the slot and can never be re-reviewed, "
-                    "which is exactly what review law 4 of agent-team/REVIEW-LOG.org "
-                    "promises it must not do (\"Rejected / refused / review-missing: the "
-                    "pending slot keeps the branch for re-review\")"]
-    return ["verdict-retain: %d $OUTCOME clause(s); refused, review-missing and rejected "
-            "all keep the same branch queued" % len(clauses)], []
+    problems = []
+    for outcome in RETAIN_OUTCOMES + (REJECTED_RETAIN,):
+        if outcome not in joined:
+            problems.append("verdict-retain: the retain clause never mentions `%s` - a "
+                            "branch carrying that verdict drops out of the slot and can "
+                            "never be re-reviewed, which is exactly what review law 4 of "
+                            "agent-team/REVIEW-LOG.org promises it must not do (\"Rejected "
+                            "/ refused / review-missing: the pending slot keeps the branch "
+                            "for re-review\")" % outcome)
+    if problems:
+        return [], problems
+    return ["verdict-retain: %d $OUTCOME clause(s); %s all keep the same branch queued"
+            % (len(clauses), ", ".join("`%s`" % o
+                                       for o in RETAIN_OUTCOMES + (REJECTED_RETAIN,)))], []
 
 
 def leg_blank_guard(seg_body):
@@ -370,6 +416,49 @@ def leg_blank_guard(seg_body):
 
 
 # -------------------------------------------------------------------- grading
+def outcome_closure(bodies):
+    """Every verdict the merger can write must be a verdict this harness knows.
+
+    Reads the literal `OUTCOME="<x>"` assignments across every CI step body (the
+    merger writes them, the bookkeeping step reads $OUTCOME) and refuses on a
+    set difference in EITHER direction. This is not a fifth leg: a graded claim
+    needs a law to grade, and a new outcome has none until a seat writes one —
+    so an unknown outcome is CANNOT RUN (the harness no longer understands its
+    input), never a green that silently excludes it.
+    """
+    found = set()
+    for body in bodies.values():
+        for line in body:
+            match = OUTCOME_ASSIGN_RE.match(line)
+            if match:
+                found.add(match.group(1))
+    if not found:
+        raise CannotRun("no `OUTCOME=\"<verdict>\"` literal appears in any step body - "
+                        "the merger's verdicts are no longer written in the workflow, so "
+                        "the retain/park law this harness grades has nothing to read")
+    unknown = sorted(found - set(OUTCOME_LITERALS))
+    if unknown:
+        raise CannotRun("the merger writes outcome(s) %s that this harness has never heard "
+                        "of - no leg knows whether one of them must keep a pending branch "
+                        "queued, so a green run here would be grading a roster it does not "
+                        "describe. Name it in RETAIN_OUTCOMES / REJECTED_RETAIN / "
+                        "RESOLVED_OUTCOMES and pin EXPECTED_OUTCOMES in the SAME commit"
+                        % ", ".join('"%s"' % u for u in unknown))
+    gone = sorted(set(OUTCOME_LITERALS) - found)
+    if gone:
+        raise CannotRun("this harness pins outcome(s) %s but the workflow no longer writes "
+                        "any of them - a verdict was renamed or removed and the leg that "
+                        "graded it is now reading a line that does not exist"
+                        % ", ".join('"%s"' % g for g in gone))
+    if len(found) != EXPECTED_OUTCOMES:
+        raise CannotRun("the merger writes %d distinct outcome(s), this harness pins %d - "
+                        "the population this closure claims is no longer the population it "
+                        "compares" % (len(found), EXPECTED_OUTCOMES))
+    return ["outcomes   %d literal(s), all known (%d park-excluded + `%s` retained by "
+            "clause + %d resolved)"
+            % (len(found), len(RETAIN_OUTCOMES), REJECTED_RETAIN, len(RESOLVED_OUTCOMES))]
+
+
 def slot_line(root):
     try:
         for line in read(root, CTL_REL).splitlines():
@@ -399,6 +488,7 @@ def grade(root):
     notes = []
     problems = []
     fired = set()
+    notes += outcome_closure(bodies)
     for leg, body in ((leg_merger_reread, merge_body), (leg_park_bootstrap, seg_body),
                       (leg_verdict_retain, seg_body), (leg_blank_guard, seg_body)):
         found, missing = leg(body)
@@ -477,9 +567,13 @@ def live_note(root):
 # to the harness itself). The Lead hardened the writer in place (ed378d4) with a
 # guard that differs from the delivered proposal patch (docs/pending-slot-fix.patch
 # no longer `git apply`-clean), and in re-indenting the sed dropped its `"$CTL"`
-# operand - so the shipped tree is RED on blank-guard and the green baseline is
-# BUILT by restoring that operand to a COPY, not by applying the stale patch. The
-# shipped tree is never written to and no Lead-owned file is ever touched.
+# operand — the shipped tree was RED on blank-guard until the Lead landed that
+# operand. The green baseline is therefore BUILT on a COPY (restore the operand if
+# the tree has lost it, accept the tree as-is if it has not), never by applying the
+# stale patch, and the shipped tree is never written to. No Lead-owned file is
+# ever touched.
+
+
 def _read_file(root, rel):
     with open(os.path.join(root, rel), encoding="utf-8") as fh:
         return fh.read()
@@ -495,6 +589,45 @@ def _replace_once(root, rel, old, new):
     if old not in text:
         raise CannotRun("control: the text to mutate is not in %s" % rel)
     _write_file(root, rel, text.replace(old, new, 1))
+
+
+def _park_gate(root):
+    """The park gate's own text, located the way leg_park_bootstrap locates it.
+
+    Returns the line WITHOUT its indentation (the step bodies are dedented by
+    YAML depth, so the harness reads them that way); `_replace_line` puts the
+    indentation back.
+    """
+    text = _read_file(root, WORKFLOW_REL)
+    body = find_step(step_bodies(text), SEGREGATE_STEP)
+    write_at = None
+    for index, line in enumerate(body):
+        if line.strip().startswith("NEWPENDING=") and "${AUTHOR_BRANCH}" in line:
+            write_at = index
+            break
+    if write_at is None:
+        raise CannotRun("control: %s has no park of this run's author branch, so there "
+                        "is no gate to mutate" % SEGREGATE_STEP)
+    gate_at, gate = enclosing_if(body, write_at)
+    if gate_at is None:
+        raise CannotRun("control: the park write at step-body line %d has no enclosing "
+                        "condition - the control cannot tell which line to rewrite"
+                        % (write_at + 1))
+    return gate.strip()
+
+
+def _replace_line(root, rel, stripped_line, new_stripped_line):
+    """Rewrite ONE whole line, matched on its dedented text."""
+    lines = _read_file(root, rel).split("\n")
+    hits = [index for index, line in enumerate(lines) if line.strip() == stripped_line]
+    if len(hits) != 1:
+        raise CannotRun("control: %s carries %d line(s) equal to %r, expected exactly 1 - "
+                        "the anchor this control mutates is not where it believes it is"
+                        % (rel, len(hits), stripped_line[:80]))
+    line = lines[hits[0]]
+    indent = line[:len(line) - len(line.lstrip())]
+    lines[hits[0]] = indent + new_stripped_line
+    _write_file(root, rel, "\n".join(lines))
 
 
 # The shipped (hardened) slot-write exactly as it sits on ai/main, and the
@@ -549,13 +682,33 @@ def control_strip_operand(root):
 
 
 def control_reintroduce_approved_gate(root):
-    """Put the 18:41Z deadlock back: the park needs approved + gate-green."""
-    _replace_once(root, WORKFLOW_REL,
-                  '            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" != '
-                  '"review-missing" ] && [ "$OUTCOME" != "refused-same-member" ] && '
-                  '[ "$OUTCOME" != "refused-wrong-reviewer" ]; then\n',
-                  '            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" = "approved" ] && '
-                  '[ "$GATE" = "green" ]; then\n')
+    """Put the 18:41Z deadlock back: the park needs approved + gate-green.
+
+    Found STRUCTURALLY, not against a hand-typed copy of the gate line: the
+    control pinned the exact three-clause exclusion the Lead shipped on
+    2026-10-22, and cycle 10-l's `lane-dead` exclusion rewrote that line under
+    it, so this control raised CANNOT RUN and killed the other seven with it.
+    Reusing the leg's own walk means the control follows the gate wherever the
+    Lead moves it, and an anchor that genuinely vanished is still a refusal.
+    """
+    _replace_line(root, WORKFLOW_REL, _park_gate(root),
+                  'if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" = "approved" ] && '
+                  '[ "$GATE" = "green" ]; then')
+
+
+def control_drop_lane_dead_exclusion(root):
+    """The fourth retain outcome leaves the park gate: a dead review lane drops it.
+
+    Without this control the harness grades three exclusions and prints
+    "all 3 retain outcome(s)" whatever the fourth does — which is precisely how
+    `lane-dead` sat ungraded between the Lead's hardening and this segment.
+    """
+    gate = _park_gate(root)
+    clause = '&& [ "$OUTCOME" != "lane-dead" ] '
+    if clause not in gate:
+        raise CannotRun("control: the park gate no longer carries %s - the exclusion this "
+                        "control deletes is gone, so it grades nothing" % clause)
+    _replace_line(root, WORKFLOW_REL, gate, gate.replace(clause, "", 1))
 
 
 def control_drop_rejected_retain(root):
@@ -592,6 +745,16 @@ def control_drop_write_site(root):
                   '${NEWPENDING}%" "$CTL"\n')
 
 
+def control_introduce_unknown_outcome(root):
+    """The merger grows a verdict no leg knows: the closure refuses, not greens.
+
+    The counterfactual for cycle 10-l: rename a pinned outcome to a name this
+    harness has never seen and check that grading STOPS with a refusal naming it,
+    rather than quietly dropping one exclusion from a roster it still calls full.
+    """
+    _replace_line(root, WORKFLOW_REL, 'OUTCOME="no-pending"', 'OUTCOME="lane-timeout"')
+
+
 def control_missing_workflow(root):
     os.remove(os.path.join(root, WORKFLOW_REL))
 
@@ -601,14 +764,16 @@ CONTROLS = (
     ("operand fix is green", control_no_change, 0, "SLOT CHECK OK", True),
     ("sed operand stripped is red", control_strip_operand, 1, "blank-guard", True),
     ("approved+green park gate back", control_reintroduce_approved_gate, 1, "park-bootstrap", True),
+    ("lane-dead exclusion deleted", control_drop_lane_dead_exclusion, 1, "lane-dead", True),
     ("rejected dropped from retain", control_drop_rejected_retain, 1, "verdict-retain", True),
     ("merger slot re-read deleted", control_drop_merger_reread, 1, "merger-reread", True),
     ("loop slot re-read deleted", control_drop_loop_reread, 1, "blank-guard", True),
     ("slot write left unguarded", control_unguard_write, 1, "blank-guard", True),
     ("slot write site removed", control_drop_write_site, 2, "CANNOT RUN", True),
+    ("outcome literal unknown", control_introduce_unknown_outcome, 2, "never heard", True),
     ("workflow file missing", control_missing_workflow, 2, "CANNOT RUN", True),
 )
-EXPECTED_CONTROLS = 9
+EXPECTED_CONTROLS = 11
 
 
 def selftest(root):
