@@ -112,7 +112,7 @@ through their DOM and their requests:
 Mutant-checked: dropping the fold, the sort, the offset step, the page cap and
 the picker preference each fail a named test; so does `DEFAULT_ROW_CAP` 300→400
 (the caption test) and reverting the caption to the old `first N records`.
-`feedGridMount.test.ts` carries its own seven-mutant battery — registry drops
+`feedGridMount.test.ts` carries its own nine-mutant battery — registry drops
 `meta.data` (floor fires), registry drops one widget's declaration (the
 aggregate-coverage door fires), a chart reads the schema non-reactively (the
 wake test fires alone), a refused feed probes a guessed `/api/trend/` (red,

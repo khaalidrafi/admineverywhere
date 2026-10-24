@@ -2559,6 +2559,44 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   csv/brand/parity twins byte-identical, gate/registry/doc twins green,
   tsc rc 0) BEFORE the push. Flip executed per merged+approved+green law.
   Night-2 item 6 CLOSED.)
+- Note taken on [2026-10-24 Sat 02:43 UTC] :: :LARK-SKIP: (relief-engineer,
+  same segment as the :UNION: note above). ROLE_LARK_WEBHOOK is empty in this
+  seat's env — measured with `[ -z ]` and by length, never by dumping the value
+  (SECRET LAW) — so the Lark copy of the 02:27Z report is SKIPPED, not lost, and
+  no URL was invented. Board rows touched by that report stay PENDING.
+- Note taken on [2026-10-24 Sat 02:27 UTC] :: :UNION: (relief-engineer, seat
+  RELIEF ENGINEER, branch ai/turn-20261024-0201). Night-2 items 6 (this row,
+  e01f4ad) and 7 (R-007, b4a0754) are both QA-APPROVED but each answered
+  `approved+gate-conflict-branch-kept` (agent-team/REVIEW-LOG.org 00:24Z and
+  01:52Z): the two branches retype the SAME two literals
+  (`scripts/landing_gate.py` EXPECTED_VITEST / EXPECTED_VITEST_FILES) and the
+  same four doc count sites (AGENTS.md `## Layout` + `## Commands`,
+  docs/DEVGUIDE.md the same two) from different bases, so no ordering lands
+  both. This branch carries the union and MEASURES the collision instead of
+  adding the two numbers: full `npx vitest run --maxWorkers=1` on the merged
+  tree = 478 tests / 39 files (main was 463/37; +6 feedGridMount, +9
+  rbacNavMount), and the pins plus all four published sites now read 478/39.
+  Gates re-run by this seat on the union, each rc 0: `python3
+  scripts/landing_gate.py --fe` → GATE GREEN 11/11 (pytest 300, System check
+  no issues, No changes detected, vitest 478 / 39 files, csv-twin 3070 cells
+  byte-identical, brand-twin 302 over pinned 350, parity-twin identical,
+  gate-twin 3/3, registry-twin 3 registries / 16 drop-ins, doc-twin 88 field
+  claims); `npx tsc --noEmit`; `python3 scripts/release_readiness.py` →
+  doc-counts 8 live claims equal the gate's pins (pytest=300, vitest=478).
+  Peer prose was preserved, not overwritten: the chat and board appends of
+  both branches survive byte-for-byte (`git diff --numstat 9824e27..HEAD` =
+  214/0 for agent-team/TEAM-CHAT.org, 168/0 for this file — pure insertions),
+  and the only -lines in the two mirror docs are the count lines and the
+  sentences each branch itself rewrote. One reviewer correction carried:
+  docs/widget-data.md:115 published a "seven-mutant battery", then enumerated
+  nine and closed 9/9 killed — retyped to nine-mutant in commit 292e74e (the
+  published-count-contradicts-its-own-list shape the ELEVENTH law refuses).
+  State untouched: this row and R-007 stay PENDING, no DONE awarded, nothing
+  merged or reviewed by this seat (SEGREGATION LAW v2 — the duty reviewer of
+  ai/turn-20261024-0201 is the next seat). Lead-owned files
+  (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, .gitattributes)
+  read and cited only.
+
 - Note taken on [2026-10-24 Sat 01:04 UTC] :: :DELIVERED: (night-2 item 6 —
   the FR-R008 feed promise is now graded through the GRID, not only through
   four hand-imported charts. Seat software-engineer, branch
@@ -3124,6 +3162,118 @@ menu/action filtering from them; (b) activity-log screen reading the
 R-003 audit endpoint (list view). Graceful-degradation law: no role
 source in the schema = no filtering, everything visible.
 :LOGBOOK:
+- Note taken on [2026-10-24 Sat 02:27 UTC] :: :UNION: (relief-engineer, seat
+  RELIEF ENGINEER, branch ai/turn-20261024-0201). This row (night-2 item 7,
+  branch ai/turn-20261024-0117 — work commit b61b564, tip b4a0754 as they
+  resolve on the fetched ref; the :DELIVERED: note below cites bce23f1, which
+  `git rev-parse` does NOT resolve here, so that sha is worth a Lead check)
+  and item 6 (R-008, e01f4ad) are
+  both QA-APPROVED yet neither lands: each retyped `scripts/landing_gate.py`
+  EXPECTED_VITEST / EXPECTED_VITEST_FILES and the same four doc count sites
+  from a different base, so the merge gate answered
+  `approved+gate-conflict-branch-kept` twice (agent-team/REVIEW-LOG.org
+  00:24Z, 01:52Z). This branch is the pre-resolved union for the Lead's
+  gate, with the union count MEASURED on the merged tree rather than summed
+  from the two branches: `npx vitest run --maxWorkers=1` = 478 tests / 39
+  files (main 463/37 + 6 feedGridMount + 9 rbacNavMount), and pins + all four
+  published sites now say 478/39. rc 0 on this seat's run: `python3
+  scripts/landing_gate.py --fe` (GATE GREEN 11/11 — pytest 300, check,
+  makemigrations, vitest 478/39, six twins identical/rosters OK), `npx tsc
+  --noEmit`, `python3 scripts/release_readiness.py` (doc-counts 8 live claims
+  == the gate's pins, vitest=478). rbacNavMount.test.ts and its docs/rbac.md
+  section ride unchanged — the 9 nav tests run inside the 478 — and this
+  row's STATE stays PENDING (no DONE awarded here; the union resolves the
+  collision, it does not gate the item). SEGREGATION LAW v2: this seat
+  reviewed and merged nothing; the duty reviewer of ai/turn-20261024-0201 is
+  the next seat. Lead-owned files read and cited only.
+- Note taken on [2026-10-24 Sat 01:55 UTC] :: :DELIVERED: (night-2 item 7 — FR
+  R-007, the client/nav half; seat platform-engineer, branch ai/turn-20261024-0117,
+  work commit bce23f1a3d72d3b97e2e8cfea7a4214bdb481476. State stays PENDING:
+  PENDING already means delivered-awaiting-your-gate, and DONE is Lead-only.)
+  THE GAP, measured before writing (not assumed from the docs): docs/rbac.md and the
+  AGENTS/DEVGUIDE mirror bullet both promise "Sidebar.svelte hides a
+  roles-declared entry unless the caller holds at least one of them". Deleting
+  BOTH `.filter((p) => roleAllows(p.roles, $claims))` calls from
+  app/src/components/Sidebar.svelte:20-21 — removing the entire nav half of FR-R007 —
+  answered `463 passed / 37 files`, rc 0. Structural, not accidental: NO shipped page
+  declares `roles` (grep over app/src/pages: zero hits), so every real-glob render
+  (navMount, shell, gapMount) is an UNFILTERED render that agrees both with a gate
+  hiding nothing and with a gate hiding everything; navMount.test.ts even resets
+  `claims = null` in its teardown and never sets it; rbac.test.ts grades only the pure
+  `roleAllows()` and the registry's handling of the field. The ACTION half was already
+  rendered (actionMount.test.ts:281) — the NAV half was graded by a code comment.
+  SHIPPED: app/src/lib/__tests__/rbacNavMount.test.ts, 9 mounted tests. The pages
+  module is stubbed ONLY to hand a fixture to the real component, and the fixture is
+  built by the REAL `collectPages` (same validation, same `roles` hand-off, same
+  accepted/refused split as the glob) — because the shipped glob can never produce the
+  hidden state. The rendered button set is asserted EXACTLY, per claims state: `null`
+  (plain DRF keeps the whole menu), a single-role caller (ungated + own entry + the
+  any-of entry), a caller holding none of the roles (ungated only), a superuser with
+  zero groups (everything — the short-circuit that forces `seed_demo` to add a
+  non-superuser). Plus three things a state table cannot say: the gate is LIVE (claims
+  changing after mount re-render the nav, and `logout()` clears claims, which means
+  filtering NOTHING); a gated entry that IS shown still routes to the href IT
+  DECLARED; and a refused `roles` declaration renders no button in ANY claims state
+  while its reason stays nameable. POPULATION pinned first (6 accepted nav pages, 4
+  role-gated, 0 refused), because an exact set over a fixture whose `roles` key
+  stopped reaching the registry would otherwise agree with an unfiltered render
+  (DEVGUIDE ELEVENTH law).
+  HARNESS NOTE for the next seat: `vi.hoisted` does NOT hoist above the imports a
+  mocked module's factory needs — measured `Cannot access 'holder' before
+  initialization` — so the fixture state lives in the factory's own closure, and an
+  ASYNC factory + `vi.importActual` is the only shape that reaches the real
+  `collectPages`. authGateMount.test.ts's sync hoisted-holder works only because its
+  factory needs no real import.
+  MUTATION BATTERY — 11 mutants over Sidebar.svelte, rbac.ts, lib/pages/index.ts,
+  stores.ts (each filter deleted, claims ignored, `!claims` hiding everything,
+  superuser short-circuit gone, `some`->`every`, ungated entries hidden, the `roles`
+  hand-off dropped, a malformed list registered instead of refused, the empty Settings
+  frame forced, logout keeping stale claims): 11/11 KILLED, sources restored
+  byte-identical (md5 -c OK, `git status` clean for all four). FOUR are killed ONLY
+  by this file — mainNav filter, settingsNav filter, stale-`null` claims, forced
+  Settings frame — the shipped 8-file subset answered `100 passed` for each.
+  GATES ON THE COMMITTED TREE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE
+  GREEN 11/11 (env django 5.2.18, pytest 300, System check no issues, No changes
+  detected, vitest 472 / 38 files, csv-twin BYTE-IDENTICAL 3070 cells / 56287 B,
+  brand-twin 302 over pinned 350, parity-twin identical, gate-twin ROSTER-IDENTICAL
+  3/3, registry-twin 3 registries / 16 drop-ins, doc-twin 88 field claims).
+  `npx tsc --noEmit` rc 0. `python3 scripts/release_readiness.py` rc 0 — doc-counts
+  8/8 equal the gate's own pins (pytest=300, vitest=472), 94 line citations in
+  bounds, 16/16 symbol claims. Pins bumped IN THIS COMMIT (DEVGUIDE ELEVENTH law):
+  scripts/landing_gate.py:68-69 EXPECTED_VITEST 463->472, EXPECTED_VITEST_FILES
+  37->38, plus the four published sites AGENTS.md:128 :156 and docs/DEVGUIDE.md:131
+  :159. Docs retyped honestly in the SAME commit and deliberately LINE-NEUTRAL:
+  AGENTS.md and DEVGUIDE.md are cited by line from other files (AGENTS.md:41/73/190/
+  450), so the RBAC mirror bullets were rewritten inside their own 3 lines (5/5
+  insertions/deletions each; both files the same line count before and after).
+  docs/rbac.md gained the claims-state table, the pre-fix measurement, the population
+  pin and copy-checklist item 5.
+  PIN COLLISION AHEAD (yours at the merge, not mine to resolve): the pending
+  ai/turn-20261024-0034 (R-008, software seat) bumps the SAME two literals from this
+  base and edits the same four doc count sites; per the c8217b1 union rule the merge
+  union is 472 + 0034's added tests over 39 files.
+  STILL UNVERIFIED, stated plainly: no browser/Tauri session. The filtered nav, the
+  live claims change and the vanished Settings frame are graded through a real render
+  in happy-dom, but nobody has logged in as `auditor` in a real window; the server row
+  of that path stays pinned by plugin/tests/test_rbac_roles.py and
+  test_seed_demo_gives_a_nonsuperuser_single_role_holder, and the client's live
+  rejection case was already rendered for the ACTION half by actionMount.test.ts:281.
+  CHAIN STATE, measured: `python3 scripts/chain_test_check.py` rc 1 with 29 NO-DROP
+  refs — the pre-existing family from the Lead's in-place TEAM-CHAT.org repairs
+  (escalated 2026-10-22 23:36Z); this note is a pure insertion and the chat entry an
+  EOF append, every byte before them preserved.
+  NIGHT-2 QUEUE: items 1-5 are DONE on your gate; item 6 (R-008) is delivered and
+  pending review on ai/turn-20261024-0034; this note closes item 7 (R-007), the last
+  row of the order. No OBJECTIVE-STATE claim from this seat.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only;
+  ROLE_LARK_WEBHOOK is empty in this seat's env (measured with `[ -z ]`) -> the Lark
+  copy of the report is SKIPPED, not lost, noted here as the instruction requires.
+  Harness scratch (.turn-inside.sh, .turn-review.txt) stayed untracked and OUT of
+  bce23f1. Lead-owned files (.github/workflows/*, .github/scripts/*,
+  TEAM-CONTROL.org, .gitattributes) read and cited only; the lane is the rotation
+  pointer at agent-team/TEAM-CONTROL.org:9 (qwen3.8-flash@qoder, Platform Engineer).
+  Per SEGREGATION LAW v2 this seat reviewed nothing — the duty reviewer on this branch
+  is the next seat.
 - Note taken on [2026-10-21 Wed 17:44 UTC] :: COVERAGE-HARDENING #3 (seat
   platform-engineer, branch ai/turn-20261021-1732 @8c81a6e). No item flipped —
   WORK ORDER rows 1-11 all still carry :DELIVERED: and the chat tail held no

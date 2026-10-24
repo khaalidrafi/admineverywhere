@@ -2,7 +2,8 @@
 
 ROADLOG R-007 in two halves, both reference implementations in the demo
 rig (`demo-backend/`), both contract-tested (`plugin/tests/test_rbac_roles.py`
-+ `app/src/lib/__tests__/rbac.test.ts`).
++ `app/src/lib/__tests__/rbac.test.ts` + the rendered gate in
+`app/src/lib/__tests__/rbacNavMount.test.ts`).
 
 ## Phase (a) — the server emits role claims, the client filters
 
@@ -37,10 +38,48 @@ Client rules (`app/src/lib/rbac.ts`, decisions only — transport is
     export const meta = { title: "Activity", path: "/activity",
                           roles: ["auditors"] };   // optional
 
-`Sidebar.svelte` hides a `roles`-declared entry unless the caller holds
-at least one of them; superusers see everything. An invalid `roles`
-declaration is **refused** into `refusedPages` with a nameable reason —
-never half-registered (the R-006 refusal law).
+`Sidebar.svelte:20` (`mainNav`) and `Sidebar.svelte:21` (`settingsNav`) hide a
+`roles`-declared entry unless the caller holds at least one of them; superusers
+see everything. An invalid `roles` declaration is **refused** into `refusedPages`
+with a nameable reason — never half-registered (the R-006 refusal law).
+
+That hiding is graded by the DOM, not by the comment above
+(`app/src/lib/__tests__/rbacNavMount.test.ts`, 9 tests). Measured before the
+harness existed: deleting **both** `roleAllows` filters from `Sidebar.svelte`
+— removing the entire nav half of FR-R007 — left the shipped suite answering
+`463 passed / 37 files`, rc 0. The reason is structural, not accidental: no
+shipped page declares `roles`, so every real-glob render (`navMount.test.ts`,
+`shell.test.ts`) is an unfiltered render and agrees with a gate that hides
+nothing, while `rbac.test.ts` grades only the pure function and the registry's
+handling of the field. The harness therefore feeds the REAL `collectPages`
+validation a fixture that the glob cannot produce, and asserts an EXACT rendered
+button set per claims state:
+
+| claims | what the sidebar must render |
+| --- | --- |
+| `null` (no `/me/` in the schema, or the read failed) | the whole declared nav — plain DRF keeps everything |
+| a single-role caller | ungated entries + their own entry + the entry listing their role among several |
+| a caller holding none of the declared roles | the ungated entries only, and NO empty Settings frame |
+| a superuser with zero role groups | everything (the short-circuit that forces `seed_demo` to add a non-superuser) |
+
+plus three things a set-per-state table cannot say: the gate is **live** (claims
+changing after mount re-render the nav, and `logout()` clears claims, which means
+filtering NOTHING — a menu still hidden after sign-out is "hiding is security" in
+the wrong direction); a gated entry that IS shown still routes to the href IT
+DECLARED (the gate changes visibility, never the address); and a refused `roles`
+declaration renders no button in any claims state while its reason stays
+nameable. Population is pinned first (six accepted nav pages, four of them
+role-gated), because an exact set over a fixture whose `roles` key silently
+stopped reaching the registry would otherwise agree with an unfiltered render
+(DEVGUIDE *ELEVENTH harness law*). Eleven mutants of the shipped sources
+(`Sidebar.svelte`, `rbac.ts`, `lib/pages/index.ts`, `stores.ts`) — each filter
+deleted, claims ignored, `!claims` hiding everything, superuser short-circuit
+gone, `some`→`every`, ungated entries hidden, the `roles` hand-off dropped, a
+malformed list registered instead of refused, the empty Settings frame forced,
+logout keeping stale claims — every one KILLED, sources restored
+byte-identical (md5 verified). Four of them (`mainNav` filter, `settingsNav`
+filter, stale-`null` claims, forced Settings frame) are killed ONLY here; the
+rest the shipped files catch as well.
 
 ### Gating an action
 
@@ -96,3 +135,8 @@ registry edit) reading the FR-R003 audit endpoint:
    server-validated anyway.
 4. Nothing in `app/src/lib/*` needs editing — mePath discovery, claims
    store, sidebar/action gating and the Activity drop-in already ship.
+5. If you add a gated page, add it to the fixture in
+   `app/src/lib/__tests__/rbacNavMount.test.ts` and say which claims state must
+   hide it. A gate nobody can render is a gate nobody can review — the shipped
+   suite stayed green over the deleted `Sidebar.svelte` filters precisely because
+   no declaration in the glob carried a role.
