@@ -1,7 +1,11 @@
 <script module lang="ts">
   /** The R-006 proof: this module was added by dropping ONE file into
    *  src/pages/ — no registry, router table, shell or sidebar edit. */
-  export const meta = { title: "Modules", path: "/modules", nav: "main", icon: "info", order: 20 };
+  /** R-007 live gate case (main group): this screen documents the app's own
+   *  registry and refusals — an onboarding/admin surface, so the demo rig's
+   *  non-staff `auditor` gets no entry here. Together with Branding's
+   *  (settings group) declaration BOTH nav legs have a rejection case. */
+  export const meta = { title: "Modules", path: "/modules", nav: "main", icon: "info", order: 20, roles: ["managers"] };
 </script>
 
 <script lang="ts">
@@ -12,12 +16,18 @@
    *  files registered a route, which got a sidebar entry, and which
    *  declarations were rejected with a reason.
    */
-  import { app } from "../lib/stores";
+  import { app, claims } from "../lib/stores";
   import { navigate } from "../lib/router";
   import { pages, refusedPages, pageHref } from "../lib/pages";
+  import { roleAllows } from "../lib/rbac";
   import Icon from "../components/Icon.svelte";
 
   const modelCount = $derived($app.schema?.models.length ?? 0);
+
+  /** FR-R007: this screen is a registry inspector, so a gated page still
+   *  shows its row — but it must not hand out the click the sidebar
+   *  withholds. No claims from the server = no filtering = Open as usual. */
+  const openable = (page: { roles?: string[] }) => roleAllows(page.roles, $claims);
 </script>
 
 <div class="mx-auto max-w-4xl">
@@ -51,13 +61,15 @@
               {#if page.standalone}<span class="ml-1 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] uppercase">standalone</span>{/if}
             </td>
             <td class="px-4 py-2 text-right">
-              {#if page.params.length === 0}
+              {#if page.params.length > 0}
+                <span class="text-xs text-text/40">parameterised</span>
+              {:else if !openable(page)}
+                <span class="text-xs text-text/40">gated · {(page.roles ?? []).join(" / ")}</span>
+              {:else}
                 <button class="btn btn-ghost px-2 py-1 text-xs" onclick={() => navigate(pageHref(page))}>
                   <Icon name="right" size={14} />
                   Open
                 </button>
-              {:else}
-                <span class="text-xs text-text/40">parameterised</span>
               {/if}
             </td>
           </tr>
