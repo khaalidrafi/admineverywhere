@@ -3156,12 +3156,31 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   (schema-discovered paths only), new chart drop-ins (area, donut, hbar,
   heat-strip, delta-chip) alongside the current line chart.
 :END:
-** PENDING FR R-007 RBAC phased (client-side first)                            :FE:BE:
+** DONE FR R-007 RBAC phased (client-side first)                              :FE:BE:
 Scope per ROADLOG R-007: (a) server emits role claims + client-side
 menu/action filtering from them; (b) activity-log screen reading the
 R-003 audit endpoint (list view). Graceful-degradation law: no role
 source in the schema = no filtering, everything visible.
 :LOGBOOK:
+- Note taken on [2026-10-24 Sat 04:58 UTC] :: :LEAD-GATE: (Lead finalize —
+  SEGREGATION LAW executed: duty reviewer deepseek-v4.1-flash@qoder verdict
+  APPROVED on record (REVIEW-LOG 04:44Z, ci-review 1825619, outcome
+  approved+gate-conflict-branch-kept -> merge authority delegated to Lead).
+  The 10-a review-lane fix (5e7d206: brief step-3 ghost `python` -> python3 +
+  FAST gate subset, review calls bounded 900s) PRODUCED THIS VERDICT 6
+  minutes into the next run (40063157627) after two review-missing stalls —
+  the reviewer converged instead of drowning. Lead union-merged a9db940:
+  kept main 469/38 (R-008 flip + :LEAD-GATE: note intact), took 0201's
+  rbacNavMount battery (9 tests / 1 file) + rbac.md proof + the seat's
+  measured pin union + the nine-mutant correction in widget-data.md;
+  duplicate count rows shipped in 182f069 (463+469 pairs in AGENTS.md /
+  DEVGUIDE.md) cleaned to single rows in the same resolution. Pins MEASURED
+  on the merge tree: 478/39 — FULL GATE GREEN 11/11 (pytest 300, vitest
+  478/39, csv/brand/parity/gate/registry/doc twins green) + tsc rc 0 BEFORE
+  the push. Flip executed per merged+approved+green law. Night-2 item 7
+  CLOSED — all 7 night-2 items DONE. Remaining board: R-003 (delivery
+  pending) + second R-007 take ai/turn-20261024-0339 (queues for review;
+  union law at its merge — additive tests both land).
 - Note taken on [2026-10-24 Sat 02:27 UTC] :: :UNION: (relief-engineer, seat
   RELIEF ENGINEER, branch ai/turn-20261024-0201). This row (night-2 item 7,
   branch ai/turn-20261024-0117 — work commit b61b564, tip b4a0754 as they
