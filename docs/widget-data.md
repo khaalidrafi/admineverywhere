@@ -76,6 +76,26 @@ page cap keeps that suite green — the same failure shape `chatMount`/
 through their DOM and their requests:
 
 - `widgetMount.test.ts` — `HeatStrip` day cells, `DeltaChip` poll + timer death.
+- `feedLifecycleMount.test.ts` — the lifecycle AROUND the mount, which every
+  other mount test assumed away by booting the schema before `mount()`:
+  a widget mounted with `schema = null` paints its own skeleton and fires ZERO
+  requests, then the store gaining a schema STARTS the feed on the live
+  instance (this is why the widgets use a schema-reactive `$effect` and not
+  `onMount` — in the running app `initApp()` delivers the schema after mount,
+  so `onMount` means five skeletons forever and every existing suite stays
+  green); a live schema swap re-resolves the source (the request moves to the
+  NEW schema's discovered `listPath`) and the previous feed's poll timer dies
+  with it; a mistyped `pollInterval: 100` in a real `<script module>` is
+  floored to 5 s by the rendered widget, not just by the unit over
+  `validateWidgetData`; a swap that removes a pinned model renders
+  `model "orders" is not in this API's schema` and nothing keeps polling the
+  vanished model; and a declaration the engine refuses (`aggregate: "median"`)
+  comes out as a friendly empty with zero requests through a real component.
+  The two probe fixtures (`fixtures/FeedProbe.svelte`,
+  `fixtures/BadDeclProbe.svelte`) live outside `app/src/widgets/` and the
+  harness pins both facts: the hostile declarations are still there (a quietly
+  "fixed" 100 → 5000 would ungrade the floor leg) and no probe leaked into the
+  shipped widget glob.
 - `chartMount.test.ts` — `StatusDonut` (dash/offset geometry from the group
   fraction, top-5 fold into `(other)`, total in the ring, nameable `empty`
   with ZERO requests, friendly `error`), `LeaderBars` (value-descending sort,
@@ -93,6 +113,12 @@ through their DOM and their requests:
 Mutant-checked: dropping the fold, the sort, the offset step, the page cap and
 the picker preference each fail a named test; so does `DEFAULT_ROW_CAP` 300→400
 (the caption test) and reverting the caption to the old `first N records`.
+The lifecycle harness is mutant-checked too — 10/10 killed: `$effect`→`onMount`,
+the stop fn not returned, the 5 s clamp deleted, the engine caching its first
+schema, the unknown-aggregate refusal neutered, the refusal losing its reason,
+a missing pinned model falling back to a GUESSED first model, the pre-schema
+guard deleted, a fixture's `pollInterval: 100` quietly fixed to 5000, and a
+probe leaked into `app/src/widgets/`.
 
 ## Caption law
 
@@ -108,7 +134,11 @@ that prints a fetched count.
 1. Drop one `.svelte` in `app/src/widgets/`; export `meta` from
    `<script module>` with the `data` block above.
 2. In the instance script: `$effect` on `$app.schema`, return the stop fn
-   from `startWidgetFeed(meta.data, setState, schema)`.
+   from `startWidgetFeed(meta.data, setState, schema)`. Not `onMount`, and
+   the stop fn must really be RETURNED: the schema arrives after mount and can
+   be swapped while the widget is live, so an unreturned stop leaves the
+   previous feed polling an API that no longer answers it (both halves are
+   pinned by `feedLifecycleMount.test.ts`).
 3. Render all four states (`loading` skeleton, `empty` reason, `error`
    message, `ready` chart). Colors only from `--brand-*` / `text-text`
    utilities.

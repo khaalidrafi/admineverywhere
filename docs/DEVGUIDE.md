@@ -46,7 +46,12 @@ Product constraints — do not relax:
   up in `schema.byId` and fetched through its discovered `listPath` — never
   concatenated onto `apiUrl`; an unresolvable source renders a friendly
   empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
-  the `$effect` cleanup kills the timer. Contract + checklist:
+  the `$effect` cleanup kills the timer. That lifecycle half — the schema
+  arriving AFTER mount, a live swap re-resolving to the new `listPath` with
+  the old poll dead, the floored poll, a refused declaration — is graded at
+  render level by `app/src/lib/__tests__/feedLifecycleMount.test.ts` (every
+  existing mount test booted the schema before `mount()`, so `onMount` kept
+  the suite green over five permanent skeletons). Contract + checklist:
   `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`.
 - RBAC (FR-R007) is claims-driven and degrades silently: `normalizeOpenAPI`
   binds `schema.mePath` ONLY when the document carries `GET …/me/` and no
@@ -128,7 +133,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (461 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (469 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -156,7 +161,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 461 vitest
+cd app && npm test                          # 469 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
@@ -1167,9 +1172,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whole law is about, arriving from the doc side: a seat that adds tests and bumps the
   pin leaves a repo telling the next reader a suite size no gate owes, and a seat that
   edits the doc without the pin has re-numbered every report written from it.
-  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:691`) grades the docs' LIVE
+  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:687`) grades the docs' LIVE
   count claims against the pins, read from the gate's own source rather than re-spelled
-  here — `gate_pins()` (`scripts/release_readiness.py:655`) parses each literal AND imports
+  here — `gate_pins()` (`scripts/release_readiness.py:651`) parses each literal AND imports
   the module, and the two views must agree, because a pin that has become a computed
   value is a number a doc cannot honestly quote. Six doors, in two verdict words:
   a doc that states a different count than the pin is RED naming doc:line, the number,
