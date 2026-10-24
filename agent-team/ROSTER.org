@@ -66,7 +66,7 @@ PAUSE-AFTER-TODO review window, full sweep weekly).
 | bai/minimax-m3.1-flash:free        | BURNED NEEDS-KEY    | same                                              |
 | aa/minimax-m3.1-flash:free         | BURNED NEEDS-KEY    | same                                              |
 | ollama-cloud/minimax-m3.1-flash    | BURNED NEEDS-KEY    | same                                              |
-| mcode (MiniMax Code CLI, M Plan)   | DORMANT             | only free brain was M3.1; MCODE_AUTH_JSON sealing CANCELLED |
+| mcode (MiniMax Code CLI, M Plan)   | RE-ARMED (free)     | Owner carve-out 17:11Z "you can use m3.1 on Mcode for free!!!" — burn covers API/gateway lanes ONLY; mcode OAuth free lane stays; MCODE_AUTH_JSON CI sealing RE-INSTATED |
 
 GitHub secret values are write-only and cannot be copied cross-repo: a
 staged body activates the moment its key lands in THIS repo's secrets.

@@ -36,9 +36,13 @@
 #     staged-needs-key revival. Evidence on file: hallucination weak
 #     spot (CANDIDATES mandate note), openrouter delist at source
 #     2026-10-22, minimax-m3.1:free promo was already dying 10-25.
-#     Consequence: the mcode lane (whose ONLY free brain was M3.1
-#     Flash) goes DORMANT until MiniMax serves a replacement or an
-#     Owner key lands; MCODE_AUTH_JSON sealing is CANCELLED.
+#     Consequence (CORRECTED per Owner 17:11Z "bruh, yiu can use m3.1
+#     on Mcode for free!!!"): the burn covers the API/GATEWAY lanes
+#     ONLY. The mcode body's OAuth FREE lane (its only free brain,
+#     M3.1 Flash) is EXEMPTED by Owner order and stays ALIVE —
+#     MCODE_AUTH_JSON CI sealing is RE-INSTATED (was momentarily
+#     cancelled by the 17:01Z read). Hallucination caveat still binds:
+#     pair mcode output with verification per the mandate note.
 #   * every other pair below stays ranked for the EM's manual dispatches.
 #
 
