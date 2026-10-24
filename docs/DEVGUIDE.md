@@ -235,6 +235,21 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 python3 scripts/chain_test_check.py            # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/chain_test_check.py --selftest # 13 controls: every leg proved able to fail
 
+# WHO a review verdict belongs to, as one command — a REJECTED branch stays queued for
+# re-review, and the re-review runs in a container whose checkout is the BRANCH's tree:
+# the branch grades itself with the checker IT ships. Every unmerged ai/turn-* ref is
+# measured on three legs — LAW (what the author owns: chat deletions, Lead-owned edits,
+# committed harness scratch), REPLAY (what the merger owns: does it still merge clean onto
+# the main ref, or is it an empty husk) and VANTAGE (what the reviewer owns: is the
+# branch's chain_test_check.py the one main ships, and does the branch's chat tree carry
+# orphan drawers main already repaired). Severity follows who can act: a finding on the
+# branch the register holds is RED, the identical fact on an unreviewed ref prints as
+# BACKLOG. The orphan rule is IMPORTED from scripts/chain_test_check.py, never re-spelled,
+# so the two scanners cannot drift.
+python3 scripts/queue_replay_check.py            # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/queue_replay_check.py --selftest # 10 controls: every leg proved able to fail
+python3 scripts/queue_replay_check.py --expect 20  # the queue population, pinned not derived
+
 # THE CHAIN'S SESSION collect->restore loop as one command — the Owner's SESSION LAW
 # (18:27Z) says each turn's CLI session files are collected, uploaded and restored into
 # the next turn, so a seat RESUMES instead of starting cold. Graded READ-ONLY against

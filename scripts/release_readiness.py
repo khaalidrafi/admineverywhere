@@ -214,7 +214,7 @@ CONTROL_PIN_ASSIGN = re.compile(r"^EXPECTED_CONTROLS\s*=\s*(\d+)\s*$", re.M)
 # reads — the exact shape that let `SELFTEST OK` print a shrunk roster for two
 # cycles (DEVGUIDE *ELEVENTH law*, applied to a harness's own legs).
 CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
-EXPECTED_CONTROL_CLAIMS = 5
+EXPECTED_CONTROL_CLAIMS = 7
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.

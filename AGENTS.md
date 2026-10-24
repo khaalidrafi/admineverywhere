@@ -218,6 +218,16 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 python3 scripts/chain_test_check.py            # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chain_test_check.py --selftest # 13 controls: every leg proved able to fail
 
+# WHO a review verdict belongs to: every unmerged ai/turn-* ref graded per branch — the
+# author's LAW (chat deletions, Lead-owned edits, committed harness scratch), the merger's
+# REPLAY cost (does it still merge clean, or is it a husk), and the reviewer's VANTAGE (is
+# the checker on the branch the checker the main ref ships, and does the branch's chat tree
+# carry orphan drawers main already repaired). Severity follows who can act: a finding on
+# the branch the register holds is RED, the identical fact on an unreviewed ref is BACKLOG.
+python3 scripts/queue_replay_check.py            # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/queue_replay_check.py --selftest # 10 controls: every leg proved able to fail
+python3 scripts/queue_replay_check.py --expect 20   # pins how many refs the scan must find
+
 # the chain's SESSION collect->restore loop (Owner order 2026-10-21 18:27Z) as a
 # check, read-only against the Lead-owned turn script WHEREVER IT LIVES — the workflow
 # inline, or the .github/scripts/turn_segment.sh the workflow runs since eaf34bd
