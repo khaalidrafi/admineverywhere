@@ -4385,3 +4385,80 @@ CLOCK: [2026-10-17 Sat 20:21]
   Acceptance: buildSchemaPrompt wired ✓, legend restored ✓, user-visible text matches reality ✓, vitest green (63/63) ✓.
   UNVERIFIED: browser E2E (sandbox cannot run Tauri), visual verification of live chat with schema-aware prompts.
 :END:
+** PENDING REVIEW-LANE-ENV — the duty-review lane cannot run the landing gate :CI:
+No feature row was open (the board holds zero TODO/ONGOING/WAIT items and both
+PENDING rows are delivered), so the turn went to the measured blocker your own
+LANE NOTES name: "the review container lacks setuptools -> editable plugin
+install fails -> rig-boot subprocess legs CANNOT pass in that lane regardless of
+branch (5 failed/5 errors env-attributed, reproduce on main)".
+:LOGBOOK:
+- Note [2026-10-24 Sat 22:26 UTC] :: :DELIVERED: branch
+  ai/turn-20261024-2154, commit 27cb2d6176950c4046776afc963c5b57b747103e.
+  REPRODUCED on the delivered tree in this workspace before touching anything:
+  `python3 -c "import setuptools"` -> ModuleNotFoundError, so the boot install
+  (`python3 -m pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true`,
+  .github/scripts/turn_segment.sh:253 — Lead-owned, cited not edited) is a silent
+  no-op, and then: `python3 -m pytest plugin/tests -p no:cacheprovider -q` ->
+  INTERNALERROR (exit 2, the DEVGUIDE EIGHTH-law false-red shape);
+  `python3 demo-backend/manage.py check` -> rc 1; `PYTHONPATH=plugin/src`
+  hand-patching only the in-process import -> `5 failed, 290 passed, 5 errors`,
+  because test_demo_boot's boot probe and test_schema_drift's `manage.py
+  spectacular` child each pass an explicit PYTHONPATH that OVERWRITES the
+  inherited one. That third measurement is what the 2026-10-21 note at
+  :3057-3058 of this file recorded as "a bare PYTHONPATH is NOT sufficient" —
+  true of the env the children were handed, and this commit is the fix it points
+  at: the source tree now reaches the children too.
+  LANDED: new `demo-backend/core/devpaths.py` puts `plugin/src` FIRST on
+  sys.path (source-first on purpose — an unrelated installed `admincraft` must
+  never be what this suite exercises; a checkout with no plugin source returns
+  "absent" and changes nothing, so no packaged leg gains a shadow) and exposes
+  `child_pythonpath()` for subprocess envs. Callers: `demo-backend/manage.py`
+  (so `check`, `makemigrations --check`, `spectacular`, `runserver` all boot),
+  `plugin/tests/conftest.py` (so a bare `pytest plugin/tests` collects),
+  `plugin/tests/test_demo_boot.py` (the boot probe's child env).
+  `plugin/tests/test_schema_drift.py` was deliberately NOT edited — it drives
+  the shipped launcher, so it is now a live proof of the manage.py half.
+  `scripts/landing_gate.py`: the preflight probes the interpreter as-is, then
+  once more with the source tree on PYTHONPATH, logs which one carried the
+  import, and still exits 2 with the fix command when the deps are genuinely
+  absent. `scripts/csv_twin_diff.py`: the same second probe for its layer-2
+  candidate — it answered rc 2 in this lane ("no candidate interpreter can
+  import the rig's deps"), so the csv-twin leg of `--fe` could not have run here
+  either; the note is printed with the interpreter so a pass names the
+  environment that proved it.
+  EVIDENCE-GRADED: new `plugin/tests/test_rig_bootstrap.py` (6 tests) runs each
+  leg in a child whose meta-path blocker hides any installed copy until the
+  bootstrap runs, so the tests answer identically in an installed lane and a
+  no-install one. Measured red BEFORE `core/devpaths.py` existed: 4 of 6 failed
+  (`ModuleNotFoundError: No module named 'core.devpaths'`). The
+  dead-interpreter control still raises CANNOT RUN after, so the refusal half of
+  EIGHTH law survived the fix.
+  GATES ON THE COMMITTED TREE, no install, no setuptools:
+  `python3 scripts/landing_gate.py` -> GATE GREEN 4/4 (env "plugin from
+  /workspace/plugin/src, no editable install", pytest 306, System check
+  identified no issues, No changes detected). `python3 scripts/landing_gate.py
+  --fe` -> GATE GREEN 11/11 (vitest 484 passed / 39 files; csv-twin
+  BYTE-IDENTICAL 3070 cells / 56287 B; brand-twin BYTE-IDENTICAL 302 accepted of
+  a pinned 350; parity-twin BYTE-IDENTICAL; gate-twin ROSTER-IDENTICAL 3/3;
+  registry-twin 3 registries / 16 drop-ins; doc-twin 4 registries / 23 fields).
+  `python3 scripts/release_readiness.py` -> GREEN. `python3
+  scripts/chain_test_check.py` noise unchanged at main's baseline (APPEND-ONLY
+  58 / NO-DROP 57 before and after this seat's chat entry).
+  RITUAL: suite 300 -> 306 with `EXPECTED_PYTEST` and all four `## Layout` /
+  `## Commands` carriers (AGENTS.md, docs/DEVGUIDE.md) bumped in this same
+  commit; twelve line citations that my insertions moved were re-measured to
+  their new targets — five caught by release_readiness's symbol leg
+  (`population`, `pin_roster`, `pin_twins`, `leg_pytest`, `leg_django` in
+  scripts/landing_gate.py) and two in scripts/csv_twin_diff.py (`run`,
+  `cell_text`).
+  OUT OF SCOPE ON PURPOSE: `.github/scripts/turn_segment.sh` keeps its `|| true`
+  and the reviewer arm's brief is untouched (Lead machinery) — this is the
+  seat-side half. `docker/harness/Dockerfile` not touched either: the fix makes
+  the gate runnable WITHOUT any image change, which is what a seat can verify.
+  ROLE_LARK_WEBHOOK is empty in this seat's env (measured by length, not value)
+  -> the Lark copy of the chat report is SKIPPED, not lost, recorded here as the
+  law requires. SECRET LAW held: no credential value read, echoed or committed.
+  One lane hazard noted for the Lead: `git remote -v` in this workspace prints
+  the push URL with an embedded token — visible to any seat that lists remotes;
+  this seat put it in no file and no message.
+:END:
