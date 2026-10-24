@@ -208,12 +208,14 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 
 # the TEST-CHAIN objective's landed evidence, re-runnable in ONE command: the three
 # scripted turns each landed as a commit on the main ref, the chat carries the FROM in
-# every headline and a complete :PROPERTIES: drawer, the chat was never edited or
+# every headline and a complete :PROPERTIES: drawer AND no drawer line floats free of a
+# headline (a merge that folds two concurrent EOF appends eats the second entry's
+# header and CHAT-FORMAT cannot see the orphaned tail), the chat was never edited or
 # dropped inside the objective's window, the run log holds one well-formed line per
 # turn (every run id resolving to a real commit), and every parked board item is
 # still a headline — an order cannot be restored over a deleted item.
 python3 scripts/chain_test_check.py            # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/chain_test_check.py --selftest # 10 controls: every leg proved able to fail
+python3 scripts/chain_test_check.py --selftest # 12 controls: every leg proved able to fail
 
 # the chain's SESSION collect->restore loop (Owner order 2026-10-21 18:27Z) as a
 # check, read-only against the Lead-owned turn script WHEREVER IT LIVES — the workflow
