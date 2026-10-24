@@ -2546,6 +2546,11 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-24 Sat 02:43 UTC] :: :LARK-SKIP: (relief-engineer,
+  same segment as the :UNION: note above). ROLE_LARK_WEBHOOK is empty in this
+  seat's env — measured with `[ -z ]` and by length, never by dumping the value
+  (SECRET LAW) — so the Lark copy of the 02:27Z report is SKIPPED, not lost, and
+  no URL was invented. Board rows touched by that report stay PENDING.
 - Note taken on [2026-10-24 Sat 02:27 UTC] :: :UNION: (relief-engineer, seat
   RELIEF ENGINEER, branch ai/turn-20261024-0201). Night-2 items 6 (this row,
   e01f4ad) and 7 (R-007, b4a0754) are both QA-APPROVED but each answered
