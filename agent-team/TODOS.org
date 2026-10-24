@@ -3516,6 +3516,100 @@ superuser, so a live smoke could never show a gated surface hidden.
   TEAM-CONTROL.org, .gitattributes) read and cited only. State left PENDING —
   DONE is the Lead's gate, and per SEGREGATION LAW this seat reviewed nothing:
   the duty reviewer of ai/turn-20261024-0659 is the next seat.
+
+- Note taken on [2026-10-24 Sat 06:20 UTC] :: SEGMENT (seat
+  relief-engineer, branch ai/turn-20261024-0607) — no state flipped here: this
+  row and TODOS.org:495 both stay PENDING (delivered-awaiting-your-gate; DONE
+  is Lead-only by law 8). Two things, both measured:
+  (1) THE LAST ROW OF THIS ITEM IS NOT CLOSEABLE IN THE TURN CONTAINER, and
+  the reason is now measured rather than asserted. Every prior report cited
+  "which chromium is empty"; the real blocker is one level deeper: uid=1001
+  (not root), `sudo` is not even installed (`/bin/bash: line 1: sudo: command
+  not found`), `apt-get`/`dpkg` exist but are unusable without root, and
+  `ldconfig -p` finds ZERO of the four libraries a browser needs
+  (libnss3.so, libatk-1.0.so.0, libgbm.so.1, libasound.so.2 — each count 0).
+  The network is reachable (registry.npmjs.org 200, pypi.org 200), so
+  `npx playwright install chromium` would DOWNLOAD and then fail to START.
+  `which docker podman` is empty in the seat container, so the image cannot be
+  amended and rebuilt from inside a seat either. Conclusion for the
+  escalation: this row needs either an Owner-side human E2E pass or an image
+  change in docker/harness/Dockerfile:17-20 (which installs only
+  git curl ca-certificates bzip2 jq nodejs npm). This seat deliberately did NOT
+  edit that Dockerfile: an image change nobody can build-verify here would gate
+  EVERY later seat, which is the opposite of relief.
+  (2) LANDED: `.gitignore` now ignores the chain harness scratch
+  (`.turn-inside.sh`, `.turn-result.txt`, `.turn-review.txt`) — 6 lines, no
+  other file touched. Why it is a seat-side fix:
+  `.github/scripts/turn_segment.sh:563` is a bare `git add -A` (the host-side
+  safety commit that exists so a seat's work is never lost), and the same
+  script WRITES the scratch into the workspace (`:232` heredoc for
+  `.turn-inside.sh`, `:266/:279` for `.turn-review.txt`, `:534-540` for
+  `.turn-result.txt`) and only removes it at `:576` — AFTER that commit. So
+  every delivery run is one `git add -A` away from committing reviewer plumbing
+  into the product tree. Measured before/after, not reasoned: `git log --all
+  --oneline -- .turn-review.txt` = 4 commits (7a4623d, ece17f8, a19ddb5,
+  d4358a6), every one of them titled "segment work — host-committed"; the file
+  carries the reviewer's raw result JSON (session id, model-fallback notice) —
+  and a19ddb5 is precisely the commit on the REJECTED pending branch. Replay in
+  a throwaway clone of the pre-fix tree, following `:562-565` exactly (scratch
+  + one product line, then `git add -A`): BEFORE →
+  `A .turn-inside.sh / A .turn-result.txt / A .turn-review.txt / M
+  docs/CHAIN-TEST.md`; AFTER (same clone, `.gitignore` copied in) →
+  `M .gitignore / M docs/CHAIN-TEST.md` only, with `git check-ignore` naming all
+  three. Clone and its scratch removed after the measurement; nothing under
+  /workspace except `.gitignore` changed. `.gitignore` is not on the Lead-owned
+  list (`.gitattributes` is, and it was not touched), and no tracked file is
+  affected by an ignore rule, so no branch loses a file it already carries.
+  GATES ON THE COMMITTED TREE, each rc 0: `python3 scripts/landing_gate.py`
+  → GATE GREEN 4/4 (env django 5.2.18, pytest 300 passed, System check no
+  issues, No changes detected) after the gate's own `env` leg caught the missing
+  rig install as CANNOT RUN and printed the fix command (EIGHTH law working —
+  `python3 -m pip install -e ./plugin --no-deps`); `python3
+  scripts/release_readiness.py` → GREEN (94 path citations, 93 line citations,
+  16/16 symbol claims, doc-counts 8 live claims == the pins pytest=300 /
+  vitest=478); `registry_roster_diff.py` rc 0 (3 glob dirs, one registry each)
+  and `doc_field_roster_diff.py` rc 0 (12 feed field claims). Vitest was NOT
+  re-run: `app/` is byte-unchanged by this segment, and the FE suite is owned by
+  the CI test job + your finalize gate.
+  BOARD RE-COUNTED, not inherited: `grep -nE '^\*+ (TODO|ONGOING|WAIT)'
+  agent-team/TODOS.org` → ZERO lines; PENDING rows → exactly two (this one and
+  :495 R-003), both already carrying :DELIVERED:. R-003 as measured has NO seat
+  work left either: BE DONE (merged f5840aaf, :515), FE DONE (Lead audit-landing
+  :546), and `app/src/actions/flag.ts`, `bulk_flag.ts`, the registry,
+  `docs/custom-actions.md` and `actionMount.test.ts` are all on main. So the
+  objective's stop condition is now your gate, not a queue of unstarted work.
+  TWO LANE READINGS FOR YOU (cited, Lead-owned so not edited here):
+  - `#+PENDING-REVIEW` (TEAM-CONTROL.org:14) still names
+    ai/turn-20261024-0454 @ a19ddb5, rejected 05:56Z — and that branch's
+    PRODUCT delta over main is zero: `git diff --numstat origin/ai/main
+    origin/ai/turn-20261024-0454 -- app/src scripts plugin AGENTS.md
+    docs/rbac.md docs/DEVGUIDE.md` prints NOTHING (its rbacNavMount.test.ts and
+    the pins 478/39 are already main's, landed by the 0201 union you approved).
+    Its two-dot diff is otherwise base drift from 9e369d8, not edits — proven by
+    `git log origin/ai/main..origin/ai/turn-20261024-0454 -- docs/widget-data.md`
+    printing nothing while main's :115 says "nine-mutant" and the branch's base
+    says "seven": a naive two-dot read of that branch shows 245 deleted chat
+    lines and a reverted doc count, neither of which the branch authored. So the
+    lane is spending review runs on a branch with nothing left to land, and the
+    stale base makes it LOOK destructive.
+  - `python3 scripts/chain_session_check.py` answers rc 1 on the PRISTINE base
+    (re-measured in a fresh clone of 305fa71, identical verdict), i.e. this
+    segment did not cause it: three `--no-session` occurrences in the inner
+    script (:140/:158/:190) and `GOOSE-STORE: the collect list does not cover
+    .local/share/goose/sessions`. The goose leg matters for MY seat this run —
+    `#+TURN` (TEAM-CONTROL.org:9) points at zai/glm-4.7-flash@goose, so if this
+    seat really ran on goose its session store is never collected and the
+    SESSION LAW is not being honoured for it.
+  SECRET LAW held: no credential value read, echoed or committed; presence was
+  probed only by name/emptiness. ROLE_LARK_WEBHOOK is empty in this seat's env
+  (measured by length, not value) → the Lark copy of this report is SKIPPED, not
+  lost, as this row requires. Harness scratch `.turn-inside.sh` /
+  `.turn-review.txt` left untracked and OUT of the commit — which is exactly what
+  the `.gitignore` change now makes structural instead of a per-seat habit.
+  Lead-owned files (`.github/workflows/*`, `.github/scripts/*`,
+  TEAM-CONTROL.org, `.gitattributes`) read and cited only. SEGREGATION LAW v2:
+  this seat authored only; it reviewed nothing and merged nothing, and the duty
+  reviewer of ai/turn-20261024-0607 is the next seat. No OBJECTIVE-STATE claim.
 - Note [2026-10-20 Tue 23:34 UTC] :: :DELIVERED: branch
   ai/turn-20261020-2327, commit 83d51be. The last UNVERIFIED row of the
   FR-R007 evidence is now a clickable fact.
