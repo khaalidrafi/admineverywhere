@@ -234,6 +234,56 @@ jobs:
           echo "" >> "$SUMMARY"
           cat "$SUMMARY" || true
 
+      - name: Probe opencode built-in lanes (wave-3 QA-4/5 + Plat-3/4 — Owner order 2026-10-24 17:01Z)
+        continue-on-error: true
+        run: |
+          SUMMARY="$GITHUB_STEP_SUMMARY"
+          echo "" >> "$SUMMARY"
+          echo "### OpenCode built-in lanes probe (wave-3 hires: bare zero-key ids on the in-image body)" >> "$SUMMARY"
+          echo "" >> "$SUMMARY"
+          # harness image: reuse the one the codebuddy probe built when present,
+          # else build (gha cache makes a warm rebuild cheap)
+          docker image inspect agent-harness:local > /dev/null 2>&1 || \
+            docker buildx build --load --cache-from type=gha --cache-to type=gha,mode=max \
+              -f docker/harness/Dockerfile -t agent-harness:local . > /tmp/harness-build2.log 2>&1 \
+            || { echo "| opencode built-ins | SKIP | - | harness image build failed (see build log) |" >> "$SUMMARY"; tail -5 /tmp/harness-build2.log 2>/dev/null; cat "$SUMMARY" || true; exit 0; }
+          # bare ids = opencode's own console free roster; NO provider key needed
+          # if the client serves anonymous free usage — the probe MEASURES that
+          # (a dead row with the exact error is honest evidence, not a fault)
+          for M in glm-5.1-flash nemotron-3.5-lightning mimo-v2.6 longcat-2.5; do
+            OUT=$(docker run --rm --entrypoint bash agent-harness:local -lc "timeout 240 opencode run --print-logs --model '$M' 'Reply with the single word: alive' > /tmp/oc-probe.log 2>&1; echo RC=\$? >> /tmp/oc-probe.log; tail -3 /tmp/oc-probe.log" 2>&1 || echo '(no output captured)')
+            if printf '%s' "$OUT" | grep -q 'RC=0'; then VERDICT="LANE ALIVE"; else VERDICT="LANE DEAD/UNKNOWN"; fi
+            SNIP=$(printf '%s' "$OUT" | head -c 100 | tr '\n' ' ' | tr -d '|' | tr -d '\`')
+            echo "| opencode built-in ($M) | opencode console free roster | - | $VERDICT — $SNIP |" >> "$SUMMARY"
+          done
+          echo "" >> "$SUMMARY"
+          cat "$SUMMARY" || true
+
+      - name: Probe cline lane (wave-3 QA-6/QA-7 — API leg via CLINE_API_KEY; free-account creds sealing is a separate DoE deliverable)
+        continue-on-error: true
+        env:
+          CLINE_API_KEY: ${{ secrets.CLINE_API_KEY }}
+        run: |
+          SUMMARY="$GITHUB_STEP_SUMMARY"
+          echo "" >> "$SUMMARY"
+          echo "### Cline lane probe (CLI + key + model)" >> "$SUMMARY"
+          echo "" >> "$SUMMARY"
+          if [ -z "$CLINE_API_KEY" ]; then
+            echo "| cline lane | SKIP | - | CLINE_API_KEY not in repo secrets (Owner action pending; DoE cardless-account creds alternative not yet sealed) |" >> "$SUMMARY"
+            cat "$SUMMARY" || true
+            exit 0
+          fi
+          docker image inspect agent-harness:local > /dev/null 2>&1 || \
+            docker buildx build --load --cache-from type=gha --cache-to type=gha,mode=max \
+              -f docker/harness/Dockerfile -t agent-harness:local . > /tmp/harness-build3.log 2>&1 \
+            || { echo "| cline lane | SKIP | - | harness image build failed (see build log) |" >> "$SUMMARY"; tail -5 /tmp/harness-build3.log 2>/dev/null; cat "$SUMMARY" || true; exit 0; }
+          OUT=$(docker run --rm --entrypoint bash -e CLINE_API_KEY agent-harness:local -lc 'cline auth -p cline -k "$CLINE_API_KEY" -m nvidia/nemotron-3.5-lightning-free > /tmp/cl-probe.log 2>&1; echo AUTH_RC=$? >> /tmp/cl-probe.log; timeout 240 cline "Reply with the single word: alive" --json >> /tmp/cl-probe.log 2>&1; echo TASK_RC=$? >> /tmp/cl-probe.log; tail -4 /tmp/cl-probe.log' 2>&1 || echo '(no output captured)')
+          if printf '%s' "$OUT" | grep -q 'TASK_RC=0'; then VERDICT="LANE ALIVE"; else VERDICT="LANE DEAD/UNKNOWN"; fi
+          SNIP=$(printf '%s' "$OUT" | head -c 120 | tr '\n' ' ' | tr -d '|' | tr -d '\`')
+          echo "| cline lane (nvidia/nemotron-3.5-lightning-free) | api.cline.bot via CLI | - | $VERDICT — $SNIP |" >> "$SUMMARY"
+          echo "" >> "$SUMMARY"
+          cat "$SUMMARY" || true
+
   # ONE TURN OF WORK. Reads agent-team/TEAM-CONTROL.org:
   #   #+KILL-SWITCH: ON           -> stop everything, exit green.
   #   #+OBJECTIVE-STATE: COMPLETE -> objective closed, exit green.
