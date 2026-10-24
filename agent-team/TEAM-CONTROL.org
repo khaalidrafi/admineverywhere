@@ -6,7 +6,7 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: FEATURE-ORDER night-2 (Owner 2026-10-23 17:37Z "Complete rest of the TODOs" — continuous night run like 2026-10-22; ESCALATED Owner 2026-10-23 19:49Z "I WANT EVERY REMAINING TODOS DONE TONIGHT" — no early stop, drive the order item after item, Lead unsticks within one patrol cycle): R-002 docs (software seat fixes the 2 stale DEVGUIDE citations on pending ai/turn-20261022-2227, re-delivers; QA re-reviews) -> FR-R001-FE (fix the audit's guessed-URL defect, live-verify, re-deliver) -> R-004 kanban -> R-005 CSV -> R-006 pages -> R-008 widgets -> R-007 RBAC; the seat flips its item PENDING with :DELIVERED: evidence (PAUSE-AFTER-TODO OFF tonight per the same Owner order; board + checker IDs renamed per "remove the cool naming", see the RENAME LAW in TODOS.org)
-#+TURN: zai/glm-4.7-flash@goose (Relief Engineer)
+#+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
