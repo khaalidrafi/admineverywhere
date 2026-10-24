@@ -327,5 +327,5 @@ Agent law:
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
    TEAM-CONTROL.org `#+TURN`.
-#+LAST-CHAT: 1469dcc296f2
+#+LAST-CHAT: 88eaa954b93c
  PRUNE EXECUTED 06:3xZ (reviewer-sanctioned, both 0454 verdicts 05:56Z+06:24Z benign already-landed): remote branches 0117/0419/0454/0243 deleted, 0201 already chain-cleaned — the sticky-register loop on 0454 is broken; queue is now exactly 0339 (additive R-007 take-2) -> 0527 (rbac_live_check.py 730L) -> 0607 (relief-engineer .gitignore hygiene: ignores the chain harness scratch that git add -A keeps committing + chat/board notes).  0339 REJECTED 07:10Z (stale base+pins, as the 0633 analysis predicted) and its OWN AUTHOR re-delivered the work clean as 0659 on the current base (self-claims 484/39 = 478 + 6 tests in existing files) -> the stale head is superseded by its author and was PRUNED 07:2xZ; register -> 0659. 
