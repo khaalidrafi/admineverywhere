@@ -2546,6 +2546,86 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-24 Sat 01:04 UTC] :: :DELIVERED: (night-2 item 6 —
+  the FR-R008 feed promise is now graded through the GRID, not only through
+  four hand-imported charts. Seat software-engineer, branch
+  ai/turn-20261024-0034; state untouched — PENDING stands, DONE is the Lead's
+  gate, no OBJECTIVE-STATE claim.)
+  WHAT LANDED: app/src/lib/__tests__/feedGridMount.test.ts (6 tests). The
+  existing proof was real but partial in a specific way: widgetMount.test.ts
+  mounts two components BY IMPORT, chartMount.test.ts mounts four BY IMPORT,
+  and dashboardMount.test.ts keeps $app.schema NULL on purpose. Nothing
+  mounted the glob-derived grid against a LIVE schema, so the registry's own
+  `data` field — the value doc_field_roster_diff grades — was never followed
+  into the engine, and no harness proved that EVERY fed widget paints (two
+  chosen charts can be green while a third silently leaves the domain).
+  THE FOUR DOORS: (1) domain — fed widgets come out of `widgets[]` filtered on
+  `meta.data.aggregate`, floored at 4 and required to cover bucket, group and
+  delta, so a collapsed glob or a vanished declaration fails by name instead
+  of shrinking the loop; (2) render — every one of them must clear its
+  skeleton, show NO reason line and draw real chart DOM off a rig schema
+  (Order: readOnly created_at + a 3-choice status enum), witnessed by the
+  35 heat cells, the three group names and the literal `5 vs 1` window
+  comparison; (3) wake — mount with schema null (zero requests), then deliver
+  the schema and the feeds must come alive: this is the `$effect`-not-`onMount`
+  law AGENTS.md records for widgets, graded at grid level for the first time;
+  (4) refusal — a schema with no enum and no date must leave every fed cell
+  rendering the ENGINE's wording ("no model in this API has an enum (choices)
+  field to aggregate" / "a date or datetime field"), with no chart drawn over
+  the refusal, no retry barrage after the state settles, and no request to any
+  pathname the schema did not discover. Every request URL is also matched as
+  ONE well-formed origin+path (`^http://feed.test/api/orders/?page=…`) — the
+  `http://hostapi…` separator corruption recorded for actionPath is red here.
+  MUTATION BATTERY — 9 mutants, whole spec re-run per mutant, sources restored
+  byte-identical (md5 over the four mutated files verified after each):
+  registry drops `data` -> floor RED; registry drops ONE widget's declaration ->
+  aggregate-coverage RED; a chart reads the schema non-reactively (`get(app)`)
+  -> ONLY the wake test RED (the door is precise); a refused feed probes a
+  guessed /api/trend/ -> RED naming the path; StatusDonut stops calling the
+  engine -> RED naming "Share by status"; HeatStrip swaps its reason for "No
+  data to show." -> RED naming the widget; LeaderBars draws bars over its own
+  refusal -> RED; delta compares its window against itself -> the `5 vs 1`
+  literal RED; listRecords loses the leading '/' of the discovered path -> the
+  origin-shape door RED. 9/9 killed, 0 survivors.
+  PINS + DOCS, same commit (ELEVENTH law): scripts/landing_gate.py:68-69
+  EXPECTED_VITEST 461->467, EXPECTED_VITEST_FILES 36->37 and the four published
+  sites AGENTS.md:128 :156, docs/DEVGUIDE.md:131 :159. The R-008 bullets in both
+  mirrors now name the grid proof (line-neutral edit in AGENTS.md — :41/:73/:190
+  are cited by DEVGUIDE, so no line may move there); docs/widget-data.md Proof
+  section carries the harness and the battery.
+  ONE HARNESS HOUSEKEEPING FOUND BY THIS DELIVERY: release_readiness's
+  CITE_LINE_ALLOWLIST exempted DEVGUIDE's quote of a control message naming
+  `docs/widget-data.md:127` while that file had 125 lines; growing the doc made
+  the exemption stale — exactly the "cannot outlive its reason" rule the leg
+  enforces — so the prose is now a number-free historical note and the entry is
+  retired (the dict is empty). CONTROL MEASURED, tree restored byte-identical: a
+  fresh `docs/widget-data.md:99999` citation still answers RED naming the file
+  and its line count, so removing the exemption did not blind the leg.
+  GATES ON THE COMMITTED TREE: `python3 scripts/landing_gate.py --fe` rc 0 —
+  GATE GREEN 11/11 (env django 5.2.18, pytest 300, System check no issues, No
+  changes detected, vitest 467 / 37 files, csv-twin BYTE-IDENTICAL 3070 cells,
+  brand-twin 302/350, parity-twin identical, gate-twin 3/3, registry-twin 3
+  registries / 16 drop-ins, doc-twin 4 registries / 88 field claims); `npx tsc
+  --noEmit` rc 0; `python3 scripts/release_readiness.py` rc 0 (doc-counts 8 live
+  claims == the pins, pytest=300 vitest=467); `registry_roster_diff.py` and
+  `doc_field_roster_diff.py` rc 0.
+  STILL UNVERIFIED, stated plainly: no browser/Tauri window — what is graded is
+  DOM + request bytes under happy-dom through the real registry; the pixel-level
+  claim (SVG geometry looks like a chart) stays with chartMount's attribute
+  maths, not with a screenshot. The 5s poll FLOOR is not re-graded at grid level
+  here (it is pinned by widgetFeed.test.ts:88/:240 and the DeltaChip timer door
+  by widgetMount.test.ts:71) — this harness proves the timer never RUNS on a
+  refusal, which is the complementary half.
+  NIGHT-2 QUEUE: items 1-5 closed; this is item 6 (R-008). Item 7 (R-007 RBAC)
+  remains, and it now has a rendered sidebar (navMount) plus a rendered widget
+  grid to hang role-gating proof on.
+  SECRET LAW held: no credential value read, echoed or committed — ENV VAR NAMES
+  only, checked with `[ -z ]`. ROLE_LARK_WEBHOOK is empty in this seat's env
+  (measured by length, not value) -> the Lark copy of the report is SKIPPED, not
+  lost. Harness scratch (.turn-inside.sh, .turn-review.txt) stays untracked and
+  out of the commit. Lead-owned files (.github/workflows/*, .github/scripts/*,
+  TEAM-CONTROL.org, .gitattributes) read and cited only. Per SEGREGATION LAW the
+  duty reviewer of this branch is the NEXT seat, not this one.
 - Note taken on [2026-10-22 Thu 01:44 UTC] :: :DELIVERED: (the FR-R008 feed
   contract is now a machine-checked artifact; cross-ref only, no state change,
   DONE stays the Lead's gate, no OBJECTIVE-STATE change, no completion claim.
