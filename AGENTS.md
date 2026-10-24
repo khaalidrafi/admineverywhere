@@ -125,7 +125,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (461 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (463 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -153,7 +153,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 461 vitest
+cd app && npm test                          # 463 vitest
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
 # FR-R005 cross-twin CSV byte diff (the two writers, one matrix, raw bytes)
@@ -435,7 +435,13 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   unanswered hash resolves to `kind: "none"` — the router never guesses a page
   from a prefix, same law as `actionPath()` and `resolveAxis()`. Captured
   segments arrive as **props**, so pattern parameter names are the component's
-  prop names (`ModelPage` takes `modelId`/`recordId`, not `id`). Contract +
+  prop names (`ModelPage` takes `modelId`/`recordId`, not `id`). The auth gate is
+  a rendered proof too: `app/src/lib/__tests__/authGateMount.test.ts` stubs the
+  pages module so the discovered `standalonePages[0]` is a non-Login probe, mounts
+  the real `App` and asserts that component paints (a hard `import Login` re-fork
+  stays green — measured 451/35 — so the promise was graded by a comment, not the
+  DOM), then empties the registry to pin the friendly no-standalone fallback the
+  real glob can never reach. Contract +
   the copy checklist in `docs/page-registration.md`.
 - Vite: `optimizeDeps.include` covers all svelte entrypoints (prevents two
   svelte-internals instances); the dev server sends

@@ -1109,7 +1109,72 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** DONE FR R-005 canonical CSV export                                     :FE:BE:
 :LOGBOOK:
-<<<<<<< HEAD
+- Note taken on [2026-10-23 Fri 21:06 UTC] :: :DELIVERED: NIGHT-2 ITEM 4 — THE RENDERED
+  HALF OF BOTH EXPORT LAYERS (branch ai/turn-20261023-2042, base 326f6e5; state untouched,
+  PENDING stands — DONE is the Lead's gate and this seat authored no completion claim).
+  THE GAP, MEASURED BEFORE WRITING: `grep -rln "fetchCsv|exportPath|onserverexport|Export
+  table|Full export" app/src/lib/__tests__/ plugin/tests/` answered THREE files —
+  openapi.test.ts, api.test.ts, test_schema_drift.py — i.e. every claim §6 of
+  docs/csv-export.md made was graded on a PURE function or on the HTTP client called
+  directly. Nothing ever rendered the page, so the four promises a reviewer reads off the
+  SCREEN were unproven: that layer 1 exports the columns the table ACTUALLY rendered (the
+  §5 checklist item "wire layer 1 to the table's own derived column list, never a
+  re-derived copy" had no grader at all), that the file is the CURRENT page only, that the
+  click fires ZERO server calls, and that layer 2 disappears with the document instead of
+  probing a guessed path. Same shape of hole R-004 had until kanbanMount.test.ts.
+  SHIPPED: app/src/lib/__tests__/exportMount.test.ts — 9 mounted tests, the real ModelPage
+  + the real DataTable + the real csv.ts/api.fetchCsv against the captured fixture. The
+  download is intercepted where the product performs it (createElement("a") -> a.download
+  -> a.click()) and asserted from the BLOB, so the bytes are the file a user would get,
+  never a re-call of buildCsv. Cross-checks pinned: header 1:1 with the rendered <th> set
+  (the rig's Order normalizes to id,status,total,weight,notes,customer,product,created_at,
+  so product/created_at sit OUTSIDE the visible six and are required absent); DATA-not-
+  display (200-char note un-truncated while the cell shows the truncation, null -> empty
+  field, "19.99" un-reflowed, 1e-7 in ECMAScript's own rendering, =SUM(...) apostrophised,
+  "Gizmo, big" and an embedded LF quoted); exactly one BOM and a trailing CRLF; empty page
+  -> info toast + zero downloads; customers (document carries no export) gets layer 1 only;
+  a stripped exportPath removes BOTH the button and any `export` request; the discovered
+  URL http://api.test/api/orders/export/ with Accept text/csv + `Token` auth; a hostile
+  Content-Disposition ../../etc/Order Lines.csv -> etc-order-lines.csv; the server's bytes
+  saved UNTOUCHED (no doubled BOM); a 400 surfacing the reason, zero downloads, both
+  buttons inert and the label reading Exporting… mid-flight.
+  MUTATION BATTERY: 8 mutants, whole file re-run per mutant, sources restored
+  byte-identical (md5 verified against /tmp/mutbak/MD5): table hands over all fields —
+  KILLED; Full export bound regardless of exportPath — KILLED; fetchCsv concatenating a
+  guessed /export/ — KILLED; csvBlobParts no longer BOM-idempotent — KILLED; empty-page
+  guard removed — KILLED; formula guard disabled — KILLED; buttons never disabled while
+  exporting — KILLED; layer 1 duplicating the page rows — KILLED. ALL 8 KILLED.
+  LIVE-SCHEMA CHECK (in-process drf_spectacular against core.settings, no server left
+  running): the live rig documents exactly {'/api/orders/export/': ['get'],
+  '/api/me/': ['get']} — get-only, one model, which is precisely the evidence shape the
+  two button-presence tests bind to. The fixture is not a guess about the rig.
+  GATES ON THE COMMITTED TREE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN
+  11/11 (pytest 300, System check no issues, No changes detected, vitest 446 / 34 files,
+  csv-twin BYTE-IDENTICAL 3070 cells / 56287 B, brand-twin 302 over pinned 350, parity and
+  gate/registry/doc twins OK). `npx tsc --noEmit` rc 0. `python3 scripts/release_readiness.py`
+  rc 0 — doc-counts 8/8 equal the gate's pins (pytest=300, vitest=446). Pins bumped in THIS
+  commit per the ELEVENTH law: EXPECTED_VITEST 437 -> 446, EXPECTED_VITEST_FILES 33 -> 34
+  (scripts/landing_gate.py:68-69) plus the four published sites AGENTS.md:120 :148 and
+  docs/DEVGUIDE.md:123 :151. Docs retyped honestly in the same commit: AGENTS.md + DEVGUIDE
+  CSV bullets now say BOTH layers are mounted, and csv-export.md §5 item 4 and §6 name the
+  harness and the battery. Product code touched: ZERO — the defect class was the absence of
+  a grader, not a wrong byte.
+  FOUND, DELIBERATELY NOT CHANGED (a ruling, not a night segment's edit): docs/csv-export.md
+  §1 scopes layer 2 to the WHOLE collection while §3 notes the server "honours ?search=",
+  and ModelPage's onServerExport passes only model.exportPath — so a user who searched and
+  then clicks Full export gets the unfiltered dataset with a filename that says `-line`,
+  never `search-<term>` (layer 1 DOES name the search: exportFileName(model.name,
+  `search-${searchTerm}`)). Two readings are defensible (layer 2 = the dataset, by §1) or
+  (the filter on screen should travel), and the second changes shipped behaviour plus a
+  pinned doc table, so it is yours. Say the word and a seat lands it with §1/§4 re-pinned
+  in the same commit.
+  CHAIN STATE, measured: `python3 scripts/chain_test_check.py` — see the chat report for the
+  count; my delta is EOF appends plus this LOGBOOK insertion, no existing byte touched.
+  SECRET LAW held — no credential read, echoed or committed; ENV VAR NAMES only.
+  app/node_modules was ABSENT at boot (measured: no such directory) — the 43rd standing
+  docker/harness gap; self-healed with `npm install` (rc 0), so the --fe twins ran for real.
+  ROLE_LARK_WEBHOOK empty in this seat's env (measured, length 0) -> the Lark copy of the
+  report is SKIPPED, not lost; no URL invented.
 - Note taken on [2026-10-23 Fri 20:38 UTC] :: SHA ADDENDUM to the 20:26Z note (it was
   written before the commit, so it carries branch + base but no sha): the work landed as
   `ba28659` on `ai/turn-20261023-2008`, one commit ahead of `e8aa04d`, tree clean apart
@@ -1185,74 +1250,6 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   ROLE_LARK_WEBHOOK empty in this seat's env (measured, length 0) → Lark copy SKIPPED.
   Board state untouched beyond this note: PENDING stands, DONE is the Lead's gate, no
   OBJECTIVE-STATE claim from this seat.
-=======
-- Note taken on [2026-10-23 Fri 21:06 UTC] :: :DELIVERED: NIGHT-2 ITEM 4 — THE RENDERED
-  HALF OF BOTH EXPORT LAYERS (branch ai/turn-20261023-2042, base 326f6e5; state untouched,
-  PENDING stands — DONE is the Lead's gate and this seat authored no completion claim).
-  THE GAP, MEASURED BEFORE WRITING: `grep -rln "fetchCsv|exportPath|onserverexport|Export
-  table|Full export" app/src/lib/__tests__/ plugin/tests/` answered THREE files —
-  openapi.test.ts, api.test.ts, test_schema_drift.py — i.e. every claim §6 of
-  docs/csv-export.md made was graded on a PURE function or on the HTTP client called
-  directly. Nothing ever rendered the page, so the four promises a reviewer reads off the
-  SCREEN were unproven: that layer 1 exports the columns the table ACTUALLY rendered (the
-  §5 checklist item "wire layer 1 to the table's own derived column list, never a
-  re-derived copy" had no grader at all), that the file is the CURRENT page only, that the
-  click fires ZERO server calls, and that layer 2 disappears with the document instead of
-  probing a guessed path. Same shape of hole R-004 had until kanbanMount.test.ts.
-  SHIPPED: app/src/lib/__tests__/exportMount.test.ts — 9 mounted tests, the real ModelPage
-  + the real DataTable + the real csv.ts/api.fetchCsv against the captured fixture. The
-  download is intercepted where the product performs it (createElement("a") -> a.download
-  -> a.click()) and asserted from the BLOB, so the bytes are the file a user would get,
-  never a re-call of buildCsv. Cross-checks pinned: header 1:1 with the rendered <th> set
-  (the rig's Order normalizes to id,status,total,weight,notes,customer,product,created_at,
-  so product/created_at sit OUTSIDE the visible six and are required absent); DATA-not-
-  display (200-char note un-truncated while the cell shows the truncation, null -> empty
-  field, "19.99" un-reflowed, 1e-7 in ECMAScript's own rendering, =SUM(...) apostrophised,
-  "Gizmo, big" and an embedded LF quoted); exactly one BOM and a trailing CRLF; empty page
-  -> info toast + zero downloads; customers (document carries no export) gets layer 1 only;
-  a stripped exportPath removes BOTH the button and any `export` request; the discovered
-  URL http://api.test/api/orders/export/ with Accept text/csv + `Token` auth; a hostile
-  Content-Disposition ../../etc/Order Lines.csv -> etc-order-lines.csv; the server's bytes
-  saved UNTOUCHED (no doubled BOM); a 400 surfacing the reason, zero downloads, both
-  buttons inert and the label reading Exporting… mid-flight.
-  MUTATION BATTERY: 8 mutants, whole file re-run per mutant, sources restored
-  byte-identical (md5 verified against /tmp/mutbak/MD5): table hands over all fields —
-  KILLED; Full export bound regardless of exportPath — KILLED; fetchCsv concatenating a
-  guessed /export/ — KILLED; csvBlobParts no longer BOM-idempotent — KILLED; empty-page
-  guard removed — KILLED; formula guard disabled — KILLED; buttons never disabled while
-  exporting — KILLED; layer 1 duplicating the page rows — KILLED. ALL 8 KILLED.
-  LIVE-SCHEMA CHECK (in-process drf_spectacular against core.settings, no server left
-  running): the live rig documents exactly {'/api/orders/export/': ['get'],
-  '/api/me/': ['get']} — get-only, one model, which is precisely the evidence shape the
-  two button-presence tests bind to. The fixture is not a guess about the rig.
-  GATES ON THE COMMITTED TREE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN
-  11/11 (pytest 300, System check no issues, No changes detected, vitest 446 / 34 files,
-  csv-twin BYTE-IDENTICAL 3070 cells / 56287 B, brand-twin 302 over pinned 350, parity and
-  gate/registry/doc twins OK). `npx tsc --noEmit` rc 0. `python3 scripts/release_readiness.py`
-  rc 0 — doc-counts 8/8 equal the gate's pins (pytest=300, vitest=446). Pins bumped in THIS
-  commit per the ELEVENTH law: EXPECTED_VITEST 437 -> 446, EXPECTED_VITEST_FILES 33 -> 34
-  (scripts/landing_gate.py:68-69) plus the four published sites AGENTS.md:120 :148 and
-  docs/DEVGUIDE.md:123 :151. Docs retyped honestly in the same commit: AGENTS.md + DEVGUIDE
-  CSV bullets now say BOTH layers are mounted, and csv-export.md §5 item 4 and §6 name the
-  harness and the battery. Product code touched: ZERO — the defect class was the absence of
-  a grader, not a wrong byte.
-  FOUND, DELIBERATELY NOT CHANGED (a ruling, not a night segment's edit): docs/csv-export.md
-  §1 scopes layer 2 to the WHOLE collection while §3 notes the server "honours ?search=",
-  and ModelPage's onServerExport passes only model.exportPath — so a user who searched and
-  then clicks Full export gets the unfiltered dataset with a filename that says `-line`,
-  never `search-<term>` (layer 1 DOES name the search: exportFileName(model.name,
-  `search-${searchTerm}`)). Two readings are defensible (layer 2 = the dataset, by §1) or
-  (the filter on screen should travel), and the second changes shipped behaviour plus a
-  pinned doc table, so it is yours. Say the word and a seat lands it with §1/§4 re-pinned
-  in the same commit.
-  CHAIN STATE, measured: `python3 scripts/chain_test_check.py` — see the chat report for the
-  count; my delta is EOF appends plus this LOGBOOK insertion, no existing byte touched.
-  SECRET LAW held — no credential read, echoed or committed; ENV VAR NAMES only.
-  app/node_modules was ABSENT at boot (measured: no such directory) — the 43rd standing
-  docker/harness gap; self-healed with `npm install` (rc 0), so the --fe twins ran for real.
-  ROLE_LARK_WEBHOOK empty in this seat's env (measured, length 0) -> the Lark copy of the
-  report is SKIPPED, not lost; no URL invented.
->>>>>>> origin/ai/turn-20261023-2042
 - Note taken on [2026-10-22 Thu 00:12 UTC] :: SHA ADDENDUM to the 00:06Z note (my chat
   report was written before the commit, so it carries branch + file:line but no sha —
   recorded here rather than edited there, the chat stays append-only): the work landed as
@@ -2213,6 +2210,63 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-006 page registration                                            :FE:
 :LOGBOOK:
+- Note taken on [2026-10-23 Fri 23:40 UTC] :: NIGHT-2 ITEM 5 — :DELIVERED:
+  (platform-engineer, branch ai/turn-20261023-2320). A rendered blind spot found
+  by MEASUREMENT, closed with a mount test; zero product-code edits, the defect
+  was in the EVIDENCE. docs/page-registration.md pins "App.svelte no longer
+  imports [Login]; it renders standalonePages[0]... a client ships its own
+  sign-in by dropping a file". The only render of that path was
+  shell.test.ts:148-162, which mounts the REAL App over the REAL glob — so the
+  discovered standalone IS the shipped Login and the test cannot tell a dynamic
+  read apart from a hard import. PROVEN, not asserted: I replaced App's auth
+  branch with `import LoginHard ... <LoginHard/>` and ran the WHOLE shipped
+  suite — `451 passed / 35 files`, rc 0, every test green (restored byte-identical,
+  md5 47f42641925badd8bb28a1144edeacf6). A re-fork of App into importing one
+  page was invisible to the suite: the promise was graded by a code comment, not
+  the DOM.
+  SHIPPED: app/src/lib/__tests__/authGateMount.test.ts (2 mounted tests) +
+  app/src/lib/__tests__/fixtures/ProbeLogin.svelte (a non-Login probe, outside
+  src/pages so the glob never discovers it). The pages module is stubbed via a
+  hoisted holder (the gapMount technique) so App's auth gate is driven by the
+  registry: (1) standalonePages[0] = the probe -> App paints "Probe Sign-In
+  Gate"/"standalone-from-registry", #probe-signin present, NO "Username" and no
+  <aside> — this is the mutation killer (re-applying the hard import answers
+  `1 failed | 1 passed`); (2) empty registry -> App shows the `{#if authPage}`
+  else-branch, the friendly "No page declares standalone: true" the real glob can
+  never reach (mutation `{#if authPage}` -> `{#if true}` answers `1 failed |
+  1 passed`). No shipped page is refused, no nav/shell behaviour changed — the
+  existing 27+8+21 R-006 grades still pass untouched.
+  PINS bumped in the SAME commit (DEVGUIDE ELEVENTH law): scripts/landing_gate.py
+  EXPECTED_VITEST 451->453, EXPECTED_VITEST_FILES 35->36, plus the four published
+  sites AGENTS.md:120 :148 and docs/DEVGUIDE.md:123 :151 (all "451 vitest"->
+  "453"). Docs retyped honestly alongside the pin: page-registration.md Tests
+  line names authGateMount, its "auth gate is a page too" section gains the
+  wire-pin paragraph + the blindness measurement, and both mirror docs' Pages
+  (FR-R006) bullets gained the mirror sentence.
+  GATES ON THE COMMITTED TREE: `npx tsc --noEmit` rc 0; `python3
+  scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 (env django 5.2.18,
+  pytest 300, System check no issues, makemigrations --check No changes, vitest
+  453 / 36 files, csv/brand/parity twins BYTE-IDENTICAL, gate/registry/doc
+  rosters OK); `python3 scripts/release_readiness.py` rc 0 — doc-counts 8/8
+  equal the gate's own pins (pytest=300, vitest=453), 91 path citations resolve,
+  16 symbol claims over 15 citations on target.
+  HARNESS GAP (Lead-side, not seat work, third seat reporting it): app/node_modules
+  WAS present this boot (self-heal not needed for vitest), but `python3
+  scripts/landing_gate.py` first answered CANNOT RUN [env] — .turn-inside.sh
+  pip-installs the plugin with `python`, not `python3`; self-healed with the
+  gate's own printed `python3 -m pip install -e ./plugin --no-deps`.
+  CHAIN STATE, measured: `python3 scripts/chain_test_check.py` still rc 1 (the
+  pre-existing APPEND-ONLY/NO-DROP family from the Lead's in-place TEAM-CHAT.org
+  repairs, escalated 2026-10-22 23:36Z) — untouched by me; my board edit is a pure
+  insertion (this note) and my chat entry is an EOF append, every byte before them
+  preserved. Lead-owned files (.github/workflows/*, .github/scripts/*,
+  TEAM-CONTROL.org, .gitattributes) read and cited only; gate.sh untouched.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, measured) -> the Lark copy
+  of the report is SKIPPED, not lost; no URL invented. The harness scratch
+  (.turn-inside.sh, .turn-review.txt) stays untracked and OUT of the commit.
+  STILL OPEN (out of this item): R-008 widgets and R-007 RBAC behind item 5 in the
+  night-2 order. No OBJECTIVE-STATE claim from this seat; DONE is Lead-only.
 - Note taken on [2026-10-23 Fri 23:20 UTC] :: :DELIVERED: (night-2 item 5, seat
   software-engineer, branch ai/turn-20261023-2241, work commit 2267049). State is
   left PENDING on purpose: PENDING already means delivered-awaiting-Lead-gate, and

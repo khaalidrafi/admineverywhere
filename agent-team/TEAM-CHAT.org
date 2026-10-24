@@ -7220,3 +7220,83 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   Recorded as a correction rather than a silence because the sentence pattern —
   publishing a number as an instruction before it is measured — is exactly what the
   ELEVENTH harness law exists to catch, and it caught it here on my own prose.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-23 Fri 23:40 UTC]
+:END:
+  NIGHT-2 ITEM 5 (FR R-006 page registration) DELIVERED — a rendered blind spot
+  found by measurement, closed with a mount test. No product code changed: the
+  defect was in the EVIDENCE, not the behaviour. RESULT: DONE.
+  LANE: this seat ran under the rotation pointer agent-team/TEAM-CONTROL.org:9
+  (qwen3.8-flash@qoder, Platform Engineer); branch ai/turn-20261023-2320. PINGS:
+  none for @platform-engineer needing action — the only recent ping was the
+  relief seat's 6929 PIN COLLISION note, which is a MERGE-TIME union for you
+  (the sibling ai/turn-20261023-1935 kanban branch and the CSV branch both
+  retyped EXPECTED_VITEST on the same base); it is yours to resolve at the
+  merge, not seat work. So the segment took the next open row of the night-2
+  order (items 5 R-006, 6 R-008, 7 R-007 still PENDING).
+  THE GAP, MEASURED BEFORE WRITING (not assumed from the docs):
+  docs/page-registration.md pins a rendered promise — "App.svelte no longer
+  imports [Login]; it renders standalonePages[0]... a client that ships its own
+  sign-in screen drops in a file". The only render of that path was
+  shell.test.ts:148 (the whole-App auth-gate test), which mounts the REAL App
+  over the REAL glob, so the discovered standalone IS the shipped Login — the
+  test cannot tell a dynamic read apart from a hard `import Login`. I PROVED the
+  blindness: replacing App's auth branch with `<LoginHard />` (a static import)
+  and running the WHOLE shipped suite answered `451 passed / 35 files`, rc 0. A
+  re-fork of App into importing one page was invisible to the suite; the promise
+  was graded by a code comment, not by the DOM. Restored byte-identical
+  (md5 47f42641925badd8bb28a1144edeacf6).
+  SHIPPED (authGateMount.test.ts, 2 mounted tests + fixtures/ProbeLogin.svelte):
+  the pages module is stubbed through a hoisted holder (the gapMount technique)
+  so App's auth gate is driven by the registry, not the glob:
+  1. standalonePages[0] = a NON-Login probe -> App paints "Probe Sign-In Gate" /
+     "standalone-from-registry", #probe-signin present, and NO "Username" / no
+     <aside>. This is the mutation killer — re-applying the hard import answers
+     `1 failed | 1 passed`.
+  2. empty registry -> App renders the `{#if authPage}` else-branch, the friendly
+     "No page declares standalone: true" message the real glob can never reach
+     (Login is always discovered). Mutation `{#if authPage}` -> `{#if true}`
+     answers `1 failed | 1 passed`.
+  The probe lives outside src/pages/, so neither the page glob nor the
+  registry_roster twin sees it. The existing 27 (pages) + 8 (shell) + 21
+  (gapMount) R-006 grades pass untouched — no nav, routing, props or refusal
+  behaviour changed.
+  PINS bumped in the SAME commit (DEVGUIDE ELEVENTH law): scripts/landing_gate.py
+  EXPECTED_VITEST 451->453, EXPECTED_VITEST_FILES 35->36, plus all four published
+  sites (AGENTS.md:120 :148, docs/DEVGUIDE.md:123 :151). Docs retyped honestly
+  beside the pin: page-registration.md Tests line + its "auth gate is a page too"
+  section, and both mirror docs' Pages (FR-R006) bullet.
+  GATES ON THE COMMITTED TREE: `npx tsc --noEmit` rc 0; `python3
+  scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11 (env django 5.2.18,
+  pytest 300, System check no issues, makemigrations --check No changes, vitest
+  453 / 36 files, csv/brand/parity twins BYTE-IDENTICAL, gate/registry/doc
+  rosters OK); `python3 scripts/release_readiness.py` rc 0 — doc-counts 8/8 ==
+  the gate's own pins (pytest=300, vitest=453).
+  HARNESS GAP, third seat reporting it (Lead-side, one-line docker/harness fix):
+  app/node_modules WAS present this boot, but `python3 scripts/landing_gate.py`
+  first answered CANNOT RUN [env] because .turn-inside.sh pip-installs the plugin
+  with `python`, not `python3`; self-healed with the gate's own printed fix
+  (`python3 -m pip install -e ./plugin --no-deps`). node_modules self-heal is no
+  longer needed here, but the python3 boot install still is.
+  CHAIN STATE, measured: `python3 scripts/chain_test_check.py` still rc 1 (the
+  pre-existing APPEND-ONLY/NO-DROP family from the Lead's in-place TEAM-CHAT.org
+  repairs, escalated 2026-10-22 23:36Z). My delta preserves every byte before it:
+  this is an EOF append and the board note is a pure insertion. Lead-owned files
+  (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, .gitattributes) read
+  and cited only; gate.sh untouched.
+  SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
+  The harness scratch (.turn-inside.sh, .turn-review.txt) stayed untracked and OUT
+  of the commit. ROLE_LARK_WEBHOOK is empty in this seat's env (measured, length
+  0) -> the Lark copy of this report is SKIPPED, not lost; no URL invented.
+  RESULT: DONE — night-2 item 5 delivered as 2 mounted tests killing 2 named
+  mutations, gate --fe rc 0 (vitest 453/36, all six twins identical), readiness
+  rc 0, tsc 0, pins + four doc sites bumped in the same commit (branch
+  ai/turn-20261023-2320).
+  NEXT: your DONE gate on this branch (duty reviewer is the next seat per
+  SEGREGATION LAW v2 — this seat reviewed nothing), the 453-vs-union pin at
+  merge, and night-2 items 6 (R-008 widgets) and 7 (R-007 RBAC) still stand
+  behind this one.
