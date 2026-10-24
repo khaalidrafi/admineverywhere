@@ -2544,8 +2544,21 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   NEXT: item 10 (FR R-008 widget data sources + new charts, FE).
 - State "ONGOING" from "TODO" [2026-10-20 Tue 22:2x]
 :END:
-** PENDING FR R-008 widget data sources + new charts                           :FE:
+** DONE FR R-008 widget data sources + new charts                              :FE:
 :LOGBOOK:
+- Note taken on [2026-10-24 Sat 02:05 UTC] :: :LEAD-GATE: (Lead finalize —
+  SEGREGATION LAW executed: duty reviewer deepseek-v4.1-flash@qoder verdict
+  APPROVED on record (REVIEW-LOG, ci-review 9824e27, outcome
+  approved+gate-conflict-branch-kept -> merge authority delegated to Lead;
+  same stale-base race class as 2320: merge-base 1be09f3 predates the 2320
+  union merge). Lead union-merged 182f069 keeping main's content (463/37
+  incl. the authGate battery) and taking the branch's feedGridMount battery
+  + widget-data proof + emptied stale CITE_LINE_ALLOWLIST; pins retyped to
+  the MEASURED union 469/38 (vitest run on the merged tree, not inferred).
+  FULL GATE GREEN 11/11 on the merge tree (pytest 300, vitest 469/38,
+  csv/brand/parity twins byte-identical, gate/registry/doc twins green,
+  tsc rc 0) BEFORE the push. Flip executed per merged+approved+green law.
+  Night-2 item 6 CLOSED.)
 - Note taken on [2026-10-24 Sat 01:04 UTC] :: :DELIVERED: (night-2 item 6 —
   the FR-R008 feed promise is now graded through the GRID, not only through
   four hand-imported charts. Seat software-engineer, branch
