@@ -44,6 +44,12 @@ other six harnesses grade their pairs:
                resolves to a real commit, each turn's line carries that
                turn's marker AND the same date as its chat entry, and the
                log ends with the closed 3-line summary.
+  LOG-COVERAGE every run-shaped line in the log is one the harness READS:
+               inside a `runs` section, or re-listed in one, or a pinned
+               superseded record. A line that fell outside the region is a
+               turn silently missing from the evidence — this log admits in
+               its own prose that two cycles' lines dropped below the fold,
+               and nothing graded that claim until now.
   BOARD        every parked feature item is still a headline on
                agent-team/TODOS.org: the Lead restores an ORDER, and an
                order cannot be restored over a deleted item.
@@ -126,6 +132,35 @@ CHAT_MESSAGE_FLOOR = 50
 LOG_RUN_LINE_FLOOR = 3
 LOG_SUMMARY_LINE_FLOOR = 3
 
+# A run record the harness cannot READ is coverage lost, not coverage printed:
+# parse_log grades only a section named exactly `runs`, and this log admits in
+# its own words that it had to RE-OPEN that region twice — the second cycle's
+# `## runs` block ("the first cycle's `runs` block was closed by the FIRST
+# cycle's T3, so the second cycle's T1/T2 lines fell below the fold") and the
+# third cycle's ("the second cycle's `## runs` block was closed by that cycle's
+# own T3"). Meanwhile the file still carries a run-shaped record under
+# `## Post-chain handoff`, which no leg reads: a line the harness does not read
+# costs the log nothing to print, so `LOG: N run line(s)` keeps looking complete
+# while a turn vanishes from the evidence — the shape the ELEVENTH law forbids
+# (a comparison blind to its own coverage, the same hole that let five CSV
+# sentinels and a FLOAT_PARITY row disappear while still printing "identical").
+#
+# SUPERSEDED_RUN_LINES is the accepted-divergence pin, the same shape the CSV
+# twins use for a row whose divergence is recorded on purpose: a line the log
+# keeps (the append-only law forbids deleting it) that is deliberately NOT
+# re-listed into the graded region. Pinned by `sha@branch` IDENTITY, never by
+# line number — numbers move with every edit, which is the trap this repo
+# already fell into once (the brand twin's positional read compared the shipped
+# brand.json against an unrelated brand and invented a re-theme flicker).
+SUPERSEDED_RUN_LINES = (
+    # The second cycle's own correction, in its own words (docs/CHAIN-TEST.md
+    # TEST-T1 re-list line): "the 11:24Z line at :39 quoted f1678cd, the v0.1.0
+    # release tag's commit — corrected here". The corrected record IS graded;
+    # this line stays as the visible mistake, in the prose region it was
+    # written into.
+    "f1678cd@ai/turn-20261022-1124",
+)
+
 # ------------------------------------------------------------- file shapes
 HEADLINE_RE = re.compile(
     # KIND/MKIND admit hyphens (e.g. :hiring-consult: — the 13:35Z Lead
@@ -143,6 +178,12 @@ RUN_LINE_RE = re.compile(
 # The log's header prose ("One line per turn: run id | seat | lane | date.")
 # does not start like a run line, so it is prose and stays prose.
 RUN_LINE_INTENT_RE = re.compile(r"^[0-9a-f]{4,40}@")
+# The COVERAGE scan's intent: same shape, any column. A run record an author
+# indents is just as invisible to parse_log (which requires column 0) as one
+# that fell outside the `runs` region, and it silently lowers the graded count
+# instead of raising a red. Measured on the delivered log: ZERO indented
+# run-shaped lines, so the tolerance buys the blind spot at no false positive.
+RUN_LINE_LOOSE_RE = re.compile(r"^[ \t]*(?P<id>[0-9a-f]{4,40}@\S+)")
 WHEN_RE = re.compile(r"^\[?(?P<date>\d{4}-\d{2}-\d{2})")
 DRAWER_KEYS = ("FROM", "TO", "KIND", "WHEN")
 HEADLINE_LINE = re.compile(r"^\* MSG ")
@@ -320,6 +361,61 @@ def parse_log(text):
             if line.strip():
                 summary.append((number, line))
     return run_lines, summary
+
+
+def loose_run_id(line):
+    """`sha@branch` for anything shaped like a run record, else None — the ONE
+    identity spelling the coverage scan and its controls compare on."""
+    match = RUN_LINE_LOOSE_RE.match(line)
+    return match.group("id") if match else None
+
+
+def scan_run_line_coverage(text, graded):
+    """Split every run-shaped line in the log into what the harness can see.
+
+    `graded` is the (line_number, text) set parse_log returned — the ONLY region
+    this harness reads. Anything else shaped like a run record is:
+      duplicate   — the same `sha@branch` is also graded, i.e. the log re-listed
+                    the turn in a fresh `## runs` block (the established
+                    append-only repair; the original stays where it fell);
+      superseded  — one of the pinned accepted-divergence records;
+      stranded    — a turn the evidence loses WITHOUT SAYING SO. That is the red.
+
+    Returns (stranded, duplicates, superseded, seen_ids, graded_count).
+    """
+    graded_numbers = set()
+    graded_ids = set()
+    for number, line in graded:
+        graded_numbers.add(number)
+        # One identity spelling for both sides of the compare: loose_run_id, so
+        # a malformed-but-intended line cannot be its own twin. A line parse_log
+        # graded but RUN_LINE_RE rejects is already RED above; here it simply
+        # contributes no id, which is the honest reading.
+        ident = loose_run_id(line)
+        if ident is not None:
+            graded_ids.add(ident)
+    stranded = []
+    duplicates = []
+    superseded = []
+    seen_ids = set(graded_ids)
+    section = "runs"
+    for number, line in enumerate(text.splitlines(), start=1):
+        if line.startswith("## "):
+            section = line[3:].strip()
+            continue
+        ident = loose_run_id(line)
+        if ident is None:
+            continue
+        seen_ids.add(ident)
+        if number in graded_numbers:
+            continue
+        if ident in graded_ids:
+            duplicates.append((number, ident, section))
+        elif ident in SUPERSEDED_RUN_LINES:
+            superseded.append((number, ident, section))
+        else:
+            stranded.append((number, ident, section))
+    return stranded, duplicates, superseded, seen_ids, len(graded)
 
 
 # ------------------------------------------------------------------ board
@@ -565,6 +661,27 @@ def main(argv):
                  ":WHEN: (a turn with none is refused above, never skipped)"
                  % (compared, len(TURNS)))
 
+    # ---- 6b. LOG-COVERAGE: a run record outside the region the harness reads
+    # is a turn missing from the evidence, not a turn recorded.
+    stranded, duplicates, superseded, seen_ids, graded_count = \
+        scan_run_line_coverage(log_text, run_lines)
+    for ident in SUPERSEDED_RUN_LINES:
+        if ident not in seen_ids:
+            problems.append("LOG-COVERAGE: the pinned superseded record `%s` is no longer in "
+                            "the log — a logged record stays visible (append-only), so the pin "
+                            "and the file disagree about what happened" % ident)
+    for number, ident, section in stranded:
+        problems.append("LOG-COVERAGE line %d (`%s`): a run-shaped record the harness cannot read — it "
+                        "sits under `## %s`, and parse_log grades only a section named exactly "
+                        "`runs`, so this turn contributes zero evidence. The fix is the "
+                        "convention this log already uses: re-open a `## runs` block and "
+                        "re-list the line at EOF; never move the original"
+                        % (number, ident, section))
+    notes.append("LOG-COVERAGE: %d run-shaped record(s) in the log — %d graded, %d re-listed "
+                 "duplicate(s), %d pinned-superseded, %d stranded"
+                 % (graded_count + len(duplicates) + len(superseded) + len(stranded),
+                    graded_count, len(duplicates), len(superseded), len(stranded)))
+
     # ---- 7. BOARD: the parked order is still restorable
     headlines = board_headlines(board_text)
     headline_text = "\n".join(text for _number, text in headlines)
@@ -716,6 +833,47 @@ def control_log_date_disagrees(root):
     _write_file(root, LOG_REL, "\n".join(lines) + "\n")
 
 
+def control_run_line_outside_runs(root):
+    """Relocate a GRADED run record to the end of the log, which sits under a
+    prose heading — the exact shape that made a whole cycle invisible to
+    parse_log while the harness kept printing a count.
+
+    A marker-free line is chosen so the LOG-TURN legs stay satisfied and the
+    only new finding is this leg's own: a control that also fires its siblings
+    cannot say which leg caught the mutation."""
+    text = _read_file(root, LOG_REL)
+    run_lines, _summary = parse_log(text)
+    markers = [mk for turn in TURNS for mk in LOG_MARKERS[turn]]
+    target = None
+    for number, line in run_lines:
+        match = RUN_LINE_RE.match(line)
+        if match and not any(mk in (match.group("note") or "") for mk in markers):
+            target = (number, line)
+            break
+    if target is None:
+        raise CannotRun("control run-line-outside-runs: the graded log holds no run line that "
+                        "is free of a turn marker, so the leg cannot be isolated")
+    number, line = target
+    lines = text.splitlines(True)
+    del lines[number - 1]
+    _write_file(root, LOG_REL, "".join(lines).rstrip("\n") + "\n" + line.rstrip("\n") + "\n")
+
+
+def control_pinned_record_deleted(root):
+    """Delete the log line the superseded pin exists to keep visible. The pin
+    must grade SOMETHING: an accepted-divergence list nobody checks is a way of
+    forgetting a record politely (the same reasoning that pins the CSV twins'
+    divergent FLOAT_PARITY rows by identity)."""
+    text = _read_file(root, LOG_REL)
+    lines = text.splitlines(True)
+    hits = [i for i, line in enumerate(lines) if loose_run_id(line) in SUPERSEDED_RUN_LINES]
+    if len(hits) != 1:
+        raise CannotRun("control pinned-record-deleted: the log carries %d line(s) for the "
+                        "pinned superseded record(s), expected exactly 1" % len(hits))
+    del lines[hits[0]]
+    _write_file(root, LOG_REL, "".join(lines))
+
+
 def control_unparseable_when(root):
     """Blind the drawer read the way the glued-key parse did: NO :WHEN: value
     yields a date, so the log/chat cross-check has nothing to compare.
@@ -810,13 +968,16 @@ CONTROLS = (
     ("folded entry (no headline)", control_folded_entry, 1, "CHAT-STRUCTURE", ()),
     ("blind drawer scan", control_blind_drawer_scan, 2, "grades nothing", ()),
     ("prose lookalike tolerated", control_prose_lookalike, 1, "!sits outside any entry", ()),
+    ("run line outside `runs`", control_run_line_outside_runs, 1, "a run-shaped record the "
+     "harness cannot read", ()),
+    ("pinned record deleted", control_pinned_record_deleted, 1, "pinned superseded record", ()),
 )
 
 # The control roster is PINNED, not derived: a comparison cannot see its own
 # coverage, and `SELFTEST OK — N control(s)` printed N from len(CONTROLS), so
 # deleting a control deleted the proof and still answered OK (landing_gate's
 # MERGE_ROSTER law, applied to this harness's own legs).
-EXPECTED_CONTROLS = 13
+EXPECTED_CONTROLS = 15
 
 
 def selftest(root):
