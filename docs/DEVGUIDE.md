@@ -195,8 +195,9 @@ python3 scripts/landing_gate.py             # 0 = green, 1 = a leg is red, 2 = c
 
 # the RELEASE story as one command — the four carriers + the Cargo.lock entry vs a
 # HEAD tag (or --expect), doc path citations that must exist AND every cited line
-# that must land inside its file, the suite counts these docs publish as instructions
-# graded against the landing gate's own pins, release inputs present,
+# that must land inside its file, the suite counts and the control-roster counts these
+# docs publish as instructions graded against the pins the harnesses themselves enforce,
+# release inputs present,
 # and no PEP 604 annotation in any harness (see NINTH + TENTH + ELEVENTH harness laws)
 python3 scripts/release_readiness.py        # 0 = coherent, 1 = a leg is red, 2 = cannot run
 
@@ -1188,9 +1189,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whole law is about, arriving from the doc side: a seat that adds tests and bumps the
   pin leaves a repo telling the next reader a suite size no gate owes, and a seat that
   edits the doc without the pin has re-numbered every report written from it.
-  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:691`) grades the docs' LIVE
+  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:723`) grades the docs' LIVE
   count claims against the pins, read from the gate's own source rather than re-spelled
-  here — `gate_pins()` (`scripts/release_readiness.py:655`) parses each literal AND imports
+  here — `gate_pins()` (`scripts/release_readiness.py:687`) parses each literal AND imports
   the module, and the two views must agree, because a pin that has become a computed
   value is a number a doc cannot honestly quote. Six doors, in two verdict words:
   a doc that states a different count than the pin is RED naming doc:line, the number,
@@ -1229,6 +1230,27 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   pinned number — the file a reader copies from is part of the contract, and the cheap
   way to keep it honest is a closed table of its live claims plus a domain defined by
   section, not by guessing which sentences are history.
+  THE SAME CLASS, SECOND NUMBER: CONTROL ROSTERS. `leg_control_counts()`
+  (`scripts/release_readiness.py:845`) was added because the suite counts were closed
+  while `--selftest # N controls` lines sat in `## Commands` with nothing grading them —
+  measured on this tree: AGENTS.md instructs `12 controls` for `scripts/chat_feature_check.py`,
+  and that harness had no `EXPECTED_CONTROLS` at all, so deleting a control printed a
+  smaller N in its own `SELFTEST OK` and left the instruction, and every report written
+  from it, promising the old number. `control_roster()` (`scripts/release_readiness.py:810`)
+  reads THREE views of one intent and refuses to re-spell any of them: the number the doc
+  line states, the harness's `EXPECTED_CONTROLS` literal, and the length of its `CONTROLS`
+  roster counted from the AST. The harness must also COMPARE the pin against the roster in
+  its own selftest, or the pin is a second number nobody reads. Verdict words follow the
+  table above: doc ≠ pin is RED naming the direction, pin ≠ roster is RED, a pin with no
+  comparison inside its harness is RED, and a claim whose line names no `scripts/*.py`
+  (or names two, so the number has no owner), a harness with no literal, a non-literal
+  roster, or a claim count that moved out of `## Commands` is CANNOT RUN — the population
+  is pinned against `EXPECTED_CONTROL_CLAIMS` by the same ELEVENTH-law rule that pins the
+  table. CONTROLS for this leg: retyped doc number → RED; the `EXPECTED_CONTROLS` literal
+  deleted from a harness → CANNOT RUN `publishes no`; a control dropped from the roster
+  with the pin kept → CANNOT RUN from the harness itself when run, RED from this leg; the
+  pin's comparison commented out → RED `never compared against`; a claim relocated to
+  `## Layout` → CANNOT RUN on population.
 
 - **TWELFTH harness law — a verdict leg that reads the TRANSPORT, not the VERDICT, is
   the EIGHTH law running backwards.** EIGHTH says `exit 0` alone never proved anything;
