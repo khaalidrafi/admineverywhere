@@ -47,7 +47,7 @@ Product constraints — do not relax:
   concatenated onto `apiUrl`; an unresolvable source renders a friendly
   empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
   the `$effect` cleanup kills the timer. Contract + checklist:
-  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`.
+  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`. The rendered half is graded too: `feedGridMount.test.ts` mounts the Dashboard grid against a live schema taking its widgets off the glob (not by import), so every fed widget must paint, a schema arriving after mount must wake it, and a feed nothing can serve must render its reason with no chart and no guessed URL.
 - RBAC (FR-R007) is claims-driven and degrades silently: `normalizeOpenAPI`
   binds `schema.mePath` ONLY when the document carries `GET …/me/` and no
   POST (exportPath law again — never a guessed `/api/me/`), the client
@@ -128,7 +128,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (461 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (467 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -156,7 +156,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 461 vitest
+cd app && npm test                          # 467 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
 
@@ -438,7 +438,17 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   and `app/src/pages/Dashboard.svelte:22` (widgets, FR-R008). The widget grid had no DOM test
   until `app/src/lib/__tests__/dashboardMount.test.ts`, which is registry-driven
   like the shell tests — a drop-in that fails to render is a red test, not an
-  empty card.
+  empty card. That harness deliberately keeps `$app.schema` null, so the grid
+  WITH a live schema was still ungraded until
+  `app/src/lib/__tests__/feedGridMount.test.ts`: the fed widgets are taken out
+  of `widgets[]` (never imported by name), every one of them must paint chart
+  DOM off the globbed `meta.data`, a schema arriving AFTER mount must wake them
+  (the `$effect`-not-`onMount` law, graded at grid level), and a schema that can
+  feed nothing must leave every fed cell showing the engine's own reason with
+  no chart over it, no retry barrage and no request to a path the schema never
+  discovered. Domain floor included: a registry that stops carrying `data`, or a
+  built-in whose `aggregate` silently disappears, fails instead of shrinking the
+  loop it is supposed to grade.
 - The last four components with zero test references are pinned by
   `app/src/lib/__tests__/gapMount.test.ts`: `ErrorBanner` (renders only while
   `backendDown`, names the **override** URL before the stored config, Dismiss
@@ -837,7 +847,10 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   measured, each restoring the tree: one carrier bumped → 1 naming all five
   values on two legs; `--expect 0.2.0` → 1 naming `plugin/pyproject.toml:7`; the
   dead file created → 1 `allowlist is stale`; a fresh bad citation appended → 1
-  naming `docs/widget-data.md:127`; a PEP 604 temp script → 1 naming the line;
+  naming a `docs/widget-data.md` line past its then-end (the control's number was
+  127, and a later doc edit grew the file over it — which retired the quoted-message
+  exemption in `scripts/release_readiness.py`, because an exemption cannot outlive
+  its reason); a PEP 604 temp script → 1 naming the line;
   `plugin/pyproject.toml` moved aside → **2** not 1 (a missing input is not a
   verdict).
 - **TENTH harness law — a `file:line` citation is HALF a claim, and the half a

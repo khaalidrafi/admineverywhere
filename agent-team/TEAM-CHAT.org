@@ -7220,3 +7220,108 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   Recorded as a correction rather than a silence because the sentence pattern —
   publishing a number as an instruction before it is measured — is exactly what the
   ELEVENTH harness law exists to catch, and it caught it here on my own prose.
+
+* MSG software-engineer -> @lead :report:      :msg:software-engineer:lead:report:
+:PROPERTIES:
+:FROM: software-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-24 Sat 01:05 UTC]
+:END:
+  NIGHT-2 ITEM 6 — FR-R008 widget data sources, delivered on
+  ai/turn-20261024-0034. One line on the lane: the rotation pointer in
+  TEAM-CONTROL.org is Lead-owned and I only read it; this segment ran as the
+  software-engineer seat in the preinstalled harness container.
+  WHAT THE BRANCH CARRIES: app/src/lib/__tests__/feedGridMount.test.ts (6
+  tests) plus the pins and docs it obliges.
+  WHY THIS AND NOT ANOTHER FEATURE: the R-008 promise was already unit-pinned
+  (widgetFeed.test.ts, 18 cases) and chart-pinned (widgetMount 2 components,
+  chartMount 4 components) — but every one of those files IMPORTS the chart it
+  wants, and dashboardMount.test.ts holds $app.schema NULL by design. So the
+  question a reviewer could still not re-run was the registry-driven one: does
+  the `data` block the glob hands over actually reach the engine, does EVERY
+  fed widget paint, and does a feed refuse visibly when the grid has a live
+  schema? Nothing mounted the grid WITH a schema.
+  THE FOUR DOORS, all measured not argued: (1) the fed domain is taken out of
+  `widgets[]` on `meta.data.aggregate`, floored at 4 and required to cover
+  bucket, group AND delta — a registry that stops exporting `data`, or a
+  built-in whose declaration vanishes, fails by name instead of quietly
+  grading a shorter list (ELEVENTH law, same shape as the CSV/brand
+  population pins); (2) every fed widget must clear its skeleton, show NO
+  reason line and draw real chart DOM — witnessed by 35 heat cells, the three
+  declared status names and the literal `5 vs 1` delta; (3) mount with schema
+  null (zero requests), THEN deliver the schema and every feed must wake — the
+  `$effect`-not-`onMount` law graded at grid level for the first time; (4) a
+  schema that can feed nothing leaves each cell rendering the ENGINE's own
+  wording ("no model in this API has an enum (choices) field to aggregate"),
+  no chart drawn over the refusal, no retry barrage once settled, and no
+  request to a pathname the schema never discovered. Every URL is also matched
+  as one well-formed origin+path, so the `http://hostapi…` separator corruption
+  AGENTS.md records for actionPath is red here too.
+  MUTATION BATTERY — 9 mutants, whole spec re-run per mutant, sources restored
+  byte-identical (md5 manifest checked after each): registry drops `data`
+  KILLED; registry drops one widget's declaration KILLED; a chart reads the
+  schema non-reactively KILLED by the wake test ALONE (the door is precise, not
+  a blast); a refused feed probes a guessed /api/trend/ KILLED naming the path;
+  StatusDonut stops calling the engine KILLED naming "Share by status";
+  HeatStrip replaces its reason with "No data to show." KILLED; LeaderBars
+  draws bars over its own refusal KILLED; delta compares its window against
+  itself KILLED by the `5 vs 1` literal; listRecords loses the leading slash of
+  the discovered path KILLED. 9/9 killed, 0 survivors.
+  PINS AND DOCS IN THE SAME COMMIT: scripts/landing_gate.py:68-69
+  EXPECTED_VITEST 461->467, EXPECTED_VITEST_FILES 36->37; the four published
+  sites AGENTS.md:128 :156 and docs/DEVGUIDE.md:131 :159; the R-008 bullets in
+  both mirrors now name the grid proof. The AGENTS.md edit is LINE-NEUTRAL on
+  purpose — DEVGUIDE cites AGENTS.md:41/:73/:190, so not one line may move in
+  that file. docs/widget-data.md Proof section carries the harness and the
+  battery.
+  HOUSEKEEPING THE DELIVERY EXPOSED (yours to note, fixed here):
+  release_readiness's CITE_LINE_ALLOWLIST exempted DEVGUIDE's quote of a control
+  message naming `docs/widget-data.md:127` while that file had 125 lines.
+  Growing the doc made the line land INSIDE the file, so the leg said the
+  exemption had outlived its reason — the reverse bite working exactly as
+  designed. Fix: the prose is now a number-free historical note, the entry is
+  retired and the dict is empty. CONTROL RE-MEASURED after the change, tree
+  restored byte-identical: appending a fresh `docs/widget-data.md:99999`
+  citation still answers RED naming the file and its line count, so retiring an
+  exemption did not blind the leg.
+  GATES ON THE COMMITTED TREE: `landing_gate.py --fe` rc 0 — GATE GREEN 11/11
+  (env django 5.2.18, pytest 300, System check no issues, No changes detected,
+  vitest 467 / 37 files, csv-twin 3070 cells byte-identical, brand-twin 302/350,
+  parity-twin identical, gate-twin 3/3, registry-twin 3 registries / 16
+  drop-ins, doc-twin 88 field claims); `npx tsc --noEmit` rc 0;
+  `release_readiness.py` rc 0 (doc-counts 8 live claims == the pins);
+  `registry_roster_diff.py` rc 0; `doc_field_roster_diff.py` rc 0.
+  STILL UNVERIFIED, plainly: no browser/Tauri window — what is graded is DOM
+  plus request bytes under happy-dom through the real registry; the pixel claim
+  stays with chartMount's SVG attribute maths. The 5s poll FLOOR is not
+  re-graded at grid level by this file (widgetFeed.test.ts:88/:240 own it, and
+  widgetMount.test.ts:71 owns the timer's death) — what this harness adds is
+  the complementary half: on a refusal no timer runs at all.
+  BOARD: agent-team/TODOS.org R-008 headline gained a :DELIVERED: note as a
+  pure insertion (git diff --numstat reads +80/-0 for that file at this commit),
+  no existing entry edited, state left PENDING — PENDING is delivered-awaiting-
+  your-gate, and DONE stays Lead-only.
+  NIGHT-2 QUEUE AS I MEASURED IT: items 1 (R-002 docs) and 2 (FR-R001-FE)
+  closed 19:21Z, 3 (R-004) 19:58Z, 4 (R-005) 21:11Z, 5 (R-006) 23:35Z, and item
+  6 (R-008) by this segment. Only item 7 (R-007 RBAC) remains: its nav half can
+  now mount against navMount's exact-set harness, and its widget/action halves
+  have rendered counterparts (this grid, actionMount), so the filtered-vs-null-
+  claims case is the one door left.
+  SECRET LAW held: no credential value read, echoed or committed — ENV VAR
+  NAMES only, presence tested with `[ -z ]`, never an `env` dump (last
+  segment's prefix slip is noted; this segment ran no such command).
+  ROLE_LARK_WEBHOOK is empty in this seat's env (measured by length, not value)
+  -> the Lark copy of this report is SKIPPED, not lost; recorded in the board
+  LOGBOOK too. No OBJECTIVE-STATE claim from this seat: night-2 stays OPEN for
+  your gate. Per SEGREGATION LAW v2 this seat reviewed and merged nothing — the
+  duty reviewer of ai/turn-20261024-0034 is the next seat.
+  RESULT: DONE — night-2 item 6 delivered: the FR-R008 feed contract is now
+  graded through the registry-driven grid against a live schema (paint, wake,
+  refusal-renders-reason, no guessed URL), 6 tests with a 9/9-killed mutation
+  battery; gate --fe rc 0 11/11 (vitest 467 / 37 files), tsc 0, readiness rc 0,
+  pins + four doc sites bumped in the same commit and one stale citation
+  exemption retired by measurement.
+  NEXT: your DONE gate on ai/turn-20261024-0034 (union pin lands as 467/37 —
+  already bumped here), then night-2 item 7 (R-007 RBAC), the only remaining
+  row in the order.
