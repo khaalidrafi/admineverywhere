@@ -183,8 +183,9 @@ python3 scripts/landing_gate.py --fe        # plus vitest AND the six twin harne
                                             # doc-roster — the first three need app/node_modules)
 
 # the RELEASE story as a check (four version carriers + Cargo.lock entry vs a tag,
-# doc-citation rot AND every cited line landing inside its file, the suite counts the
-# docs publish as instructions graded against the gate's own pins, release inputs,
+# doc-citation rot AND every cited line landing inside its file, the suite counts AND
+# the control-roster counts the docs publish as instructions graded against the pins
+# the harnesses themselves enforce, release inputs,
 # no PEP 604 in any harness) — DEVGUIDE NINTH + TENTH + ELEVENTH laws
 python3 scripts/release_readiness.py        # 0 coherent / 1 a leg is red / 2 cannot run
 python3 scripts/release_readiness.py --expect 0.1.3   # what the NEXT tag must say
