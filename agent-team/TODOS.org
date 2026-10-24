@@ -3455,6 +3455,67 @@ source in the schema = no filtering, everything visible.
 Closes the one UNVERIFIED line left on the item above: the rig had only a
 superuser, so a live smoke could never show a gated surface hidden.
 :LOGBOOK:
+- Note [2026-10-24 Sat 07:07 UTC] :: :DELIVERED (RE-DELIVERED): branch
+  ai/turn-20261024-0659, commit 77eb04c — the clean re-delivery of what
+  ai/turn-20261024-0339 (sha ece17f8) was REJECTED for: that branch committed
+  the review harness scratch .turn-review.txt (another seat's session JSON,
+  session id included) while its own chat/board notes asserted the scratch
+  stayed untracked. One blocking finding, no finding on the substance, so the
+  work is carried forward byte-for-byte where it could be and re-measured
+  where the base moved.
+  WHAT THIS BRANCH CARRIES (cherry-pick of 05eb9c4, conflicts resolved):
+  - app/src/pages/Modules.svelte + Branding.svelte now DECLARE
+    roles: ["managers"] — the reference app finally has a live nav rejection
+    case in EACH group (main + settings), which is what the seeded
+    non-staff `auditor` (audit123) loses on login.
+  - Modules.svelte runs the same roleAllows() as the sidebar for its OWN
+    click: a gated page keeps its row (registry inspector), annotated
+    `gated · <roles>`, and gets NO Open button. claims=null → Open as usual.
+  - app/src/lib/__tests__/rbac.test.ts mounts the REAL Sidebar + REAL Modules
+    over the SHIPPED glob with the two captured live /api/me/ bodies, a
+    managers holder and claims=null, exact-set per group across four claims
+    states, plus a population leg that refuses a group with no live gate.
+    gapMount.test.ts grades the same rule on a stubbed registry (+3).
+  - .gitignore gained the harness-scratch pair (.turn-inside.sh,
+    .turn-review.txt) — the durable half of the reviewer's finding: the turn
+    host commits whatever is untracked, so an ignore rule is what keeps this
+    class of leak off ai/main rather than a seat's good intentions.
+  BASE MOVED, SO THE PIN WAS RE-MEASURED, NOT REUSED: 0339 was cut at
+  469/38 and published 475; ai/main now carries the 0201 union at 478/39, so
+  475 would have been a revert. Measured on THIS tree with the shipped capped
+  run (`NODE_OPTIONS=--max-old-space-size=1024 npx vitest run --maxWorkers=1`
+  → `Test Files 39 passed (39)`, `Tests 484 passed (484)`):
+  scripts/landing_gate.py:68 EXPECTED_VITEST 478 -> 484 (files stay 39), and
+  all four published sites (AGENTS.md `## Layout` + `## Commands`,
+  docs/DEVGUIDE.md the same two) retyped to 484 IN THE SAME COMMIT.
+  Two merged-tree prose defects the union left behind, fixed here:
+  docs/rbac.md's copy checklist carried a duplicated `5.` after `6.` (the
+  cherry-pick renumbered one leg only) and still asserted in the PRESENT tense
+  that "no shipped page declares roles" — now false on this very commit, so
+  the sentence is dated to the pre-harness state and points at the new section.
+  EVIDENCE (all measured on this tree, 77eb04c):
+  - [X] `python3 scripts/landing_gate.py --fe` -> GATE GREEN 11/11: pytest
+        300, System check no issues, No changes detected, vitest 484 (39
+        files), csv-twin BYTE-IDENTICAL 3070 cells / 56287 B, brand-twin 302
+        over pinned 350, parity-twin identical, gate-twin ROSTER-IDENTICAL
+        3/3, registry-twin 3 registries / 16 drop-ins, doc-twin 88 claims.
+  - [X] `npx tsc --noEmit` rc 0.
+  - [X] `python3 scripts/release_readiness.py` rc 0 — doc-counts: 8 live
+        claims == the gate's pins (pytest=300, vitest=484).
+  - [X] `git ls-files | grep -c 'turn-'` == 0 on this branch: the scratch
+        leak class is absent from the delivered tree.
+  STILL OPEN, unchanged by this row: the human E2E line above ("nobody
+  literally watched the button vanish"). Mounted tests paint the hidden entry
+  and the withheld click, they are not a window; no browser/Tauri binary
+  exists in the turn container, so that row needs the Owner's pass, not code.
+  SECRET LAW held: no credential value read, echoed or committed — ENV VAR
+  NAMES only, presence checked by test. ROLE_LARK_WEBHOOK is empty in this
+  seat's env (measured with `[ -z ]`, never by dumping env) -> the Lark copy
+  of the report is SKIPPED, not lost.
+  Lead-owned files (.github/workflows/*, .github/scripts/*,
+  TEAM-CONTROL.org, .gitattributes) read and cited only. State left PENDING —
+  DONE is the Lead's gate, and per SEGREGATION LAW this seat reviewed nothing:
+  the duty reviewer of ai/turn-20261024-0659 is the next seat.
 - Note [2026-10-20 Tue 23:34 UTC] :: :DELIVERED: branch
   ai/turn-20261020-2327, commit 83d51be. The last UNVERIFIED row of the
   FR-R007 evidence is now a clickable fact.

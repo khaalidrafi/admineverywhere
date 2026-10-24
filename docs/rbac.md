@@ -35,8 +35,8 @@ Client rules (`app/src/lib/rbac.ts`, decisions only — transport is
 
 ### Gating a nav entry
 
-    export const meta = { title: "Activity", path: "/activity",
-                          roles: ["auditors"] };   // optional
+    export const meta = { title: "Modules", path: "/modules",
+                          nav: "main", roles: ["managers"] };   // optional
 
 `Sidebar.svelte:20` (`mainNav`) and `Sidebar.svelte:21` (`settingsNav`) hide a
 `roles`-declared entry unless the caller holds at least one of them; superusers
@@ -47,11 +47,13 @@ That hiding is graded by the DOM, not by the comment above
 (`app/src/lib/__tests__/rbacNavMount.test.ts`, 9 tests). Measured before the
 harness existed: deleting **both** `roleAllows` filters from `Sidebar.svelte`
 — removing the entire nav half of FR-R007 — left the shipped suite answering
-`463 passed / 37 files`, rc 0. The reason is structural, not accidental: no
-shipped page declares `roles`, so every real-glob render (`navMount.test.ts`,
+`463 passed / 37 files`, rc 0. The reason was structural, not accidental: no
+shipped page declared `roles` then, so every real-glob render (`navMount.test.ts`,
 `shell.test.ts`) is an unfiltered render and agrees with a gate that hides
-nothing, while `rbac.test.ts` grades only the pure function and the registry's
-handling of the field. The harness therefore feeds the REAL `collectPages`
+nothing, while `rbac.test.ts` graded only the pure function and the registry's
+handling of the field. (That blank is what the section below closes: the
+reference app now carries a gated page in each nav group, asserted over the
+shipped glob.) The harness therefore feeds the REAL `collectPages`
 validation a fixture that the glob cannot produce, and asserts an EXACT rendered
 button set per claims state:
 
@@ -81,6 +83,39 @@ byte-identical (md5 verified). Four of them (`mainNav` filter, `settingsNav`
 filter, stale-`null` claims, forced Settings frame) are killed ONLY here; the
 rest the shipped files catch as well.
 
+The reference app declares the gate in **both** nav groups, because gating
+one group alone leaves the other filtering leg graded by vacuous truth:
+
+| page | group | gate | who loses it, live |
+| --- | --- | --- | --- |
+| `Modules.svelte` | main | `["managers"]` | `auditor` — the registry inspector is an onboarding/admin surface |
+| `Branding.svelte` | settings | `["managers"]` | `auditor` — brand PUT is staff-only server-side, so the editor would only 403 |
+
+### The registry inspector does not leak the click
+
+`Modules.svelte` lists what the glob registered — that is its whole job — so
+a gated page keeps its **row**. What it must not keep is the **Open
+button**: the screen runs the same `roleAllows()` decision as the sidebar, so
+a caller the gate excludes sees the row annotated `gated · <roles>` and gets
+no button. Hiding the row would destroy the diagnostic; leaving the button
+would hand out, on a self-documenting screen, the navigation the sidebar
+withheld.
+
+### Proof
+
+`app/src/lib/__tests__/rbac.test.ts` mounts the REAL `Sidebar` and the REAL
+`Modules` screen over the shipped glob, with the two captured live `/api/me/`
+bodies plus a managers holder and `claims = null`, and asserts each rendered
+group is **exactly** what `roleAllows` declares (both directions, four claims
+states) — the population leg pins that a gated entry exists in EACH group, so
+a deleted declaration is red rather than quietly narrowing the domain.
+Eight mutants were killed against it (sources restored byte-identical, md5
+re-checked after every one): settings filter removed, main filter removed,
+Modules hands the Open button anyway, Modules hides the row instead of the
+click, the gate reason names no role, `roleAllows` filters a no-claims
+backend, the shipped `roles` declaration deleted, and the gate switched to a
+role the seeded auditor already holds.
+
 ### Gating an action
 
 `meta.roles: ["managers"]` on an action file (`bulk_flag.ts` is the
@@ -92,12 +127,15 @@ do not hold the role.
 | login | who they are | what the gate does |
 | --- | --- | --- |
 | `admin` / `admin123` | superuser, holds `auditors` + `managers` | sees **everything** — superuser short-circuits `roleAllows()` |
-| `auditor` / `audit123` | non-staff, non-superuser, holds `auditors` **only** | the **rejection** path, live: the managers-only "Flag batch" button is absent from the Order table |
+| `auditor` / `audit123` | non-staff, non-superuser, holds `auditors` **only** | the **rejection** path, live: the managers-only "Flag batch" button is absent from the Order table, and the **Modules** and **Branding** entries are absent from the sidebar (one per nav group) |
 
 Both are DEV-ONLY demo credentials, same caveat as `admin123`. To watch
 the gate rather than trust the unit test: `manage.py seed_demo`, log the
 client in with `auditor`'s token, open Orders and select rows — the batch
-button is gone. Switch to `admin` and it returns. `GET /api/me/` for each
+button is gone; look at the sidebar — no Modules, no Branding (typing
+`#/modules` by hand still paints the inspector, and there both rows are
+marked `gated` with no Open button).
+Switch to `admin` and everything returns. `GET /api/me/` for each
 answers `["auditors"]` vs `["auditors","managers"]` (+ `is_superuser`
 false/true), which is the whole decision input — pinned by
 `test_seed_demo_gives_a_nonsuperuser_single_role_holder`.
@@ -133,9 +171,15 @@ registry edit) reading the FR-R003 audit endpoint:
    acceptance case.
 3. Declare `roles` on pages/actions you want hidden; keep handlers
    server-validated anyway.
-4. Nothing in `app/src/lib/*` needs editing — mePath discovery, claims
+4. Gate at least one entry in EVERY nav group you render. A gate that only
+   exists in the settings block leaves the main-group filter unexercised —
+   exactly the mutant that survived the first draft of this harness.
+5. Any self-documenting screen that lists registered modules must run its
+   own click through the same `roleAllows()` decision, or it leaks the
+   navigation the sidebar withheld. List the row, withhold the button.
+6. Nothing in `app/src/lib/*` needs editing — mePath discovery, claims
    store, sidebar/action gating and the Activity drop-in already ship.
-5. If you add a gated page, add it to the fixture in
+7. If you add a gated page, add it to the fixture in
    `app/src/lib/__tests__/rbacNavMount.test.ts` and say which claims state must
    hide it. A gate nobody can render is a gate nobody can review — the shipped
    suite stayed green over the deleted `Sidebar.svelte` filters precisely because
