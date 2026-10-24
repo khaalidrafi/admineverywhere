@@ -5,11 +5,42 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushSync, mount, unmount } from "svelte";
 import { findAuditModel, parseClaims, roleAllows, type RoleClaims } from "../rbac";
 import { normalizeOpenAPI } from "../openapi";
-import { collectPages } from "../pages/index";
+import { collectPages, navPages, pages } from "../pages/index";
+import { app, claims } from "../stores";
 import { actions, actionsFor, type RegisteredAction } from "../actions/index";
-import { app } from "../stores";
 import Activity from "../../pages/Activity.svelte";
+import Modules from "../../pages/Modules.svelte";
+import Sidebar from "../../components/Sidebar.svelte";
 import type { AdminSchema, FieldSpec, ModelSpec } from "../types";
+
+/** Mount any component through the same manual-flush harness as renderActivity. */
+function mountComponent(component: any): HTMLElement {
+  const host = document.createElement("div");
+  document.body.append(host);
+  flushSync(() => {
+    mounted.push(mount(component, { target: host }));
+  });
+  return host;
+}
+
+const buttonLabels = (host: HTMLElement) =>
+  [...host.querySelectorAll("button")].map((b) => (b.textContent ?? "").replace(/\s+/g, " ").trim());
+
+/** The sidebar's two declared groups, exactly as navMount reads them: the
+ *  `<nav>` holds the main entries (plus schema Models, and no schema is
+ *  mounted here), and the settings block exists only when something declares it. */
+function navGroups(host: HTMLElement): { main: string[]; settings: string[] } {
+  const nav = host.querySelector("nav");
+  if (!nav) throw new Error("the sidebar rendered no <nav> group");
+  const label = (el: Element) => (el.textContent ?? "").replace(/\s+/g, " ").trim();
+  const blocks = [...host.querySelectorAll("div")].filter((d) =>
+    [...d.children].some((c) => label(c) === "Settings"),
+  );
+  return {
+    main: buttonLabels(nav),
+    settings: blocks.length ? buttonLabels(blocks[0]) : [],
+  };
+}
 
 // ---------------------------------------------------------------------------
 // pure decisions
@@ -152,6 +183,82 @@ describe("the seeded demo rig's live claims", () => {
   it("leaves ungated actions visible to the single-role caller", () => {
     const auditor = parseClaims(AUDITOR_LIVE)!;
     expect(actionsFor("orders", "record", actions, auditor).map((a) => a.id)).toContain("flag");
+  });
+
+  // The NAV half of that live case, on the REAL glob. Until this fired the
+  // reference app shipped NO page declaring `roles`, so the only demonstrable
+  // rejection was an action button: docs/rbac.md advertised a gated nav entry
+  // that no dropped-in file actually declared, and a seat could delete either
+  // filtering leg of Sidebar.svelte with every suite green (measured — the
+  // main-group mutant survived until each group was asserted as an exact set).
+  describe("nav gating on the shipped registry", () => {
+    const auditor = parseClaims(AUDITOR_LIVE)!;
+    const admin = parseClaims(ADMIN_LIVE)!;
+    const manager: RoleClaims = { username: "boss", isStaff: true, isSuperuser: false, roles: ["managers"] };
+    const gated = pages.filter((p) => p.nav && p.roles && p.roles.length > 0);
+
+    /** A page must be gated in EACH group, or the other leg is graded by
+     *  vacuous truth — the shape that let the main-filter mutant survive. */
+    it("the reference app gates at least one main entry and one settings entry", () => {
+      for (const group of ["main", "settings"] as const) {
+        const inGroup = gated.filter((p) => p.nav === group);
+        expect(inGroup.length, `no ${group}-nav page declares meta.roles`).toBeGreaterThan(0);
+        expect(
+          inGroup.some((p) => !roleAllows(p.roles, auditor)),
+          `every ${group} gate is a role the seeded auditor already holds: ${inGroup.map((p) => `${p.id}=${p.roles}`).join(", ")}`,
+        ).toBe(true);
+      }
+    });
+
+    it("each rendered group is exactly what roleAllows declares, for four claims states", () => {
+      const expectGroup = (group: "main" | "settings", c: RoleClaims | null) =>
+        navPages(group).filter((p) => roleAllows(p.roles, c)).map((p) => p.title);
+
+      for (const [who, value] of [
+        ["no claims (plain DRF: no filtering)", null],
+        ["the seeded auditor (rejection case)", auditor],
+        ["a managers holder (acceptance case)", manager],
+        ["the seeded superuser (short-circuit)", admin],
+      ] as Array<[string, RoleClaims | null]>) {
+        claims.set(value);
+        const host = mountComponent(Sidebar);
+        const groups = navGroups(host);
+        expect(groups.main, `${who}: main group`).toEqual(expectGroup("main", value));
+        expect(groups.settings, `${who}: settings group`).toEqual(expectGroup("settings", value));
+        unmount(mounted.pop()!);
+      }
+      claims.set(null);
+      // sanity on the rejection row itself, so a vanished gate cannot hide
+      // inside an equally-empty expectation on both sides of the compare
+      const host = mountComponent(Sidebar);
+      expect(navGroups(host).settings).toContain(gated.find((p) => p.nav === "settings")!.title);
+      claims.set(auditor);
+      flushSync(() => {});
+      expect(navGroups(host).settings).not.toContain("Branding");
+      expect(navGroups(host).main).not.toContain("Modules");
+      expect(navGroups(host).main.length).toBeGreaterThan(0);
+      unmount(mounted.pop()!);
+      claims.set(null);
+    });
+
+    it("the Modules screen hides no row but withholds the Open click for the same caller", () => {
+      claims.set(auditor);
+      const host = mountComponent(Modules);
+      const rows = [...host.querySelectorAll("tbody tr")];
+      expect(rows.length, "a gated page vanished from the registry inspector").toBe(pages.length);
+      const gatedRow = rows.find((r) => (r.textContent ?? "").includes(gated[0].title))!;
+      expect(gatedRow.textContent).toContain(`gated · ${gated[0].roles!.join(" / ")}`);
+      expect(gatedRow.querySelector("button")).toBeNull();
+      unmount(mounted.pop()!);
+
+      claims.set(null);
+      const plainRow = [...mountComponent(Modules).querySelectorAll("tbody tr")].find((r) =>
+        (r.textContent ?? "").includes(gated[0].title),
+      )!;
+      expect(plainRow.querySelector("button")?.textContent).toContain("Open");
+      unmount(mounted.pop()!);
+      claims.set(null);
+    });
   });
 });
 

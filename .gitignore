@@ -13,3 +13,7 @@ db.sqlite3
 .vite/
 coverage/
 admincraft_brand/
+
+# harness scratch (CI turn/review runner) — never a product artifact
+.turn-inside.sh
+.turn-review.txt
