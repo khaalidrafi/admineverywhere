@@ -448,9 +448,20 @@ CONTROLS = (
     ("one-builder: the dead clone returns", control_second_builder, 1, "one-builder"),
 )
 
+# The control roster is PINNED, not derived: AGENTS.md publishes "12 controls" as
+# an instruction, and `SELFTEST OK — N control(s)` printed N from len(CONTROLS), so
+# deleting a control deleted the proof, shrank the printed N and left the doc's live
+# claim with nothing to be graded against (chain_test_check's EXPECTED_CONTROLS law).
+EXPECTED_CONTROLS = 12
+
 
 def selftest(root):
     """Prove each leg can fire, against copies. Returns 0 or raises CannotRun."""
+    if len(CONTROLS) != EXPECTED_CONTROLS:
+        raise CannotRun("the control roster holds %d entries, the pin says %d — a control "
+                        "vanished (or was added without the pin), so `SELFTEST OK` would no "
+                        "longer mean every leg was run"
+                        % (len(CONTROLS), EXPECTED_CONTROLS))
     script = os.path.join(root, "scripts", "chat_feature_check.py")
     failures = []
     for name, mutation, expected_rc, expected_text in CONTROLS:
