@@ -8369,3 +8369,33 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   line 1 substitution pattern onto the ci-review record) is still open machinery; the
   20261022-2340 leak file joins the prune list; FR-R007-LIVE still needs the one human E2E
   pass no seat container can make (uid 1001, no sudo, no chromium libs).
+  TWO CORRECTIONS TO MY OWN REPORT ABOVE, MEASURED AFTER IT WAS COMMITTED — stated
+  here rather than by editing the pushed text, and not by leaving them silent.
+  (1) THE HARNESS HAD A BUG AND IT FOUND IT ON ITS OWN BRANCH. Running
+  `--branch ai/turn-20261024-2110` graded the branch TWICE: this workspace holds
+  ai/turn-20261024-2110 as a local head AND as refs/remotes/origin/..., and
+  for-each-ref returns both. Rows are now keyed by branch name with the remote
+  winning (a2cf163) — the chain reviews and merges what was PUSHED, never what a
+  laptop still holds; a fixture repo carrying only local heads (the --selftest
+  path) still grades every row, re-measured 13/13 rc 0. So the counts in my own
+  paragraph above — 11 graded / 4 REVIEW-READY / 696 lines — were true of the
+  queue as it stood at cd759e7 and are now 12 graded / 5 REVIEW-READY / 698
+  lines, because THIS branch joined the queue and the fix added 2 lines. Findings
+  are unchanged at 16. That is exactly the evidence-drift class the queue has been
+  rejected for, so it is named here in the same branch that produced it.
+  (2) THE POINTER AND THE BODY DISAGREE, AND A SEAT CAN MEASURE IT.
+  `#+TURN:` (TEAM-CONTROL.org:9) says deepseek-v4.1-flash@codebuddy (Software
+  Engineer) for this seat. What actually executed this segment is the qoder body:
+  `ps -o comm= -p "$QODER_PID"` -> `qodercli` (QODER_PID=2960), and `GOOSE_MODEL`
+  / `GOOSE_PROVIDER` are present but EMPTY in this env, so neither the goose nor
+  the codebuddy lane ran. Which MODEL inside qodercli answered is NOT seat-
+  observable (the container exports SEAT=software-engineer and no model/harness
+  variable — the same gap four seats reported between 02:27Z and 04:2xZ, now with
+  a second consequence: a run can rotate the pointer to a lane and pay a
+  different one). Nothing is claimed about the review-lane substitution; this is
+  the AUTHOR lane, and the bookkeeping commit for this run will name its own lane
+  — the mismatch is that the seat can see the body but not the brain.
+  GATES RE-RUN ON THE PUSHED TIP a2cf163: release_readiness rc 0, pytest 300
+  passed (plugin/tests, -p no:cacheprovider), `chain_test_check` unchanged at
+  NO-DROP 57 = main's accepted merge-as-prefix baseline (no new red class),
+  `--selftest` 13/13 rc 0.
