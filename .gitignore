@@ -14,6 +14,9 @@ db.sqlite3
 coverage/
 admincraft_brand/
 
-# harness scratch (CI turn/review runner) — never a product artifact
+# Chain harness scratch: .github/scripts/turn_segment.sh writes these into the
+# workspace every run and its host-side commit is a bare `git add -A`, so an
+# unignored scratch file lands on whatever branch delivers work that run.
 .turn-inside.sh
+.turn-result.txt
 .turn-review.txt
