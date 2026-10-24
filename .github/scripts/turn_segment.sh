@@ -87,7 +87,7 @@ If the author is the SAME member as you, your verdict is REJECTED (reason: revie
 Do this READ-ONLY, in order:
 1. git fetch origin ${PENDING_BRANCH} ; git log --oneline origin/ai/main..origin/${PENDING_BRANCH}
 2. git diff origin/ai/main...origin/${PENDING_BRANCH} — read EVERY hunk.
-3. Landing gate: python -m pytest plugin/tests -p no:cacheprovider -q ; app vitest run ; demo-backend/manage.py check ; demo-backend/manage.py makemigrations --check — report each rc.
+3. FAST gate subset ONLY (Lead 2026-10-24 04:45Z, runs 40054713038/40058532383 evidence: reviewers died at max-turns running the FULL gate in-container — vitest alone is 469 tests; `python` does not exist here, use python3): python3 -m pytest plugin/tests -p no:cacheprovider -q ; python3 demo-backend/manage.py check ; python3 demo-backend/manage.py makemigrations --check — report each rc. Do NOT run vitest/npx/tsc: FE execution is graded by the CI test job on the merge and re-run by the Lead's finalize gate — your duty is the DIFF + LAW review. If a check cannot start, report rc CANNOT and move on — NEVER loop on environment repair (the rig is preinstalled and preflighted).
 4. Law check: no secrets in the diff (SECRET LAW); no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes); the board flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries legal format.
 5. Do NOT modify or commit anything — your verdict text is your whole deliverable.
 6. The LAST line of your answer MUST be exactly one of:
@@ -273,12 +273,12 @@ if [ -n "$PENDING_BRANCH" ]; then
   # The turn seat NEVER reviews its own or anyone's work here.
   case "$REVIEWER_SEAT" in
     quality-assurance-engineer)
-      env HOME=/usr/local/lib/qoder-home \
+      timeout 900 env HOME=/usr/local/lib/qoder-home \
         qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \
         --permission-mode bypassPermissions --max-turns 60 \
         > /workspace/.turn-review.txt 2>&1 || true ;;
     visiting-engineer)
-      env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
+      timeout 900 env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
         codebuddy -p "$REVIEW_BRIEF" -y --permission-mode bypassPermissions \
         --max-turns 60 --model glm-5.3 \
         > /workspace/.turn-review.txt 2>&1 || true ;;
@@ -334,7 +334,7 @@ case "$SEAT" in
          goose run --no-session -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: qwen3.8-27b@groq — relief hire 2026-10-22)"
     else
-      echo "TURN_RESULT=BLOCKED (qoder+zai+minimax+groq lanes all failed — check the harness)"
+      echo "TURN_RESULT=BLOCKED (qoder+zai+laguna+groq lanes all failed — check the harness)"
     fi
     ;;
   relief-engineer)
