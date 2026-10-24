@@ -74,11 +74,14 @@ print(json.dumps({"check_ok": check_ok, "resolved": resolved}))
 @pytest.fixture(scope="session")
 def boot_probe():
     """One subprocess boot per session, shared by every assertion below."""
+    from core.devpaths import child_pythonpath
+
     env = {
         **os.environ,
         # manage.py puts its own dir on sys.path; a bare -c script does not,
-        # so `core` and `shop` need it explicitly.
-        "PYTHONPATH": str(DEMO_ROOT),
+        # so `core` and `shop` need it explicitly — and so does the plugin,
+        # because this env overwrites any inherited PYTHONPATH by design.
+        "PYTHONPATH": child_pythonpath(str(DEMO_ROOT)),
         "DJANGO_SETTINGS_MODULE": "core.settings",
         "DEMO_DEV": "1",  # ack for the DEV-ONLY settings warning (see settings.py)
     }

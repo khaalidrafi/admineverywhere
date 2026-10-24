@@ -14,8 +14,13 @@ seat's work being red, both measured on real turns of this repo:
   * The boot install (``pip install -e plugin --no-deps -q 2>/dev/null || true``,
     mirrored in agent-team.yml) hides its own failure, so leg 1 dies with
     INTERNALERROR ``No module named 'admincraft'`` — pytest exit code 2 — and
-    reads as a red tree. Leg 0 below probes the imports first and exits 2 with
-    the fix command instead of letting a launcher bug impersonate a verdict.
+    reads as a red tree. Leg 0 below probes the imports first; when the plain
+    probe fails it retries with this checkout's ``plugin/src`` on PYTHONPATH (an
+    image without setuptools cannot build the editable install the boot script
+    swallows, and the plugin needs no build to be importable), logs which one
+    carried it, and only then exits 2 with the fix command. The rig legs do the
+    same from their own side: ``demo-backend/core/devpaths.py`` puts the source
+    tree on ``sys.path`` for ``manage.py`` and for the two subprocess tests.
   * Exit code 0 is not the claim. ``manage.py check`` answers 0 for a settings
     module that never booted the rig, and ``-q`` prints a summary line this
     script parses rather than trusts, so every leg asserts the phrase or the
@@ -48,6 +53,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+PLUGIN_SRC = ROOT / "plugin" / "src"
 GREEN, RED, CANNOT = 0, 1, 2
 
 # POPULATION PIN (DEVGUIDE ELEVENTH law). A leg that prints a count must be
@@ -64,7 +70,7 @@ GREEN, RED, CANNOT = 0, 1, 2
 # report that cites them. The direction of the mismatch is named in the verdict:
 # shrank = coverage lost, grew = the pin went stale, both must be red until the
 # tree and its claimed population agree.
-EXPECTED_PYTEST = 300
+EXPECTED_PYTEST = 306
 EXPECTED_VITEST = 484
 EXPECTED_VITEST_FILES = 39
 
@@ -142,10 +148,23 @@ def require(probe, why, proc):
 
 
 def leg_env(py, log):
-    proc = launch([py, "-c",
-                   "import django, rest_framework, drf_spectacular, admincraft;"
-                   " print(django.get_version())"], ROOT)
+    probe = ("import django, rest_framework, drf_spectacular, admincraft;"
+             " print(django.get_version())")
+    proc = launch([py, "-c", probe], ROOT)
     if proc.returncode != 0:
+        # A lane whose image has no setuptools cannot build the editable install
+        # the boot script silently swallows, and this preflight used to be the
+        # thing that refused it — so the gate stopped before grading anything.
+        # The plugin is pure python and its source sits in this checkout, so
+        # retry against that tree and say which one carried the import. The
+        # refusal below still fires when the deps are genuinely absent: a
+        # preflight that never says no is not a preflight (EIGHTH law).
+        retry = launch([py, "-c", probe], ROOT,
+                       dict(os.environ, PYTHONPATH=str(PLUGIN_SRC)))
+        if retry.returncode == 0:
+            log("env       deps importable on %s (django %s) — plugin from %s, "
+                "no editable install" % (py, retry.stdout.strip(), PLUGIN_SRC))
+            return
         raise CannotRun(
             "interpreter %s cannot import the plugin+rig deps (rc %d): %s\n"
             "  fix: python3 -m pip install -e ./plugin --no-deps   "
