@@ -89,10 +89,39 @@ through their DOM and their requests:
   against a server whose pagination never ends. Every request is asserted
   against the schema-discovered `listPath` with the token header, never a
   concatenated URL.
+- `feedGridMount.test.ts` — the same components, but reached through the grid
+  instead of an `import`. `dashboardMount.test.ts` keeps `$app.schema` null on
+  purpose, so nothing mounted the grid against a live schema, and the per-component
+  harnesses import the chart they want — a door no product code walks. This one
+  reads `widgets[]` and takes every entry whose `data` block carries an
+  `aggregate` (a registry that stopped exporting `data`, or a built-in whose
+  declaration silently left the domain, fails the floor rather than grading a
+  shorter list), then proves four things the other files cannot see:
+  **every** fed widget paints chart DOM off the globbed declaration (skeleton
+  gone, no reason line, real chart); the feeds are **base + discovered
+  `listPath` + page query** as one well-formed URL — the exact
+  `http://hostapi…` corruption `docs/custom-actions.md` records for `actionPath`
+  is red here too; a schema that arrives **after** mount wakes every feed (the
+  `$effect` law, checked at grid level, so reverting a widget to `onMount` is
+  a named failure, not a card that quietly stays a skeleton); and a schema that
+  can feed nothing leaves each fed cell rendering the engine's own wording
+  (`no model in this API has … to aggregate`) with no chart drawn over it, no
+  second request barrage, and no request to a pathname the schema never
+  discovered.
 
 Mutant-checked: dropping the fold, the sort, the offset step, the page cap and
 the picker preference each fail a named test; so does `DEFAULT_ROW_CAP` 300→400
 (the caption test) and reverting the caption to the old `first N records`.
+`feedGridMount.test.ts` carries its own seven-mutant battery — registry drops
+`meta.data` (floor fires), registry drops one widget's declaration (the
+aggregate-coverage door fires), a chart reads the schema non-reactively (the
+wake test fires alone), a refused feed probes a guessed `/api/trend/` (red,
+naming the path), a chart stops calling the engine (red, naming the widget),
+a chart swallows its reason for "No data to show." (red, naming the widget),
+a chart draws bars over its own refusal (red), the delta window compares
+against itself (the `5 vs 1` literal fires) and `listRecords` loses the
+leading `/` of the discovered path (the origin-shape door fires). 9/9 killed,
+sources restored byte-identical between runs.
 
 ## Caption law
 
