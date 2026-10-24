@@ -49,22 +49,47 @@ rejoins the rotation at software-engineer. Burn ledger + hire reasons
 PAUSE-AFTER-TODO review window, full sweep weekly).
 
 * MiniMax M3.1 Flash — ALL free offers (Owner order 13:22Z)
+  >>> BURNED (Owner 2026-10-24 17:01Z "burn Minimax m3.1 to the ground,
+  according to its performance!") — the whole section is retired; rows
+  kept for the record only. No hire, no probe, no fallback, no revival.
+  Supersedes the 13:22Z consume-ALL order. Evidence on file: M3.1
+  hallucination weak spot (CANDIDATES mandate note), openrouter delist
+  at source 2026-10-22 18:16Z, promo already dying 2026-10-25.
 
 | offer                              | status              | note                                              |
 |------------------------------------+---------------------+---------------------------------------------------|
-| openrouter/minimax-m3.1-flash:free | ACTIVE (PROVEN)     | in every seat's fallback chain                    |
-| gomodel/<id>@goose (gateway)       | PROBING every run   | probe lists the gateway's minimax ids + live-tests the first |
-| gmi/minimax-m3.1-flash:free        | STAGED NEEDS-KEY    | GMI_API_KEY exists in agent-team.el secrets       |
-| tokenharbor/minimax-m3.1-flash:free| STAGED NEEDS-KEY    | TOKENHARBOR_API_KEY — same                        |
-| navyai/minimax-m3.1-flash:free     | STAGED NEEDS-KEY    | NAVYAI_API_KEY — same                             |
-| bai/minimax-m3.1-flash:free        | STAGED NEEDS-KEY    | BAI_API_KEY — same                                |
-| aa/minimax-m3.1-flash:free         | STAGED NEEDS-KEY    | AA_API_KEY — same                                 |
-| ollama-cloud/minimax-m3.1-flash    | STAGED NEEDS-KEY    | OLLAMA_CLOUD_API_KEY — same                       |
+| openrouter/minimax-m3.1-flash:free | BURNED (was PROVEN) | delisted at source 10-22; Owner burn 10-24        |
+| gomodel/<id>@goose (gateway)       | BURNED              | was PROBING every run; probes STOPPED per burn    |
+| gmi/minimax-m3.1-flash:free        | BURNED NEEDS-KEY    | was STAGED; key landing no longer activates it    |
+| tokenharbor/minimax-m3.1-flash:free| BURNED NEEDS-KEY    | same                                              |
+| navyai/minimax-m3.1-flash:free     | BURNED NEEDS-KEY    | same                                              |
+| bai/minimax-m3.1-flash:free        | BURNED NEEDS-KEY    | same                                              |
+| aa/minimax-m3.1-flash:free         | BURNED NEEDS-KEY    | same                                              |
+| ollama-cloud/minimax-m3.1-flash    | BURNED NEEDS-KEY    | same                                              |
+| mcode (MiniMax Code CLI, M Plan)   | DORMANT             | only free brain was M3.1; MCODE_AUTH_JSON sealing CANCELLED |
 
 GitHub secret values are write-only and cannot be copied cross-repo: a
 staged body activates the moment its key lands in THIS repo's secrets.
-Unknown endpoints are NOT invented — each provider's base URL is wired
-only after its key lands and the probe confirms the catalog.
+That law stays for OTHER brains — it no longer applies to any M3.1 id.
+
+* HIRES WAVE 3 — built-in opencode + cline models (Owner order 2026-10-24 17:01Z)
+
+| role                      | member ID                                | status      | evidence / note                                      |
+|---------------------------+------------------------------------------+-------------+------------------------------------------------------|
+| QA ENGINEER 4             | glm-5.1-flash@opencode                   | ACTIVATING  | GLM lineage proven in-team; zero-key built-in        |
+| QA ENGINEER 5             | nemotron-3.5-lightning@opencode          | ACTIVATING  | family DoE-verified live on cline 2026-10-23         |
+| QA ENGINEER 6             | nvidia/nemotron-3.5-lightning-free@cline | ACTIVATING  | DoE smoke LIVE 10-23 ($0.00); needs CLI bake + creds |
+| QA ENGINEER 7             | poolside/laguna-s-2.1-free@cline         | ACTIVATING  | laguna PROVEN in-team (TEST-T1/T2); new lane         |
+| PLATFORM ENGINEER 3       | mimo-v2.6@opencode                       | ACTIVATING  | zero-key built-in; character interned only           |
+| PLATFORM ENGINEER 4       | longcat-2.5@opencode                     | ACTIVATING  | zero-key built-in; undated tier - probe-first x2     |
+
+Activation law: probe-first — a seat is never ARMED without a measured
+completion in its own lane. opencode seats: body already in the CI
+harness image; need bare-id probe pass + turn_segment.sh arm wiring
+(Lead machinery). cline seats: need cline CLI baked into the CI
+Dockerfile + DoE cardless-account creds sealed as a repo secret (the
+API-key leg stays the alternative path per the CLINE LANE ADD note).
+
 
 * REFUSED / CLOSED (failure classes, kept so nobody re-hires into them)
 
