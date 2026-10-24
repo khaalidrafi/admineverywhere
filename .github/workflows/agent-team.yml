@@ -257,6 +257,7 @@ jobs:
       review_verdict: ${{ steps.seg.outputs.review_verdict }}   # APPROVED | REJECTED | empty (review-missing)
       review_seat: ${{ steps.seg.outputs.review_seat }}         # duty reviewer that ran (quality-assurance-engineer | visiting-engineer)
       review_member: ${{ steps.seg.outputs.review_member }}     # duty reviewer's member ID (merger enforces the duty-role law)
+      review_lane_dead: ${{ steps.seg.outputs.review_lane_dead }} # 1 = substitution marker in the review output with no VERDICT token (honest lane-dead; Lead cycle 10-l, job 120814481260 evidence)
     runs-on: ubuntu-latest
     timeout-minutes: 50   # raised 35->50 (Lead, cycle 9-f): must exceed the seg step's 45 so the step's own timeout is what fails first, with artifacts still collected
     continue-on-error: true
@@ -824,8 +825,21 @@ jobs:
               echo "MERGER: pending branch is an empty husk — deleting"
               git push origin --delete "$PENDING_BRANCH" || true
             elif [ -z "$VERDICT" ]; then
-              OUTCOME="review-missing"
-              echo "MERGER: no verdict captured — branch stays pending for re-review"
+              # HONEST LANE LABEL (Lead cycle 10-l, run 40073828746 turn
+              # job 120814481260 evidence): a provider-side substitution
+              # ("Model ... is not available right now; using ... instead")
+              # drifts the reviewer off-brief, the report loses the
+              # VERDICT: token, and the old code recorded a bland
+              # review-missing on a healthy-looking run. Label the
+              # substituted lane as lane-dead; handling (retain + re-review)
+              # is identical to review-missing.
+              if [ "${{ needs.turn.outputs.review_lane_dead }}" = "1" ]; then
+                OUTCOME="lane-dead"
+                echo "MERGER: reviewer lane substituted, no parseable verdict — honest lane-dead, branch stays pending"
+              else
+                OUTCOME="review-missing"
+                echo "MERGER: no verdict captured — branch stays pending for re-review"
+              fi
             elif [ "$VERDICT" != "APPROVED" ]; then
               OUTCOME="rejected"
               echo "MERGER: reviewer REJECTED the branch — it does not land"
@@ -924,7 +938,7 @@ jobs:
           # empty forever and no turn branch could ever be queued,
           # reviewed or landed). The park now keys on whether the OLD
           # pending is being RETAINED: retain-outcomes (review-missing /
-          # refused-same-member / refused-wrong-reviewer) keep the SAME
+          # lane-dead / refused-same-member / refused-wrong-reviewer) keep the SAME
           # branch queued for re-review; every resolved-or-empty slot
           # (no-pending, empty-segment, approved, rejected) takes THIS
           # run's author branch. Parked is NOT merged — the merger still
@@ -935,7 +949,7 @@ jobs:
           if [ -n "$AUTHOR_BRANCH" ] && git ls-remote --exit-code --heads origin "$AUTHOR_BRANCH" >/dev/null 2>&1; then
             git fetch origin "$AUTHOR_BRANCH" >/dev/null 2>&1 || true
             AHEAD=$(git rev-list --count "origin/ai/main..origin/$AUTHOR_BRANCH" 2>/dev/null || echo 0)
-            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" != "review-missing" ] && [ "$OUTCOME" != "refused-same-member" ] && [ "$OUTCOME" != "refused-wrong-reviewer" ]; then
+            if [ "${AHEAD:-0}" -gt 0 ] && [ "$OUTCOME" != "review-missing" ] && [ "$OUTCOME" != "lane-dead" ] && [ "$OUTCOME" != "refused-same-member" ] && [ "$OUTCOME" != "refused-wrong-reviewer" ]; then
               SHA=$(git rev-parse "origin/$AUTHOR_BRANCH")
               NEWPENDING="branch=${AUTHOR_BRANCH} | author=${AUTHOR_ID} | sha=${SHA}"
             fi
@@ -943,7 +957,7 @@ jobs:
           if [ "$OUTCOME" = "approved" ] && [ "$GATE" != "green" ]; then
             NEWPENDING="branch=${PENDING_BRANCH} | author=${PENDING_AUTHOR} | sha=${PENDING_SHA}"
           fi
-          if [ "$OUTCOME" = "review-missing" ] || [ "$OUTCOME" = "refused-same-member" ] || [ "$OUTCOME" = "refused-wrong-reviewer" ] || [ "$OUTCOME" = "rejected" ]; then
+          if [ "$OUTCOME" = "review-missing" ] || [ "$OUTCOME" = "lane-dead" ] || [ "$OUTCOME" = "refused-same-member" ] || [ "$OUTCOME" = "refused-wrong-reviewer" ] || [ "$OUTCOME" = "rejected" ]; then
             # REJECTED branches stay queued for re-review / Lead audit —
             # REVIEW-LOG.org law 4 promised this; the code now honors it.
             NEWPENDING="branch=${PENDING_BRANCH} | author=${PENDING_AUTHOR} | sha=${PENDING_SHA}"
