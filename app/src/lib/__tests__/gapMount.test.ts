@@ -11,7 +11,7 @@ import ErrorBanner from "../../components/ErrorBanner.svelte";
 import Modules from "../../pages/Modules.svelte";
 import StatsCards from "../../widgets/StatsCards.svelte";
 import QuoteCard from "../../widgets/QuoteCard.svelte";
-import { app } from "../stores";
+import { app, claims } from "../stores";
 import { QUOTES } from "../../widgets/quotes";
 import type { AdminSchema, FieldSpec, ModelSpec } from "../types";
 
@@ -52,6 +52,7 @@ afterEach(() => {
   document.body.innerHTML = "";
   mockFetch.mockReset();
   app.set(snapshot);
+  claims.set(null);
   vi.useRealTimers();
   vi.restoreAllMocks();
   location.hash = "";
@@ -266,6 +267,53 @@ describe("Modules — the R-006 self-documenting page", () => {
     boot(SCHEMA);
     const host = renderSync(Modules);
     expect(text(host)).not.toContain("Refused declarations");
+  });
+
+  // FR-R007: the registry inspector must not hand out the click the sidebar
+  // withholds. The row stays (it documents what registered); the Open button
+  // follows roleAllows(), including its no-claims = no-filtering leg.
+  it("withholds Open from a caller whose claims exclude the page, naming the gate", async () => {
+    registry.pages.push(
+      declaredPage("branding", "Branding", "/branding", { nav: "settings", roles: ["managers"] }),
+      declaredPage("modules", "Modules", "/modules"),
+    );
+    boot(SCHEMA);
+    claims.set({ username: "auditor", isStaff: false, isSuperuser: false, roles: ["auditors"] });
+    const host = renderSync(Modules);
+    const rows = [...host.querySelectorAll("tbody tr")];
+    expect(rows.length).toBe(2); // gated ≠ unregistered: the row is still the truth about the glob
+    expect(byText(rows[0], "td")).toEqual(["Branding", "/branding", "settings", "gated · managers"]);
+    expect(byText(rows[1], "td")[3]).toBe("Open");
+    expect(host.querySelectorAll("button").length).toBe(1);
+  });
+
+  it("offers Open again to a holder, a superuser and a backend that emits no claims", async () => {
+    registry.pages.push(declaredPage("branding", "Branding", "/branding", { nav: "settings", roles: ["managers"] }));
+    boot(SCHEMA);
+    const cases: Array<[string, any]> = [
+      ["no claims (plain DRF, no filtering)", null],
+      ["holder", { username: "q", isStaff: false, isSuperuser: false, roles: ["managers"] }],
+      ["superuser", { username: "admin", isStaff: true, isSuperuser: true, roles: [] }],
+    ];
+    for (const [who, value] of cases) {
+      claims.set(value);
+      const host = renderSync(Modules);
+      expect(byText(host, "td")[3], who).toBe("Open");
+      expect(text(host), who).not.toContain("gated");
+      unmount(mounted.pop()!);
+    }
+  });
+
+  it("re-renders the gate the moment the claims change", async () => {
+    registry.pages.push(declaredPage("branding", "Branding", "/branding", { nav: "settings", roles: ["managers"] }));
+    boot(SCHEMA);
+    claims.set({ username: "auditor", isStaff: false, isSuperuser: false, roles: ["auditors"] });
+    const host = renderSync(Modules);
+    expect(text(host)).toContain("gated");
+    claims.set({ username: "admin", isStaff: true, isSuperuser: true, roles: [] });
+    flushSync(() => {});
+    expect(text(host)).not.toContain("gated");
+    expect(byText(host, "td")[3]).toBe("Open");
   });
 });
 
