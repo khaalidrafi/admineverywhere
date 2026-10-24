@@ -25,6 +25,11 @@ other six harnesses grade their pairs:
                :WHEN: :END:) — the FORMAT LAW, graded over the whole file
                and not over the handful of entries a reader happens to
                scroll to.
+  CHAT-STRUCTURE  every drawer line in the file is OWNED by a `* MSG`
+               headline. A message whose header vanished is invisible to
+               CHAT-FORMAT (it grades parsed entries, and an orphan drawer
+               parses as the PREVIOUS entry's body), so the fold shape
+               below needs its own scan.
   APPEND-ONLY  in the objective's own window (the commit that switched
                the chain to TEST-CHAIN and everything after it), every
                historical version of the chat is a BYTE prefix of the
@@ -141,6 +146,12 @@ RUN_LINE_INTENT_RE = re.compile(r"^[0-9a-f]{4,40}@")
 WHEN_RE = re.compile(r"^\[?(?P<date>\d{4}-\d{2}-\d{2})")
 DRAWER_KEYS = ("FROM", "TO", "KIND", "WHEN")
 HEADLINE_LINE = re.compile(r"^\* MSG ")
+# A drawer FIELD line is a line whose first column is `:` followed by an
+# uppercase key (`:PROPERTIES:`, `:FROM: …`, `:END:`). Every body line the
+# FORMAT LAW writes is INDENTED by two spaces, so column-0 is what makes a
+# drawer line a drawer line — and what makes one outside a drawer region an
+# orphan.
+DRAWER_FIELD_RE = re.compile(r"^:[A-Z][A-Z0-9_-]*:")
 
 
 class CannotRun(Exception):
@@ -231,6 +242,53 @@ def message_ids(messages):
     return [m["identity"] for m in messages]
 
 
+def scan_orphan_drawers(text):
+    """Every column-0 drawer field line, split into OWNED and ORPHAN.
+
+    OWNED = it sits between a `* MSG` headline and that entry's `:END:`.
+    ORPHAN = it sits anywhere else: the file's preamble, or an entry's body
+    region. A body region never legitimately holds one, because the FORMAT
+    LAW indents every body line — so an orphan is an entry whose headline
+    and drawer HEADER were eaten while its `:WHEN:` / `:END:` tail survived.
+
+    That is not hypothetical, it is the shape a MERGE FOLD leaves behind:
+    two branches append at EOF, the appended blocks begin with identical
+    header lines (`* MSG platform-engineer -> @lead :report:` + the four
+    drawer keys), and the three-way merge reads those identical lines as
+    COMMON CONTEXT and folds them, so one header ends up serving two
+    bodies. Measured on ai/main: the merge 3b121ee of ai/turn-20261024-0809
+    took the branch's 81 appended lines and dropped 5 of them — the
+    headline, `:PROPERTIES:`, `:FROM:`, `:TO:`, `:KIND:` — which is why
+    agent-team/TEAM-CHAT.org:7731 opens with a bare `:WHEN:`. The same
+    fold hit 4598a81 at :6407. CHAT-FORMAT cannot see either one (the orphan
+    parses as the previous entry's body), and APPEND-ONLY / NO-DROP do fire
+    on those merges but report only "not a prefix" — never WHICH message
+    lost its headline, and both are already red under the Lead's
+    merge-as-prefix ruling. So nothing named the two entries whose FROM is
+    gone until this leg did.
+
+    Returns (orphans, owned) — ([(line_number, text, owner_line)], count).
+    """
+    orphans = []
+    owned = 0
+    state = "preamble"
+    owner = 0
+    for number, line in enumerate(text.splitlines(), start=1):
+        if HEADLINE_LINE.match(line):
+            state = "drawer"
+            owner = number
+            continue
+        if state == "drawer":
+            if DRAWER_FIELD_RE.match(line):
+                owned += 1
+            if line.startswith(":END:"):
+                state = "body"
+            continue
+        if DRAWER_FIELD_RE.match(line):
+            orphans.append((number, line, owner))
+    return orphans, owned
+
+
 # -------------------------------------------------------------------- log
 def parse_log(text):
     """Split docs/CHAIN-TEST.md into its run lines and its prose sections."""
@@ -302,6 +360,13 @@ def main(argv):
     if not messages:
         raise CannotRun("agent-team/TEAM-CHAT.org holds no `* MSG` entry — there is no chat "
                         "to grade (a rename or a wipe is not a failure of the objective)")
+
+    orphans, owned_fields = scan_orphan_drawers(chat_text)
+    if owned_fields == 0:
+        raise CannotRun("the drawer scan matched no field line inside any entry region "
+                        "(pattern %r over %d entry(ies)) — CHAT-STRUCTURE grades nothing "
+                        "on this file, so a clean answer here would be meaningless"
+                        % (DRAWER_FIELD_RE.pattern, len(messages)))
 
     # ---- 1. TURNS: a landed commit per scripted turn
     subjects = {}
@@ -378,6 +443,29 @@ def main(argv):
         if not message["ended"]:
             problems.append("CHAT-FORMAT line %d: the drawer never closes with :END:"
                             % message["line"])
+
+    # ---- 3b. CHAT-STRUCTURE: every drawer line has an owning headline
+    # CHAT-FORMAT can only complain about an entry it PARSED. When a merge
+    # folds two concurrent EOF appends, the second entry loses its headline
+    # and its drawer header, and the surviving `:WHEN:` / `:END:` tail is
+    # absorbed into the PREVIOUS entry's body — a shape the parser cannot
+    # see and a byte-prefix check does not flag (nothing was deleted from
+    # the perspective of the earlier commit). So the orphan scan reads the
+    # file structurally instead.
+    for number, line, owner in orphans:
+        field = DRAWER_FIELD_RE.match(line).group(0)
+        problems.append(
+            "CHAT-STRUCTURE line %d: drawer field `%s` sits outside any entry "
+            "(folded into the message whose headline is at line %d) — an entry lost "
+            "its `* MSG` headline and drawer header, so the FORMAT LAW's FROM no "
+            "longer travels with this message. Repair = re-insert the five header "
+            "lines above it (headline + :PROPERTIES:/:FROM:/:TO:/:KIND:); the body "
+            "and timestamp survived intact"
+            % (number, field, owner))
+    if not orphans:
+        notes.append("CHAT-STRUCTURE: %d drawer field(s) inside %d entry region(s), "
+                     "0 orphan(s) — every drawer belongs to a headline"
+                     % (owned_fields, len(messages)))
 
     # ---- 4. APPEND-ONLY: the objective's own window, byte for byte
     base = objective_base(root, control_text)
@@ -633,6 +721,50 @@ def control_unparseable_when(root):
     _write_file(root, CHAT_REL, broken)
 
 
+def control_folded_entry(root):
+    """The MERGE FOLD itself: delete one entry's headline plus its drawer
+    header, leaving the `:WHEN:` / `:END:` tail welded onto the previous
+    entry — the exact shape merge 3b121ee left at TEAM-CHAT.org:7731 (and
+    4598a81 at :6407). CHAT-FORMAT stays silent over it (the orphan parses
+    as body), so this control is the leg's ONLY proof it can see the fold.
+
+    The live folds are neutralised FIRST (each orphan line indented, so the
+    copy starts at ZERO orphans): the shipped chat already carries four true
+    CHAT-STRUCTURE reds, and a control whose expected text is printed by the
+    tree rather than by its own mutation grades nothing (ELEVENTH law)."""
+    text = _read_file(root, CHAT_REL)
+    lines = text.splitlines()
+    for number, _line, _owner in scan_orphan_drawers(text)[0]:
+        lines[number - 1] = "  " + lines[number - 1]
+    text = "\n".join(lines) + "\n"
+    if scan_orphan_drawers(text)[0]:
+        raise CannotRun("control folded-entry: the orphan lines could not be neutralised")
+    cut = text.rfind("\n* MSG ")
+    if cut < 0:
+        raise CannotRun("control folded-entry: the chat holds no entry to fold")
+    lines = text[cut + 1:].splitlines(True)
+    if len(lines) < 7 or not lines[0].startswith("* MSG ") or not lines[1].startswith(":PROPERTIES:"):
+        raise CannotRun("control folded-entry: the last entry does not open with a headline "
+                        "plus a :PROPERTIES: drawer, so the fold cannot be reproduced")
+    _write_file(root, CHAT_REL, text[:cut] + "\n" + "".join(lines[5:]))
+
+
+def control_blind_drawer_scan(root):
+    """Take the orphan scan's own eyes away: indent EVERY column-0 drawer
+    field, so no field line sits inside an entry region any more and the leg
+    would grade nothing while printing a clean 0 orphans. A sweep of all of
+    them, not one key: a single indented key leaves the other four readable
+    and the coverage guard would never fire."""
+    text = _read_file(root, CHAT_REL)
+    lines = text.splitlines()
+    rebuilt = ["  " + line if DRAWER_FIELD_RE.match(line) else line for line in lines]
+    broken = "\n".join(rebuilt) + "\n"
+    if broken == text:
+        raise CannotRun("control blind-drawer-scan: the chat holds no column-0 drawer field "
+                        "to indent")
+    _write_file(root, CHAT_REL, broken)
+
+
 # (name, mutation, expected exit code, expected text in the output, extra argv)
 CONTROLS = (
     ("dropped chat entry", control_dropped_entry, 1, "NO-DROP", ()),
@@ -645,13 +777,15 @@ CONTROLS = (
     ("turns never landed", control_no_change, 1, "none is an ancestor of", "--main",),
     ("log date disagrees", control_log_date_disagrees, 1, "disagree with the chat entry", ()),
     ("no chat date parses", control_unparseable_when, 2, "drawer parse is broken", ()),
+    ("folded entry (no headline)", control_folded_entry, 1, "CHAT-STRUCTURE", ()),
+    ("blind drawer scan", control_blind_drawer_scan, 2, "grades nothing", ()),
 )
 
 # The control roster is PINNED, not derived: a comparison cannot see its own
 # coverage, and `SELFTEST OK — N control(s)` printed N from len(CONTROLS), so
 # deleting a control deleted the proof and still answered OK (landing_gate's
 # MERGE_ROSTER law, applied to this harness's own legs).
-EXPECTED_CONTROLS = 10
+EXPECTED_CONTROLS = 12
 
 
 def selftest(root):
