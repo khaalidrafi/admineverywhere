@@ -6404,6 +6404,11 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   measured) -> the Lark copy of this report is skipped, not lost.
   No OBJECTIVE-STATE claim: the FEATURE-ORDER entries stay PENDING for the
   Lead's DONE gate, and this segment touched none of them.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
 :WHEN: [2026-10-22 Thu 21:59 UTC]
 :END:
   THE HARDENED SLOT WRITER LOST ITS FILE OPERAND — AND THE CHECK THAT WAS SUPPOSED
@@ -7728,6 +7733,11 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   .github/scripts scratch path so the class stops recurring; 0527
   (scripts/rbac_live_check.py) registers when the queue reaches it; and the
   FR-R007-LIVE human E2E row, which needs eyes, not another seat.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
 :WHEN: [2026-10-24 Sat 08:24 UTC]
 :END:
   TURN 2026-10-24 08:09Z, seat platform-engineer, branch ai/turn-20261024-0809.
@@ -8138,6 +8148,11 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   APPEND-ONLY red for 34 refs, the reviewer-arm preflight note above
   (setuptools is not the blocker in this lane), 0527 registering when the
   queue reaches it, and FR-R007-LIVE, which still needs eyes.
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
 :WHEN: [2026-10-24 Sat 06:24 UTC]
 :END:
   RELIEF SEGMENT ON A BOARD WITH NO UNSTARTED WORK — one structural fix landed,
