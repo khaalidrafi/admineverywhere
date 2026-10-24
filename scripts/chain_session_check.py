@@ -44,6 +44,11 @@ the wrong script would be a false green.
                 goose >= 1.5x layout.
   MOUNT         the chain mounts a restore dir at /sessions-restore and
                 creates the source dir it mounts from.
+  REVIEW-CAPTURE the duty reviewer's verdict really reaches the merger: the
+                arm's write path and the extractor's read path name ONE file,
+                the container mounts the host workspace under that path, and
+                the extractor's own pattern captures every verdict literal the
+                reviewer brief demands (replayed, not compared as prose).
 
 Verdicts follow the house convention: 0 = OK, 1 = RED (a claim is false),
 2 = CANNOT RUN (the harness no longer understands its own input - never a
@@ -99,6 +104,30 @@ FORBIDDEN_FLAGS = ("--no-session",)
 # A collect list smaller than this cannot be a population (ELEVENTH law:
 # a printed count is not an expectation).
 COLLECT_POPULATION_FLOOR = 3
+
+# The duty reviewer's verdict is the ONLY input the merger acts on, and it
+# crosses a container boundary as a scratch file: the reviewer arm writes it
+# INSIDE the container at its absolute /workspace path, the extractor reads it
+# on the HOST as $PWD/<same name>, and `-v "$PWD":/workspace` is the only thing
+# that makes those two spellings one file. Measured 2026-10-24: three
+# review-missing records in ~50 min (0339 07:10Z, 0659 07:21Z + 07:59Z), two of
+# them with a reviewer lane named and no verdict captured - which the chain
+# cannot tell apart from a lane that never ran. The promise, not the disk.
+REVIEW_SCRATCH_NAME = ".turn-review.txt"
+REVIEW_MOUNT_RE = re.compile(r'-v\s+"\$PWD":/workspace\b')
+# A redirect target ending in the scratch name, on either side of the boundary.
+REVIEW_PATH_RE = re.compile(r'(?P<path>[^\s"\'<>|;&]*\.turn-review[\w.-]*\.txt)')
+# The host's capture line: `REVIEW_VERDICT=$(grep <flags> '<ERE>' "<path>" ...)`
+REVIEW_EXTRACT_RE = re.compile(
+    r"""^REVIEW_VERDICT=\$\(grep\s+[-A-Za-z]+\s+'(?P<pat>[^']+)'\s+"(?P<path>[^"]+)" """,
+    re.M)
+# The reviewer brief's own demand: the last line must be one of these literals.
+REVIEW_TOKEN_RE = re.compile(r"^VERDICT:\s*(?P<tok>[A-Z]+)[^\n]*$", re.M)
+# What the arms wrap the CLI in - recorded as evidence, never graded as a
+# verdict: a lane killed at its timeout writes a truncated payload with no
+# VERDICT line, which lands in REVIEW-LOG as review-missing (see the 07:59Z
+# record); the fix is the Lead's budget call, not a seat's claim.
+REVIEW_TIMEOUT_RE = re.compile(r'timeout\s+(?P<n>\d+)\b')
 
 # ------------------------------------------------------------- file shapes
 HEREDOC_OPEN_RE = re.compile(r"cat\s+>\s+\"?\$PWD/\.turn-inside\.sh\"?\s*<<'([A-Z_]+)'")
@@ -323,6 +352,84 @@ def covers(copy, member, home_rel):
     return landed == member
 
 
+# ------------------------------------------------------- review-capture law
+def grade_review_capture(script, loop_text):
+    """(problems, notes) for the duty reviewer's verdict crossing the boundary.
+
+    THREE claims, because the capture breaks in three independent places, and
+    today's three review-missing records show the chain cannot tell them apart:
+    (1) the arm's write path and the extractor's read path must name the SAME
+    file; (2) the container must mount the host workspace where the arm writes;
+    (3) the verdict literal the BRIEF demands must be capturable by the
+    extractor's OWN pattern - replayed, not compared as prose, the same way the
+    CSV twins are diffed by running both writers.
+    """
+    writers = sorted(set(match.group("path")
+                         for match in REVIEW_PATH_RE.finditer(script)))
+    if not writers:
+        raise CannotRun("no reviewer arm writes a %s - the duty review lane is gone, "
+                        "so there is no capture for this harness to grade"
+                        % REVIEW_SCRATCH_NAME)
+    extract = REVIEW_EXTRACT_RE.search(loop_text)
+    if not extract:
+        raise CannotRun("the host no longer captures the verdict in the shape this "
+                        'harness parses (REVIEW_VERDICT=$(grep <flags> \'<E>\' "<path>")) '
+                        "- a capture rewritten is a capture re-measured, never assumed")
+
+    problems = []
+    notes = []
+    write_names = set(os.path.basename(path) for path in writers)
+    read_name = os.path.basename(extract.group("path"))
+    if read_name not in write_names:
+        problems.append("REVIEW-CAPTURE: the reviewer arm writes %s but the extractor "
+                        "reads %s - the verdict is captured from a file nobody writes, "
+                        "so a completed review records review-missing"
+                        % (", ".join(writers), extract.group("path")))
+    notes.append("REVIEW-CAPTURE: writer(s) %s -> reader %s"
+                 % (", ".join(writers), extract.group("path")))
+
+    if not REVIEW_MOUNT_RE.search(loop_text):
+        problems.append("REVIEW-CAPTURE: no %s mounts the host workspace at /workspace "
+                        "- the arm's /workspace/%s and the extractor's $PWD/%s are then "
+                        "TWO different files and the verdict never leaves the container"
+                        % (SEGMENT_REL, REVIEW_SCRATCH_NAME, REVIEW_SCRATCH_NAME))
+
+    demands = list(REVIEW_TOKEN_RE.finditer(loop_text))
+    if not demands:
+        raise CannotRun("the reviewer brief asks for no VERDICT line, so there is no "
+                        "token to capture - the review duty is no longer what this "
+                        "harness grades")
+    ere = extract.group("pat")
+    if "[[:" in ere.replace("[[:space:]]", ""):
+        raise CannotRun("the extractor's pattern uses a POSIX class this harness cannot "
+                        "translate (%s) - it would grade its own guess, not the capture"
+                        % ere)
+    try:
+        capture = re.compile(ere.replace("[[:space:]]", r"\s"))
+    except re.error as exc:
+        raise CannotRun("the extractor's pattern is not a pattern this harness can "
+                        "replay: %s (%s)" % (ere, exc))
+    lost = []
+    for match in demands:
+        hit = capture.search(match.group(0) + "\n")
+        if not hit or hit.group(1) != match.group("tok"):
+            lost.append("%r" % match.group(0))
+    if lost:
+        problems.append("REVIEW-CAPTURE: the brief demands %s but the extractor's own "
+                        "pattern %r captures none of it - the reviewer can answer "
+                        "perfectly and the merger still sees verdict=none"
+                        % (", ".join(lost), ere))
+    notes.append("REVIEW-CAPTURE: pattern %r replayed against %d brief token line(s), "
+                 "%d captured" % (ere, len(demands), len(demands) - len(lost)))
+    timeouts = REVIEW_TIMEOUT_RE.findall(script)
+    if timeouts:
+        notes.append("REVIEW-CAPTURE: reviewer arm(s) wrapped in `timeout %s` - a lane "
+                     "killed mid-answer writes no VERDICT line and lands in REVIEW-LOG "
+                     "as review-missing (budget: Lead's call, not a claim here)"
+                     % ", ".join(sorted(set(timeouts))))
+    return problems, notes
+
+
 # -------------------------------------------------------------- live probes
 def find_stores(home):
     """Where the CLIs on THIS machine keep their session stores."""
@@ -443,6 +550,12 @@ def grade(root, home):
                         "mount would land on an empty host path"
                         % (WORKFLOW_REL, SEGMENT_REL))
     notes.append("MOUNT: %s mounted at %s" % (RESTORE_MOUNT, RESTORE_MOUNT))
+
+    # ---- 6. REVIEW-CAPTURE: the duty reviewer's verdict really reaches the merger
+    review_problems, review_notes = grade_review_capture(script, loop_text)
+    problems.extend(review_problems)
+    for note in review_notes:
+        notes.append(note)
 
     for note in live_note(home):
         notes.append(note)
@@ -664,6 +777,47 @@ def control_missing_carrier(root):
     os.remove(os.path.join(root, SEGMENT_REL))
 
 
+# The host's verdict-capture line, spelled exactly as the carrier writes it.
+# A control mutates THIS and refuses (CANNOT RUN) when it no longer matches,
+# because a control whose target has moved grades nothing.
+REVIEW_CAPTURE_NEEDLE = ('REVIEW_VERDICT=$(grep -hoE '
+                         "'VERDICT:[[:space:]]*(APPROVED|REJECTED)' "
+                         '"$PWD/.turn-review.txt"')
+
+
+def _mutate_once(root, needle, replacement, missing):
+    """Replace one exact needle in the carrier; a moved needle is CANNOT RUN."""
+    rel = carrier_rel(root)
+    text = _read_file(root, rel)
+    if needle not in text:
+        raise CannotRun("control: %s - %s no longer carries that line, so this "
+                        "control grades nothing" % (missing, rel))
+    _write_file(root, rel, text.replace(needle, replacement, 1))
+
+
+def control_rename_review_scratch(root):
+    """The extractor reads a different scratch file than the reviewer arm writes."""
+    _mutate_once(root, REVIEW_CAPTURE_NEEDLE,
+                 REVIEW_CAPTURE_NEEDLE.replace('"$PWD/.turn-review.txt"',
+                                               '"$PWD/.turn-review-v2.txt"'),
+                 "the verdict capture line is gone")
+
+
+def control_break_verdict_token(root):
+    """The brief's verdict literal and the extractor's pattern drift apart."""
+    _mutate_once(root, REVIEW_CAPTURE_NEEDLE,
+                 REVIEW_CAPTURE_NEEDLE.replace("'VERDICT:[[:space:]]*",
+                                               "'VERDICT=[[:space:]]*"),
+                 "the verdict pattern is not on the capture line")
+
+
+def control_unmount_workspace(root):
+    """The container mounts the host workspace under a different path."""
+    _subn_file(root, carrier_rel(root),
+               r'(-v "\$PWD":)/workspace', r"\1/work", 1,
+               "the workspace mount is not there")
+
+
 def control_missing_workflow(root):
     os.remove(os.path.join(root, WORKFLOW_REL))
 
@@ -680,13 +834,16 @@ CONTROLS = (
     ("goose store dropped", control_drop_goose_store, 1, "GOOSE-STORE", True),
     ("restore mount dropped", control_drop_mount, 1, "MOUNT", True),
     ("collect block dropped", control_drop_collect, 2, "CANNOT RUN", True),
+    ("verdict read path renamed", control_rename_review_scratch, 1, "REVIEW-CAPTURE", True),
+    ("verdict token pattern drift", control_break_verdict_token, 1, "REVIEW-CAPTURE", True),
+    ("workspace mount renamed", control_unmount_workspace, 1, "REVIEW-CAPTURE", True),
     ("carrier script missing", control_missing_carrier, 2, "CANNOT RUN", True),
     ("workflow file missing", control_missing_workflow, 2, "CANNOT RUN", False),
 )
 
 # ELEVENTH harness law, on this harness's own roster: a deleted control is a
 # refusal, never a shorter SELFTEST OK.
-EXPECTED_CONTROLS = 11
+EXPECTED_CONTROLS = 14
 
 
 def selftest(root):
