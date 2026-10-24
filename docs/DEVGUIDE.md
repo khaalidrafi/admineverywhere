@@ -129,7 +129,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (300 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (306 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (484 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
@@ -160,7 +160,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 # tests
 cd app && npm test                          # 484 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 300 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 306 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
@@ -647,7 +647,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   would have filed a divergence that never happened (measured:
   `PATH=/nonexistent python3 scripts/csv_twin_diff.py` → traceback, 1). Now a
   launch failure is caught into a synthetic 127 and reported as exit 2, in both
-  harnesses (`scripts/csv_twin_diff.py:248` `run()`,
+  harnesses (`scripts/csv_twin_diff.py:253` `run()`,
   `scripts/brand_twin_diff.py` `run_client_probe()`); a harness with three
   documented exit codes has to prove each of them, not just the green one.
   Fourth control, same trap from the OTHER side: a false BLOCKED. An exit 2 is
@@ -832,6 +832,43 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   416 vitest / csv 3070 cells 56287 B / brand 302 accepted brands over a pinned
   population of 350 / parity 226 B
   golden, on `/usr/local/bin/python3` with django 5.2.18.
+  CLOSED 2026-10-24 (platform seat, turn 2154) — the escalation this law calls
+  "standing" is the swallowed install line itself, and the lane it blocks is the
+  duty-review lane: that image has no setuptools, so `pip install -e plugin`
+  cannot build at all, and three of the four merge legs could never pass there
+  whatever the branch carried. The Lead's LANE NOTES put the choice as "preflight
+  PYTHONPATH=plugin/src or install setuptools in the review arm brief" — the arm
+  brief is Lead-owned, the preflight and the rig are not. Measured in this
+  workspace on the delivered tree: `pytest plugin/tests` -> INTERNALERROR exit 2;
+  `manage.py check` -> rc 1; hand-patch the in-process import and the suite
+  answers `5 failed, 290 passed, 5 errors`, the two subprocess legs still red
+  because they hand their children an explicit PYTHONPATH that overwrites the
+  inherited one.
+  THE FIX IS SEAT-SIDE AND REMOVES THE DEPENDENCY RATHER THAN THE SYMPTOM: the
+  plugin is pure python and its source sits one directory from the rig, so
+  `demo-backend/core/devpaths.py` puts `plugin/src` FIRST on sys.path — first on
+  purpose, so an unrelated installed copy can never be what this suite is
+  exercising — and `manage.py`, `plugin/tests/conftest.py` and the boot probe's
+  child env all go through it. `scripts/landing_gate.py` keeps its preflight AND
+  its refusal (a preflight that never says no is not a preflight): the probe now
+  tries the interpreter as-is, then once more with the source tree on PYTHONPATH,
+  and logs which of the two carried the import — the same
+  `NAME THE ENVIRONMENT THAT PROVED IT` sentence above, applied to the lane rather
+  than to the interpreter. `scripts/csv_twin_diff.py` got the identical second
+  probe for its layer-2 candidate, because that harness refused the same lane for
+  the same reason ("no candidate interpreter can import the rig's deps").
+  GRADED, not asserted: `plugin/tests/test_rig_bootstrap.py` runs its legs in a
+  child whose meta-path blocker makes an installed copy invisible, so the tests
+  answer the same way whether or not the plugin happens to be installed — 4 of
+  its 6 tests were red before `demo-backend/core/devpaths.py` existed, and the
+  dead-interpreter control still raises CANNOT RUN after. The suite moved 300 ->
+  306 with its `EXPECTED_PYTEST` pin and its four doc carriers bumped in this same
+  commit (ELEVENTH law, applied to its own author). Measured after: the merge gate
+  4/4 and the full `--fe` 11/11 GREEN on an interpreter with no install and no
+  setuptools at all. STILL LEAD-OWNED AND UNTOUCHED: the swallowed `|| true`
+  install line in `.github/scripts/turn_segment.sh` and the reviewer arm's own
+  command list — this is what a seat can close from its own side, not an edit of
+  the arm.
 - **NINTH harness law — a RELEASE procedure is a set of facts about files, and
   files rot silently.** AGENTS.md *Releases* promises "bump the version in ALL
   FOUR carriers first … the tag should match them" and points at a reference
@@ -1049,12 +1086,12 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   `FLOAT_PARITY: 24 rows, identical values AND expectations`, rc 0, against an honest 25.
   Neither verdict was wrong about what it ran; both were silent about what stopped
   existing. THE FIX, in both: the population is pinned twice — a literal
-  (`scripts/csv_twin_diff.py:103`, `scripts/parity_table_diff.py:86`) AND the lists /
+  (`scripts/csv_twin_diff.py:108`, `scripts/parity_table_diff.py:86`) AND the lists /
   parsed rows it describes, which must agree — and the rows carrying a RECORDED
   divergence are pinned individually by identity. Floats are keyed by their IEEE-754
   bytes, never by equality or a dict, because `0.0 == -0.0` in Python would collapse
   negative zero into plain zero — the exact pair the table exists to distinguish; and
-  one renderer (`scripts/csv_twin_diff.py:190` `cell_text()`) is shared by the builder
+  one renderer (`scripts/csv_twin_diff.py:195` `cell_text()`) is shared by the builder
   and the check, so the check cannot re-implement the builder's spelling and then
   report its own drift as a truncation.
   A LINE COUNT IS NOT A ROW COUNT: the first attempt pinned `cells + 1 == CRLF lines`
@@ -1086,8 +1123,8 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   forbid, hidden in the file that enforces it, because a law written about harnesses
   is not automatically a law about the law's own file.
   THE FIX: `EXPECTED_PYTEST` / `EXPECTED_VITEST` / `EXPECTED_VITEST_FILES`
-  (`scripts/landing_gate.py:67`) are literals, one shared grader
-  (`scripts/landing_gate.py:158` `population()`), and a mismatch is RED that names the
+  (`scripts/landing_gate.py:73`) are literals, one shared grader
+  (`scripts/landing_gate.py:177` `population()`), and a mismatch is RED that names the
   direction: SHRANK = coverage lost (restore the tests, or bump the literal in the
   same commit as a deliberate deletion); GREW = the pin is stale (bump it in the same
   commit as the added tests). Unlike the twins there is no CANNOT RUN tier here: the
@@ -1115,12 +1152,12 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   launches, so a drift REFUSES rather than running the survivors and printing green
   lines for a gate that is no longer the gate finalize replays. Identity, population
   AND order in one compare:
-  graded by `pin_roster()` (`scripts/landing_gate.py:176`) against MERGE_ROSTER +
-  FE_ROSTER (`scripts/landing_gate.py:86`). Two copies of one intent are the weakest
+  graded by `pin_roster()` (`scripts/landing_gate.py:195`) against MERGE_ROSTER +
+  FE_ROSTER (`scripts/landing_gate.py:92`). Two copies of one intent are the weakest
   pin there is — measured twice above — so the twin roster is ALSO cross-checked against
   a source that is not a copy, the `scripts/*_diff.py` files on disk, by
-  `pin_twins()` (`scripts/landing_gate.py:213`) against the EXPECTED_TWINS literal
-  (`scripts/landing_gate.py:92`).
+  `pin_twins()` (`scripts/landing_gate.py:232`) against the EXPECTED_TWINS literal
+  (`scripts/landing_gate.py:98`).
   THE VERDICT SPLIT IS THE POINT, and it reverses the ruling two lines above on
   purpose: a COUNT mismatch is RED (the tree is not making the claim its own runner
   summary prints — a verdict about the work), a ROSTER mismatch is `CANNOT RUN` (this
@@ -1143,9 +1180,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   was prose on both sides.
   THE FIX: `scripts/gate_roster_diff.py` — the FOURTH twin, wired into FE_ROSTER as
   `gate-twin` — parses the commands gate.sh ACTUALLY EXECUTES and diffs them, in order,
-  against `MERGE_COMMANDS` (`scripts/landing_gate.py:103`), which is no longer a
-  description of the gate but its source: `leg_pytest()` at `scripts/landing_gate.py:233`
-  and `leg_django()` at `scripts/landing_gate.py:256` read it, so
+  against `MERGE_COMMANDS` (`scripts/landing_gate.py:109`), which is no longer a
+  description of the gate but its source: `leg_pytest()` at `scripts/landing_gate.py:252`
+  and `leg_django()` at `scripts/landing_gate.py:275` read it, so
   seat behaviour, seat expectation and machine behaviour are ONE object instead of three
   claims that can each drift. Four doors, one verdict word `ROSTER-DIVERGENCE`: MISSING
   (a leg the seat advertises is not run by the merge gate), UNDECLARED (the merge gate
