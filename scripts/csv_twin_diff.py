@@ -27,7 +27,11 @@ scripts/brand_twin_diff.py has always had, and the reason this harness can now
 be re-run by the CI landing gate, which pip-installs the plugin into its own
 environment and never builds a venv (a venv demanded BY PATH made the whole
 FR-R005 live-rig claim read "cannot run" on a dependency-complete box;
-measured 2026-10-21). The chosen interpreter is printed in the verdict, so a
+measured 2026-10-21). A candidate that fails as-is is probed a second time with
+this checkout's `plugin/src` on PYTHONPATH, because an image without setuptools
+cannot build that install at all (measured 2026-10-24 on the duty-review lane) —
+the note says which of the two carried the import, so a pass always names the
+environment that proved it. The chosen interpreter is printed in the verdict, so a
 pass always says WHICH python proved it.
 
 Exit 0 = byte-identical; exit 1 = divergence (first differing lines printed);
@@ -52,6 +56,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "app"
 RIG = ROOT / "demo-backend"
+PLUGIN_SRC = ROOT / "plugin" / "src"
 VENV_PY = RIG / ".venv" / "bin" / "python"
 
 # What SERVER_SPEC actually needs: django.setup() on core.settings plus the
@@ -260,12 +265,18 @@ def run(cmd, cwd=None, **env):
 
 
 def resolve_server_python(explicit):
-    """Pick the interpreter that runs layer 2. Returns (exe, note) or
-    (None, why) — never a guess, never a silent skip.
+    """Pick the interpreter that runs layer 2. Returns (exe, note, env) or
+    (None, why, None) — never a guess, never a silent skip.
 
     `--python` is honoured exclusively: if a seat names an interpreter, a
     failure there is the answer, not a licence to fall back to another one and
     report a pass from a different environment than was asked about.
+
+    Each candidate is probed twice — as it is, then with this checkout's
+    `plugin/src` on PYTHONPATH — because an image without setuptools cannot
+    build the editable install the CI boot script swallows, and the plugin is
+    pure python: a lane that has django but no install can still run the real
+    writer, and the note says which of the two carried the import.
     """
     if explicit:
         candidates = [explicit]
@@ -274,16 +285,22 @@ def resolve_server_python(explicit):
     if not candidates:
         return None, ("no interpreter can run layer 2 — build the rig venv "
                       f"(see AGENTS.md Commands) or pass --python <exe> with one that "
-                      f"imports {', '.join(RIG_DEPS)}")
+                      f"imports {', '.join(RIG_DEPS)}"), None
+    source_env = {"PYTHONPATH": os.pathsep.join(
+        [str(PLUGIN_SRC)] + [p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p])}
     tried = []
     for exe in candidates:
-        probe = run([exe, "-c", "import " + ", ".join(RIG_DEPS)], cwd=str(RIG))
-        if probe.returncode == 0:
-            return exe, "probed OK"
+        for probe_env, note in ((None, "probed OK"),
+                                (source_env, "probed OK — plugin from plugin/src, "
+                                             "no editable install")):
+            probe = run([exe, "-c", "import " + ", ".join(RIG_DEPS)], cwd=str(RIG),
+                        **(probe_env or {}))
+            if probe.returncode == 0:
+                return exe, note, probe_env
         lines = (probe.stderr or probe.stdout or "").strip().splitlines()
         tried.append(f"{exe} -> {lines[-1] if lines else 'no output'}")
     return None, ("no candidate interpreter can import the rig's deps — tried: "
-                  + "; ".join(tried) + f". Need {', '.join(RIG_DEPS)}.")
+                  + "; ".join(tried) + f". Need {', '.join(RIG_DEPS)}."), None
 
 
 def main() -> int:
@@ -301,9 +318,9 @@ def main() -> int:
     if not (APP / "node_modules").exists():
         print(f"app/node_modules missing — run `cd app && npm install` first", file=sys.stderr)
         return 2
-    server_py, why = resolve_server_python(args.python)
+    server_py, note, server_env = resolve_server_python(args.python)
     if server_py is None:
-        print(why, file=sys.stderr)
+        print(note, file=sys.stderr)
         return 2
 
     work = Path(tempfile.mkdtemp(prefix="csv-twin-"))
@@ -331,7 +348,8 @@ def main() -> int:
 
         spec_py = work / "server_probe.py"
         spec_py.write_text(SERVER_SPEC, encoding="utf-8")
-        p = run([server_py, str(spec_py), str(matrix), str(server_doc)], cwd=str(RIG))
+        p = run([server_py, str(spec_py), str(matrix), str(server_doc)], cwd=str(RIG),
+                **(server_env or {}))
         if p.returncode != 0:
             print("server probe failed:\n" + p.stdout[-2000:] + p.stderr[-2000:], file=sys.stderr)
             return 2
@@ -339,7 +357,7 @@ def main() -> int:
         a = client_doc.read_bytes()
         b = server_doc.read_bytes()
         n = len(matrix.read_text(encoding="utf-8").splitlines())
-        print(f"  layer 2 interpreter: {server_py}")
+        print(f"  layer 2 interpreter: {server_py} ({note})")
         # Coverage of the COMPARE, not only of the matrix. A line COUNT cannot pin
         # it (quoted cells carry CRLF: the honest run is 3070 cells over 3097 lines),
         # so the check is identity instead: column 0 is the row index the probe was
