@@ -2546,6 +2546,39 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
 :END:
 ** PENDING FR R-008 widget data sources + new charts                           :FE:
 :LOGBOOK:
+- Note taken on [2026-10-24 Sat 02:27 UTC] :: :UNION: (relief-engineer, seat
+  RELIEF ENGINEER, branch ai/turn-20261024-0201). Night-2 items 6 (this row,
+  e01f4ad) and 7 (R-007, b4a0754) are both QA-APPROVED but each answered
+  `approved+gate-conflict-branch-kept` (agent-team/REVIEW-LOG.org 00:24Z and
+  01:52Z): the two branches retype the SAME two literals
+  (`scripts/landing_gate.py` EXPECTED_VITEST / EXPECTED_VITEST_FILES) and the
+  same four doc count sites (AGENTS.md `## Layout` + `## Commands`,
+  docs/DEVGUIDE.md the same two) from different bases, so no ordering lands
+  both. This branch carries the union and MEASURES the collision instead of
+  adding the two numbers: full `npx vitest run --maxWorkers=1` on the merged
+  tree = 478 tests / 39 files (main was 463/37; +6 feedGridMount, +9
+  rbacNavMount), and the pins plus all four published sites now read 478/39.
+  Gates re-run by this seat on the union, each rc 0: `python3
+  scripts/landing_gate.py --fe` → GATE GREEN 11/11 (pytest 300, System check
+  no issues, No changes detected, vitest 478 / 39 files, csv-twin 3070 cells
+  byte-identical, brand-twin 302 over pinned 350, parity-twin identical,
+  gate-twin 3/3, registry-twin 3 registries / 16 drop-ins, doc-twin 88 field
+  claims); `npx tsc --noEmit`; `python3 scripts/release_readiness.py` →
+  doc-counts 8 live claims equal the gate's pins (pytest=300, vitest=478).
+  Peer prose was preserved, not overwritten: the chat and board appends of
+  both branches survive byte-for-byte (`git diff --numstat 9824e27..HEAD` =
+  214/0 for agent-team/TEAM-CHAT.org, 168/0 for this file — pure insertions),
+  and the only -lines in the two mirror docs are the count lines and the
+  sentences each branch itself rewrote. One reviewer correction carried:
+  docs/widget-data.md:115 published a "seven-mutant battery", then enumerated
+  nine and closed 9/9 killed — retyped to nine-mutant in commit 292e74e (the
+  published-count-contradicts-its-own-list shape the ELEVENTH law refuses).
+  State untouched: this row and R-007 stay PENDING, no DONE awarded, nothing
+  merged or reviewed by this seat (SEGREGATION LAW v2 — the duty reviewer of
+  ai/turn-20261024-0201 is the next seat). Lead-owned files
+  (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, .gitattributes)
+  read and cited only.
+
 - Note taken on [2026-10-24 Sat 01:04 UTC] :: :DELIVERED: (night-2 item 6 —
   the FR-R008 feed promise is now graded through the GRID, not only through
   four hand-imported charts. Seat software-engineer, branch
@@ -3111,6 +3144,30 @@ menu/action filtering from them; (b) activity-log screen reading the
 R-003 audit endpoint (list view). Graceful-degradation law: no role
 source in the schema = no filtering, everything visible.
 :LOGBOOK:
+- Note taken on [2026-10-24 Sat 02:27 UTC] :: :UNION: (relief-engineer, seat
+  RELIEF ENGINEER, branch ai/turn-20261024-0201). This row (night-2 item 7,
+  branch ai/turn-20261024-0117 — work commit b61b564, tip b4a0754 as they
+  resolve on the fetched ref; the :DELIVERED: note below cites bce23f1, which
+  `git rev-parse` does NOT resolve here, so that sha is worth a Lead check)
+  and item 6 (R-008, e01f4ad) are
+  both QA-APPROVED yet neither lands: each retyped `scripts/landing_gate.py`
+  EXPECTED_VITEST / EXPECTED_VITEST_FILES and the same four doc count sites
+  from a different base, so the merge gate answered
+  `approved+gate-conflict-branch-kept` twice (agent-team/REVIEW-LOG.org
+  00:24Z, 01:52Z). This branch is the pre-resolved union for the Lead's
+  gate, with the union count MEASURED on the merged tree rather than summed
+  from the two branches: `npx vitest run --maxWorkers=1` = 478 tests / 39
+  files (main 463/37 + 6 feedGridMount + 9 rbacNavMount), and pins + all four
+  published sites now say 478/39. rc 0 on this seat's run: `python3
+  scripts/landing_gate.py --fe` (GATE GREEN 11/11 — pytest 300, check,
+  makemigrations, vitest 478/39, six twins identical/rosters OK), `npx tsc
+  --noEmit`, `python3 scripts/release_readiness.py` (doc-counts 8 live claims
+  == the gate's pins, vitest=478). rbacNavMount.test.ts and its docs/rbac.md
+  section ride unchanged — the 9 nav tests run inside the 478 — and this
+  row's STATE stays PENDING (no DONE awarded here; the union resolves the
+  collision, it does not gate the item). SEGREGATION LAW v2: this seat
+  reviewed and merged nothing; the duty reviewer of ai/turn-20261024-0201 is
+  the next seat. Lead-owned files read and cited only.
 - Note taken on [2026-10-24 Sat 01:55 UTC] :: :DELIVERED: (night-2 item 7 — FR
   R-007, the client/nav half; seat platform-engineer, branch ai/turn-20261024-0117,
   work commit bce23f1a3d72d3b97e2e8cfea7a4214bdb481476. State stays PENDING:
