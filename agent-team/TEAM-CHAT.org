@@ -7300,3 +7300,112 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   SEGREGATION LAW v2 — this seat reviewed nothing), the 453-vs-union pin at
   merge, and night-2 items 6 (R-008 widgets) and 7 (R-007 RBAC) still stand
   behind this one.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-24 Sat 01:58 UTC]
+:END:
+  NIGHT-2 ITEM 7 (FR R-007 RBAC, client/nav half) DELIVERED — the hidden sidebar
+  entry is now graded by the DOM, not by a comment. No product code changed: the
+  defect was in the EVIDENCE. RESULT: DONE.
+  LANE: rotation pointer agent-team/TEAM-CONTROL.org:9 (qwen3.8-flash@qoder, Platform
+  Engineer); branch ai/turn-20261024-0117, work commit bce23f1a3d72d3b97e2e8cfea7a4214bdb481476.
+  PINGS: none open for @platform-engineer in the chat tail (the two dispatches to this
+  seat are from 2026-10-22 11:55Z and 17:40Z and both were answered), so the segment
+  took the last undelivered row of the night-2 order.
+  THE GAP, MEASURED BEFORE WRITING: docs/rbac.md and both mirror docs promise
+  "Sidebar.svelte hides a roles-declared entry unless the caller holds at least one of
+  them". Deleting BOTH `.filter((p) => roleAllows(p.roles, $claims))` calls from
+  app/src/components/Sidebar.svelte:20-21 — removing the entire nav half of FR-R007 —
+  answered `463 passed / 37 files`, rc 0. The reason is structural: NO shipped page
+  declares `roles` (grep over app/src/pages: zero hits), so every real-glob render
+  (navMount, shell, gapMount) is an UNFILTERED render that agrees both with a gate
+  hiding nothing and with a gate hiding everything; navMount.test.ts resets
+  `claims = null` in its teardown and never sets it, and rbac.test.ts grades only the
+  pure function plus the registry's field handling. The ACTION half already had a
+  render (actionMount.test.ts:281); the NAV half had none.
+  SHIPPED: app/src/lib/__tests__/rbacNavMount.test.ts, 9 mounted tests. The pages
+  module is stubbed only to hand a fixture to the REAL component, and that fixture is
+  built by the REAL `collectPages` (same validation, same `roles` hand-off, same
+  accepted/refused split as the glob) — the shipped glob cannot produce the hidden
+  state at all. The rendered button set is asserted EXACTLY per claims state: null
+  (plain DRF keeps everything), a single-role caller (ungated + own + the any-of
+  entry), a caller holding none of the roles (ungated only), a superuser with zero
+  groups (everything — the short-circuit that is why `seed_demo` seeds a
+  non-superuser). Plus three facts a state table cannot say: the gate is LIVE (claims
+  changing after mount re-render the nav, and `logout()` clears claims, which means
+  filtering NOTHING); a gated entry that IS shown still routes to the href IT DECLARED
+  (visibility changes, addresses do not); and a refused `roles` declaration renders no
+  button in ANY claims state while its reason stays nameable. POPULATION pinned first
+  (6 accepted nav pages, 4 role-gated, 0 refused) — DEVGUIDE ELEVENTH law.
+  MUTATION BATTERY — 11 mutants across Sidebar.svelte, rbac.ts, lib/pages/index.ts,
+  stores.ts: each filter deleted, claims ignored, `!claims` hiding everything, the
+  superuser short-circuit gone, `some`->`every`, ungated entries hidden, the `roles`
+  hand-off dropped, a malformed list registered instead of refused, the empty Settings
+  frame forced, logout keeping stale claims. 11/11 KILLED; sources restored
+  byte-identical (md5 -c OK, all four files clean in `git status`). FOUR are killed
+  ONLY by this file (mainNav filter, settingsNav filter, stale-`null` claims, forced
+  Settings frame) — the shipped subset answered `100 passed` for each of those.
+  HARNESS NOTE, worth a line in the DEVGUIDE (your call, Lead-owned): `vi.hoisted`
+  does NOT hoist above the imports a mocked module's factory needs — measured
+  `Cannot access 'holder' before initialization` — so the fixture state has to live in
+  the factory's own closure, and an ASYNC factory + `vi.importActual` is the only
+  shape that reaches the real `collectPages`. authGateMount.test.ts's sync
+  hoisted-holder works only because its factory imports nothing real.
+  GATES ON THE COMMITTED TREE: `python3 scripts/landing_gate.py --fe` rc 0 — GATE
+  GREEN 11/11 (env django 5.2.18, pytest 300, System check no issues, No changes
+  detected, vitest 472 / 38 files, csv-twin BYTE-IDENTICAL 3070 cells, brand-twin 302
+  over pinned 350, parity-twin identical, gate-twin ROSTER-IDENTICAL 3/3,
+  registry-twin 3 registries / 16 drop-ins, doc-twin 88 field claims).
+  `npx tsc --noEmit` rc 0. `python3 scripts/release_readiness.py` rc 0 — doc-counts
+  8/8 equal the gate's own pins (pytest=300, vitest=472), 94 line citations in bounds,
+  16/16 symbol claims. Pins bumped IN THE WORK COMMIT (DEVGUIDE ELEVENTH law):
+  scripts/landing_gate.py:68-69 EXPECTED_VITEST 463->472, EXPECTED_VITEST_FILES
+  37->38, plus the four published sites AGENTS.md:128 :156 and docs/DEVGUIDE.md:131
+  :159. Docs retyped in the same commit and deliberately LINE-NEUTRAL: AGENTS.md and
+  DEVGUIDE.md are cited by line from other files (AGENTS.md:41/73/190/450), so the
+  RBAC mirror bullets were rewritten inside their own three lines (5/5 each; both
+  files the same line count before and after) and `release_readiness.py` stayed rc 0.
+  docs/rbac.md gained the claims-state table, the pre-fix measurement, the population
+  pin and copy-checklist item 5.
+  PIN COLLISION AHEAD — yours at the merge, not mine to resolve: the PENDING-REVIEW
+  branch ai/turn-20261024-0034 (item 6, R-008) bumps the SAME two literals from this
+  base and edits the same four doc count sites, so per the c8217b1 union rule the
+  merge union is 472 + 0034's added tests over 39 files.
+  BOARD: agent-team/TODOS.org:3033 carries the :DELIVERED: note for item 7 —
+  `git diff --numstat` reads +88/-0 for that file, a pure insertion; this is an EOF
+  append. State left PENDING on purpose (PENDING already means
+  delivered-awaiting-your-gate; DONE is Lead-only).
+  CHAIN STATE, measured: `python3 scripts/chain_test_check.py` rc 1, 29 NO-DROP refs —
+  the pre-existing family from the in-place TEAM-CHAT.org repairs (escalated
+  2026-10-22 23:36Z), untouched by a pure insertion plus an EOF append.
+  STILL UNVERIFIED, stated plainly: no browser/Tauri session. The filtered nav, the
+  live claims change and the vanished Settings frame are graded through a real render
+  in happy-dom, but nobody has logged in as `auditor` in a real window; the server row
+  of that path stays pinned by plugin/tests/test_rbac_roles.py and
+  test_seed_demo_gives_a_nonsuperuser_single_role_holder, and the live client rejection
+  case was already rendered for the ACTION half.
+  NIGHT-2 QUEUE AS I MEASURED IT: items 1-5 DONE on your gate, item 6 delivered and
+  awaiting review on ai/turn-20261024-0034, item 7 delivered here — the order is now
+  fully spoken for. That is your call, not mine: no OBJECTIVE-STATE claim from this
+  seat, and per SEGREGATION LAW v2 I reviewed nothing (the duty reviewer on this
+  branch is the next seat).
+  SECRET LAW held: no credential value read, echoed or committed — ENV VAR NAMES only.
+  ROLE_LARK_WEBHOOK is empty in this seat's env (measured with `[ -z ]`, never by
+  dumping env) -> the Lark copy of this report is SKIPPED, not lost; recorded in the
+  board LOGBOOK too. Harness scratch (.turn-inside.sh, .turn-review.txt) stayed
+  untracked and OUT of bce23f1. Lead-owned files (.github/workflows/*,
+  .github/scripts/*, TEAM-CONTROL.org, .gitattributes) read and cited only; gate.sh
+  untouched.
+  RESULT: DONE — night-2 item 7 delivered: the FR-R007 nav gate is a rendered proof
+  (9 mounted tests, 11/11 mutants killed, 4 of them visible ONLY here), gate --fe rc 0
+  11/11 at vitest 472 / 38 files, tsc 0, readiness rc 0, pins + four doc sites bumped
+  in the same commit (branch ai/turn-20261024-0117).
+  NEXT: your DONE gate on this branch plus the 0034 pin union; a review of
+  ai/turn-20261024-0034 by the duty seat (it is the PENDING-REVIEW row and the last
+  undelivered-then-delivered item of the order); and two housekeeping items for you —
+  the DEVGUIDE line about the async `vi.mock` factory / `vi.hoisted` TDZ (a seat lost a
+  debugging cycle to it), and whether the `PENDING-REVIEW` pointer should move before
+  the next segment given my branch now stacks the same landing_gate.py region.
