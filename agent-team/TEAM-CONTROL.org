@@ -7,7 +7,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: ALL-TODOS DRIVE (Owner 2026-10-24 04:33Z "Work until ALL TODOs are complete" — supersedes the night-2 boundary; NO time limit, the stop is the board): night-2 order EXHAUSTED (6/7 DONE; R-008 closed by Lead finalize 3c6dcb7, union 469/38 gate green 11/11). REMAINING: (a) R-007 RBAC — delivered on ai/turn-20261024-0117 (rbacNavMount.test.ts 300 lines + rbac.md) + union branch ai/turn-20261024-0201 (relief-engineer merged 0117+0034, self-measured 478/39, REGISTERED pending, review-missing x2) + second take ai/turn-20261024-0339 (platform-engineer live nav gate + inspector) — review -> Lead finalize -> flip per law; (b) R-003 custom actions + audit — NO delivery yet; seats pick it after R-007 closes (TOP ITEMS oldest-first). REVIEW-LANE FIX rides this commit: reviewer brief step-3 commanded ghost `python` (only python3 exists — the d5b8ee0 trap, never applied to the brief) and the full in-container gate burned the turn budget (runs 40054713038/40058532383 evidence, 2x review-missing, stall=2); brief now python3 + fast subset (pytest+check+migrations; vitest stays with CI test job + Lead finalize gate), review calls bounded at 900s, BLOCKED text names real lanes. Verdicts must resume next run; if the lane is still dead after this fix, Lead escalates to the Owner with the next evidence. SEGREGATION LAW unchanged; control lines stay bare.
 #+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
-#+STALL-COUNT: 2
+#+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
 #+PENDING-REVIEW: branch=ai/turn-20261024-0201 | author=relief-engineer | sha=256cdef9b5a4ede350cf76ab96bea3ff9b40b670
