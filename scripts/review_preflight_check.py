@@ -183,12 +183,14 @@ def queue_branches(repo, main, prefix, since=None):
     if main_sha is None:
         raise CannotRun("main ref %s does not resolve in %s" % (main, repo))
     rc, out = git(repo, "for-each-ref", "--format=%(refname:short)")
-    rows = []
     main_tail = main.split("/")[-1]
+    # A seat's workspace carries the same branch twice — once as a local head, once
+    # as its remote ref — so rows are keyed by branch name and the remote wins: the
+    # chain reviews and merges what was PUSHED, never what a laptop still holds.
+    by_tail = {}
     for short in sorted(out.split()):
-        # Remote refs come back as origin/ai/turn-..., local heads as ai/turn-...;
-        # both name the same branch, so match on the ref path below the remote.
-        tail = short.split("/", 1)[-1] if short.startswith("origin/") else short
+        remote = short.startswith("origin/")
+        tail = short.split("/", 1)[-1] if remote else short
         if tail == main or tail == main_tail or not tail.startswith(prefix):
             continue
         if since and tail[len(prefix):][:8] < since:
@@ -197,12 +199,12 @@ def queue_branches(repo, main, prefix, since=None):
         if sha is None:
             continue
         rc, ahead = git(repo, "rev-list", "--count", "%s..%s" % (main_sha, sha))
-        if rc != 0:
+        if rc != 0 or int(ahead.strip()) == 0:
             continue
-        if int(ahead.strip()) == 0:
+        if not remote and tail in by_tail:
             continue
-        rows.append((short, sha))
-    return main_sha, rows
+        by_tail[tail] = (short, sha)
+    return main_sha, [by_tail[k] for k in sorted(by_tail)]
 
 
 def pending_slot(repo, main):
