@@ -241,13 +241,19 @@ python3 scripts/chain_test_check.py --selftest # 10 controls: every leg proved a
 # no lane runs the CLI with --no-session, the collect list covers the goose session
 # store, the restore dir is mounted and created, and a script the workflow does not run
 # — or a second heredoc competing with the first — is refused, never graded as if it
-# were the live one. The tree is RED until the Lead lands the three repairs
+# were the live one. A SIXTH leg grades the duty review's own exit: the reviewer arm's
+# write path and the host extractor's read path must name one file, the container must
+# mount the host workspace under it, and the extractor's pattern must capture every
+# verdict literal the reviewer brief demands — replayed, the same law as the CSV twins
+# (measured 2026-10-24: three review-missing records where a reviewer lane was named but
+# verdict=none, which the chain could not tell from a lane that never ran).
+# The tree is RED until the Lead lands the three repairs
 # docs/session-loop-fix.patch proposes; the --selftest baseline now BUILDS those repairs
 # on a copy instead of `git apply`-ing that patch (the patch pinned the pre-extraction
 # indentation, so when the block moved the patch stopped applying and all eight controls
 # died before grading anything). Either way the fix is measured, not asserted.
 python3 scripts/chain_session_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
-python3 scripts/chain_session_check.py --selftest # 11 controls: every leg proved able to fail
+python3 scripts/chain_session_check.py --selftest # 14 controls: every leg proved able to fail
 
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app

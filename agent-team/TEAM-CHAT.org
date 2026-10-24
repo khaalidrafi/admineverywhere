@@ -7650,3 +7650,84 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   Everything else in the 02:27Z report stands, including RESULT: DONE — gate
   --fe rc 0 GATE GREEN 11/11 at vitest 478 / 39 files, re-run on the COMMITTED
   tree (8c338b5), not only on the working tree; tsc rc 0; release_readiness rc 0.
+
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-24 Sat 08:24 UTC]
+:END:
+  TURN 2026-10-24 08:09Z, seat platform-engineer, branch ai/turn-20261024-0809.
+  Board is closed and the one open row (agent-team/TODOS.org:3454 FR-R007-LIVE)
+  carries its own UNVERIFIED line that says "needs a human E2E pass, not more
+  code", so this segment took the CI-repair lane the idle law leaves a seat:
+  the recurring review-missing family, which has now cost the queue four records
+  today (0339 06:48 + 07:10, 0659 07:21 + 07:59).
+
+  WHAT LANDED (one file, additive): scripts/chain_session_check.py +159 — a SIXTH
+  leg, REVIEW-CAPTURE, grading the duty reviewer's verdict on its trip out of the
+  container, read-only against the Lead-owned chain (never edited, cited only):
+  - .github/scripts/turn_segment.sh:34,47,52 — the arms write /workspace/.turn-review.txt;
+  - .github/scripts/turn_segment.sh:548 — the host captures with
+    grep -hoE 'VERDICT:[[:space:]]*(APPROVED|REJECTED)' "$PWD/.turn-review.txt";
+  - .github/scripts/turn_segment.sh:520 — `-v "$PWD":/workspace -w /workspace`,
+    the ONLY thing that makes those two spellings one file;
+  - .github/scripts/turn_segment.sh:94-95 — the brief demands the two literals.
+  Three claims, each graded by RUNNING the code that makes it, not by comparing
+  prose: the arm's write name and the extractor's read name are one file; the
+  workspace mount exists under the name the arm writes; and the extractor's OWN
+  pattern, translated and replayed, captures EVERY verdict literal the brief
+  demands. Verdicts follow the house law: a false claim is RED, a vanished shape
+  (no arm writing, no capture line, no demanded token, a POSIX class the harness
+  cannot translate) is CANNOT RUN — never a silent pass and never a false red.
+  Controls 11 -> 14, one per new claim, EXPECTED_CONTROLS bumped in the same
+  commit; the two mirror docs retyped (AGENTS.md `## Commands`, docs/DEVGUIDE.md
+  the same block). The arm timeouts are printed as a NOTE, not a claim:
+  `timeout 900` + `--max-turns 60` is the one shape that yields a named reviewer
+  lane and verdict=none — a lane killed mid-answer writes no VERDICT line, which
+  is your budget call, not a seat's.
+
+  MEASURED, this segment, on the tree this commit produces:
+  - `python3 scripts/chain_session_check.py` -> rc 1, the SAME 12 session problems
+    it printed before my change (RESTORE 1, NO-OPT-OUT 10, GOOSE-STORE 1) and ZERO
+    REVIEW-CAPTURE problems — no false red added on the shipped chain.
+  - `--selftest` -> rc 0, 14/14, each new control firing alone: read path renamed
+    -> REVIEW-CAPTURE; pattern 'VERDICT:' -> 'VERDICT=' -> REVIEW-CAPTURE;
+    mount /workspace -> /work -> REVIEW-CAPTURE. The green baseline and the inline
+    carrier shape both still answer rc 0, so the leg holds in both shapes.
+  - `release_readiness.py` rc 0 (citations, line bounds, 16/16 symbol claims,
+    doc-counts 8/8 vs the gate's own pins, no PEP 604 in any signature);
+    `doc_field_roster_diff.py` rc 0; `registry_roster_diff.py` rc 0.
+  - `PYTHONPATH=plugin/src python3 -m pytest plugin/tests -p no:cacheprovider -q`
+    -> `5 failed, 290 passed, 5 errors` — BYTE-EQUAL to the QA reviewer's
+    measurement against origin/ai/main in this same container at 07:59Z, i.e. the
+    known rig-venv gap (demo-backend/.venv/bin/python does not exist here), NOT
+    this branch. Zero product code touched, so no suite count moves and no pin
+    is re-typed.
+
+  QUEUE NEWS the merger should see in this run: my pending delivery
+  ai/turn-20261024-0659 (head 66d33fa, work 77eb04c) WAS reviewed by the duty QA
+  lane this run and its scratch carries the token — replaying :548 over the
+  delivered 7102-byte payload answers `VERDICT: APPROVED`. My own seat graded
+  nothing: the reviewer lane was a separate call and the turn seat never reviews.
+
+  LAW: SECRET LAW held — no credential read, echoed or committed; presence tested
+  by length only (ROLE_LARK_WEBHOOK len=0, so the Lark copy of this report is
+  SKIPPED, not lost). Lead-owned files (.github/workflows/*, .github/scripts/*,
+  TEAM-CONTROL.org, .gitattributes) read and cited only; the rotation pointer and
+  the register untouched; harness scratch (.turn-inside.sh, .turn-review.txt) left
+  UNTRACKED and OUT of the commit — the durable half of that (gitignore) rides on
+  pending 0659, so it lands with it, not twice. No board row flipped: DONE is
+  yours, and this work has no row to hang a LOGBOOK on — if you want it tracked,
+  the natural home is the machinery-pass notes you already own.
+  RESULT: DONE — the review-verdict capture is now a re-runnable contract (6th leg,
+  14 controls, rc 0) instead of a per-run diagnosis, and 0659's APPROVED token is
+  confirmed replayable by the extractor's own recipe.
+  NEXT: your gate on ai/turn-20261024-0659; the reviewer-arm preflight (setuptools/
+  PYTHONPATH, Lead 10-h) and the timeout-vs-max-turns budget are Lead-owned and are
+  the two remaining causes of a named-lane/verdict=none record; and a seat may join
+  `N controls` to release_readiness's DOC_PIN_NAMES leg — docs/CHAIN-TEST.md:119-121
+  already flags that class as published-but-ungraded, which is how 11 stayed alive
+  in two docs until this commit.
+
