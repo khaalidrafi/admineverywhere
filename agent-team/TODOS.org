@@ -3659,6 +3659,51 @@ superuser, so a live smoke could never show a gated surface hidden.
 :END:
 * OPEN ITEMS
 
+** PENDING mcode-lane-activation — harness bake landed; arm wiring + secret are Lead/Owner :CI:
+:LOGBOOK:
+- Note taken on [2026-10-24 Sat 17:46 UTC] :: MCODE BAKE LANDED (branch
+  ai/turn-20261024-1736, one file: docker/harness/Dockerfile). Lead 10-ay
+  deferred this "own machinery pass, with its own evidence" and recorded the
+  blocker as "Debian bookworm Node 18"; measured IN this harness container the
+  blocker is real but the number is not — system node is v20.19.2, and
+  @minimax-ai/code@0.6.13's postinstall hard-refuses it
+  ("[MCode] Unsupported Node.js environment. Detected: linux-x64, Node 20.19.2
+  (ABI 115) / Supported: Node 22.19+, 24, 25, 26", rc 1, package never lands).
+  Recipe = a PRIVATE Node 24.22.1 under /usr/local/lib/mcode-node plus a
+  /usr/local/bin/mcode wrapper that execs only that node, so the five proven
+  bodies keep the system nodejs untouched. Every command was replayed
+  verbatim in this image as uid 1001 (prefixes remapped to /tmp/replay,
+  leading `RUN` stripped, bash rc 0): sha256 verify OK -> node v24.22.1 ->
+  npm install lands -> computer-use payload deleted -> wrapper prints 0.6.13.
+  Two measured facts that changed the recipe: no xz binary in this image
+  (tar -xJf dies, so the .tar.gz form is mandatory) and nodejs.org serves no
+  .asc for the tarball (404) with no gpg here, so it is SHA256-pinned instead.
+  TRAP recorded for whoever edits this step: `--ignore-scripts` looks like CI
+  hygiene but deletes better-sqlite3's native binding (measured: absent with
+  the flag, present and FUNCTIONAL — :memory: CREATE/INSERT/SELECT — without
+  it; the binding comes from prebuild-install, no compiler needed).
+  Trim measured: the 228M embedded/computer-use payload carries only
+  darwin-arm64/darwin-x64/win32-arm64/win32-x64 — NO linux build — and
+  deleting it leaves `mcode --version`, `mcode exec` and `mcode provider list`
+  identical (package 340M -> 112M; layer cost 253M total).
+  Headless contract for the (Lead-owned) turn_segment.sh arm:
+  `mcode exec --permission full --output-format json -o <file> --cwd <ws>
+  "<prompt>"` — the `ask` policy needs a TUI. Skip-guard measured: with no
+  credential, exec refuses with "Sign in to MiniMax to use Agent features.
+  Run `mcode login`, then retry." and ZERO requests. Restore target for
+  MCODE_AUTH_JSON: $MINIMAX_DATA_DIR/auth.json (default ~/.minimax, with
+  auth-state.json/auth.lock beside it).
+  GATES ON THE COMMITTED TREE: landing_gate rc 0 GATE GREEN 4/4 (pytest 300,
+  System check no issues, No changes detected); release_readiness,
+  registry_roster_diff, doc_field_roster_diff, gate_roster_diff all rc 0;
+  chain_session_check rc 1 and chain_test_check rc 1 with the SAME pre-existing
+  families (goose collect gap + --no-session in the Lead-owned turn script;
+  APPEND-ONLY/NO-DROP + the 4 orphan drawers) and zero new red. No product
+  code, no suite count moved. Lane stays paper-armed until a measured
+  in-lane completion (probe-first law) — this pass proves the BODY bakes and
+  runs, not that a token completes a turn.
+:END:
+
 ** DONE CHAT-PREVIEW — live rebrand preview (apply/revert pure module) (:DELIVERED: kept; Lead sweep flip 2026-10-23; renamed from COOL-PREVIEW per Owner 2026-10-23) :FE:
 :LOGBOOK:
 - Note taken on [2026-10-21 Wed 19:43 UTC] :: THE BRAND CSS TWIN CLAIM BECAME A
