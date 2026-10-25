@@ -309,6 +309,8 @@ jobs:
       review_seat: ${{ steps.seg.outputs.review_seat }}         # duty reviewer that ran (quality-assurance-engineer | visiting-engineer)
       review_member: ${{ steps.seg.outputs.review_member }}     # duty reviewer's member ID (merger enforces the duty-role law)
       review_lane_dead: ${{ steps.seg.outputs.review_lane_dead }} # 1 = substitution marker in the review output with no VERDICT token (honest lane-dead; Lead cycle 10-l, job 120814481260 evidence)
+      review_substituted: ${{ steps.seg.outputs.review_substituted }} # 1 = the reviewer BRAIN was provider-substituted, verdict or no verdict — provenance only, changes no outcome (Lead cycles 10-az..10-bj: five verdicts judged by a substitute while lane_dead=0)
+      review_sub_brain: ${{ steps.seg.outputs.review_sub_brain }}   # the substitute's own name, from its marker line (empty when the duty brain answered)
     runs-on: ubuntu-latest
     timeout-minutes: 50   # raised 35->50 (Lead, cycle 9-f): must exceed the seg step's 45 so the step's own timeout is what fails first, with artifacts still collected
     continue-on-error: true
@@ -1006,6 +1008,13 @@ jobs:
       - name: SEGREGATION bookkeeping — record review, set next pending (merger law)
         id: segregate
         if: always()
+        env:
+          # PROVENANCE pass-through as ENV, not inline interpolation: the value is
+          # a fragment of the reviewer CLI's own stdout, so it must never be
+          # written into the script text. turn_segment.sh already whitelists it
+          # to [A-Za-z0-9._:@-]; env is the second door.
+          REVIEW_SUBSTITUTED: ${{ needs.turn.outputs.review_substituted }}
+          REVIEW_SUB_BRAIN: ${{ needs.turn.outputs.review_sub_brain }}
         run: |
           git config user.name "agent-team-ci"
           git config user.email "agent-team-ci@users.noreply.github.com"
@@ -1025,6 +1034,15 @@ jobs:
           AUTHOR_ID=$(printf '%s' "$SEAT" | cut -d' ' -f1)
           OUT="$OUTCOME"
           [ "$OUTCOME" = "approved" ] && OUT="approved+gate-${GATE:-n/a}"
+          # Reviewer-brain PROVENANCE (Lead 10-az..10-bj: five verdicts in a row
+          # were judged by a provider-substituted model while the record said
+          # lane_dead=0, i.e. the duty reviewer answered). This changes NO
+          # outcome — a produced verdict remains a verdict — it only stops the
+          # record from claiming a brain it cannot prove ran.
+          SUB_NOTE="no"
+          if [ "${REVIEW_SUBSTITUTED:-0}" = "1" ]; then
+            SUB_NOTE="yes (${REVIEW_SUB_BRAIN:-unidentified} substituted)"
+          fi
           # Which branch is pending NEXT? BOOTSTRAP LAW (platform-seat
           # TEST-T2, measured live 18:41Z — the slot could NEVER fill
           # from empty: the old write keyed on OUTCOME=approved, but
@@ -1070,10 +1088,11 @@ jobs:
                 echo ":AUTHOR: ${PENDING_AUTHOR:-unknown}"
                 echo ":REVIEWER: ${REVIEW_MEMBER:-unknown}"
                 echo ":VERDICT: ${VERDICT:-none}"
+                echo ":SUBSTITUTED: ${SUB_NOTE}"
                 echo ":OUTCOME: ${OUT}"
                 echo ":WHEN: [${WHEN}]"
                 echo ":END:"
-                echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}; merge authority: Lead, executed by this gate)."
+                echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}, reviewer brain substituted=${SUB_NOTE}; merge authority: Lead, executed by this gate)."
               } >> "$RLOG"
             fi
             # NON-CLOBBER SLOT GUARD (Lead hardening of relief-seat patch
