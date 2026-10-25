@@ -2414,3 +2414,13 @@
 :WHEN: [2026-10-25 Sun 12:25 UTC]
 :END:
   Merger outcome: review-missing (duty reviewer=deepseek-v4.1-flash@qoder, verdict=none; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261024-2110 :lane-dead:
+:PROPERTIES:
+:AUTHOR: software-engineer
+:REVIEWER: deepseek-v4.1-flash@qoder
+:VERDICT: none
+:OUTCOME: lane-dead
+:WHEN: [2026-10-25 Sun 13:02 UTC]
+:END:
+  Merger outcome: lane-dead (duty reviewer=deepseek-v4.1-flash@qoder, verdict=none; merge authority: Lead, executed by this gate).
