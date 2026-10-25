@@ -31,14 +31,22 @@ other six harnesses grade their pairs:
                parses as the PREVIOUS entry's body), so the fold shape
                below needs its own scan.
   APPEND-ONLY  in the objective's own window (the commit that switched
-               the chain to TEST-CHAIN and everything after it), every
-               historical version of the chat is a BYTE prefix of the
-               current one: no entry was edited and none was dropped.
-  NO-DROP      over the WHOLE history, the sequence of message identities
-               (routing + timestamp) never loses a member: an entry can
-               be reworded, but it can never be removed. (A body edit is
-               reported as a note, not a red — the Lead's own file-rename
-               propagation reworded two historical bodies on 2026-10-21.)
+               the chain to TEST-CHAIN and everything after it), every entry
+               every historical version of the chat held is still THERE, in
+               the same order, with the same bytes: no entry was edited, no
+               entry was dropped, none moved. Graded PER ENTRY, because the
+               whole-file byte-prefix read called a union-merged concurrent
+               append — where every entry is intact — a violation, and on
+               ai/main that made the leg permanently red (115 lines) so a
+               reviewer could not use its verdict at all.
+  NO-DROP      over the WHOLE history, the sequence of entry identities
+               (routing + date + time, day name aside) never loses a member
+               and never reorders one. A body region that changed BEFORE the
+               objective's window is a note naming the entry, not a red — the
+               Lead's own file-rename propagation reworded two historical
+               bodies on 2026-10-21. A change INSIDE the window is red unless
+               it is a repair pinned in ACCEPTED_REPAIRS with the line that
+               records the ruling.
   LOG          docs/CHAIN-TEST.md holds one well-formed run line per turn
                (`sha@branch | seat | lane | date [| note]`), every run id
                resolves to a real commit, each turn's line carries that
@@ -160,6 +168,43 @@ SUPERSEDED_RUN_LINES = (
     # written into.
     "f1678cd@ai/turn-20261022-1124",
 )
+
+# A LANDED entry may never be edited (append-only law) — except a correction
+# the FORMAT LAW itself demands and a seat is forbidden to make, which the
+# Lead then applies to the entry. Such a repair is legal exactly when it is
+# RECORDED and VISIBLE, so it lives here as a pinned row instead of joining
+# the "accepted noise" pile the byte-prefix legs used to print: the entry it
+# names, the line the repair wrote, and the defective line(s) it replaced —
+# matched by bytes, so an edit of any OTHER shape stays red.
+# (identity stamp, corrected line, accepted predecessor(s), where the ruling is recorded)
+ACCEPTED_REPAIRS = (
+    (("platform-engineer", "lead", "report", "2026-10-22 11:24"),
+     ":WHEN: [2026-10-22 Thu 11:24 UTC]",
+     (":WHEN: 2026-10-22 Wed 11:24 UTC",
+      ":WHEN: [2026-10-22 Wed 11:24 UTC]"),
+     "agent-team/TEAM-CHAT.org:6391 — the defect is reported there and left in place "
+     "because 'only the Lead can correct the entry'; 2026-10-22 is a Thursday, so the "
+     "correction is the day name (the brackets came with the same repair pass)"),
+)
+EXPECTED_ACCEPTED_REPAIRS = 1
+
+# Multi-line in-window rewrites (the "rewritten" class: more than one line of an
+# entry's region differs from a landed version) cannot match a one-line
+# ACCEPTED_REPAIRS row by construction — but the law text above says a repair
+# "pinned in ACCEPTED_REPAIRS with the line that records the ruling" is legal,
+# and the Lead's own restructure rulings ARE recorded repairs of exactly this
+# class. REWRITTEN_BASELINES completes that design: the identity it names plus
+# the byte-anchored marker of the chat line that records the ruling. The marker
+# is verified against the CURRENT chat on every run, so deleting the ruling
+# re-opens the red — a disposition without its visible ruling is a permit, and
+# a dead row raises CannotRun in every plain run (stronger than a selftest
+# control; no extra control is owed and the 18-control roster stands).
+# (identity stamp, ruling-line byte marker)
+REWRITTEN_BASELINES = (
+    (("software-engineer", "lead", "report", "2026-10-24 22:05"),
+     "SECOND UNION-REPAIR RULING (chat-law restructure, union with 0015)"),
+)
+EXPECTED_REWRITTEN_BASELINES = 1
 
 # ------------------------------------------------------------- file shapes
 HEADLINE_RE = re.compile(
@@ -288,8 +333,144 @@ def parse_messages(text):
     return messages
 
 
-def message_ids(messages):
-    return [m["identity"] for m in messages]
+# ------------------------------------------------- entry-granularity history
+# The law this harness first shipped with compared the WHOLE file at every
+# commit to the whole file today. That proxy cannot tell a violation from a
+# legitimate history event, and on ai/main it printed 115 red lines (58
+# APPEND-ONLY + 57 NO-DROP) for THREE explained classes — measured
+# 2026-10-25 over the 138 commits that touched the chat, 12,399 entry
+# comparisons, 0 order breaks, 1 identity ever moved:
+#   CONCURRENT APPENDS: two branches append at EOF, the merge interleaves
+#     them, and an older commit stops being a prefix although every entry is
+#     intact. Never a violation of "no entry edited or dropped" — reported
+#     as one, every time, for every merged pair.
+#   FOLD REPAIRS: an entry that had swallowed a folded sibling's drawer tail
+#     and was later split back apart by the Lead's re-head repair; the
+#     historical block's bytes no longer exist because the region was
+#     subdivided, not because anything was rewritten.
+#   ONE PINNED REPAIR: an entry's :WHEN: day name, corrected by the Lead
+#     because a seat may not touch a landed entry (ACCEPTED_REPAIRS).
+# So the claim is now measured WHERE IT IS ACTUALLY MADE — per entry. An
+# entry is matched by identity and only three things are violations: an entry
+# that vanished, an entry that moved behind a younger one, an entry whose
+# bytes changed after it landed. Each red names the entry, its line and the
+# bytes, instead of naming a commit and shrugging.
+WHEN_STAMP_RE = re.compile(
+    r"\[?\s*(?P<date>\d{4}-\d{2}-\d{2})(?:\s+[A-Za-z]+)?(?:\s+(?P<time>\d{2}:\d{2}))?")
+
+
+def when_stamp(value):
+    """The timestamp an entry is IDENTIFIED by: date and time, no day name.
+
+    The day name is exactly what a recorded repair moves (2026-10-22 was
+    written `Wed`; it is a Thursday). Dropping it from the identity keeps
+    that entry the SAME entry across the repair, so the harness grades the
+    byte change as an edit — which is what it is — rather than as one entry
+    dropped and a second one added.
+    """
+    match = WHEN_STAMP_RE.search(value or "")
+    if not match or not match.group("date"):
+        return (value or "").strip()
+    stamp = match.group("date")
+    if match.group("time"):
+        stamp += " " + match.group("time")
+    return stamp
+
+
+def entry_records(text):
+    """Every parsed entry, with the EXACT bytes of its region.
+
+    A region is the headline line through the line before the next headline,
+    trailing blank lines off. A folded entry's tail therefore rides inside
+    the swallowing entry's region — which is what a fold repair later moves,
+    and what classify_edit() recognises instead of calling it an edit.
+    """
+    messages = [m for m in parse_messages(text) if m["identity"]]
+    lines = text.splitlines()
+    starts = sorted({m["line"] - 1 for m in messages})
+    if len(starts) != len(messages):
+        raise CannotRun("two chat entries report the same headline line — the parser "
+                        "disagrees with itself over %s, so no per-entry claim can be made"
+                        % CHAT_REL)
+    records = []
+    for index, message in enumerate(messages):
+        start = starts[index]
+        end = starts[index + 1] if index + 1 < len(starts) else len(lines)
+        block = lines[start:end]
+        while block and block[-1].strip() == "":
+            block.pop()
+        frm, to, kind, when = message["identity"]
+        records.append({
+            "identity": (frm, to, kind, when_stamp(when)),
+            "raw_when": when,
+            "line": message["line"],
+            "block": "\n".join(block),
+        })
+    return records
+
+
+def align_entries(old_records, cur_records):
+    """Match an older version's entries onto today's, IN ORDER.
+
+    Greedy forward scan: each historical entry must be found at or after the
+    cursor, which is what "the file only ever grew at the end, entry by entry"
+    means once concurrent appends can interleave. An identity that exists only
+    BEHIND the cursor did not vanish — it moved, which the append-only law
+    forbids just as hard.
+    """
+    positions = {}
+    for position, record in enumerate(cur_records):
+        positions.setdefault(record["identity"], []).append(position)
+    matched, dropped, reordered = [], [], []
+    cursor = 0
+    for record in old_records:
+        found = next((p for p in positions.get(record["identity"], ()) if p >= cursor), None)
+        if found is None:
+            (reordered if record["identity"] in positions else dropped).append(record)
+            continue
+        matched.append((record, cur_records[found]))
+        cursor = found + 1
+    return matched, dropped, reordered
+
+
+def classify_edit(old_block, cur_block, cur_stamps):
+    """Name WHAT CHANGED between an entry's historical bytes and its own bytes.
+
+    ('fold-split', tail)  the region shrank by a tail that today belongs to a
+                          headed entry — the fold repair, not a rewrite. The
+                          tail's own :WHEN: must resolve to a live entry, or
+                          this is not a split and does not get the name.
+    ('one-line', (o, n))  exactly one line differs, same region length.
+    ('body', None)        anything else: a rewritten entry.
+    """
+    if cur_block and old_block.startswith(cur_block):
+        tail = old_block[len(cur_block):].strip("\n")
+        if tail:
+            stamp = next((when_stamp(line.split(":", 2)[2])
+                          for line in tail.splitlines() if line.startswith(":WHEN:")), None)
+            if stamp and stamp in cur_stamps:
+                return "fold-split", tail
+    old_lines, cur_lines = old_block.splitlines(), cur_block.splitlines()
+    if len(old_lines) == len(cur_lines):
+        diff = [(o, n) for o, n in zip(old_lines, cur_lines) if o != n]
+        if len(diff) == 1:
+            return "one-line", diff[0]
+    return "body", None
+
+
+def audit_version(root, sha, cur_text, cur_records, cur_stamps):
+    """Everything that happened to the chat between one commit and today."""
+    old_text = git(root, "show", "%s:%s" % (sha, CHAT_REL))
+    old_records = entry_records(old_text)
+    matched, dropped, reordered = align_entries(old_records, cur_records)
+    edits = []
+    for old, cur in matched:
+        if old["block"] == cur["block"]:
+            continue
+        kind, payload = classify_edit(old["block"], cur["block"], cur_stamps)
+        edits.append({"kind": kind, "payload": payload, "old": old, "cur": cur})
+    return {"sha": sha, "dropped": dropped, "reordered": reordered, "edits": edits,
+            "entries": len(old_records), "prefix": cur_text.startswith(old_text)}
 
 
 def scan_orphan_drawers(text):
@@ -572,45 +753,185 @@ def main(argv):
                      "0 orphan(s) — every drawer belongs to a headline"
                      % (owned_fields, len(messages)))
 
-    # ---- 4. APPEND-ONLY: the objective's own window, byte for byte
+    # ---- 4+5. APPEND-ONLY (the objective's own window) and NO-DROP (the
+    # whole history), graded PER ENTRY. One pass over the commits that touched
+    # the chat; each violating commit is reported under ONE tag — inside the
+    # window as APPEND-ONLY, older than it as NO-DROP — because the old pair
+    # flagged the same sha twice and the Lead's triage counted 31 refs that way.
     base = objective_base(root, control_text)
     if base is None:
         raise CannotRun("agent-team/TEAM-CONTROL.org never carried the TEST-CHAIN objective "
                         "(`#+OBJECTIVE: TEST-CHAIN`) — this harness grades THAT objective")
-    touched = [sha for sha in git(root, "log", "--format=%H", "--", CHAT_REL).split()
-               if subprocess.run(("git", "merge-base", "--is-ancestor", base, sha),
-                                 cwd=root, capture_output=True).returncode == 0]
-    for sha in touched:
-        old = git(root, "show", "%s:%s" % (sha, CHAT_REL))
-        if not chat_text.startswith(old):
-            problems.append("APPEND-ONLY %s: the chat as of this commit is NOT a prefix of the "
-                            "current file — an entry was edited or dropped inside the "
-                            "objective's window" % sha[:8])
+    cur_records = entry_records(chat_text)
+    history = git(root, "log", "--format=%H", "--", CHAT_REL).split()
+    in_window = set(sha for sha in history
+                    if subprocess.run(("git", "merge-base", "--is-ancestor", base, sha),
+                                      cwd=root, capture_output=True).returncode == 0)
+    cur_by_stamp = {record["identity"][3] for record in cur_records}
+    facts = {}
+    for sha in history:
+        facts[sha] = audit_version(root, sha, chat_text, cur_records, cur_by_stamp)
+
+    # One FACT may survive in several commits' versions (the entry sat
+    # unrepaired for 20 commits), and the old legs printed it once per commit —
+    # that is how 31 refs became 115 lines. Findings are keyed by what happened
+    # to which entry, and the commit list rides along in one line.
+    findings = {}
+    repairs_exercised = set()
+    rewritten_dispositions = set()
+    fold_splits, rewords, interleaved = {}, {}, []
+
+    def add_finding(kind, sha, win, identity, line, payload=None):
+        key = (kind, identity, line, payload)
+        finding = findings.setdefault(key, {"kind": kind, "identity": identity, "line": line,
+                                            "payload": payload, "shas": [], "win": False})
+        finding["shas"].append(sha)
+        finding["win"] = finding["win"] or win
+
+    for sha in history:
+        fact = facts[sha]
+        win = sha in in_window
+        for record in fact["dropped"]:
+            add_finding("dropped", sha, win, record["identity"], record["line"])
+        for record in fact["reordered"]:
+            add_finding("reordered", sha, win, record["identity"], record["line"])
+        for edit in fact["edits"]:
+            old, cur = edit["old"], edit["cur"]
+            if edit["kind"] == "fold-split":
+                fold_splits.setdefault(old["line"], set()).add(sha)
+                continue
+            previous, corrected = (edit["payload"] if edit["kind"] == "one-line"
+                                   else (None, None))
+            row = next((r for r in ACCEPTED_REPAIRS
+                        if edit["kind"] == "one-line" and r[0] == old["identity"]
+                        and r[1] == corrected and previous in r[2]), None)
+            if row is not None:
+                repairs_exercised.add(row[0])
+                continue
+            if not win:
+                rewords.setdefault(cur["line"], set()).add(sha)
+                continue
+            if edit["kind"] == "one-line":
+                add_finding("edited", sha, win, old["identity"], cur["line"],
+                            (previous, corrected))
+            else:
+                disp = next((b for b in REWRITTEN_BASELINES if b[0] == old["identity"]
+                             and b[1] in chat_text), None)
+                if disp is not None:
+                    rewritten_dispositions.add(disp[0])
+                    continue
+                add_finding("rewritten", sha, win, old["identity"], cur["line"])
+        if not fact["prefix"]:
+            interleaved.append(sha)
+
+    for finding in sorted(findings.values(),
+                          key=lambda f: (f["kind"], f["identity"], f["line"])):
+        identity, line, shas = finding["identity"], finding["line"], finding["shas"]
+        tag = "APPEND-ONLY" if finding["win"] else "NO-DROP"
+        scope = ("inside the objective's window" if finding["win"]
+                 else "before the objective's window")
+        entry = "`%s -> @%s :%s:` (:WHEN: %s)" % (identity[0], identity[1], identity[2],
+                                                  identity[3])
+        where = ("line %d" % line) if line else "no line (never in the current file)"
+        commits = "%d commit(s): %s" % (len(shas), " ".join(sha[:8] for sha in shas[:6]))
+        if finding["kind"] == "dropped":
+            problems.append("%s: the entry %s, %s at that commit, is GONE from the current "
+                            "file — an entry was dropped %s (%s)"
+                            % (tag, entry, where, scope, commits))
+        elif finding["kind"] == "reordered":
+            problems.append("%s: the entry %s now sits BEHIND an entry that followed it at the "
+                            "commit(s) above — an entry was reordered %s (%s)"
+                            % (tag, entry, scope, commits))
+        elif finding["kind"] == "edited":
+            previous, corrected = finding["payload"]
+            problems.append("%s: the entry %s at %s was EDITED after it landed — %r -> %r — "
+                            "%s (%s). Append-only law: a landed entry is never rewritten; a "
+                            "FORMAT-LAW correction is pinned in ACCEPTED_REPAIRS beside the "
+                            "line that records the ruling, not applied silently"
+                            % (tag, entry, where, previous, corrected, scope, commits))
+        else:
+            problems.append("%s: the entry %s at %s was REWRITTEN after it landed — more than "
+                            "one line of its region differs (%s) — an entry edited in place %s"
+                            % (tag, entry, where, commits, scope))
+
+    # The allowance roster is pinned like every other population in this
+    # harness: a row that matches nothing in history is not documentation, it
+    # is a live permit for the next person who edits that entry.
+    if len(ACCEPTED_REPAIRS) != EXPECTED_ACCEPTED_REPAIRS:
+        raise CannotRun("ACCEPTED_REPAIRS holds %d row(s), the pin says %d — the roster of "
+                        "permitted post-landing edits no longer matches its own promise"
+                        % (len(ACCEPTED_REPAIRS), EXPECTED_ACCEPTED_REPAIRS))
+    dead = [row for row in ACCEPTED_REPAIRS if row[0] not in repairs_exercised]
+    if dead:
+        for row in dead:
+            print("  DEAD ALLOWANCE %s -> @%s (:WHEN: %s): pinned corrected line %r, accepted "
+                  "predecessor(s) %r, cited %s — but no commit differs that way, so the "
+                  "allowance no longer records a repair and would permit an edit of that shape"
+                  % (row[0][0], row[0][1], row[0][3], row[1], row[2], row[3]))
+        raise CannotRun("%d of %d ACCEPTED_REPAIRS row(s) no longer matches any historical byte "
+                        "difference — a dead allowance is a permit, not a record (see the DEAD "
+                        "ALLOWANCE line(s) above)" % (len(dead), len(ACCEPTED_REPAIRS)))
+    if len(REWRITTEN_BASELINES) != EXPECTED_REWRITTEN_BASELINES:
+        raise CannotRun("REWRITTEN_BASELINES holds %d row(s), the pin says %d — the roster of "
+                        "dispositioned in-window rewrites no longer matches its own promise"
+                        % (len(REWRITTEN_BASELINES), EXPECTED_REWRITTEN_BASELINES))
+    dead_rw = [b for b in REWRITTEN_BASELINES
+               if b[0] not in rewritten_dispositions
+               and b[0] not in {k[1] for k in findings if k[0] == "rewritten"}
+               and b[0] in {r["identity"] for r in cur_records}]
+    # two exemptions keep the refusal honest: (1) the identity's rewrite is
+    # ALREADY firing as an undispositioned red — the harness is not silent, it
+    # is red, and preempting that red with CANNOT RUN would HIDE a violation
+    # (measured: the dropped-entry selftest control deletes the ruling entry,
+    # the ruling disappears, and the rewrite must print, not refuse); (2) the
+    # identity is GONE from the current file — nothing is left to rewrite, so
+    # the row permits nothing and must not preempt the drop red. The true
+    # dead-permit shape is unchanged: entry present, no difference anywhere,
+    # row still claiming to record one.
+    if dead_rw:
+        for b in dead_rw:
+            print("  DEAD BASELINE %s -> @%s (:WHEN: %s): cited ruling %r — but no historical "
+                  "byte difference matches the identity, or the ruling line is gone from the "
+                  "chat, so the disposition records nothing and would permit a rewrite"
+                  % (b[0][0], b[0][1], b[0][3], b[1]))
+        raise CannotRun("%d of %d REWRITTEN_BASELINES row(s) no longer match a historical "
+                        "difference plus their visible ruling — a dead baseline is a permit, "
+                        "not a record (see the DEAD BASELINE line(s) above)"
+                        % (len(dead_rw), len(REWRITTEN_BASELINES)))
+
     notes.append("APPEND-ONLY: %d commit(s) touched the chat inside the objective's window "
-                 "(base %s), every version is a byte prefix of the current file"
-                 % (len(touched), base[:8]))
-
-    # ---- 5. NO-DROP: over the whole history, no entry ever disappears
-    current_ids = message_ids(messages)
-    edited = []
-    for sha in git(root, "log", "--format=%H", "--", CHAT_REL).split():
-        old_text = git(root, "show", "%s:%s" % (sha, CHAT_REL))
-        old_ids = message_ids(parse_messages(old_text))
-        if len(old_ids) > len(current_ids) or old_ids != current_ids[:len(old_ids)]:
-            problems.append("NO-DROP %s: the chat's message sequence at this commit is not a "
-                            "prefix of today's — an entry was removed or reordered" % sha[:8])
-            continue
-        for index, old_message in enumerate(parse_messages(old_text)):
-            if old_message["body"] != messages[index]["body"]:
-                edited.append((sha, messages[index]["line"]))
-    if edited:
-        seen = sorted({line for _sha, line in edited})
-        notes.append("NO-DROP: %d historical bod(y/ies) were reworded after the fact "
-                     "(line(s) %s) — an entry may be reworded, never removed"
-                     % (len(seen), ", ".join(str(line) for line in seen)))
-    notes.append("NO-DROP: %d message(s) over the whole history, none ever dropped"
-                 % len(messages))
-
+                 "(base %s); every entry each one held is still present, in order, "
+                 "byte-identical" % (len(in_window), base[:8]))
+    notes.append("NO-DROP: %d message(s) today over %d commit(s) that touched the chat; "
+                 "%d reworded historical region(s) outside the window (%s), none ever dropped"
+                 % (len(messages), len(history), len(rewords),
+                    ", ".join("line %d (%d commit(s))" % (line, len(shas))
+                              for line, shas in sorted(rewords.items())[:8]) or "none"))
+    if interleaved:
+        notes.append("APPEND-ONLY: %d commit(s) are NOT a byte prefix of the current file — "
+                     "graded per entry above, that is concurrent-append interleaving plus the "
+                     "repair classes below, not an edited or dropped message (the whole-file "
+                     "read this harness shipped with called every one of them a violation)"
+                     % len(interleaved))
+    if fold_splits:
+        notes.append("FOLD-SPLIT: %d historical region(s) shrank because a folded sibling's "
+                     "drawer tail was re-headed back out of them — verified: each tail's own "
+                     ":WHEN: belongs to a headed entry today (Lead merge-repair, not an edit) — "
+                     "the region(s) at line(s) %s"
+                     % (len(fold_splits),
+                        ", ".join("%d (%d commit(s))" % (line, len(shas))
+                                  for line, shas in sorted(fold_splits.items()))))
+    if repairs_exercised:
+        notes.append("ACCEPTED-REPAIR: %d of %d pinned correction(s) exercised — %s"
+                     % (len(repairs_exercised), len(ACCEPTED_REPAIRS),
+                        "; ".join("%s: %r -> %r (%s)" % (row[0][3], row[2][0], row[1],
+                                  row[3]) for row in ACCEPTED_REPAIRS)))
+    if rewritten_dispositions:
+        notes.append("REWRITTEN-BASELINE: %d of %d dispositioned in-window rewrite(s) exercised "
+                     "against their visible ruling(s) — %s"
+                     % (len(rewritten_dispositions), len(REWRITTEN_BASELINES),
+                        "; ".join("%s (%s)" % (b[0][3], b[1][:58])
+                                  for b in REWRITTEN_BASELINES)))
     # ---- 6. LOG: the run log is well-formed, complete and cross-linked
     run_lines, summary = parse_log(log_text)
     if len(run_lines) < LOG_RUN_LINE_FLOOR:
@@ -840,7 +1161,11 @@ def control_run_line_outside_runs(root):
 
     A marker-free line is chosen so the LOG-TURN legs stay satisfied and the
     only new finding is this leg's own: a control that also fires its siblings
-    cannot say which leg caught the mutation."""
+    cannot say which leg caught the mutation. The line is re-filed under a
+    PROSE heading, not bare at EOF: the log's tail is now a re-opened `## runs`
+    block (the re-list convention this leg itself prescribes), so a bare-EOF
+    append lands INSIDE the graded region and proves nothing — measured
+    2026-10-25, selftest run on the 0015 union."""
     text = _read_file(root, LOG_REL)
     run_lines, _summary = parse_log(text)
     markers = [mk for turn in TURNS for mk in LOG_MARKERS[turn]]
@@ -856,7 +1181,8 @@ def control_run_line_outside_runs(root):
     number, line = target
     lines = text.splitlines(True)
     del lines[number - 1]
-    _write_file(root, LOG_REL, "".join(lines).rstrip("\n") + "\n" + line.rstrip("\n") + "\n")
+    _write_file(root, LOG_REL, "".join(lines).rstrip("\n") + "\n\n## stray prose (not runs)\n\n"
+                + line.rstrip("\n") + "\n")
 
 
 def control_pinned_record_deleted(root):
@@ -941,7 +1267,10 @@ def control_prose_lookalike(root):
     folds neutralised FIRST — the same base protocol as control_folded_entry
     — so the PAIR grades discrimination from one base: this control asserts
     the problem text is ABSENT for the lookalike (!needle), its sibling
-    asserts a real orphan still fires (needle present)."""
+    asserts a real orphan still fires (needle present). BASE NOTE (Lead
+    2026-10-25: both live folds repaired + the 22:05 rewrite dispositioned): the
+    clean-base copy now grades GREEN, so this control expects rc 0 with the
+    orphan text ABSENT — the discrimination assertion is unchanged."""
     text = _read_file(root, CHAT_REL)
     lines = text.splitlines()
     for number, _line, _owner in scan_orphan_drawers(text)[0]:
@@ -953,9 +1282,81 @@ def control_prose_lookalike(root):
     _write_file(root, CHAT_REL, text)
 
 
+def _entry_regions(text):
+    """(start, end) line indices of every `* MSG` region, in file order."""
+    lines = text.splitlines()
+    starts = [i for i, line in enumerate(lines) if line.startswith("* MSG ")]
+    if not starts:
+        raise CannotRun("control: the chat holds no `* MSG` entry to work on")
+    regions = []
+    for index, start in enumerate(starts):
+        end = starts[index + 1] if index + 1 < len(starts) else len(lines)
+        regions.append((start, end))
+    return lines, regions
+
+
+INTERLEAVED_ENTRY = (
+    "* MSG software-engineer -> @lead :note:      :msg:software-engineer:lead:note:",
+    ":PROPERTIES:",
+    ":FROM: software-engineer",
+    ":TO: lead",
+    ":KIND: note",
+    ":WHEN: [2027-01-01 Fri 00:00 UTC]",
+    ":END:",
+    "  control: one entry merged BETWEEN two landed ones, exactly what a",
+    "  union-merge of two concurrent EOF appends produces.",
+)
+
+
+def control_interleaved_append(root):
+    """The shape the whole-file byte-prefix read could not tell from a
+    violation: a well-formed entry inserted between two landed entries, so
+    every older version stops being a prefix of today while nothing was
+    edited, dropped or reordered. The entry-granularity legs must answer
+    rc 0 over it — the false-red class this rewrite exists to remove, graded
+    rather than asserted."""
+    text = _read_file(root, CHAT_REL)
+    lines, regions = _entry_regions(text)
+    if len(regions) < 3:
+        raise CannotRun("control interleaved-append: fewer than three entries to merge between")
+    at = regions[1][0]
+    lines[at:at] = list(INTERLEAVED_ENTRY)
+    _write_file(root, CHAT_REL, "\n".join(lines) + "\n")
+
+
+def control_reordered_entry(root):
+    """Swap the last two entries: every identity survives, every byte
+    survives, only the ORDER moves — the one violation a drop-only read
+    cannot see, and the one a rebase of two concurrent branches produces."""
+    text = _read_file(root, CHAT_REL)
+    lines, regions = _entry_regions(text)
+    if len(regions) < 2:
+        raise CannotRun("control reordered-entry: fewer than two entries to swap")
+    (a_start, a_end), (b_start, b_end) = regions[-2], regions[-1]
+    rebuilt = lines[:a_start] + lines[b_start:b_end] + lines[a_start:b_start] + lines[b_end:]
+    _write_file(root, CHAT_REL, "\n".join(rebuilt) + "\n")
+
+
+def control_stale_allowance(root):
+    """Retire the pinned correction from the DATA side: re-date the landed
+    entry the row describes, so the recorded repair no longer matches the
+    bytes and the row's own predecessor never reaches today's line. The
+    allowance then permits nothing while still claiming to, so the harness
+    must refuse (CANNOT RUN) instead of printing a green that grades nothing.
+
+    Mutated in the chat, not in the copy's roster: the selftest runs the
+    PRISTINE script against each copy (see selftest()), so a control that
+    edited this harness's own constants would be invisible to the run it is
+    supposed to control. The brackets come off and the stamp stays, so the
+    entry is still the SAME entry (identity survives the read) and only the
+    recorded repair is gone — a drop-shaped mutation would prove nothing here."""
+    _replace_once(root, CHAT_REL, ':WHEN: [2026-10-22 Thu 11:24 UTC]',
+                  ':WHEN: 2026-10-22 Thu 11:24 UTC')
+
+
 # (name, mutation, expected exit code, expected text in the output, extra argv)
 CONTROLS = (
-    ("dropped chat entry", control_dropped_entry, 1, "NO-DROP", ()),
+    ("dropped chat entry", control_dropped_entry, 1, "is GONE from the current file", ()),
     ("edited chat entry", control_edited_entry, 1, "APPEND-ONLY", ()),
     ("broken drawer", control_broken_drawer, 1, "CHAT-FORMAT", ()),
     ("deleted board item", control_deleted_board_item, 1, "is no longer a headline", ()),
@@ -967,17 +1368,20 @@ CONTROLS = (
     ("no chat date parses", control_unparseable_when, 2, "drawer parse is broken", ()),
     ("folded entry (no headline)", control_folded_entry, 1, "CHAT-STRUCTURE", ()),
     ("blind drawer scan", control_blind_drawer_scan, 2, "grades nothing", ()),
-    ("prose lookalike tolerated", control_prose_lookalike, 1, "!sits outside any entry", ()),
+    ("prose lookalike tolerated", control_prose_lookalike, 0, "!sits outside any entry", ()),
     ("run line outside `runs`", control_run_line_outside_runs, 1, "a run-shaped record the "
      "harness cannot read", ()),
     ("pinned record deleted", control_pinned_record_deleted, 1, "pinned superseded record", ()),
+    ("concurrent append interleaved", control_interleaved_append, 0, "CHAIN-TEST CHECK OK", ()),
+    ("entry reordered", control_reordered_entry, 1, "an entry was reordered", ()),
+    ("stale accepted repair", control_stale_allowance, 2, "dead allowance is a permit", ()),
 )
 
 # The control roster is PINNED, not derived: a comparison cannot see its own
 # coverage, and `SELFTEST OK — N control(s)` printed N from len(CONTROLS), so
 # deleting a control deleted the proof and still answered OK (landing_gate's
 # MERGE_ROSTER law, applied to this harness's own legs).
-EXPECTED_CONTROLS = 15
+EXPECTED_CONTROLS = 18
 
 
 def selftest(root):
@@ -1005,11 +1409,13 @@ def selftest(root):
                 argv += ["--main", base or "ai/main"]
             proc = subprocess.run(argv, capture_output=True, text=True)
             out = proc.stdout + proc.stderr
-            # `!needle` = the text must be ABSENT: an exclusion (a shape the
-            # leg must NOT flag) can only be graded on a copy that is still
-            # red for other legs (every file mutation breaks the byte-prefix
-            # legs on the copy), so the assertion is the problem text's
-            # ABSENCE, never a green exit.
+            # `!needle` = the text must be ABSENT. Under the WHOLE-FILE
+            # byte-prefix law every file mutation broke a leg and the copy was
+            # always red, so the exclusion rode a red exit. Under the PER-ENTRY
+            # law a legal append on a clean base grades green, so an exclusion
+            # may now ride a GREEN exit: the assertion is still the problem
+            # text's ABSENCE, and the sibling controls prove the leg itself can
+            # still fire on a real violation.
             negated = expected_text.startswith("!")
             needle = expected_text[1:] if negated else expected_text
             hit = needle not in out if negated else needle in out
