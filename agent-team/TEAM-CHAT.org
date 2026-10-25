@@ -8525,3 +8525,110 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   `lane-dead` label now flows through `#+PENDING-REVIEW` retention, so a
   lane-dead verdict should be counted separately in your stall accounting if you
   want the substitution rate visible; and FR-R007-LIVE, which still needs eyes.
+:WHEN: [2026-10-24 Sat 15:40 UTC]
+:END:
+  IDLE-LAW TURN — REVIEW/VERIFICATION DUTY ONLY. The board is closed
+  (agent-team/TEAM-CONTROL.org:8, "Idle law: board closed — seats take review
+  duty only until the Owner's next order"), the rotation pointer named this
+  seat (:9), and the register is empty (#+PENDING-REVIEW: — :13) with 0607
+  owned by the duty reviewer, so there was nothing for me to review and NO
+  reason to add a branch to the queue. No @software-engineer ping is
+  outstanding: `grep -nE '^\* MSG .*-> @software-engineer' agent-team/TEAM-CHAT.org`
+  returns :6537 and :6564 only, both yours of 2026-10-22 23:56/23:58, and both
+  CLOSED on main — release_readiness rc 0 now measures 17 symbol claims over
+  16 citations with 0 unresolvable, and DEVGUIDE:1195/:1197 cite
+  release_readiness.py:723 (`leg_doc_counts`) and :687 (`gate_pins`), which are
+  the live line numbers this run measured.
+  So this segment took the ONE item every seat keeps handing past —
+  FR-R007-LIVE (agent-team/TODOS.org:3454) — and ran what can be run without a
+  browser: a live HTTP smoke over real TCP against the rig, which no existing
+  test does (plugin/tests/test_rbac_roles.py authenticates through the
+  in-process APIClient with `client.credentials(...)`, never through the token
+  endpoint; test_demo_boot.py:55 only RESOLVES /api/auth/token/).
+
+  LIVE WIRE RESULT — the server half of FR-R007-LIVE holds end to end :rig
+  (booted per AGENTS.md Commands: `pip install -e ./plugin --no-deps`,
+  manage.py migrate + seed_demo + runserver):
+  - POST /api/auth/token/ -> 200 + token for BOTH demo identities
+    (admin/admin123 and the seeded non-superuser auditor/audit123).
+  - GET /api/me/ with the auditor's token ->
+    {"username":"auditor","is_staff":false,"is_superuser":false,"roles":["auditors"]}
+    admin -> roles ["auditors","managers"]; anonymous -> 401. That is the
+    rejection INPUT the gated nav consumes, produced by the real wire, not a fixture.
+  - Live /api/schema/ carries every path the client discovers, and each under
+    the law that binds it: /api/me/ `get` ONLY (so normalizeOpenAPI binds
+    mePath and never guesses it), /api/orders/export/ get-only,
+    /api/orders/{id}/history/ get-only, /api/orders/{id}/transition/ post,
+    /api/orders/bulk_flag/ post, /api/audit/ get+post.
+  - Audit append-only is structural on the wire: DELETE and PUT on
+    /api/audit/1/ both 404 (the router never mints the detail route), while
+    POST /api/orders/1/flag/ -> 201 with the actor SERVER-derived
+    ("actor":"admin" from the token, not from the body) and the audit list
+    count then reads 1. An illegal transition was refused with 400 +
+    {"reason": ...} naming the missing `transition` key.
+  - /admincraft/branding/ -> 404 {"detail":"no brand configured — the client
+    falls back to its bundled brand"}: the documented graceful path, not a defect.
+
+  TWO DEMO GAPS the live pass surfaced, neither visible to a per-side test
+  (fresh seed, then measured over HTTP):
+  1. `manage.py seed_demo` writes ZERO AuditEntry rows — `GET /api/audit/`
+     answered `count: 0` right after seeding. The R-007 activity screen
+     (app/src/pages/Activity.svelte) and the R-003 audit trail therefore paint
+     empty on a freshly seeded rig until someone fires a flag action by hand.
+  2. seed_demo writes ONE OrderHistory row per order with `actor=None`
+     (demo-backend/shop/management/commands/seed_demo.py:129-131) — measured
+     `GET /api/orders/1/history/` -> a 1-element list, `from_status:""`,
+     `to_status:"refunded"`. So the history half of the demo shows a single
+     hop, while the module docstring advertises "14 days of order history".
+     I deliberately did NOT add a test or extend the seed: a new pytest would
+     move the 300 pin and its four published sites, and either change touches
+     the same files the queued branches 0607/0633/0731/1037/1403 carry —
+     conflict cost against Lead's own merge-as-prefix ruling. Both are ONE-LINE
+     seed_demo additions when you want them (rule, not fix: your call).
+  WHAT REMAINS GENUINELY OPEN on that row, and is not code: nobody watched the
+  gated entry vanish in a real window. The mounted proof exists on main
+  (rbac.test.ts + gapMount.test.ts landed via the 0659 re-delivery;
+  TODOS.org:3454 LOGBOOK 07:07Z), the claims that feed it are now proven live
+  above — but no browser/Tauri binary exists in this container, so that line
+  needs the Owner's hands. I did not open a branch to "close" it with more tests.
+
+  MEASURED on this tree (main tip a1de1e0, zero content committed by me):
+  - `python3 scripts/landing_gate.py` -> GATE GREEN 4/4 (django 5.2.18,
+    pytest 300 passed, System check no issues, makemigrations No changes).
+  - `python3 scripts/release_readiness.py` -> rc 0, RELEASE READINESS GREEN
+    (doc-counts 8 == the gate's pins pytest=300 / vitest=484).
+  - `python3 scripts/chain_test_check.py` -> rc 1: 4 CHAT-STRUCTURE orphans
+    (TEAM-CHAT.org:6407, :6408, :7731, :7732) + the standing APPEND-ONLY/NO-DROP
+    families under your merge-as-prefix ruling. The orphans are still unfixed on
+    main at this hour — repair is five lines each and LEAD-ONLY (append-only law
+    bars a seat; precedent aa6e7ef / 0dd7985 for the :5528 repair).
+  - LANE FACT for the review-arm preflight (Lead 10-h note): the gate's env leg
+    answered CANNOT RUN on a cold lane until `python3 -m pip install -e ./plugin
+    --no-deps` ran, which SUCCEEDED here — so setuptools is NOT the blocker in
+    this image and the rig-boot legs can pass in-review. That matches the
+    platform-engineer's 10:02Z reading and contradicts the "no setuptools ->
+    legs CANNOT pass in that lane" note still standing in TEAM-CONTROL.org:8;
+    the preflight you are planning may be unnecessary, an informational
+    `pip install` in the arm brief is enough.
+  - HARNESS-LEAK CHECK on my own segment: `git status --short` is empty; the
+    rig's db.sqlite3 is ignored (.gitignore:10) and nothing else was written in
+    the repo. Live tokens were kept in /tmp only and deleted — no credential
+    value entered any file in the tree, chat line, or commit.
+
+  LAW: SECRET LAW held — no credential read or echoed, ROLE_LARK_WEBHOOK
+  presence tested with `[ -z ]` (empty in this seat's env -> the Lark copy of
+  this report is SKIPPED, not lost; QODER_PERSONAL_ACCESS_TOKEN present, value
+  never read). Lead-owned files (.github/workflows/*, .github/scripts/*,
+  TEAM-CONTROL.org, .gitattributes) read and cited only; the register and
+  rotation pointer untouched. No board row flipped, so no :LOGBOOK: note —
+  this segment verified FR-R007-LIVE, it did not deliver it (DONE is your gate).
+  SEGREGATION LAW: I reviewed nothing, merged nothing, never pushed ai/main.
+  RESULT: DONE — the live-wire half of FR-R007-LIVE is measured green over HTTP
+  (token -> claims -> schema-discovered paths -> append-only audit -> 400/409
+  guards), the two seed gaps are named with file:line, and main is verified
+  green (merge gate 4/4, release readiness rc 0) at a1de1e0.
+  NEXT: your repair of the four CHAT-STRUCTURE orphans (the only actionable red
+  this run found that a seat cannot lawfully fix), the seed_demo audit/history
+  rows if you want the demo to paint, the Owner's browser pass for the one line
+  that stays open, 0607's verdict by the duty reviewer, and the TEAM-CONTROL:8
+  setuptools note which this lane measured as NOT the blocker.
