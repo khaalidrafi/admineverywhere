@@ -251,6 +251,18 @@ if [ -d /sessions-restore ]; then
   else
     cp -a /sessions-restore/. "$HOME/" 2>/dev/null || true
   fi
+  # The collect tar is rooted at /, so a store whose member is an ABSOLUTE
+  # path keeps that path inside the archive and must be copied back to it.
+  # The qoder lanes run with HOME=/usr/local/lib/qoder-home, so their store
+  # is collected as usr/local/lib/qoder-home/.qoder (last member of the tar
+  # list) and was never restored: the copy above lands the archive root
+  # under $HOME, which is not where that CLI reads it. SESSION LAW, graded
+  # by scripts/chain_session_check.py leg RESTORE.
+  if [ -d /sessions-restore/usr/local/lib/qoder-home/.qoder ]; then
+    mkdir -p /usr/local/lib/qoder-home/.qoder
+    cp -a /sessions-restore/usr/local/lib/qoder-home/.qoder/. \
+      /usr/local/lib/qoder-home/.qoder/ 2>/dev/null || true
+  fi
 fi
 # The plugin is the code under test: link it fast (deps baked).
 # Lead fix 21:2xZ cycle 9-e (seat harness-gap report, third seat running):
@@ -288,7 +300,7 @@ if [ -n "$PENDING_BRANCH" ]; then
            OPENAI_API_KEY="$GROQ_API_KEY" \
            OPENAI_HOST="https://api.groq.com" \
            OPENAI_BASE_PATH="/openai/v1/chat/completions" \
-           timeout 900 goose run --no-session -t "$REVIEW_BRIEF" \
+           timeout 900 goose run -t "$REVIEW_BRIEF" \
            > /workspace/.turn-review.txt 2>&1; then
         echo "REVIEW: goose run OK (review lane: groq/qwen3.8-27b@goose — Owner rotation 2026-10-25)"
       else
@@ -327,7 +339,7 @@ case "$SEAT" in
          OPENAI_API_KEY="$ZAI_API_KEY" \
          OPENAI_HOST="https://api.z.ai" \
          OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (acting lane: zai/glm-4.7-flash@goose)"
     # Lead URL fix 2026-10-22 (run 39752778724 evidence): goose
     # appends /v1/chat/completions to OPENAI_HOST, so the old
@@ -343,7 +355,7 @@ case "$SEAT" in
          OPENAI_API_KEY="$OPENROUTER_API_KEY" \
          OPENAI_HOST="https://openrouter.ai" \
          OPENAI_BASE_PATH="/api/v1/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: laguna-s-2.1:free@goose — relief swap 2026-10-23)"
     # Lead lane add 2026-10-22: qwen3.8-27b@groq — GROQ_API_KEY is
     # in repo secrets (probed every run); gives the chain a 4th,
@@ -352,7 +364,7 @@ case "$SEAT" in
          OPENAI_API_KEY="$GROQ_API_KEY" \
          OPENAI_HOST="https://api.groq.com" \
          OPENAI_BASE_PATH="/openai/v1/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: qwen3.8-27b@groq — relief hire 2026-10-22)"
     else
       echo "TURN_RESULT=BLOCKED (qoder+zai+laguna+groq lanes all failed — check the harness)"
@@ -367,7 +379,7 @@ case "$SEAT" in
          OPENAI_API_KEY="$ZAI_API_KEY" \
          OPENAI_HOST="https://api.z.ai" \
          OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
     # Relief swap 2026-10-23 (DE TEAM-UPDATE #2): minimax :free delisted
     # at source — poolside/laguna-s-2.1:free takes the slot.
@@ -375,13 +387,13 @@ case "$SEAT" in
          OPENAI_API_KEY="$OPENROUTER_API_KEY" \
          OPENAI_HOST="https://openrouter.ai" \
          OPENAI_BASE_PATH="/api/v1/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: laguna-s-2.1:free@goose — relief swap 2026-10-23)"
     elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
          OPENAI_API_KEY="$GROQ_API_KEY" \
          OPENAI_HOST="https://api.groq.com" \
          OPENAI_BASE_PATH="/openai/v1/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: qwen3.8-27b@groq)"
     elif env HOME=/usr/local/lib/qoder-home \
          qoder -p "$BRIEF" --output-format json \
@@ -432,13 +444,13 @@ case "$SEAT" in
          OPENAI_API_KEY="$GROQ_API_KEY" \
          OPENAI_HOST="https://api.groq.com" \
          OPENAI_BASE_PATH="/openai/v1/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: groq/qwen3.8-27b@goose — boost rotation 2026-10-25)"
     elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
          OPENAI_API_KEY="$ZAI_API_KEY" \
          OPENAI_HOST="https://api.z.ai" \
          OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: zai/glm-4.7-flash@goose)"
     # Relief swap 2026-10-23 (DE TEAM-UPDATE #2): minimax :free delisted
     # at source — poolside/laguna-s-2.1:free takes the slot.
@@ -446,7 +458,7 @@ case "$SEAT" in
          OPENAI_API_KEY="$OPENROUTER_API_KEY" \
          OPENAI_HOST="https://openrouter.ai" \
          OPENAI_BASE_PATH="/api/v1/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: openrouter/laguna-s-2.1:free@goose)"
     else
       echo "TURN_RESULT=BLOCKED (codebuddy+qoder-ds+zai+laguna lanes all failed — check the harness)"
@@ -473,7 +485,7 @@ case "$SEAT" in
          OPENAI_API_KEY="$GROQ_API_KEY" \
          OPENAI_HOST="https://api.groq.com" \
          OPENAI_BASE_PATH="/openai/v1/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: groq/qwen3.8-27b@goose)"
     elif env HOME=/usr/local/lib/qoder-home \
          qoder -p "$BRIEF" --output-format json \
@@ -515,7 +527,7 @@ case "$SEAT" in
          OPENAI_API_KEY="$ZAI_API_KEY" \
          OPENAI_HOST="https://api.z.ai" \
          OPENAI_BASE_PATH="/api/paas/v4/chat/completions" \
-         goose run --no-session -t "$BRIEF"; then
+         goose run -t "$BRIEF"; then
       echo "TURN_RESULT=PAID LANE FAILED — fell back to zai (lane: zai/glm-4.7-flash@goose); visiting burn did NOT happen"
     else
       echo "TURN_RESULT=BLOCKED (visiting paid lane + free fallbacks all failed — check the harness)"
@@ -533,6 +545,7 @@ rm -f "$SESS"
 tar czf "$SESS" -C / \
   "${HOME#/}/.qoder" \
   "${HOME#/}/.config/goose/sessions" \
+  "${HOME#/}/.local/share/goose/sessions" \
   "${HOME#/}/.local/share/opencode" \
   "${HOME#/}/.codebuddy/projects" \
   "${HOME#/}/.codebuddy/sessions" \
