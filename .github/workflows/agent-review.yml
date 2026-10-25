@@ -87,6 +87,10 @@ jobs:
             echo "--- makemigrations --check ---"
             python3 demo-backend/manage.py makemigrations --check 2>&1 | tail -3
             echo "MIGRATIONS_RC=$?"
+            echo "--- secret scan over the FULL diff (SECRET LAW pre-measure) ---"
+            BASE=$(git merge-base origin/ai/main "origin/$BR")
+            SECRET_HITS=$(git diff "$BASE"..."origin/$BR" | grep -Eci "github_pat_[A-Za-z0-9_]+|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|BEGIN (RSA|EC|OPENSSH) PRIVATE KEY" || true)
+            echo "SECRET_SCAN_HITS=$SECRET_HITS (0 = clean; full diff scanned, not the truncated body)"
           } > gate-out.txt 2>&1
           cat gate-out.txt
 
@@ -106,11 +110,22 @@ jobs:
           # JSON body ~14KB < 413 threshold; reviewer flags PARTIAL REVIEW.
           MAX=8000
           if [ "$(wc -c < review-diff.txt)" -gt "$MAX" ]; then
+            # run 40225779256 artifact evidence (first REAL verdict, v12):
+            # the reviewer correctly REJECTED because the stat summary was
+            # EMPTY — the trim block used "$BR" (a local branch name that
+            # does not exist after fetch-depth:0; ea6dd86's same bug class)
+            # so the stat command died silently. Fix: origin/ prefix + a
+            # full --name-status manifest so the reviewer can verify the
+            # no-Lead-owned-files law even when the diff body is truncated.
             {
-              git diff --stat "$BASE"..."$BR" | tail -5
-              git diff "$BASE"..."$BR" | head -c "$MAX"
+              echo "=== FULL FILE MANIFEST (name-status, complete change) ==="
+              git diff --name-status "$BASE"..."origin/$BR"
+              echo "=== STAT TAIL ==="
+              git diff --stat "$BASE"..."origin/$BR" | tail -5
+              echo "=== DIFF BODY (first ${MAX} bytes) ==="
+              git diff "$BASE"..."origin/$BR" | head -c "$MAX"
               echo ""
-              echo "... [DIFF TRUNCATED at ${MAX} bytes — stat above covers the full change; reviewer must flag PARTIAL REVIEW in the verdict body]"
+              echo "... [DIFF BODY TRUNCATED at ${MAX} bytes — the manifest above IS the complete file list; judge the no-Lead-files law on it; flag PARTIAL REVIEW for the hidden hunks]"
             } > review-diff-trim.txt
             mv review-diff-trim.txt review-diff.txt
           fi
