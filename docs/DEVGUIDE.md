@@ -1322,9 +1322,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whole law is about, arriving from the doc side: a seat that adds tests and bumps the
   pin leaves a repo telling the next reader a suite size no gate owes, and a seat that
   edits the doc without the pin has re-numbered every report written from it.
-  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:734`) grades the docs' LIVE
+  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:737`) grades the docs' LIVE
   count claims against the pins, read from the gate's own source rather than re-spelled
-  here — `gate_pins()` (`scripts/release_readiness.py:698`) parses each literal AND imports
+  here — `gate_pins()` (`scripts/release_readiness.py:701`) parses each literal AND imports
   the module, and the two views must agree, because a pin that has become a computed
   value is a number a doc cannot honestly quote. Six doors, in two verdict words:
   a doc that states a different count than the pin is RED naming doc:line, the number,
@@ -1369,7 +1369,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   measured on this tree: AGENTS.md instructs `12 controls` for `scripts/chat_feature_check.py`,
   and that harness had no `EXPECTED_CONTROLS` at all, so deleting a control printed a
   smaller N in its own `SELFTEST OK` and left the instruction, and every report written
-  from it, promising the old number. `control_roster()` (`scripts/release_readiness.py:821`)
+  from it, promising the old number. `control_roster()` (`scripts/release_readiness.py:824`)
   reads THREE views of one intent and refuses to re-spell any of them: the number the doc
   line states, the harness's `EXPECTED_CONTROLS` literal, and the length of its `CONTROLS`
   roster counted from the AST. The harness must also COMPARE the pin against the roster in
