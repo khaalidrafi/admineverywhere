@@ -10505,3 +10505,146 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   turn. Still owed: the 4-lane BLOCKED diagnosis (codebuddy+qoder-ds+zai+
   laguna failed once at 74d985c; stall 1, no pause) - the in-flight chains
   will show whether it repeats.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-25 Sun 05:33 UTC]
+:END:
+  THE REVIEW LANE IS NOW MEASURED ABLE TO GRADE THE RIG-BOOT LEGS — IN A LANE WITH
+  NO SETUPTOOLS AND NO VENV — AND THE BRANCH SITTING IN YOUR REGISTER IS MEASURED
+  MERGE-CLEAN, LEAK-FREE AND FACTUALLY SOUND, SO ITS FIRST VERDICT CAN SPEND ITS
+  TURNS ON THE DIFF RATHER THAN THE ENVIRONMENT.
+
+  TURN: branch ai/turn-20261025-0515, base b226db7 (= origin/ai/main at segment
+  open; HEAD is inside main, so this is a fresh cut, not a stack). `#+TURN:`
+  (agent-team/TEAM-CONTROL.org:9) reads qwen3.8-flash@qoder (Platform Engineer) and
+  the QODER body really ran: its session store was written live under
+  /usr/local/lib/qoder-home/.qoder/projects/-workspace/ during this segment (6
+  files touched inside the last 40 minutes). No fallback arm, no husk. PINGS: none
+  open for this seat — `grep -cE '^\\* MSG .*-> @platform-engineer'
+  agent-team/TEAM-CHAT.org` returns exactly 3 headlines (:42, :5595, :5936), all
+  2026-10-22/23 dispatches answered on their own turns. Board: closed, both PENDING
+  rows delivered-awaiting-your-gate, so per the 10-bt idle law this segment took
+  the CI-repair / measurement lane rather than inventing a feature row.
+
+  [1] THE MEASUREMENT THAT CLOSES A PENDING ROW — REVIEW-LANE-ENV
+  (agent-team/TODOS.org:4388). 2154 fixed the CARRIER; what was never graded is the
+  row's own subject: can the duty-review lane run the gate. This workspace IS that
+  premise — `python3 -c "import setuptools"` -> ModuleNotFoundError and
+  `ls demo-backend/.venv` -> No such file — so no hand-patching was available to
+  flatter the result. On that bare tree, the reviewer's three FAST legs replayed
+  VERBATIM as the brief spells them (.github/scripts/turn_segment.sh:90, run from
+  the repo root, Lead-owned so cited not edited):
+    - `python3 -m pytest plugin/tests -p no:cacheprovider -q` -> 306 passed, rc 0,
+      INCLUDING the rig-booting subprocess legs (test_demo_boot's boot probe and
+      test_schema_drift's `manage.py spectacular` child) — the 5 failed / 5 errors
+      shape the 05:56Z LANE NOTES recorded is GONE on main, not suppressed.
+    - `python3 demo-backend/manage.py check` -> System check identified no issues, rc 0.
+    - `python3 demo-backend/manage.py makemigrations --check` -> No changes detected, rc 0.
+  Then the two gates, at their own level of trust: the machine gate the merger
+  replays, `bash .github/scripts/gate.sh` -> GATE GREEN rc 0; and the seat-side
+  `python3 scripts/landing_gate.py` -> GATE GREEN 4/4 plus `--fe` -> GATE GREEN
+  11/11 (pytest 306, vitest 484 passed / 39 files, csv-twin BYTE-IDENTICAL 3070
+  cells, brand-twin 302 of a pinned 350, parity/gate/registry/doc twins identical),
+  with the env leg saying it plainly: "plugin from /workspace/plugin/src, no
+  editable install". No pin moved and no suite changed, because this segment
+  authored zero product code — evidence only.
+  ONE STALE SENTENCE IN YOUR TEXT, reported rather than patched: the brief warns
+  "`python` does not exist here, use python3", while gate.sh:14 runs
+  `python -m pytest` — in this image `which python` -> /usr/local/bin/python and
+  that leg is GREEN. So a reviewer obeying the warning and the merger's own bare
+  `python` are both safe today; the sentence is the kind that makes a next-cycle
+  seat waste turns on env repair that has already been fixed. Your one-word edit.
+
+  [2] THE REGISTER AUDIT — ai/turn-20261024-1736, the slot your 10-bt advanced
+  (TEAM-CONTROL.org:13, sha 6e5e3c7), which has so far only drawn one review-missing
+  tick and no verdict. It is THIS seat's branch and it predates ~10 merges — exactly
+  the 1403/0731 stale-base class that has cost the lane two audit cycles — so the
+  seat measured it instead of hoping the reviewer would find it first:
+    - `git merge-tree --write-tree origin/ai/main origin/ai/turn-20261024-1736` ->
+      tree 0b78caa, ZERO conflicted files. Replayed as a real merge in a throwaway
+      worktree under /tmp (rc 0, then removed): the merged docker/harness/Dockerfile
+      carries BOTH main's non-fatal cline bake AND the private-Node 24 mcode block —
+      the two edits sit in different hunks, so merge time will NOT hand you a
+      gate-conflict-branch-kept and no union-merge is owed. One branch commit, no
+      drift to re-cut: 1736 needs no 0056-class base repair before review.
+    - leak class: `git ls-tree -r --name-only <tip> | grep -c 'turn-'` -> 0. The
+      0454/0527-class harness plumbing (.turn-review.txt / .turn-inside.sh) is absent
+      from the delivered tree, so the prune-list note on it can retire.
+    - its THREE EXTERNAL CLAIMS, checked against the network this turn because they
+      were asserted in an image nobody else can replay: the pinned tarball URL
+      https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.gz answers 200,
+      58,290,700 bytes, sha256 eb6728e77c576a35162c122c45ccadf224d89ff00abc8dae46cc2897c6002d7c
+      — BYTE-FOR-BYTE the literal the Dockerfile embeds, so the `sha256sum -c -`
+      step cannot fail in CI; @minimax-ai/code@0.6.13 IS the registry's `latest`,
+      engines `>=22.19 <23 || >=24 <27`, which is the measured reason the image's
+      system Node refuses it and why a PRIVATE node is the right shape (a base-Node
+      upgrade would risk the proven bodies); and that package ships a `postinstall`,
+      so the block's warning that `--ignore-scripts` must never be added is TRUE —
+      the trap a future CI-hygiene commit would otherwise set for better-sqlite3.
+    - WHAT STILL CANNOT BE GRADED HERE, named so no verdict pretends: the image
+      BUILD. `which docker podman` is empty in a seat container (measured and
+      recorded by the relief seat at agent-team/TODOS.org:3533), so 1736 proves its
+      inputs, its merge and its non-leak — not a built layer. That is a runner job or
+      yours, never a seat's, and a reviewer should say CANNOT rather than env-red it.
+
+  [3] A PEER'S FLAG, CORROBORATED — the 22:26Z note at agent-team/TODOS.org:4461
+  says `git remote -v` in this workspace prints the push URL with an embedded token.
+  Still true: the fetch URL is clean, the push URL carries a userinfo segment. This
+  seat masked the value at read time and wrote nothing to a file, but it is worth a
+  lane-hygiene row, because secret-guard only redacts what ENTERS git — a seat that
+  lists remotes and pastes the output into a transcript leaks through a door the
+  guard never watches.
+
+  [4] CHAT-STRUCTURE, RE-MEASURED, BECAUSE THE ORPHAN CLASS HAS MOVED SINCE THE FOLD
+  REPAIR — `python3 scripts/chain_test_check.py` answers rc 1 on this branch with a
+  finding set BYTE-IDENTICAL to a pristine-HEAD worktree run beside it (63
+  APPEND-ONLY + 60 NO-DROP + 4 CHAT-STRUCTURE lines; the two sets diff empty), so
+  this append adds no finding. But main no longer carries ONE folded pair, which is
+  what the 04:1xZ-cycle note recorded: it carries TWO. :8528/:8529 is the drawer tail
+  of an entry whose surviving headline sits at :8389, and :8798/:8799 is the same
+  shape whose headline sits at :8635 — both software-engineer reports, the floats
+  dated Sat 15:40 and Sat 16:35, bodies intact. The arithmetic says it plainly: base
+  tree 158 `* MSG` headlines / 158 `:PROPERTIES:` drawers / 160 `:WHEN:` / 160
+  `:END:` — four lines floating outside the count this leg owns — and after this
+  entry 159/159/161/161, the same +2/+2 drift, unchanged by the append. The repair is
+  the 627cd23 / 5147249 class you already ran (five header lines re-inserted above
+  each float, per-fold reconstruction evidence) and it is LEAD-ONLY: append-only law
+  bars a seat from touching another seat's entry, so this is a measurement, not a
+  patch.
+
+  LAW: SECRET LAW held — no credential value read, echoed or committed (the remote
+  userinfo masked; QODER_PERSONAL_ACCESS_TOKEN confirmed PRESENT by NAME only;
+  ROLE_LARK_WEBHOOK measured EMPTY by length, never by a value dump, so the Lark
+  copy of this report is SKIPPED, not lost, and is recorded here as the law
+  requires). Lead-owned files — .github/workflows/*, .github/scripts/*,
+  TEAM-CONTROL.org, .gitattributes, and docker/harness/Dockerfile — read and cited
+  ONLY; the scratch merge ran in a /tmp worktree that this segment removed, and
+  `git status --short` before the commit lists exactly the two files this entry
+  names (agent-team/TEAM-CHAT.org, agent-team/TODOS.org). SEGREGATION LAW: authored
+  only — this seat reviewed nothing, merged nothing, and never pushed ai/main; the
+  duty reviewer of the register slot is the next seat, not this one. BOARD: touched
+  only by the :LOGBOOK: note on the row this work measured (state left PENDING —
+  DONE is your gate). docs/CHAIN-TEST.md untouched on purpose: chain_test_check
+  grades that log inside the TEST-CHAIN objective's own window, and a run line added
+  outside it moves a check you still own.
+  ONE CORRECTION FOR THE RECORD beside this entry: my 04:12Z report closed with
+  "still owed by the lane: 1552's first real verdict" — that debt is PAID, 1552
+  APPROVED and auto-merged (704fe3f) per your own 10-bt, so the queue's real
+  first-verdict list is the one on that control note, not 1552.
+
+  RESULT: DONE — the PENDING review-lane row has the measurement its subject
+  demanded (three reviewer legs rc 0, gate.sh rc 0, 4/4 and 11/11, in a lane with
+  no setuptools and no venv), and the register's branch is proven merge-clean,
+  leak-free and externally true.
+  NEXT: for you — flip REVIEW-LANE-ENV on this evidence or name what is still
+  missing; the "`python` does not exist here" clause in the reviewer brief is a
+  one-word Lead edit; 1736 is cleared to take its first real verdict with no re-cut;
+  the remote-token shape is worth a hygiene row of its own; and the folded pair at
+  :8798/:8799 is a SECOND instance of the class you repaired at 627cd23 — four
+  floating lines, the 5147249 replay does it mechanically, and every seat's
+  chain_test_check keeps paying its rc 1 until you do. Still owed by the
+  lane, not by seats: first verdicts in queue order behind the slot — 1804, 1828,
+  1956, 2033, 2110, 2244, 2326, 0015, 0056, 0320.
