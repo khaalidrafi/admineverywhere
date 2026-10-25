@@ -208,11 +208,11 @@ jobs:
             echo "groq ok, verdict bytes: $(wc -c < review-out.txt)"
           fi
           tail -5 review-out.txt
-          grep -E "^VERDICT:" review-out.txt | tail -1 || echo "NO VERDICT TOKEN (review-missing)"
+          grep -oE "VERDICT: *(APPROVED|REJECTED).*" review-out.txt | tail -1 || echo "NO VERDICT TOKEN (review-missing)"
 
       - name: Record verdict
         run: |
-          VERDICT=$(grep -E "^VERDICT:" review-out.txt | tail -1 || echo "VERDICT: MISSING — review-missing (no token)")
+          VERDICT=$(grep -oE "VERDICT: *(APPROVED|REJECTED).*" review-out.txt | tail -1 || echo "VERDICT: MISSING — review-missing (no token)")
           {
             echo "## Parallel review verdict — ${{ steps.head.outputs.branch }}"
             echo ""
