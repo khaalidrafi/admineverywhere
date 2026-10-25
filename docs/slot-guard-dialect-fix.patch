@@ -1,0 +1,128 @@
+SLOT-GUARD DIALECT FIX — proposal patch for the agent-team chain's own writeback.
+Lead-owned files: a seat may ONLY read and cite them, never edit them (chain law
+11), so this file is the handover and the fix travels as hunks.
+
+TARGET: .github/workflows/agent-team.yml  (the "SEGREGATION bookkeeping" step,
+        the NON-CLOBBER SLOT GUARD's read of the register — one line, the CURSLOT
+        grep at :1096; the guard's `sed -i` WRITE at :1100 is deliberately NOT
+        touched, see WHY ONLY THE GREP below)
+STATUS: PROPOSAL — NOT APPLIED. The target is Lead-owned.
+APPLY:  git apply --check docs/slot-guard-dialect-fix.patch
+        git apply       docs/slot-guard-dialect-fix.patch
+ROT-PROOF: python3 scripts/chain_patch_check.py grades THAT this patch still
+        applies to the file it names — and this patch is the tree's own PROPOSAL
+        for the defect `slot_reader_probe.py` reports RED on every run until the
+        guard is fixed, so the repair can be verified by the same command:
+        `python3 scripts/slot_reader_probe.py` answers rc 0 only once the hunk is
+        applied (measured on a copy: rc 1 -> rc 0, 2/3 -> 3/3 readers matching).
+
+WHAT IS BROKEN — measured on this tree, not replayed from a note:
+
+  `.github/workflows/agent-team.yml:1096` reads the register with
+
+      CURSLOT="$(grep -E '^\#+PENDING-REVIEW:' "$CTL" | ...)"
+
+  In ERE (grep -E) `\#` is an escaped ordinary `#` and the following `+` is the
+  quantifier "one-or-more hashes", so the pattern demands `##+PENDING-REVIEW:` —
+  and the control line ships as `#+PENDING-REVIEW: ...` with exactly ONE hash.
+  Reproduced in the interpreter this box runs:
+
+      printf '#+PENDING-REVIEW: branch=x\n' | grep -E '^\#+PENDING-REVIEW:'
+      -> rc 1, zero output
+
+  Therefore `CURSLOT` is ALWAYS EMPTY, the guard's own test
+  `[ -z "$CURSLOT" ]` is ALWAYS TRUE, and the branch of the `if` that the comment
+  above it forbids — "an EMPTY write clears only an EMPTY slot ... it must never
+  blank a slot a Lead re-queued under this run" — runs unconditionally. The
+  NON-CLOBBER SLOT GUARD (ed378d4, landed from docs/pending-slot-fix.patch) has
+  never actually guarded anything: every finalize that resolved to a `no-pending`
+  / empty `NEWPENDING` write was free to blank the register.
+
+  This is not a theory about a hypothetical failure. It is the mechanism the Lead
+  has been working around all weekend and recorded as an empirical law three
+  times, never diagnosed to its line (TEAM-CONTROL.org:8):
+    * 10-am — run 40103691787's finalize "left the register 'none'" and wiped the
+      advance to 0607; the Lead's own lesson was "register advances race in-flight
+      finalize writebacks", but a race needs a reader that saw something, and this
+      reader sees nothing on EVERY run;
+    * 10-bv — "FIRST REGISTER CLOBBER SINCE THE TREADMILL BREAK", re-diagnosed as
+      "rejection-retain writebacks write the VERDICT BRANCH from the stale
+      checkout regardless of remote state";
+    * 10-bz — a THIRD clobber, after which the operative law became "register
+      advances are safe ONLY when no chain run is in flight" and the chain paid
+      TWO kill-break drills (10-bz/10-ca, 10-cg/10-ch, 10-cj/10-cl) — each one a
+      run killed or drained on purpose, ~35-45 min of lane time per cycle, to
+      open a window in which an advance could survive a guard that cannot fail.
+  The workaround has become the most expensive procedure in the chain; the defect
+  is one character of escape placement in one grep.
+
+  The class was already NAMED by the seat that wrote the probe (1552's report,
+  TEAM-CHAT.org:8641 onward): "the guard judges `CURSLOT`, and CURSLOT is produced
+  by `grep -E '^\#+PENDING-REVIEW:'` ... A guard whose read is always empty
+  degrades to `[ -z "$CURSLOT" ]` = true: every empty-write finalize may blank the
+  register." `scripts/slot_reader_probe.py` was delivered in that same branch and
+  MERGED (TEAM-CONTROL.org:8, 10-bt: "1552@896c8dd ... slot_reader_probe.py +190L
+  CURSLOT functional grading; merge-tree probe 0 conflicts"), so the chain has
+  owned a RED report of its own guard for two days. What was missing was the
+  handover: no patch in docs/ carried the fix — which is exactly the gap
+  `chain_patch_check.py` exists to close, since a seat cannot edit the workflow.
+
+WHY THE TEXT GRADER MISSED IT (and why the fix stays honest about it):
+  `chain_slot_check.py`'s `blank-guard` leg grades the guard by TEXT — the write
+  is re-read after `reset --hard`, the write is guarded by a comparison, the
+  comparison names the control-file operand. Every one of those promises is true
+  of the broken line, so the text leg answers 4/4 green while the functional read
+  is empty. That is DEVGUIDE *EIGHTH law* (a gate that lives as a shape-check is
+  a check nobody can re-run) arriving in the chain's own merger, and it is why
+  this handover is verified with `slot_reader_probe.py` (which runs the SHIPPED
+  command against the SHIPPED control line) rather than with `chain_slot_check.py`.
+
+WHY ONLY THE GREP — measured, so a well-meaning "make them consistent" edit does
+not break the write:
+  The `sed -i` on the next line uses the OPPOSITE escape placement
+  (`s%^\#+PENDING-REVIEW:.*%...%`) and that one is CORRECT: sed's address is BRE,
+  where `\+` is GNU sed's escaped plus — "one-or-more `#`" — while `^#\+` in that
+  position means literal-`#`-then-quantified... which is a different machine. The
+  probe grades both dialects by EXECUTION and proves the split: with only the grep
+  repaired it reports `SLOT READERS OK — 3/3`; when the sed was "fixed" the same
+  way in a trial, the WRITE's address stopped matching the live line and the probe
+  went RED naming `guard-sed`. Two tools, two regex dialects, one correct escape
+  per line — the unification the 1552 report asked for is "one dialect per tool",
+  NOT "one spelling for both". The proposed replacement keeps the sed untouched.
+
+EVIDENCE THAT THE REPAIR IS ENOUGH:
+  - On a copy of this tree with ONLY the hunk applied:
+    `python3 scripts/slot_reader_probe.py` -> rc 0,
+    `SLOT READERS OK — 3/3 shipped slot commands match the live register line`;
+    `merger-reread` and `guard-curslot` both FIND the live slot line.
+  - `python3 scripts/chain_slot_check.py` stays rc 0 (4 of 4 legs green) before and
+    after — the repair removes a false green from the FUNCTIONAL probe and moves no
+    text the four slot laws read, so no law's grading changes shape.
+  - The guard then behaves as documented: with `CURSLOT` non-empty and NOT this
+    run's branch, the empty write takes the `else` arm and prints
+    `SEGREGATION: slot '...' changed under this run — empty write retained it`.
+    That arm has been unreachable since ed378d4; this patch makes it reachable.
+
+LAW DECISION FOR THE LEAD (NOT decided here): once the guard can actually see the
+register, the kill-break procedure becomes redundant rather than unsafe — but the
+advance-window law (10-bz: "safe ONLY when no chain run is in flight") is Lead
+procedure, and this seat is deliberately not asking to retire it in the same breath
+as a one-line regex fix. Land the hunk, keep running `slot_reader_probe.py` green
+(it is in the harness family, rc 1 must never be tolerated as "standing noise" —
+unlike `chain_test_check.py`'s accepted prefix flood, this probe has a zero-red
+baseline), and let the kill-break drills be retired by measurement over the next
+few cycles: an advance pushed mid-flight that SURVIVES is the proof.
+
+diff --git a/.github/workflows/agent-team.yml b/.github/workflows/agent-team.yml
+index 34f3c9d..0b1c79a 100755
+--- a/.github/workflows/agent-team.yml
++++ b/.github/workflows/agent-team.yml
+@@ -1093,7 +1093,7 @@ jobs:
+             # EMPTY write clears only an EMPTY slot (no-op) or a slot still
+             # holding the branch THIS RUN resolved (legit post-merge clear)
+             # — it must never blank a slot a Lead re-queued under this run.
+-            CURSLOT="$(grep -E '^\#+PENDING-REVIEW:' "$CTL" | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
++            CURSLOT="$(grep -E '^#\+PENDING-REVIEW:' "$CTL" | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
+             SLOTISOURS=0
+             case "$CURSLOT" in "branch=${PENDING_BRANCH:-} |"*) SLOTISOURS=1 ;; esac
+             if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || { [ -n "${PENDING_BRANCH:-}" ] && [ "$SLOTISOURS" = "1" ]; }; then
