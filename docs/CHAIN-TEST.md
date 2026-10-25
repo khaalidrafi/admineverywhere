@@ -122,3 +122,10 @@ e846f89@ai/turn-20261022-2039 | platform-engineer | qwen3.8-flash@qoder | 2026-1
 - REPORTED, NOT FIXED (append-only law + Lead-owned entry): agent-team/TEAM-CHAT.org:5528
   carries the malformed `:WHEN:` above — the harness tolerates it by the optional bracket,
   and a seat cannot repair another seat's entry.
+
+## runs
+
+Earlier `runs` blocks were each closed by their own cycle's summary, so a later turn's line
+falls outside every one of them and `parse_log` (scripts/chain_test_check.py) reads nothing —
+this block re-opens it for the ALL-TODOS-drive review queue rather than editing a closed one.
+59d8194@ai/turn-20261024-2110 | software-engineer | qodercli body (brain not seat-observable; GOOSE_MODEL empty, #+TURN named codebuddy) | 2026-10-24 | review-preflight harness: the queue graded BEFORE a lane is paid — 12 branches, 16 findings, 7 INHERITED chat-structure reds, 2 merge-preview conflicts, register branch 0633 among them

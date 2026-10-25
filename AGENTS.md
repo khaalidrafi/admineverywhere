@@ -294,6 +294,29 @@ python3 scripts/chain_patch_check.py --selftest # every leg proved able to fail
 # every round because nothing in the family printed it)
 python3 scripts/chat_when_check.py            # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chat_when_check.py --selftest # 11 controls: every leg proved able to fail
+# IS THE QUEUED BRANCH REVIEWABLE, or is the next lane about to grade state its author
+# never wrote? On 2026-10-24 the chain spent NINE review lanes on ai/turn-20261024-1632;
+# the Lead's triage sorted them as 2 checker false-reds, 2 INHERITED folds, 1 lost
+# transcript and 4 real authored defects. The inherited class is the one a seat can see
+# for free: the branch's base predated the chat fold repair, so the branch TREE carried
+# the orphan drawer lines main had already fixed, and the duty brief grades "TEAM-CHAT
+# entries legal format" against that tree. This harness asks the same question of the
+# whole queue BEFORE a lane is paid: the register's pending branch is live, unmerged and
+# at the parked sha (slot-live); main moved inside a region the branch also edited
+# (stale-base); orphan drawer lines are attributed AUTHORED (the branch's own fold —
+# rework) or INHERITED (main's stale state — rebase, precedent
+# 950f71e); no harness-leak file in the tree and no Lead-owned file in the branch's delta
+# (the standing reject classes); and `git merge-tree` against main is conflict-free,
+# because a conflict turns an APPROVED verdict into a manual Lead union-merge (the 0607
+# class). Measured on 2026-10-24 21:3xZ over the OBJECTIVE's 11 queued branches: 7 carry
+# INHERITED chat-structure reds (2/2/4/4/4/4/6 orphans), 2 of those also conflict at merge
+# — including the one pinned in #+PENDING-REVIEW — and 4 based after the repair are
+# REVIEW-READY. Read-only over git; it issues no verdict, writes nothing, and reads the
+# Lead-owned register as data. Not `*_diff.py`: that glob IS the landing gate's twin
+# roster, and this grades a branch against main, not an artifact against its twin
+python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
+python3 scripts/review_preflight_check.py --since 20261024   # one day's queue only
+python3 scripts/review_preflight_check.py --selftest  # 13 controls on real fixture repos: every leg able to fail
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
