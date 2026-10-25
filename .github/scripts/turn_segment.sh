@@ -26,8 +26,9 @@ echo "TURN_BRANCH=$BRANCH" >> "$GITHUB_ENV"
 # capabilities") — three distinct CAPABLE ROLES per delivery:
 # AUTHOR = the implementation seats in rotation (platform -> relief
 #   -> software); QA is OUT of the author rotation.
-# REVIEWER = the QA ENGINEER (deepseek-v4.1-flash@qoder — the
-#   audit-proven reviewer role, FR-R001-FE), ALWAYS, not "whoever is
+# REVIEWER = the QA ENGINEER (groq/qwen3.8-27b@goose — Owner
+#   rotation order 2026-10-25 ~18:08Z "rotate your hire list";
+#   audit-proven reviewer ROLE, FR-R001-FE), ALWAYS, not "whoever is
 #   next"; when QA itself authored the pending branch the VISITING
 #   SENIOR ENGINEER (glm-5.3@codebuddy) reviews instead. The turn
 #   seat NEVER reviews.
@@ -60,8 +61,15 @@ if [ -n "$PENDING_BRANCH" ] && git ls-remote --exit-code --heads origin "$PENDIN
 else
   PENDING_BRANCH=""; PENDING_AUTHOR=""; PENDING_SHA=""
 fi
-# DUTY-REVIEWER selection (determined BEFORE the brief is built):
-QA_MEMBER="deepseek-v4.1-flash@qoder"
+# DUTY-REVIEWER selection (determined BEFORE the brief is built).
+# ROTATION (Owner order 2026-10-25 ~18:08Z "rotate your hire list"):
+# duty reviewer member -> groq/qwen3.8-27b@goose (QA-3 hire, MEMBERS
+# wave 2). Evidence: 17 consecutive review-missing probes #5-#22 with
+# ZERO artifacts — deterministic qoder-side brain substitution
+# (episodes #8-#13, transcripts 453/455); the qoder deepseek lane is
+# DEMOTED to in-lane fallback below. Recipe proven in this repo's
+# author relief arm (probe 200, GROQ_API_KEY in repo secrets).
+QA_MEMBER="groq/qwen3.8-27b@goose"
 VISITING_MEMBER="glm-5.3@codebuddy"
 REVIEWER_ROLE=""; REVIEWER_MEMBER=""; REVIEWER_SEAT=""
 if [ -n "$PENDING_BRANCH" ]; then
@@ -267,16 +275,29 @@ fi
 if [ -n "$PENDING_BRANCH" ]; then
   # DUTY-REVIEWER lanes (Owner 18:55Z: the review duty belongs to a
   # capable member ROLE, not to whoever happens to hold the turn):
-  #   default  -> QA ENGINEER lane (deepseek-v4.1-flash@qoder via the
-  #               qoder body — the seat's PROVEN recipe, --model pinned)
+  #   default  -> QA ENGINEER lane: PRIMARY qwen3.8-27b@goose via
+  #               groq (Owner rotation 2026-10-25, QA-3 hire; same
+  #               PROVEN recipe as the author relief arm), FALLBACK
+  #               deepseek-v4.1-flash@qoder (demoted 2026-10-25 after
+  #               17 consecutive zero-artifact review-missing probes)
   #   QA authored -> VISITING SENIOR lane (glm-5.3@codebuddy)
   # The turn seat NEVER reviews its own or anyone's work here.
   case "$REVIEWER_SEAT" in
     quality-assurance-engineer)
-      timeout 900 env HOME=/usr/local/lib/qoder-home \
-        qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \
-        --permission-mode bypassPermissions --max-turns 60 \
-        > /workspace/.turn-review.txt 2>&1 || true ;;
+      if env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
+           OPENAI_API_KEY="$GROQ_API_KEY" \
+           OPENAI_HOST="https://api.groq.com" \
+           OPENAI_BASE_PATH="/openai/v1/chat/completions" \
+           timeout 900 goose run --no-session -t "$REVIEW_BRIEF" \
+           > /workspace/.turn-review.txt 2>&1; then
+        echo "REVIEW: goose run OK (review lane: groq/qwen3.8-27b@goose — Owner rotation 2026-10-25)"
+      else
+        echo "REVIEW: groq lane failed — falling back to qoder deepseek (demoted primary)"
+        timeout 900 env HOME=/usr/local/lib/qoder-home \
+          qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \
+          --permission-mode bypassPermissions --max-turns 60 \
+          > /workspace/.turn-review.txt 2>&1 || true
+      fi ;;
     visiting-engineer)
       timeout 900 env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
         codebuddy -p "$REVIEW_BRIEF" -y --permission-mode bypassPermissions \
