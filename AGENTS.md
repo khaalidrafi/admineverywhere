@@ -283,6 +283,17 @@ python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved a
 python3 scripts/rbac_live_check.py            # 0 as published / 1 a claim is false / 2 cannot run (no rig, no app/node_modules)
 python3 scripts/rbac_live_check.py --selftest # 11 controls: every leg proved able to fail
 
+# THE SLOT READERS AS COMMANDS, NOT TEXT: chain_slot_check reads the merger's guard
+# prose, so a guard that MENTIONS the key still passes while the grep IT RUNS cannot
+# see the register line at all. This probe replays each shipped command — merger-reread,
+# guard-curslot, guard-sed — against the live `#+PENDING-REVIEW:` line in THIS
+# interpreter (GNU grep's ERE treats the escape `\#+` as "one-or-more hashes", which
+# the single-hash register line never matches: agent-team.yml:1091 read always-empty and
+# licensed the exact 27748d9 clobber the ed378d4 guard exists to refuse — carried as
+# the handover docs/slot-dialect-fix.patch, one character, proven by this probe 2/3 ->
+# 3/3 on a patched copy)
+python3 scripts/slot_reader_probe.py          # 0 all readers find the slot / 1 a reader is blind / 2 cannot run
+
 # THE HANDOVER PATCHES in docs/ as ONE command. A seat cannot edit the chain's own
 # files, so a chain defect travels as `docs/<name>-fix.patch` plus the instruction to
 # run it — and BOTH instructions in the tree had gone dead when this was measured: the
@@ -348,7 +359,7 @@ python3 scripts/review_preflight_check.py --selftest  # 13 controls on real fixt
 # reviewer model, which no review-lane guard notices while every SEAT lane greps a
 # dead-lane marker before calling itself OK
 python3 scripts/review_verdict_check.py        # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/review_verdict_check.py --selftest # 13 controls: every leg proved able to fail
+python3 scripts/review_verdict_check.py --selftest # 15 controls: every leg proved able to fail
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
