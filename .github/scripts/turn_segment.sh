@@ -641,7 +641,24 @@ if [ -z "$REVIEW_VERDICT" ] && [ -n "$PENDING_BRANCH" ] \
   REVIEW_LANE_DEAD=1
   echo "REVIEW LANE DEAD-MARKER: reviewer model substituted and no VERDICT token — recording lane-dead, not review-missing (job 120814481260 evidence)."
 fi
-echo "review verdict for ${PENDING_BRANCH:-none}: ${REVIEW_VERDICT:-none} lane_dead=${REVIEW_LANE_DEAD}"
+# REVIEW-BRAIN PROVENANCE (Lead cycles 10-az / 10-bc / 10-bf / 10-bh / 10-bj —
+# FIVE consecutive verdicts judged by a substituted brain while `lane_dead=0`
+# made the record read as the duty reviewer's own work). The guard above only
+# consults the substitution marker when NO verdict parsed, so a substituted
+# reviewer that still prints `VERDICT:` is trusted with no trace of it in
+# REVIEW-LOG, and every triage since has had to open the transcript artifact by
+# hand to learn which brain judged. The stamp below is unconditional: it records
+# provenance WITHOUT changing any outcome (a produced verdict stays a verdict —
+# the Lead's ruling), so the audit trail names the brain that actually judged.
+REVIEW_SUBSTITUTED=0
+REVIEW_SUB_BRAIN=""
+if [ -n "$PENDING_BRANCH" ] \
+   && grep -q 'is not available right now; using' "$PWD/.turn-review.txt" 2>/dev/null; then
+  REVIEW_SUBSTITUTED=1
+  REVIEW_SUB_BRAIN=$(sed -n 's/.*is not available right now; using \([^ ]*\) instead.*/\1/p' \
+                     "$PWD/.turn-review.txt" 2>/dev/null | head -1 | tr -cd 'A-Za-z0-9._:@-' | cut -c1-60)
+fi
+echo "review verdict for ${PENDING_BRANCH:-none}: ${REVIEW_VERDICT:-none} lane_dead=${REVIEW_LANE_DEAD} substituted=${REVIEW_SUBSTITUTED}${REVIEW_SUB_BRAIN:+ (brain: ${REVIEW_SUB_BRAIN})}"
 echo "pending_branch=${PENDING_BRANCH}" >> "$GITHUB_OUTPUT"
 echo "pending_author=${PENDING_AUTHOR}" >> "$GITHUB_OUTPUT"
 echo "pending_sha=${PENDING_SHA}" >> "$GITHUB_OUTPUT"
@@ -650,6 +667,8 @@ echo "review_evid=${REVIEW_EVID}" >> "$GITHUB_OUTPUT"
 echo "review_seat=${REVIEWER_SEAT}" >> "$GITHUB_OUTPUT"
 echo "review_member=${REVIEWER_MEMBER}" >> "$GITHUB_OUTPUT"
 echo "review_lane_dead=${REVIEW_LANE_DEAD}" >> "$GITHUB_OUTPUT"
+echo "review_substituted=${REVIEW_SUBSTITUTED}" >> "$GITHUB_OUTPUT"
+echo "review_sub_brain=${REVIEW_SUB_BRAIN}" >> "$GITHUB_OUTPUT"
 # HOST-SIDE COMMIT (run 39488529938: the seat EDITED + VERIFIED but
 # its sandbox denied git/pytest — the edits died in the container,
 # branch pushed empty, work lost). The host commits the workspace
