@@ -165,6 +165,14 @@ callers and would otherwise look like a gate that hides nothing. 0 = as publishe
 is sit in a browser: nobody has watched the pixel vanish in a real window, so that
 row of the board stays a human pass, not a green harness.
 
+The seed also carries the DATA those gated screens read, so a first login is
+not an empty card: six record-scope `order.flag` entries authored by `admin`,
+one three-order batch authored by `auditor`, and every refund hop of the
+lifecycle trail attributed to `auditor` too. `#/activity` and a record's audit
+half therefore paint rows on a freshly seeded rig — pinned by
+`plugin/tests/test_seed_demo.py`, which reads the log back through the API with
+the non-superuser's own token.
+
 ## The line that must not blur
 
 Hiding is **UX, not security**. Every gate above is client-side; the
