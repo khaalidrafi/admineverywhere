@@ -136,8 +136,7 @@ jobs:
           # pre-measures the gate; the reviewer judges DIFF + LAW and
           # flags PARTIAL REVIEW when the diff was truncated.
           python3 - <<'PYEOF'
-          import json, os, time, urllib.request
-          api = os.environ["GROQ_API_KEY"]
+          import json, os
           diff = open("review-diff.txt", encoding="utf-8", errors="replace").read()
           gate = open("gate-out.txt", encoding="utf-8", errors="replace").read()[:2000]
           sysmsg = (
@@ -159,31 +158,36 @@ jobs:
           payload = {"model": "qwen/qwen3.8-27b", "temperature": 0, "max_tokens": 900,
                      "messages": [{"role": "system", "content": sysmsg},
                                   {"role": "user", "content": usrmsg}]}
-          body = json.dumps(payload).encode()
-          print("JSON body bytes:", len(body))
-          last = ""
-          ok = False
-          for attempt in (1, 2):
-              try:
-                  req = urllib.request.Request(
-                      "https://api.groq.com/openai/v1/chat/completions", data=body,
-                      headers={"Authorization": "Bearer " + api, "Content-Type": "application/json"})
-                  with urllib.request.urlopen(req, timeout=120) as r:
-                      out = json.load(r)
-                  txt = out["choices"][0]["message"]["content"]
-                  open("review-out.txt", "w").write(txt)
-                  print("groq ok on attempt", attempt, "bytes:", len(txt))
-                  ok = True
-                  break
-              except Exception as e:
-                  last = type(e).__name__ + ": " + str(e)
-                  print("groq attempt", attempt, "failed:", last, flush=True)
-                  if attempt == 1:
-                      open("review-out.txt", "w").write("transport-failed: " + last + "\n")
-                      time.sleep(20)
-          if not ok:
-              open("review-out.txt", "a").write("\ntransport-failed x2: " + last + "\n")
+          open("groq-payload.json", "w").write(json.dumps(payload))
+          print("JSON body bytes:", len(json.dumps(payload)))
           PYEOF
+          # SEND via curl (run 40225511333 evidence: python-urllib got a
+          # bare 403 Forbidden x2 — WAF/UA filtering suspected; curl UA +
+          # a named User-Agent is the standard fix) and CAPTURE THE BODY
+          # on any non-200 so the artifact self-diagnoses the provider.
+          send_groq() {
+            curl -sS -o groq-resp.json -w "%{http_code}" --max-time 120 \
+              -X POST "https://api.groq.com/openai/v1/chat/completions" \
+              -H "Authorization: Bearer $GROQ_API_KEY" \
+              -H "Content-Type: application/json" \
+              -H "User-Agent: admincraft-duty-reviewer/1.0" \
+              --data @groq-payload.json 2>groq-curlerr.txt || echo "CURLERR"
+          }
+          CODE=$(send_groq)
+          echo "groq http code (attempt 1): $CODE"
+          if [ "$CODE" != "200" ]; then
+            { echo "transport-failed: http $CODE"; cat groq-curlerr.txt; echo "--- response body ---"; head -c 2000 groq-resp.json; } > review-out.txt
+            sleep 20
+            CODE=$(send_groq)
+            echo "groq http code (attempt 2): $CODE"
+            if [ "$CODE" != "200" ]; then
+              { echo "transport-failed x2: http $CODE"; cat groq-curlerr.txt; echo "--- response body ---"; head -c 2000 groq-resp.json; } >> review-out.txt
+            fi
+          fi
+          if [ "$CODE" = "200" ]; then
+            python3 -c "import json; open('review-out.txt','w').write(json.load(open('groq-resp.json'))['choices'][0]['message']['content'])"
+            echo "groq ok, verdict bytes: $(wc -c < review-out.txt)"
+          fi
           tail -5 review-out.txt
           grep -E "^VERDICT:" review-out.txt | tail -1 || echo "NO VERDICT TOKEN (review-missing)"
 
