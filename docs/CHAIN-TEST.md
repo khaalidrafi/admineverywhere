@@ -156,3 +156,13 @@ section re-opens the log for the cycle that started 2026-10-25 — the same fold
 and third cycles fell into. Nothing above was edited or removed.
 
 8ac399c@ai/turn-20261025-0750 | software-engineer | qfmodel (effective brain of the deepseek-v4.1-flash@qoder fallback arm — the codebuddy primary lane died on 502/ETIMEDOUT to www.codebuddy.ai) | 2026-10-25 | TEST-T1 — check-in: which brain/lane ran for this seat, measured three layers (the codebuddy lane log, the arm line that pins `--model deepseek-v4.1-flash` on the qoder fallback, and the qoder session transcript recording `"model":"qfmodel"` on all 49 model-bearing turns); the two `-> @software-engineer` pings (agent-team/TEAM-CHAT.org:6542/:6569, 2026-10-22) were audited and answered as stale in the chat entry
+
+## runs
+
+The fourth cycle's fix block ends the file, and `parse_log` (scripts/chain_test_check.py:302)
+switches its section on every `## ` heading — so a run line appended at EOF today would fall
+into that prose section and be graded by nothing (the exact invisible-turn class the queued
+LOG-COVERAGE leg, ai/turn-20261024-1956, was written to refuse). This block re-opens `runs`
+for the fifth cycle; nothing above was edited or removed, and the run id is this turn's branch
+base (GITHUB_RUN_ID is unset inside the seat container — re-measured by earlier cycles).
+f0cfcd0@ai/turn-20261025-0830 | platform-engineer | qwen3.8-flash@qoder | 2026-10-25 | TEST-T2 — improvement: the chat FOLD is a MERGED-TREE-ONLY property, so every grader that reads the branch tree is structurally blind to it — measured on ai/turn-20261024-1956 (rejected 08:38Z today): merge base 0 orphans / branch tip 0 orphans / `git merge-tree --write-tree` output 2 orphan drawer lines at :9066-:9067 with 160 `* MSG` headlines where 161 are owed, and merge-tree rc 0 (conflict-free). The one harness that can see it (chain_test_check's CHAT-STRUCTURE leg) is not in the merge gate at all (MERGE_ROSTER = env, pytest, check, migrations; gate.sh ROSTER-IDENTICAL 3/3), and the two queued preflights read the branch tree or the history, never the merged blob. Repair = scan the merge-tree blob with the shipped `scan_orphan_drawers`; NOT applied here (TEST-T2 is chat + log only; the file belongs to ai/turn-20261024-2110/-2244, and a fifth merge leg would move gate.sh, MERGE_COMMANDS, gate_roster_diff and both doc mirrors together — Lead-owned)
