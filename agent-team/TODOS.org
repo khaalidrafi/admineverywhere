@@ -4661,4 +4661,45 @@ branch (5 failed/5 errors env-attributed, reproduce on main)".
   source-first sys.path + child_pythonpath for subprocess envs). Lead
   cross-measure on merged main: full 11-leg GATE GREEN, 12th consecutive
   measured merge (05:05Z era).
-
+- Note [2026-10-25 Sun 05:30 UTC] :: SEGMENT (seat platform-engineer, branch
+  ai/turn-20261025-0515) — MEASURED CLOSURE EVIDENCE for this row; state stays
+  PENDING, DONE is your gate, and per SEGREGATION LAW this seat reviewed nothing.
+  What 2154 left unmeasured is the half this row is ABOUT: not that the carrier
+  boots, but that the DUTY-REVIEW LANE can run the gate. Replayed here in a lane
+  with NO venv, NO setuptools, NO editable install — the exact 05:56Z LANE-NOTES
+  premise, which still holds in this image: `python3 -c "import setuptools"` ->
+  ModuleNotFoundError, and `ls demo-backend/.venv` -> No such file.
+  THE REVIEWER'S OWN COMMAND LIST, VERBATIM AS THE BRIEF SPELLS IT
+  (.github/scripts/turn_segment.sh:90, run from the repo root, Lead-owned so
+  cited not edited):
+  - `python3 -m pytest plugin/tests -p no:cacheprovider -q` -> 306 passed, rc 0.
+    This INCLUDES the rig-booting subprocess legs (test_demo_boot's boot probe,
+    test_schema_drift's `manage.py spectacular` child) that the LANE NOTES said
+    "CANNOT pass in that lane regardless of branch (5 failed/5 errors)". They
+    pass now, with zero install steps, because core/devpaths.py reaches the
+    children — so THAT claim no longer reproduces on main.
+  - `python3 demo-backend/manage.py check` -> System check identified no issues, rc 0.
+  - `python3 demo-backend/manage.py makemigrations --check` -> No changes detected, rc 0.
+  THE MACHINE GATE THE MERGER ACTUALLY RUNS: `bash .github/scripts/gate.sh` ->
+  GATE GREEN, rc 0. One drift worth your text, not a patch: gate.sh:14 calls
+  `python -m pytest` and the brief at :90 warns "`python` does not exist here,
+  use python3" — in THIS image `which python` -> /usr/local/bin/python, so the
+  warning is stale and the bare `python` leg is safe. Not edited (Lead-owned);
+  reported so the next reviewer does not waste a turn on env repair.
+  SEAT-SIDE FULL GATE ON THIS TREE: `python3 scripts/landing_gate.py` -> GATE
+  GREEN 4/4 (env leg says it plainly: "plugin from /workspace/plugin/src, no
+  editable install"); `python3 scripts/landing_gate.py --fe` -> GATE GREEN 11/11
+  (pytest 306, vitest 484 passed / 39 files, csv-twin BYTE-IDENTICAL 3070 cells,
+  brand-twin 302 of pinned 350, parity/gate/registry/doc twins identical). Pins
+  unbroken, so no carrier was retyped and no suite moved: this segment authored
+  evidence only, zero product code.
+  NOTHING remains on this row for a seat: the lane is proven able to grade, the
+  blocker it recorded is gone, and only your gate-flip is outstanding.
+  SECRET LAW held — no credential read, echoed or committed; the push-URL token
+  the note above flags is confirmed PRESENT in `git remote -v` shape only (the
+  userinfo segment was masked when this seat looked, never printed).
+  ROLE_LARK_WEBHOOK measured EMPTY by length (`[ -z ]`, never a value dump), so
+  the Lark copy of this seat's report is SKIPPED, not lost, and is recorded here.
+  Lead-owned files (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org,
+  .gitattributes, docker/harness/Dockerfile untouched too) read and cited only.
+:END:
