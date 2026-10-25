@@ -3455,6 +3455,49 @@ source in the schema = no filtering, everything visible.
 Closes the one UNVERIFIED line left on the item above: the rig had only a
 superuser, so a live smoke could never show a gated surface hidden.
 :LOGBOOK:
+- Note [2026-10-25 Sun 03:45 UTC] :: :DELIVERED — branch
+  ai/turn-20261025-0320, commit f8a5e22 (software-engineer). The two seed
+  gaps the relief seat measured on the live wire at 02:24Z are closed, and
+  they were the last thing standing between this row and a clickable demo:
+  `GET /api/audit/` answered `count: 0` on a fresh rig (so #/activity and
+  every record's audit half painted empty), and `GET /api/orders/<id>/history/`
+  answered ONE row `"" -> <final status>` with `actor: null` — a hop
+  `apply_transition()` itself refuses with 409, i.e. demo data showing a
+  lifecycle the API forbids.
+  WHAT CHANGED: `AuditEntry.record_flag()` (demo-backend/shop/models.py) is
+  the single writer of the flag row shape — the @actions and the seed both
+  call it; `seed_demo` walks every order through the machine (BFS over
+  `Order.TRANSITIONS`, creation entry first, refund hops attributed to the
+  seeded `auditor`), and wipes the audit log with the other shop rows so no
+  entry outlives the order it names.
+  EVIDENCE (all measured on this tree):
+  - [X] `plugin/tests/test_seed_demo.py` +7 tests, rig-scoped via conftest
+        DEMO_RIG_MODULES: trail legality per order, the log served to the
+        NON-superuser's own token, object_type/object_id filter, bulk `batch`
+        provenance, seeded row vs POSTed row compared field-by-field through
+        the serializer, actor attribution, re-seed non-accumulation.
+  - [X] `python3 scripts/landing_gate.py` -> GATE GREEN 4/4; `--fe` -> GATE
+        GREEN 11/11 (pytest 313, vitest 484/39 files, six twins identical).
+  - [X] `python3 scripts/release_readiness.py` rc 0 — doc-counts 8/8 against
+        the gate's pins (EXPECTED_PYTEST 306 -> 313 bumped IN THIS COMMIT,
+        with all four published carriers: AGENTS.md ## Layout + ## Commands,
+        docs/DEVGUIDE.md the same two).
+  - [X] LIVE over HTTP (rig booted on :8010, migrated + seeded): token POST
+        as `auditor` -> `GET /api/audit/` count 9 (6 record-scope by admin,
+        one 3-order batch by auditor) and `GET /api/orders/60/history/` ->
+        pending -> paid -> refunded with actors named. Server stopped after;
+        `git status --short` clean, no harness scratch committed.
+  - [X] Three present-tense doc claims this change made false were retyped
+        in the same commit: docs/custom-actions.md ("seed_demo does not
+        fabricate audit entries"), docs/order-lifecycle.md (creation-row-only
+        trail), docs/rbac.md (demo-users section now states the seeded data).
+  STILL OPEN, unchanged by this note: the human line — nobody literally
+  watched the gated entry vanish in a real window (no browser/Tauri binary in
+  the turn container, evidence in the 06:20Z note below). State stays PENDING:
+  DONE is the Lead's gate, and per SEGREGATION LAW this seat reviewed nothing
+  of its own work. SECRET LAW held — no credential value read or echoed;
+  ROLE_LARK_WEBHOOK empty in this seat's env (checked with `[ -z ]`), so the
+  Lark copy of the report is SKIPPED, not lost.
 - Note [2026-10-24 Sat 07:07 UTC] :: :DELIVERED (RE-DELIVERED): branch
   ai/turn-20261024-0659, commit 77eb04c — the clean re-delivery of what
   ai/turn-20261024-0339 (sha ece17f8) was REJECTED for: that branch committed
