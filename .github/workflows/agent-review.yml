@@ -97,11 +97,14 @@ jobs:
           echo "merge-base: $BASE"
           git diff "$BASE"..."origin/$BR" > review-diff.txt || true
           git diff --stat "$BASE"..."origin/$BR" | tail -3
-          # size guard: keep the reviewer's REQUEST under groq's cap —
+          # size guard: keep the reviewer's REQUEST under groq's caps —
           # evidence: runs 40222194772/40222193160 hit HTTP 413 with a
-          # 120KB diff inside the JSON payload (Lead 10-dk). Cap the
-          # diff at 48KB with the stat preamble covering the full change.
-          MAX=48000
+          # 120KB diff inside the JSON payload; 48KB/29.5KB still 413'd;
+          # artifacts review-verdict-9/-10 measured the FREE-TIER token
+          # caps: ITPM=7000, OTPM=1000 (req_01m5t6nsa*/req_01m5t6p0*).
+          # Cap the diff at 8KB: brief+diff+gate ~= 2.8K tokens < ITPM,
+          # JSON body ~14KB < 413 threshold; reviewer flags PARTIAL REVIEW.
+          MAX=8000
           if [ "$(wc -c < review-diff.txt)" -gt "$MAX" ]; then
             {
               git diff --stat "$BASE"..."$BR" | tail -5
@@ -113,51 +116,74 @@ jobs:
           fi
           echo "diff bytes: $(wc -c < review-diff.txt)"
 
-      - name: Duty reviewer verdict (agentic groq/qwen3.8-27b@goose — the chain recipe)
+      - name: Duty reviewer verdict (single-shot groq, free-tier-limits-aware)
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          BR_NAME: ${{ steps.head.outputs.branch }}
+          BR_AUTHOR: ${{ github.event.inputs.author }}
+          BR_SHA: ${{ steps.head.outputs.sha }}
         run: |
-          # 413 ROOT CAUSE (runs 40222194772/40222193160/4022300*/4022310*):
-          # groq rejects LARGE single-shot chat bodies (~30KB+ JSON) with
-          # HTTP 413 — a diff-in-prompt review cannot fit. FIX: use the
-          # CHAIN'S PROVEN AGENTIC RECIPE (goose + groq env override, the
-          # same one running the 2244 review in agent-team.yml right now):
-          # small per-turn requests, the reviewer runs git/pytest itself.
-          # Goose binary + the team's OWN baked config (Owner order
-          # 2026-10-20 "make agent configs, too, and reuse them").
-          mkdir -p /tmp/goose-dl \
-            && curl -fsSL -o /tmp/goose-dl/goose.tar.bz2 \
-                 https://github.com/block/goose/releases/download/stable/goose-x86_64-unknown-linux-gnu.tar.bz2 \
-            && tar -xjf /tmp/goose-dl/goose.tar.bz2 -C /tmp/goose-dl \
-            && install -m 0755 /tmp/goose-dl/goose /usr/local/bin/goose
-          mkdir -p "$HOME/.config/goose"
-          cp docker/harness/goose-config.yaml "$HOME/.config/goose/config.yaml"
-          git config --global --add safe.directory "$PWD"
-          BR="${{ steps.head.outputs.branch }}"
-          AUTHOR="${{ github.event.inputs.author }}"
-          SHA="${{ steps.head.outputs.sha }}"
-          GATE=$(head -c 2000 gate-out.txt)
-          REVIEW_BRIEF="REVIEW DUTY (SEGREGATION LAW v2, Owner 18:14Z + 18:55Z: duties belong to capable member roles — author, reviewer and merger are SEPARATE roles; no seat merges its own work).
-          You are the DUTY REVIEWER: QA Engineer, member groq/qwen3.8-27b@goose (parallel review track — read-only; the serialized chain remains the only merger).
-          Pending branch: ${BR} (authored by ${AUTHOR}, head ${SHA}).
-          If the author is the SAME member role as you (quality-assurance-engineer or visiting-engineer), your verdict is REJECTED (reason: reviewer-equals-author).
-          Do this READ-ONLY, in order:
-          1. git fetch origin ${BR} ; git log --oneline origin/ai/main..origin/${BR}
-          2. git diff origin/ai/main...origin/${BR} — read EVERY hunk.
-          3. FAST gate subset ONLY (python3 exists here, pytest is installed): python3 -m pytest plugin/tests -p no:cacheprovider -q ; python3 demo-backend/manage.py check ; python3 demo-backend/manage.py makemigrations --check — report each rc. Do NOT run vitest/npx/tsc: FE execution is graded by the CI test job on the merge and re-run by the Lead's finalize gate — your duty is the DIFF + LAW review. If a check cannot start, report rc CANNOT and move on — NEVER loop on environment repair.
-          4. Law check: no secrets in the diff (SECRET LAW); no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes); the board flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries legal format.
-          5. Do NOT modify or commit anything — your verdict text is your whole deliverable.
-          6. The LAST line of your answer MUST be exactly one of:
-          VERDICT: APPROVED
-          VERDICT: REJECTED — <one line of reasons>
-          PRE-MEASURED GATE EVIDENCE from the harness (corroborate if you wish):
-          ${GATE}"
-          env HOME="$HOME" GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
-               OPENAI_API_KEY="$GROQ_API_KEY" \
-               OPENAI_HOST="https://api.groq.com" \
-               OPENAI_BASE_PATH="/openai/v1/chat/completions" \
-               timeout 900 goose run --no-session -t "$REVIEW_BRIEF" \
-               > review-out.txt 2>&1 || true
+          # MEASURED PROVIDER LIMITS (artifacts review-verdict-9/-10, runs
+          # 40223485958/40223488282, req_01m5t6nsa*/req_01m5t6p0*): groq
+          # free on_demand tier for qwen/qwen3.8-27b enforces OTPM=1000
+          # (goose requested 2048 -> rejected) and ITPM=7000 (goose's own
+          # system+tools prompt alone requested 22878 -> rejected). The
+          # agentic goose recipe CANNOT fit this tier — receipts above.
+          # FIX: single-shot chat call, max_tokens=900 (< OTPM), micro
+          # body: brief + 8KB diff + 2KB gate excerpt ~= 2.8K tokens
+          # (< ITPM); JSON body ~14KB also clears the measured 413
+          # threshold (~29.5KB failed). Not agentic: the harness
+          # pre-measures the gate; the reviewer judges DIFF + LAW and
+          # flags PARTIAL REVIEW when the diff was truncated.
+          python3 - <<'PYEOF'
+          import json, os, time, urllib.request
+          api = os.environ["GROQ_API_KEY"]
+          diff = open("review-diff.txt", encoding="utf-8", errors="replace").read()
+          gate = open("gate-out.txt", encoding="utf-8", errors="replace").read()[:2000]
+          sysmsg = (
+              "You are the DUTY REVIEWER (QA Engineer; SEGREGATION LAW v2: author, reviewer and merger are SEPARATE roles). "
+              "Read-only duty review of one pending branch. Law checklist: no secrets in the diff (SECRET LAW); "
+              "no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes); "
+              "board flips carry :DELIVERED: evidence with branch + sha; TEAM-CHAT entries in legal format. "
+              "If the author is quality-assurance-engineer or visiting-engineer (same role as you), the verdict is REJECTED (reason: reviewer-equals-author). "
+              "If the diff was truncated, open with PARTIAL REVIEW and judge the visible hunks plus the stat summary. "
+              "Be terse and concrete. The LAST line of your answer MUST be exactly one of:\n"
+              "VERDICT: APPROVED\n"
+              "VERDICT: REJECTED - <one line of reasons>")
+          usrmsg = (
+              "Pending branch: " + os.environ.get("BR_NAME", "") +
+              " (authored by " + os.environ.get("BR_AUTHOR", "") + ", head " + os.environ.get("BR_SHA", "") + ").\n\n"
+              "PRE-MEASURED GATE EVIDENCE from the harness (fast subset):\n" + gate + "\n\n"
+              "DIFF (may be truncated; the stat lines cover the full change):\n" + diff + "\n\n"
+              "Deliver the duty review now, ending with the VERDICT line.")
+          payload = {"model": "qwen/qwen3.8-27b", "temperature": 0, "max_tokens": 900,
+                     "messages": [{"role": "system", "content": sysmsg},
+                                  {"role": "user", "content": usrmsg}]}
+          body = json.dumps(payload).encode()
+          print("JSON body bytes:", len(body))
+          last = ""
+          ok = False
+          for attempt in (1, 2):
+              try:
+                  req = urllib.request.Request(
+                      "https://api.groq.com/openai/v1/chat/completions", data=body,
+                      headers={"Authorization": "Bearer " + api, "Content-Type": "application/json"})
+                  with urllib.request.urlopen(req, timeout=120) as r:
+                      out = json.load(r)
+                  txt = out["choices"][0]["message"]["content"]
+                  open("review-out.txt", "w").write(txt)
+                  print("groq ok on attempt", attempt, "bytes:", len(txt))
+                  ok = True
+                  break
+              except Exception as e:
+                  last = type(e).__name__ + ": " + str(e)
+                  print("groq attempt", attempt, "failed:", last, flush=True)
+                  if attempt == 1:
+                      open("review-out.txt", "w").write("transport-failed: " + last + "\n")
+                      time.sleep(20)
+          if not ok:
+              open("review-out.txt", "a").write("\ntransport-failed x2: " + last + "\n")
+          PYEOF
           tail -5 review-out.txt
           grep -E "^VERDICT:" review-out.txt | tail -1 || echo "NO VERDICT TOKEN (review-missing)"
 
