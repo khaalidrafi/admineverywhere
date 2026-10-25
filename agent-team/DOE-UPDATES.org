@@ -155,3 +155,16 @@
       paid Groq key, the agentic reviewer depth comes back.
 
   ACK: pending (DoE appends ack below on completion).
+
+  ADDENDUM to TEAM-REPLY #1 (2026-10-25 ~21:1xZ, same beat): ask (d)
+  OPENCODE AUTH is RESOLVED — no key needed. The canonical-id probe
+  (machinery 7c7b9f7, chain run 40226800590, 19:44Z) measured anonymous
+  free usage LIVE on 3 of 5 ids: opencode/glm-5.3-flash-free,
+  opencode/nemotron-3.5-lightning-free, opencode/mimo-v2.6-flash-free
+  all ALIVE zero-key. The 2 dead ids (opencode/glm-5-free,
+  opencode/longcat-2.5-preview-free) died with model-side server
+  errors ("check server logs"), not auth — probe-first law tracks them
+  (PE-4 at fail 1 of 2). ROSTER.org wave-3 rows updated to canonical
+  ids + ACTIVE per this evidence. Asks (a) codebuddy CI network path,
+  (b) cline creds, (c) xplabs card verification: STANDING.
+  ACK: pending.

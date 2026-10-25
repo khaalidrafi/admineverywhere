@@ -76,12 +76,12 @@ That law stays for OTHER brains — it no longer applies to any M3.1 id.
 
 | role                      | member ID                                | status      | evidence / note                                      |
 |---------------------------+------------------------------------------+-------------+------------------------------------------------------|
-| QA ENGINEER 4             | glm-5.1-flash@opencode                   | ACTIVATING  | GLM lineage proven in-team; zero-key built-in        |
-| QA ENGINEER 5             | nemotron-3.5-lightning@opencode          | ACTIVATING  | family DoE-verified live on cline 2026-10-23         |
+| QA ENGINEER 4             | glm-5.3-flash-free@opencode              | ACTIVE      | RE-SPEC per probe evidence: hired name glm-5.1-flash does not exist in models.dev; canonical id ALIVE zero-key (run 40226800590 19:44Z) |
+| QA ENGINEER 5             | nemotron-3.5-lightning-free@opencode     | ACTIVE      | canonical id ALIVE zero-key (run 40226800590 19:44Z); bare-name probe form was the mis-probe class |
 | QA ENGINEER 6             | nvidia/nemotron-3.5-lightning-free@cline | ACTIVATING  | DoE smoke LIVE 10-23 ($0.00); needs CLI bake + creds |
 | QA ENGINEER 7             | poolside/laguna-s-2.1-free@cline         | ACTIVATING  | laguna PROVEN in-team (TEST-T1/T2); new lane         |
-| PLATFORM ENGINEER 3       | mimo-v2.6@opencode                       | ACTIVATING  | zero-key built-in; character interned only           |
-| PLATFORM ENGINEER 4       | longcat-2.5@opencode                     | ACTIVATING  | zero-key built-in; undated tier - probe-first x2     |
+| PLATFORM ENGINEER 3       | mimo-v2.6-flash-free@opencode            | ACTIVE      | canonical id ALIVE zero-key (run 40226800590 19:44Z) |
+| PLATFORM ENGINEER 4       | longcat-2.5-preview-free@opencode        | PROBE-FAIL-1| canonical id DEAD model-side (server error, not auth; run 40226800590); probe-first x2: one more fail = BENCH |
 
 Activation law: probe-first — a seat is never ARMED without a measured
 completion in its own lane. opencode seats: body already in the CI
