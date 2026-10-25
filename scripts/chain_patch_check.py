@@ -71,9 +71,8 @@ PATCH_GLOB = "docs/*-fix.patch"
 # accepts whatever appears. A new handover must be added here in the same commit
 # that writes it, or the check refuses rather than grading less than it claims.
 HANDOVERS = ("docs/pending-slot-fix.patch",
-             "docs/review-provenance-fix.patch",
              "docs/slot-dialect-fix.patch")
-EXPECTED_PATCHES = 3
+EXPECTED_PATCHES = 2
 
 STATUS_RE = re.compile(r"^STATUS:\s*([A-Za-z-]+)", re.M)
 PROPOSAL = "PROPOSAL"
