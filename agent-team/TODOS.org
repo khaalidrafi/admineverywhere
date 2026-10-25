@@ -3455,6 +3455,51 @@ source in the schema = no filtering, everything visible.
 Closes the one UNVERIFIED line left on the item above: the rig had only a
 superuser, so a live smoke could never show a gated surface hidden.
 :LOGBOOK:
+- Note [2026-10-24 Sat 23:40 UTC] :: :DELIVERED (rig half, this row's own
+  blocker): branch ai/turn-20261024-2326, seat platform-engineer. The row was
+  re-read before touching it and a SECOND gap sits under the one it names: the
+  item says the rig had only a superuser so a live smoke could never show a
+  gated surface hidden — `auditor` closed that, but every gated surface in the
+  reference app requires `managers` (`app/src/pages/Modules.svelte:8`,
+  `app/src/pages/Branding.svelte:5`, `app/src/actions/bulk_flag.ts:17` — grepped,
+  nothing anywhere gates on `auditors`). So the seeded non-superuser only ever
+  proves the DENIAL, and the only login that shows the gated surfaces is the
+  superuser, who sees them by the bypass at `app/src/lib/rbac.ts:47` and never
+  reaches the claim-match at `:48`. The human browser pass this row waits on
+  therefore could not observe the positive half of FR-R007 at all.
+  LANDED: `seed_demo` now seeds one plain caller per gate direction (the loop in
+  `demo-backend/shop/management/commands/seed_demo.py`, docstring + stdout line
+  updated with it) — `manager` / `manager123`, non-staff, non-superuser, holding
+  exactly the `managers` Group. Written first: `plugin/tests/test_rbac_roles.py`
+  gained `test_seed_demo_gives_a_nonsuperuser_managers_holder` and
+  `test_seed_demo_covers_both_gate_directions_without_a_superuser` (population
+  pin: at least one non-superuser on each side of the gate, the second one never
+  allowed to be the superuser) and the idempotence test now re-reads `manager`'s
+  groups. Measured red before the seed edit: 3 failed (`User.DoesNotExist`),
+  9 passed after.
+  LIVE PROOF over HTTP (not in-process): rig booted on 127.0.0.1:8021 on a fresh
+  `db.sqlite3` (gitignored), `manage.py seed_demo`, then POST `/api/auth/token/`
+  + GET `/api/me/` per login — admin -> {"is_superuser":true,"roles":
+  ["auditors","managers"]}; auditor -> {false,["auditors"]}; manager ->
+  {false,["managers"]}; anon -> 401. That manager body is the exact
+  decision input `roleAllows(["managers"], …)` needs to take the `some()` branch
+  rather than the bypass. Rig stopped, port closed (re-checked: connection
+  refused), dev db removed — tree left pristine.
+  RITUAL: suite 306 -> 308 with `EXPECTED_PYTEST` (`scripts/landing_gate.py:73`)
+  and all four published carriers (AGENTS.md `## Layout` + `## Commands`,
+  docs/DEVGUIDE.md the same two) retyped in this same commit. Docs mirror kept:
+  the AGENTS/DEVGUIDE rig sentences are byte-identical after the edit, README and
+  the docs/rbac.md demo-user table both gained the third login.
+  GATES: `python3 scripts/landing_gate.py` -> GATE GREEN 4/4; `--fe` -> GATE
+  GREEN 11/11 (vitest 484/39, six twins identical); `release_readiness.py` rc 0;
+  `chain_test_check.py` noise unchanged at main's baseline.
+  STILL OPEN ON THIS ROW: what it always needed — a real browser. Nothing here
+  changes that; the addition is that a human pass can now watch the gate in BOTH
+  directions with two non-superuser logins instead of one.
+  SECRET LAW held (no credential value read or echoed; ROLE_LARK_WEBHOOK length
+  0 in this seat's env -> the Lark copy of this seat's report is SKIPPED, not
+  lost). SEGREGATION LAW: authored only; nothing reviewed or merged here;
+  ai/main never pushed; Lead-owned files untouched.
 - Note [2026-10-24 Sat 07:07 UTC] :: :DELIVERED (RE-DELIVERED): branch
   ai/turn-20261024-0659, commit 77eb04c — the clean re-delivery of what
   ai/turn-20261024-0339 (sha ece17f8) was REJECTED for: that branch committed
