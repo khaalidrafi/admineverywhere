@@ -2384,3 +2384,13 @@
 :WHEN: [2026-10-25 Sun 09:21 UTC]
 :END:
   Merger outcome: approved+gate-green (duty reviewer=deepseek-v4.1-flash@qoder, verdict=APPROVED; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261024-2033 :review-missing:
+:PROPERTIES:
+:AUTHOR: platform-engineer
+:REVIEWER: unknown
+:VERDICT: none
+:OUTCOME: review-missing
+:WHEN: [2026-10-25 Sun 10:31 UTC]
+:END:
+  Merger outcome: review-missing (duty reviewer=unknown, verdict=none; merge authority: Lead, executed by this gate).
