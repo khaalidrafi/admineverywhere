@@ -351,7 +351,7 @@ def control_target_deleted(root):
 
 def control_context_moved(root):
     """APPLY: the carrier reworded the line the hunk anchors on."""
-    name = "docs/session-loop-fix.patch"
+    name = "docs/slot-dialect-fix.patch"
     text = read(_patch_path(root, name))
     for path in targets_of(text):
         full = os.path.join(root, path)
@@ -359,20 +359,20 @@ def control_context_moved(root):
             continue
         lines = read(full).splitlines()
         for number, line in enumerate(lines):
-            if "cp -a /sessions-restore/. " in line:
-                lines[number] = '    cp -a /sessions-restore/. "${HOME}/" 2>/dev/null || true'
+            if "CURSLOT=\"$(grep -E" in line:
+                lines[number] = line.replace("^\\#+", "^#\\+")
                 _write(root, path, "\n".join(lines) + "\n")
                 return
-    raise AssertionError("no restore context line to reword")
+    raise AssertionError("no guard read line to reword")
 
 
 def control_extracted(root):
     """APPLY + MOVED: the patched block was lifted into another carrier."""
-    name = "docs/session-loop-fix.patch"
+    name = "docs/slot-dialect-fix.patch"
     text = read(_patch_path(root, name))
-    removals = [m for m in REMOVAL_RE.findall(text) if "--no-session" in m]
+    removals = [m for m in REMOVAL_RE.findall(text) if "CURSLOT" in m]
     if not removals:
-        raise AssertionError("the proposal hunks carry no --no-session removal line")
+        raise AssertionError("the proposal hunks carry no guard-read removal line")
     needle = removals[0].strip()
     for path in targets_of(text):
         full = os.path.join(root, path)
@@ -390,14 +390,14 @@ def control_extracted(root):
 
 def control_no_apply_line(root):
     """CLASSIFY: a proposal that lost its instruction."""
-    name = "docs/session-loop-fix.patch"
+    name = "docs/slot-dialect-fix.patch"
     text = read(_patch_path(root, name))
     _write(root, name, re.sub(r"^APPLY:.*$", "", text, count=1, flags=re.M))
 
 
 def control_bad_status(root):
     """CLASSIFY: a status nobody wrote a rule for."""
-    name = "docs/session-loop-fix.patch"
+    name = "docs/slot-dialect-fix.patch"
     text = read(_patch_path(root, name))
     _write(root, name, text.replace("STATUS: PROPOSAL", "STATUS: WAITING", 1))
 
@@ -407,7 +407,7 @@ def control_extra_patch(root):
     # Its needle is count-FREE by design: a needle carrying a literal patch count
     # would fire on the shipped tree the day the roster grows, grading the pin
     # instead of the leg.
-    text = read(_patch_path(root, "docs/session-loop-fix.patch"))
+    text = read(_patch_path(root, "docs/slot-dialect-fix.patch"))
     _write(root, "docs/third-handover-fix.patch", text)
 
 
@@ -444,7 +444,7 @@ def control_grader_red(root):
 
 def control_no_hunks(root):
     """TARGET: a patch with nothing parsable in it grades no claim."""
-    name = "docs/session-loop-fix.patch"
+    name = "docs/slot-dialect-fix.patch"
     text = read(_patch_path(root, name))
     head = text.split("diff --git", 1)[0]
     _write(root, name, head + "(content unavailable in this copy)\n")
