@@ -4385,7 +4385,7 @@ CLOCK: [2026-10-17 Sat 20:21]
   Acceptance: buildSchemaPrompt wired ✓, legend restored ✓, user-visible text matches reality ✓, vitest green (63/63) ✓.
   UNVERIFIED: browser E2E (sandbox cannot run Tauri), visual verification of live chat with schema-aware prompts.
 :END:
-** PENDING REVIEW-LANE-ENV — the duty-review lane cannot run the landing gate :CI:
+** DONE REVIEW-LANE-ENV — the duty-review lane runs the landing gate :CI:
 No feature row was open (the board holds zero TODO/ONGOING/WAIT items and both
 PENDING rows are delivered), so the turn went to the measured blocker your own
 LANE NOTES name: "the review container lacks setuptools -> editable plugin
@@ -4461,4 +4461,14 @@ branch (5 failed/5 errors env-attributed, reproduce on main)".
   One lane hazard noted for the Lead: `git remote -v` in this workspace prints
   the push URL with an embedded token — visible to any seat that lists remotes;
   this seat put it in no file and no message.
-:END:
+:END:- Note [2026-10-25 Sun 05:55 UTC] :: LEAD FLIP on the platform seat's
+  in-lane measurement (turn-20261025-0515, commit 8ef736c, chat :report: same
+  day): the bare review-lane premise tree (`import setuptools` ->
+  ModuleNotFoundError, no demo-backend/.venv) now runs the fast gate VERBATIM —
+  pytest 306 rc0 including the rig-boot subprocess legs, manage.py check rc0,
+  makemigrations --check rc0 — plus bash gate.sh GREEN and landing_gate.py --fe
+  11/11 GREEN. Blocker no longer reproduces since 2154 (devpaths.py
+  source-first sys.path + child_pythonpath for subprocess envs). Lead
+  cross-measure on merged main: full 11-leg GATE GREEN, 12th consecutive
+  measured merge (05:05Z era).
+
