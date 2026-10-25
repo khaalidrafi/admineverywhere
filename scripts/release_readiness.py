@@ -220,12 +220,14 @@ CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
 # no reader follows, which is how chain_slot_check ran 11 controls nobody knew
 # existed while its `--selftest` anchor rotted to rc 2 unnoticed).
 
-# 7 claims over 5 harness sites inside `## Commands`: chain_test_check,
-# chain_session_check and chat_feature_check in AGENTS.md; chain_test_check and
-# chain_session_check again in docs/DEVGUIDE.md. chat_when_check carries the
-# third DEVGUIDE line and the fourth in AGENTS.md, so a mirror on ONE side only
-# would leave its own roster ungraded by a reader.
-EXPECTED_CONTROL_CLAIMS = 10
+# 11 claims over 7 harnesses inside `## Commands`: six in AGENTS.md (chain_test_check,
+# chain_session_check, chat_feature_check, chain_slot_check, chat_when_check and
+# review_preflight_check) plus four again in docs/DEVGUIDE.md, chat_when_check carrying
+# both sides so a one-sided mirror would leave its own roster ungraded by a reader.
+# chain_merge_check is the eleventh, AGENTS.md-only like review_preflight_check — a
+# Commands entry bumped on BOTH mirrors doubles friction on the file the queue already
+# conflicts in, so this pin's comment keeps its original line count and moves no cite.
+EXPECTED_CONTROL_CLAIMS = 11
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.
