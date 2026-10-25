@@ -862,7 +862,7 @@ jobs:
           PENDING_AUTHOR="${{ needs.turn.outputs.pending_author }}"
           VERDICT="${{ needs.turn.outputs.review_verdict }}"
           REVIEW_MEMBER="${{ needs.turn.outputs.review_member }}"
-          QA_MEMBER="deepseek-v4.1-flash@qoder"
+          QA_MEMBER="groq/qwen3.8-27b@goose"  # Owner rotation 2026-10-25 (review-missing x17 evidence; demoted lane = qoder fallback in turn_segment.sh)
           VISITING_MEMBER="glm-5.3@codebuddy"
           # DURABILITY FIX (night-watch 2026-10-22 ~20:50Z, measured: run
           # 39846623548's seg step timed out mid-review at 20:35:52 after a

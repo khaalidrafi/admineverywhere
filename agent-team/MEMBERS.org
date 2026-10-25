@@ -64,11 +64,15 @@
 
   * ROLE: QA ENGINEER 3 (HIRED - Owner order 2026-10-24 16:34Z
     "hire even more"; wave 2)
-    groq/qwen3.8-27b@goose [ACTIVATING - reviewer-arm wiring + first
-    live proof pending; FREE lane, probe 200 ALIVE at 16:23Z; same
-    brain as PLATFORM ENGINEER 2 - acceptable, refusal law checks
-    member ids and rotation alternates; reviewer-3 depth for the
-    parallel review lanes]
+    groq/qwen3.8-27b@goose [ROTATED IN AS DUTY REVIEWER - Owner order
+    2026-10-25 ~18:08Z "rotate your hire list" + "I want this complete
+    by MORNING 9am": the old primary deepseek-v4.1-flash@qoder died 17
+    consecutive probes (#5-#22) with zero artifacts, deterministic
+    qoder-side brain substitution; groq lane is FREE, probe 200 ALIVE
+    at 16:23Z, recipe PROVEN in this repo's author relief arm; first
+    live REVIEW proof = the next probe verdict (probation until then);
+    qoder deepseek demoted to in-lane fallback; same brain as PLATFORM
+    ENGINEER 2 - acceptable, refusal law checks member ids]
 
   * HIRES WAVE 3 (Owner order 2026-10-24 17:01Z "Hire built-in models
     from Opencode and cline") - built-in free-roster bodies, probe-first

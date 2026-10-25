@@ -14,6 +14,19 @@
 
 * Notes
 
+- LEAD ROTATION (Owner order 2026-10-25 ~18:08Z, in-channel: "rotate
+  your hire list" + 9am completion goal): DUTY REVIEWER swapped to
+  groq/qwen3.8-27b@goose (QA-3, wave-2 hire). Evidence for the swap:
+  17 consecutive review-missing probes #5-#22, ZERO artifacts,
+  deterministic qoder-side brain substitution (episodes #8-#13,
+  transcripts 453/455); lane fix 5e7d206 did not recover it. The groq
+  recipe is PROVEN in the author relief arm (probe 200; GROQ_API_KEY
+  in repo secrets). qoder deepseek demoted to in-lane fallback. This
+  resolves escalation ask #2 (lane change) by Owner order; asks #1/#3/#4
+  (substituted-brain verdict validity, provenance patch, 2110
+  ratify-or-revert) remain open. First live review proof = next probe;
+  if the rotated lane also fails 2 probes, revert + re-escalate.
+
 - LEAD CYCLE 9-e (21:2xZ, three actions): (1) R-005 CSV MERGED c8217b1 —
   the CI merger had hit a real CONFLICT in scripts/landing_gate.py (1935 and
   2008 are siblings from e8aa04d, both bumped vitest pins 432->437, overlapping
