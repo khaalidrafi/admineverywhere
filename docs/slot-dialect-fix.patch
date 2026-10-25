@@ -1,0 +1,86 @@
+SLOT-DIALECT FIX — one-character handover for the non-clobber guard's reader.
+Lead-owned files: a seat may ONLY read and cite them, never edit them (chain law
+11), so this file is the handover and the fix travels as a hunk.
+
+TARGET: .github/workflows/agent-team.yml  (the non-clobber guard's CURSLOT read,
+        :1091 in the tree this patch was cut against; the harness that names the
+        reader locates it by the `CURSLOT=` assignment, never by line number)
+STATUS: PROPOSAL — NOT APPLIED. The workflow is Lead-owned.
+APPLY:  git apply --check docs/slot-dialect-fix.patch
+        git apply       docs/slot-dialect-fix.patch
+ROT-PROOF: python3 scripts/chain_patch_check.py grades THAT this patch still
+        applies to the file it names (POPULATION now counts FOUR handovers — this
+        roster entry and `EXPECTED_PATCHES = 4` moved in the same commit, per the
+        POPULATION leg's own rule), and python3
+        scripts/slot_reader_probe.py grades the LAW this patch proposes: it runs
+        each shipped slot command — merger-reread, guard-curslot, guard-sed —
+        against the live register line in THIS interpreter and reports how many
+        of the three can see it.
+
+WHAT IS BROKEN — measured on f284b3b (current ai/main), not replayed:
+
+  `python3 scripts/slot_reader_probe.py` on this tree answers rc 1,
+  "readers matching: 2 of 3", RED naming `guard-curslot`: the exact grep shipped
+  at agent-team.yml:1091 cannot find the exact slot line shipped in
+  agent-team/TEAM-CONTROL.org. Reproduced directly against the register file:
+
+    grep -Ec '^\#+PENDING-REVIEW:' agent-team/TEAM-CONTROL.org   -> 0
+    grep -Ec '^#\+PENDING-REVIEW:' agent-team/TEAM-CONTROL.org   -> 1
+
+  GNU grep 3.11 (this image, `grep --version`) reads the ERE escape `\#+` as an
+  ordinary `#` followed by the one-or-more quantifier — "one-or-more hash
+  characters" — which the register line `#+PENDING-REVIEW: ...` does NOT contain
+  (it carries exactly one hash before the P). Undefined-escape dialect, resolved
+  silently, in the direction that hides the line.
+
+  Why that specific line matters — the guard depends on it being TRUE: the
+  non-clobber condition at :1094 is
+  `if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || { ... }`, and with an
+  always-empty CURSLOT the middle disjunct is ALWAYS true, so every empty write
+  is admitted — the exact 27748d9 clobber shape (Lead 10-am: "wrote 'next
+  pending: none' and wiped the register EMPTY") that ed378d4 built this guard to
+  refuse. The guard is armed but blind: the law landed, its read does not work,
+  and chain_slot_check.py's `blank-guard` leg — a TEXT read — passes the whole
+  time because the guard does mention the key and does carry the control-file
+  operand. That gap (text-read legs passing while the command they describe is
+  inert) is precisely why ai/turn-20261024-1552 shipped slot_reader_probe.py;
+  it landed with 2326@b1d3280 and this is its first firing on the live tree.
+
+  Consequence for right now: none yet — 10-dl advanced the register by hand to
+  0015@2754f09 — but the next finalize that resolves a branch without a new
+  pending (NEWPENDING empty) is licensed by this bug to blank the register, and
+  the queue holds ten more branches.
+
+WHAT THIS PATCH DOES:
+
+  Uses the merger-reread's OWN proven dialect — :871 reads the same key with
+  `^#\+` (backslash-escaped plus = the quantifier on a literal `+`, which is
+  exactly what the Org keyword is) and the probe shows that command FINDS the
+  live line. Same key, same file, one dialect for all three slot readers. The
+  sed write address at :1095 is deliberately NOT touched: GNU sed reads `\#+` as
+  hash-then-one-or-more-`+` and the probe's third reader proves it MOVES the
+  line — this patch fixes the measured defect, one character, and re-cuts
+  nothing that is green.
+
+ON LANDING (Lead): relabel this file `STATUS: RETIRED` and DELETE the APPLY line,
+  naming `GRADED BY: scripts/slot_reader_probe.py` — that probe flips to rc 0
+  ("3/3") the moment the hunk is in, and chain_patch_check's GRADE leg then keeps
+  the retirement measured by the command itself, never by this text. If instead
+  the Lead lands the fix REWORDED (any dialect that makes guard-curslot FIND the
+  line), that satisfies the law — do not re-apply this hunk then; relabel per
+  the same rule, which is the false-red ruling that keeps pending-slot-fix.patch
+  retired-by-grader rather than re-matched.
+
+diff --git a/.github/workflows/agent-team.yml b/.github/workflows/agent-team.yml
+index 7451302..24e9a01 100755
+--- a/.github/workflows/agent-team.yml
++++ b/.github/workflows/agent-team.yml
+@@ -1088,7 +1088,7 @@ jobs:
+             # EMPTY write clears only an EMPTY slot (no-op) or a slot still
+             # holding the branch THIS RUN resolved (legit post-merge clear)
+             # — it must never blank a slot a Lead re-queued under this run.
+-            CURSLOT="$(grep -E '^\#+PENDING-REVIEW:' "$CTL" | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
++            CURSLOT="$(grep -E '^#\+PENDING-REVIEW:' "$CTL" | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
+             SLOTISOURS=0
+             case "$CURSLOT" in "branch=${PENDING_BRANCH:-} |"*) SLOTISOURS=1 ;; esac
+             if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || { [ -n "${PENDING_BRANCH:-}" ] && [ "$SLOTISOURS" = "1" ]; }; then

@@ -146,7 +146,7 @@ EXPECTED_LEGS = 6
 
 # Controls are pinned too, so a deleted control is a refusal, not a shorter
 # "SELFTEST OK".
-EXPECTED_CONTROLS = 13
+EXPECTED_CONTROLS = 15
 
 # ------------------------------------------------------------- file shapes
 INNER_OPEN_RE = re.compile(r"cat\s+>\s+\"?\$PWD/\.turn-inside\.sh\"?\s*<<'([A-Za-z_]+)'")
@@ -156,7 +156,7 @@ FI_RE = re.compile(r"^\s*fi\s*$")
 CASE_REVIEW_RE = re.compile(r"^\s*case\s+\"\$REVIEWER_SEAT\"\s+in\s*$")
 ESAC_RE = re.compile(r"^\s*esac\s*$")
 LABEL_RE = re.compile(r"^\s*([A-Za-z0-9_*][A-Za-z0-9_*-]*)\)\s*(?:#.*)?$")
-MEMBER_ID_RE = r'^\s*(%s)="([^"]*)"\s*$'
+MEMBER_ID_RE = r'^\s*(%s)="([^"]*)"\s*(?:#.*)?$'
 EXTRACT_RE = re.compile(r"^\s*REVIEW_VERDICT=\$\(")
 ALT_RE = re.compile(r"VERDICT:\[\[:space:\]\]\*\(([^)]*)\)")
 GREP_ON_REVIEW_FILE_RE = re.compile(r"grep\s.*%s" % re.escape(REVIEW_FILE))
@@ -374,6 +374,32 @@ def leg_lane_coverage(inner, host, case_index, case_block):
         if REVIEW_FILE not in text:
             raise Red("lane-coverage: the %s lane does not redirect into %s — its answer "
                       "goes to the step log, where the extractor cannot find it" % (seat, REVIEW_FILE))
+        # Owner rotation 2026-10-25 made the QA lane's goose call PRIMARY with the
+        # demoted qoder call as its fallback. One brief-carrying call is not
+        # coverage: the pre-rotation primary died 17 consecutive review-missing
+        # runs, and whichever call answers — primary or fallback — must have
+        # received the format law. A whole-body contains-check let the lane grade
+        # GREEN with a brief-less primary (the fallback's brief carried it), the
+        # exact shape that made the pre-rotation `lane-unbriefed` control inert:
+        # it mutated the then-PRIMARY qoder line and the leg stayed green.
+        call_lines = [l for l in body
+                      if re.search(r"\b(goose|qoder|codebuddy|claude|aider)\b", l)]
+        for call in call_lines:
+            if "$REVIEW_BRIEF" not in call and "-t " in call + " ":
+                raise Red("lane-coverage: the %s lane runs `%s` without $REVIEW_BRIEF — "
+                          "a reviewer invoked off the format law cannot emit the token"
+                          % (seat, call.strip()[:72]))
+        if seat == "quality-assurance-engineer":
+            if not re.search(r"^\s*else\s*$", text, re.M):
+                raise Red("lane-coverage: the QA lane has no fallback arm at all — the "
+                          "rotation shipped one BECAUSE the primary died 17 consecutive "
+                          "review-missing runs; a single-call lane silently revives that "
+                          "failure mode")
+            after = re.split(r"^\s*else\s*$", text, flags=re.M, maxsplit=1)[1]
+            if ("qoder" in after) and ("$REVIEW_BRIEF" not in after):
+                raise Red("lane-coverage: the QA lane's fallback re-invokes without "
+                          "$REVIEW_BRIEF — the demoted qoder call would answer a "
+                          "prompt that never saw the format law")
     tail_text = "\n".join(case_tail(inner, case_index + len(case_block)))
     if "REVIEWER_SEAT" not in tail_text:
         raise Red("lane-coverage: nothing reports which duty reviewer ran after the "
@@ -639,9 +665,26 @@ CONTROLS = [
         ("lane-dropped", lambda root: _sub(
             root, SEGMENT_REL, r"[ \t]*visiting-engineer\)\n", "",
             "visiting lane label"), 1, "lane-coverage", True),
+        # Owner rotation 2026-10-25 rewired the QA lane: goose/groq is the
+        # PRIMARY brief carrier (via `-t "$REVIEW_BRIEF"`) and the demoted qoder
+        # call survives as the else-arm fallback. The pre-rotation `lane-unbriefed`
+        # control mutated the then-primary qoder line and stayed GREEN — the goose
+        # carrier kept the lane briefed, so the leg it was supposed to prove had
+        # no live firing. Three firings now, one per shape that loses a briefed
+        # reviewer: the `-t` primary unbriefed, the fallback arm deleted outright
+        # (the rotation's recovery path is gone), the fallback re-invoking without
+        # the brief (a demoted brain answers a prompt that never saw the law).
         ("lane-unbriefed", lambda root: _sub(
-            root, SEGMENT_REL, r'qoder -p "\$REVIEW_BRIEF"', "qoder -p \"say something\"",
-            "QA lane brief"), 1, "lane-coverage", True),
+            root, SEGMENT_REL, r'-t "\$REVIEW_BRIEF"', '-t "say something"',
+            "goose review lane brief"), 1, "lane-coverage", True),
+        ("lane-fallback-gone", lambda root: _sub(
+            root, SEGMENT_REL,
+            r'[ \t]*else\n[ \t]*echo "REVIEW: groq lane failed[^\n]*\n(?:[ \t]+[^\n]*\n)*?[ \t]*fi ;;',
+            '      echo "REVIEW: groq lane failed, no fallback" ;;',
+            "QA lane fallback block"), 1, "lane-coverage", True),
+        ("lane-fallback-unbriefed", lambda root: _sub(
+            root, SEGMENT_REL, r'qoder -p "\$REVIEW_BRIEF"', 'qoder -p "say something"',
+            "QA lane fallback brief"), 1, "lane-coverage", True),
         ("member-id-drift", lambda root: _sub(
             root, WORKFLOW_REL, r'QA_MEMBER="[^"]*"', 'QA_MEMBER="other@qoder"',
             "workflow QA_MEMBER"), 1, "reviewer-ids", True),
