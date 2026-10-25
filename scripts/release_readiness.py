@@ -225,7 +225,7 @@ CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
 # chain_session_check again in docs/DEVGUIDE.md. chat_when_check carries the
 # third DEVGUIDE line and the fourth in AGENTS.md, so a mirror on ONE side only
 # would leave its own roster ungraded by a reader.
-EXPECTED_CONTROL_CLAIMS = 10
+EXPECTED_CONTROL_CLAIMS = 11
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.

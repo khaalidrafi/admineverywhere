@@ -317,6 +317,20 @@ python3 scripts/chat_when_check.py --selftest # 11 controls: every leg proved ab
 python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
 python3 scripts/review_preflight_check.py --since 20261024   # one day's queue only
 python3 scripts/review_preflight_check.py --selftest  # 13 controls on real fixture repos: every leg able to fail
+# THE REVIEW LANE ITSELF as a check, read-only against the Lead-owned chain: the
+# verdict a branch lives or dies by is ONE token, spelled in three places nothing
+# compared — the duty reviewer's BRIEF (which must instruct it as the last line of
+# the answer), the host's EXTRACTOR (which must grep the same token from the same
+# file the lanes redirect into, last match wins, host-side, because $GITHUB_OUTPUT
+# never reaches the container) and the two carriers' reviewer MEMBER IDs (which must
+# agree, or a real duty verdict is graded refused-wrong-reviewer forever). Measured
+# cost of not having this: ai/turn-20261024-0659 got a full clean review from the QA
+# lane and lost the token, so the merger wrote review-missing and the stall grew —
+# and the lane accepted it because the CLI had silently substituted the pinned
+# reviewer model, which no review-lane guard notices while every SEAT lane greps a
+# dead-lane marker before calling itself OK
+python3 scripts/review_verdict_check.py        # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/review_verdict_check.py --selftest # 13 controls: every leg proved able to fail
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
