@@ -145,34 +145,22 @@ jobs:
             "https://api.z.ai/api/paas/v4/chat/completions" \
             "glm-4.7-flash" "$ZAI_API_KEY"
 
-          probe "openrouter/minimax/minimax-m3.1-flash:free" \
-            "https://openrouter.ai/api/v1/chat/completions" \
-            "minimax/minimax-m3.1-flash:free" "$OPENROUTER_API_KEY"
-
-          # FREE-OFFER CATALOG SCAN (Owner order 2026-10-22 #admincraft:
-          # "consume ALL the free offers of MiniMax M3.1 Flash happening
-          # right now"): list the GoModel gateway catalog, echo every
-          # minimax/deepseek id it serves, and live-probe the first
-          # MiniMax M3.1 Flash variant. Pure evidence — nothing here gates.
+          # BURN-LAW (Owner 2026-10-24 17:01Z): minimax-m3.1-flash is
+          # PERSONA NON GRATA — "no hire, no probe, no fallback". The
+          # former direct :free probe row and the FIRST_MM live probe
+          # are REMOVED (Lead, 10-di, Owner BOOST cycle). The gateway
+          # catalog scan stays as deepseek-only evidence:
           if [ -n "$GOMODEL_MASTER_KEY" ]; then
             CATALOG=$(curl -sS -m 30 -H "Authorization: Bearer $GOMODEL_MASTER_KEY" \
               "${GOMODEL_GATEWAY_URL}/v1/models" 2>/dev/null || echo '{}')
-            GWM=$(echo "$CATALOG" | jq -r '.data[]?.id' 2>/dev/null | grep -i 'minimax-m3.1' | head -5 || true)
             GWD=$(echo "$CATALOG" | jq -r '.data[]?.id' 2>/dev/null | grep -i 'deepseek' | head -5 || true)
             {
               echo ""
               echo "### GoModel gateway free-offer catalog (minimax / deepseek)"
               echo ""
-              while IFS= read -r m; do [ -n "$m" ] && echo "- minimax: \`$m\`"; done <<< "$GWM"
               while IFS= read -r d; do [ -n "$d" ] && echo "- deepseek: \`$d\`"; done <<< "$GWD"
               [ -n "$GWM$GWD" ] || echo "- (no minimax/deepseek ids served by the gateway today)"
             } >> "$SUMMARY"
-            FIRST_MM=$(echo "$GWM" | head -1)
-            if [ -n "$FIRST_MM" ]; then
-              probe "gomodel/$FIRST_MM" \
-                "${GOMODEL_GATEWAY_URL}/v1/chat/completions" \
-                "$FIRST_MM" "$GOMODEL_MASTER_KEY"
-            fi
           else
             echo "" >> "$SUMMARY"
             echo "- GOMODEL_MASTER_KEY not set — gateway catalog scan skipped" >> "$SUMMARY"
