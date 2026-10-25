@@ -228,7 +228,7 @@ CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
 # docs/DEVGUIDE.md. chat_when_check carries the third DEVGUIDE line and the
 # fourth in AGENTS.md, so a mirror on ONE side only would leave its own roster
 # ungraded by a reader. rbac_live_check adds the FR-R007-LIVE claim.
-EXPECTED_CONTROL_CLAIMS = 12
+EXPECTED_CONTROL_CLAIMS = 15
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.
