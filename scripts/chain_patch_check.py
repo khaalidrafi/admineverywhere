@@ -70,8 +70,10 @@ PATCH_GLOB = "docs/*-fix.patch"
 # disk: a literal alone cannot see WHICH harnesses it counts, and a glob alone
 # accepts whatever appears. A new handover must be added here in the same commit
 # that writes it, or the check refuses rather than grading less than it claims.
-HANDOVERS = ("docs/pending-slot-fix.patch", "docs/session-loop-fix.patch")
-EXPECTED_PATCHES = 2
+HANDOVERS = ("docs/pending-slot-fix.patch",
+             "docs/review-provenance-fix.patch",
+             "docs/session-loop-fix.patch")
+EXPECTED_PATCHES = 3
 
 STATUS_RE = re.compile(r"^STATUS:\s*([A-Za-z-]+)", re.M)
 PROPOSAL = "PROPOSAL"
@@ -402,7 +404,10 @@ def control_bad_status(root):
 
 
 def control_extra_patch(root):
-    """POPULATION: a third handover appeared, uncounted."""
+    """POPULATION: a handover appeared that the roster does not name."""
+    # Its needle is count-FREE by design: a needle carrying a literal patch count
+    # would fire on the shipped tree the day the roster grows, grading the pin
+    # instead of the leg.
     text = read(_patch_path(root, "docs/session-loop-fix.patch"))
     _write(root, "docs/third-handover-fix.patch", text)
 
@@ -453,7 +458,7 @@ CONTROLS = (
     ("block extracted to another carrier", control_extracted, 1, "the block moved"),
     ("proposal lost its APPLY line", control_no_apply_line, 1, "no APPLY instruction"),
     ("STATUS value unknown", control_bad_status, 2, "neither PROPOSAL nor RETIRED"),
-    ("a third handover, uncounted", control_extra_patch, 2, "holds 3 patch(es)"),
+    ("an extra handover, uncounted", control_extra_patch, 2, "without its roster entry"),
     ("retired names no grader", control_retired_no_grader, 1, "names no `GRADED BY"),
     ("retired grader is missing", control_grader_missing, 1, "not on disk"),
     ("retired still says APPLY", control_retired_apply_line, 1, "still tells the reader"),

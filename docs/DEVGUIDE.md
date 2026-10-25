@@ -306,6 +306,13 @@ python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved a
 # added text, because the Lead rewords what it lands and firing on a re-wording that
 # keeps the law would be a false red on correct work, the ruling that keeps a stale
 # citation from grading a true one).
+# The newest handover is docs/review-provenance-fix.patch: FIVE verdicts in a row were
+# judged by a provider-substituted reviewer brain while the record said lane_dead=0,
+# because turn_segment.sh consults the substitution marker ONLY when no verdict parsed
+# — so a substitute that still prints VERDICT is trusted and REVIEW-LOG names a brain
+# nobody can prove ran. The patch stamps that provenance into the record without
+# touching any outcome (a produced verdict stays a verdict), and its roster entry plus
+# EXPECTED_PATCHES moved in the same commit, which is the POPULATION leg's own rule.
 python3 scripts/chain_patch_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/chain_patch_check.py --selftest # every leg proved able to fail
 
