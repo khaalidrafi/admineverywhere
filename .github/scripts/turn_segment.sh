@@ -516,7 +516,26 @@ INNER
 # the inner case matched nothing and exited silently. Pass values
 # explicitly instead.
 mkdir -p "$PWD/.sessions-restore"
-if docker run --rm --user 1001:1001 \
+# EARLY VERDICT TRANSPORT (Lead 10-cl; evidence run 40181228238): the
+# review is the FIRST phase inside the container and the verdict outputs
+# were only written at script END — when the author segment overran the
+# 45-min step budget, the host script was killed at this docker-run line
+# and a DELIVERED verdict (transcript artifact review-transcript-451:
+# full REJECTED, 46 turns) fell back to review-missing; the register
+# re-polled a verdict the chain already had. Emit the pending identity
+# + review duty up front, and emit the verdict the moment it settles in
+# .turn-review.txt (same token across 2 consecutive polls — the review
+# writes the file once and never rewrites, so a mid-transcript quoted
+# format line would move on and fail the stability check) so a step
+# kill can no longer lose a delivered verdict. The end-of-script parse
+# below re-emits identical values (same grep, same keys — last write
+# wins; settled-case semantics unchanged).
+echo "pending_branch=${PENDING_BRANCH}" >> "$GITHUB_OUTPUT"
+echo "pending_author=${PENDING_AUTHOR}" >> "$GITHUB_OUTPUT"
+echo "pending_sha=${PENDING_SHA}" >> "$GITHUB_OUTPUT"
+echo "review_seat=${REVIEWER_SEAT:-}" >> "$GITHUB_OUTPUT"
+echo "review_member=${REVIEWER_MEMBER:-}" >> "$GITHUB_OUTPUT"
+docker run --rm --user 1001:1001 \
   -v "$PWD":/workspace -w /workspace \
   -v "$PWD/.sessions-restore":/sessions-restore:ro \
   -e SEAT="${SEAT}" -e BRIEF="${BRIEF}" \
@@ -526,7 +545,22 @@ if docker run --rm --user 1001:1001 \
   -e QODER_PERSONAL_ACCESS_TOKEN -e ZAI_API_KEY -e OPENROUTER_API_KEY \
   -e GROQ_API_KEY -e CODEBUDDY_AUTH_TOKEN \
   agent-harness:local bash /workspace/.turn-inside.sh \
-  > /tmp/.turn-out.txt 2>&1; then
+  > /tmp/.turn-out.txt 2>&1 &
+DOCKER_PID=$!
+PREV_TOKEN=""
+for _ in $(seq 1 190); do
+  kill -0 "$DOCKER_PID" 2>/dev/null || break
+  TOK=$(grep -hoE 'VERDICT:[[:space:]]*(APPROVED|REJECTED)' "$PWD/.turn-review.txt" 2>/dev/null | tail -1 | sed 's/.*VERDICT:[[:space:]]*//' | awk '{print $1}')
+  if [ -n "$TOK" ] && [ "$TOK" = "$PREV_TOKEN" ]; then
+    echo "review_verdict=${TOK}" >> "$GITHUB_OUTPUT"
+    grep -hE 'VERDICT:' "$PWD/.turn-review.txt" 2>/dev/null | tail -1 | tr -d '\r\n"%' | cut -c1-200 | sed 's/^/review_evid=/' >> "$GITHUB_OUTPUT" || true
+    echo "early verdict transport: ${TOK} emitted while the container is still running"
+    break
+  fi
+  PREV_TOKEN="$TOK"
+  sleep 15
+done
+if wait "$DOCKER_PID"; then
   echo "container verdict captured"
 else
   echo "docker run failed — see output below for the cause"
