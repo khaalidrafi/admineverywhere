@@ -17,6 +17,21 @@ admincraft_brand/
 # Chain harness scratch: .github/scripts/turn_segment.sh writes these into the
 # workspace every run and its host-side commit is a bare `git add -A`, so an
 # unignored scratch file lands on whatever branch delivers work that run.
+# Proven: `.turn-review.txt` landed twice (1a87144, 7a4623d) and
+# `demo-backend/.coverage` once (d819f6e) — so the session tarball and the
+# restore/upload dirs are listed here too, not only the three above: the
+# tarball holds the session stores BEFORE the host scrubs them (the scrub step
+# runs after the commit) and `.coverage` is a binary byproduct no grep-based
+# secret guard can read inside. scripts/chain_session_check.py's SCRATCH leg
+# pins this list against the carriers: a new chain scratch name is RED, never
+# silently committed.
 .turn-inside.sh
 .turn-result.txt
 .turn-review.txt
+.turn-sessions.tgz
+.sessions-prev.zip
+.sessions-restore/
+.sessions-upload/
+.review-upload/
+# pytest/vitest coverage data (demo-backend/.coverage reached ai/main via add -A)
+.coverage
