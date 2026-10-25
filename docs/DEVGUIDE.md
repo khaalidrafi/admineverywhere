@@ -316,6 +316,46 @@ python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved a
 python3 scripts/chain_patch_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/chain_patch_check.py --selftest # every leg proved able to fail
 
+# THE CHAT FEATURE, as one command: governance (MEMBER IDS reversal + its two rule
+# headings), the color sweep of the three files the send-back touched, one panel / one
+# importer / one mount, the LIVE prompt path and one prompt builder. Its verdict used to
+# be prose; this is the re-runnable form, and the wire-level proof that asserts the
+# captured request body is still on disk.
+python3 scripts/chat_feature_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/chat_feature_check.py --selftest # controls: every leg proved able to fail
+
+# THE SLOT READERS, EXECUTED — the door chain_slot_check's text legs cannot open. Those
+# legs MATCH pattern strings in .github/workflows/agent-team.yml; they cannot tell whether
+# grep 3.11 treats `\#` as a literal hash or as an escape. The merger's re-read and the
+# guard's sed write shipped as two DIALECTS of one pattern and only `^#\+` finds the live
+# `#+PENDING-REVIEW:` line, so CURSLOT is permanently empty, `[ -z "$CURSLOT" ]` admits
+# every empty write, and the guard that exists to protect a Lead advance silently hands the
+# slot back — the 27748d9 and 10-bb clobbers, both diagnosed by hand. This harness runs
+# each shipped reader against the shipped control file and prints how many agree; today it
+# answers 2 of 3 and names the one-character repair. The repair is Lead-owned machinery,
+# the measurement is a command any seat can re-run — which is exactly why it must be
+# published HERE and not only in the seat's chat entry (measured: the probe landed with
+# the 1552 merge cited by neither mirror doc, so its RED was invisible to a reader).
+python3 scripts/slot_reader_probe.py         # 0 = readers agree, 1 = an inert reader, 2 = cannot run
+
+# THE CHECK FAMILY ITSELF, as a check. Every grader in scripts/ is run BY INSTRUCTION —
+# measured, zero of them are invoked anywhere under .github/, so whoever runs one read it
+# in a mirror doc. The `*_diff.py` twins are population-pinned by landing_gate's
+# EXPECTED_TWINS cross-check; the `*_check.py`/`*_probe.py` family was in NOBODY's domain,
+# and the first run of this harness named two live holes (the slot reader probe published
+# by nothing, the chat feature check published here only as prose outside this table).
+# Four legs, all read-only: POPULATION (the graders on disk equal a pinned roster by NAME
+# and COUNT — a vanished harness is CANNOT RUN, because a comparison cannot see its own
+# coverage: *ELEVENTH law* arriving at the grader family itself), PUBLISH (each grader has
+# a row inside `## Commands` of AGENTS.md AND of this file — the REGION is the domain,
+# since prose elsewhere does not tell a reader which command to run), INVOKE (every
+# `scripts/x.py --flag` a doc prints is a flag that harness declares — the inverse hazard:
+# a doc promising a mode that does not exist gets run, hits argparse's exit 2 and is
+# reported as tooling rot), GHOST (a doc instruction naming an absent grader is CANNOT
+# RUN, because grading it would misreport a dead doc line as a missing file).
+python3 scripts/harness_roster_check.py      # 0 = roster published, 1 = an unpublished grader, 2 = cannot run
+python3 scripts/harness_roster_check.py --selftest # controls: every leg proved able to fail
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
