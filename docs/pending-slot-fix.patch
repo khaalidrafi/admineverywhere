@@ -1,3 +1,31 @@
+PENDING-SLOT FIX — HANDOVER RECORD, THE LAW ALREADY LANDED (relabelled 2026-10-25)
+
+TARGET: .github/workflows/agent-team.yml  (the finalize writeback step)
+STATUS: RETIRED — the guard proposed below is IN the merger now, so do not act on
+        these hunks: they are the audit trail, not a work item. `git apply` would
+        fail on them for a reason that is NOT a defect — the Lead landed the law in
+        REWORDED form (the comment block re-cast, the guard condition re-spelled),
+        so the removal line no longer matches at the recorded offset. That mismatch
+        is precisely why a retirement here is measured through a grader instead of
+        by re-matching this text: a rule that fires on a re-wording which keeps the
+        law is a false red, and the queue has already been rejected for less.
+GRADED BY: scripts/chain_slot_check.py
+        Its `blank-guard` leg is what "the non-clobber guard landed" means now: it
+        walks the writeback loop and requires the slot to be RE-READ after the
+        `git reset --hard origin/ai/main`, the write to be guarded by a comparison
+        against that fresh read, and the comparison to carry the control-file
+        operand. Measured green on this tree by that harness's own note, so the law
+        is enforced by the chain and graded by a seat, and neither claim is prose.
+
+WHY IT IS KEPT: the record of the 2026-10-22 blanking (the Lead re-queued
+ai/turn-20261022-1904 in 0ace32e at 20:47:17Z and a write computed BEFORE its own
+reset erased it 20 seconds later in 86d88ce) is the reason the guard exists; the
+diff carries the reasoning a future reader needs, the workflow carries the law.
+
+ROT-PROOF: python3 scripts/chain_patch_check.py grades THIS label — a patch may
+claim RETIRED only while the harness it names is on disk and exits 0, and a retired
+patch that still tells a reader to apply it is RED.
+
 diff --git a/.github/workflows/agent-team.yml b/.github/workflows/agent-team.yml
 index 05b1d65..b48597a 100755
 --- a/.github/workflows/agent-team.yml
