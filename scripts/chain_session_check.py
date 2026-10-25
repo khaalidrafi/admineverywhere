@@ -49,6 +49,18 @@ the wrong script would be a false green.
                 the container mounts the host workspace under that path, and
                 the extractor's own pattern captures every verdict literal the
                 reviewer brief demands (replayed, not compared as prose).
+  SCRATCH       the loop's workspace scratch is invisible to its own commit. The
+                host commits with a bare `git add -A`, so every dot-path the
+                carriers write into $PWD is a commit candidate for that run's
+                branch. The names are DERIVED from the carriers and pinned by
+                roster, then asked of git: ignored (`check-ignore --no-index`)
+                and untracked (`ls-files`). `.turn-sessions.tgz` is the reason
+                this is not housekeeping - it holds the session stores BEFORE
+                the host scrub step, and the scrubber's grep cannot read inside
+                a gzip stream. A lost `git add -A`, a roster that no longer
+                matches the carriers, or a scratch name the index already holds
+                are CANNOT RUN / RED respectively (measured: `.turn-review.txt`
+                landed in 1a87144 + 7a4623d, `demo-backend/.coverage` in d819f6e).
 
 Verdicts follow the house convention: 0 = OK, 1 = RED (a claim is false),
 2 = CANNOT RUN (the harness no longer understands its own input - never a
@@ -128,6 +140,56 @@ REVIEW_TOKEN_RE = re.compile(r"^VERDICT:\s*(?P<tok>[A-Z]+)[^\n]*$", re.M)
 # VERDICT line, which lands in REVIEW-LOG as review-missing (see the 07:59Z
 # record); the fix is the Lead's budget call, not a seat's claim.
 REVIEW_TIMEOUT_RE = re.compile(r'timeout\s+(?P<n>\d+)\b')
+
+# ---------------------------------------------------- workspace scratch
+# The turn loop writes its scratch INTO THE CHECKOUT, and the host commit a few
+# lines later is a bare `git add -A` (measured once, and graded below as the
+# premise of this whole leg). Every workspace path the carriers therefore name is
+# a commit candidate for whatever branch delivers that run. Not a hypothesis:
+# `.turn-review.txt` landed twice (1a87144, 7a4623d) and `demo-backend/.coverage`
+# once (d819f6e) — all three through that same add -A.
+#
+# The names this leg exists to keep ignored are the session-law ones:
+#   * `.turn-sessions.tgz` — the collect tar, written by the container at
+#     /workspace and read by the host's "Persist session files" step only AFTER
+#     the commit, so a non-empty tarball reaches git history BEFORE any scrubbing
+#     (the secret-guard runs on the extracted copy, and a grep-based redaction
+#     cannot see inside a gzip stream in any case). The lanes that run --no-session
+#     are why nothing has landed YET: the same NO-OPT-OUT defect this harness
+#     already grades makes the tar empty today, and docs/session-loop-fix.patch —
+#     the Lead's pending repair — is exactly what makes it non-empty every run.
+#   * `.sessions-restore/`, `.sessions-upload/`, `.review-upload/`,
+#     `.sessions-prev.zip` — the artifact staging the same loop builds in $PWD.
+# The roster is PINNED, like every other population here: a carrier that starts
+# writing a name this harness has not heard of is CANNOT RUN, never a green that
+# quietly grades one file fewer.
+WORKSPACE_WRITE_RE = re.compile(r'(?:"\$PWD"?|/workspace)/(?P<name>\.[\w.-]+)')
+# `mkdir -p "$PWD/.x"` marks a name as a DIRECTORY, which is what decides the
+# form git is asked about (a `.x/` pattern matches a child path, not the bare
+# name, when nothing on disk says "directory").
+SCRATCH_MKDIR_RE = re.compile(r'mkdir\s+-p\s+"?\$PWD/?(?P<name>\.[\w.-]+)"?')
+ADD_ALL_RE = re.compile(r'^\s*git\s+add\s+-A\b', re.M)
+EXPECTED_SCRATCH = (
+    ".review-upload",
+    ".sessions-prev.zip",
+    ".sessions-restore",
+    ".sessions-upload",
+    ".turn-inside.sh",
+    ".turn-result.txt",
+    ".turn-review.txt",
+    ".turn-sessions.tgz",
+)
+# Paths MEASURED in git history as already committed by that add -A, with the
+# commit that did it. Such a name must be untracked as well as ignored: an
+# ignored path that the index already holds is still committed, every run, which
+# is why demo-backend/.coverage sat on ai/main from d819f6e onwards while
+# `.gitignore` said nothing about it. The pin is the PROMISE (a leak stays
+# graded shut), not the disk.
+PROVEN_LEAKS = (".turn-review.txt", "demo-backend/.coverage")
+# A child path under a scratch DIRECTORY, for the ignore question. It is never
+# created on disk — `git check-ignore` evaluates rules against path text.
+SCRATCH_DIR_PROBE = ".ignore-probe"
+
 
 # ------------------------------------------------------------- file shapes
 HEREDOC_OPEN_RE = re.compile(r"cat\s+>\s+\"?\$PWD/\.turn-inside\.sh\"?\s*<<'([A-Z_]+)'")
@@ -430,6 +492,117 @@ def grade_review_capture(script, loop_text):
     return problems, notes
 
 
+def git_ask(root, args, what):
+    """Run one read-only git query against ROOT; a refusal is CANNOT RUN.
+
+    The ignore question is asked of git itself rather than reimplemented here:
+    gitignore matching has negations, anchoring and directory rules, and a
+    hand-written matcher would grade its own guess. `--no-index` is deliberate —
+    the question is "would `git add -A` take this untracked scratch path", and an
+    index lookup would answer "not ignored" for a name that IS ignored but has
+    already leaked. That second failure is its own check below, never a pass.
+    """
+    done = subprocess.run(("git", "-C", root) + args, capture_output=True, text=True)
+    if done.returncode not in (0, 1):
+        raise CannotRun("git %s exited %d (%s) - %s cannot be answered without git, "
+                        "so this leg refuses rather than guessing: %s"
+                        % (" ".join(args[:2]), done.returncode,
+                           done.stderr.strip()[:140], what,
+                           "is the graded tree a git work tree?"))
+    return done
+
+
+def scratch_writes(loop_text):
+    """(names, dirs) — every workspace-resident dot-path the carriers touch."""
+    names = set(match.group("name") for match in WORKSPACE_WRITE_RE.finditer(loop_text))
+    dirs = set(match.group("name") for match in SCRATCH_MKDIR_RE.finditer(loop_text))
+    return names, dirs
+
+
+def grade_scratch(root, loop_text):
+    """(problems, notes) for the scratch the host `git add -A` can commit.
+
+    FOUR claims, checked in the order a reader can falsify them:
+      premise  the turn loop really does commit with a bare `git add -A`. If it
+               stops, ignore coverage is no longer load-bearing and this leg has
+               lost its subject, so it says CANNOT RUN instead of going quietly
+               green (the same ruling as a gate that parses to zero commands).
+      roster   the names derived from the carriers are exactly EXPECTED_SCRATCH.
+      ignore   git reports every one of them ignored in the graded tree.
+      index    none of them, and no PROVEN_LEAKS path, is tracked.
+    """
+    problems = []
+    notes = []
+
+    if not ADD_ALL_RE.search(loop_text):
+        raise CannotRun("no bare `git add -A` in the turn loop - the commit that this "
+                        "leg exists to guard has changed shape, so ignore coverage is "
+                        "no longer what keeps scratch out of a branch")
+    notes.append("PREMISE: the turn loop commits with `git add -A` (that is why an "
+                 "unignored scratch path lands)")
+
+    names, dirs = scratch_writes(loop_text)
+    if not names:
+        raise CannotRun("the carriers name no workspace scratch path at all - the loop "
+                        "no longer writes where this harness reads, so there is nothing "
+                        "for the leg to grade")
+    if tuple(sorted(names)) != EXPECTED_SCRATCH:
+        vanished = sorted(set(EXPECTED_SCRATCH) - names)
+        unrostered = sorted(names - set(EXPECTED_SCRATCH))
+        raise CannotRun("the workspace scratch the carriers write is %d name(s), the pin "
+                        "says %d (vanished: %s / unrostered: %s) - a comparison cannot see "
+                        "its own coverage, so this is a refusal, not a smaller green "
+                        "(add the name to EXPECTED_SCRATCH and .gitignore in the SAME "
+                        "commit as the carrier that writes it)"
+                        % (len(names), len(EXPECTED_SCRATCH),
+                           ", ".join(vanished) or "none",
+                           ", ".join(unrostered) or "none"))
+
+    unignored = []
+    for name in EXPECTED_SCRATCH:
+        probe = name + "/" + SCRATCH_DIR_PROBE if name in dirs else name
+        if git_ask(root, ("check-ignore", "--no-index", "-q", probe),
+                   "is %s ignored" % name).returncode != 0:
+            unignored.append(name)
+            problems.append("SCRATCH: the turn loop writes %s into the checkout and git "
+                            "does NOT ignore it (%s) - the host `git add -A` commits it "
+                            "onto whatever branch delivers that run; add the pattern to "
+                            ".gitignore" % (name, probe))
+    notes.append("IGNORE: %d workspace scratch name(s) derived from the carriers (%d of "
+                 "them dirs created by mkdir), %d ignored, unignored: %s"
+                 % (len(EXPECTED_SCRATCH), len(dirs),
+                    len(EXPECTED_SCRATCH) - len(unignored),
+                    ", ".join(unignored) or "none"))
+
+    for name in EXPECTED_SCRATCH:
+        held = [line for line in git_ask(root, ("ls-files", "--", name),
+                                        "is %s tracked" % name).stdout.splitlines()
+                if line.strip()]
+        if held:
+            problems.append("SCRATCH: %s is TRACKED in this tree (%s) - ignoring it does "
+                            "not untrack it, so `git add -A` keeps committing it every "
+                            "run; run `git rm --cached %s`"
+                            % (name, held[0], name))
+
+    for rel in PROVEN_LEAKS:
+        held = [line for line in git_ask(root, ("ls-files", "--", rel),
+                                        "is %s tracked" % rel).stdout.splitlines()
+                if line.strip()]
+        if held:
+            problems.append("PROVEN-LEAK: %s is measured in git history as already "
+                            "committed by that add -A and it is STILL tracked here - the "
+                            "leak is live, not historical: `git rm --cached %s`"
+                            % (rel, rel))
+        if git_ask(root, ("check-ignore", "--no-index", "-q", rel),
+                   "is %s ignored" % rel).returncode != 0:
+            problems.append("PROVEN-LEAK: %s (a path measured committed by `git add -A`) "
+                            "is not ignored in this tree - nothing keeps the next run "
+                            "from committing it again" % rel)
+    notes.append("PROVEN-LEAK: %d path(s) pinned from git history (%s) checked untracked "
+                 "and ignored" % (len(PROVEN_LEAKS), ", ".join(PROVEN_LEAKS)))
+    return problems, notes
+
+
 # -------------------------------------------------------------- live probes
 def find_stores(home):
     """Where the CLIs on THIS machine keep their session stores."""
@@ -555,6 +728,12 @@ def grade(root, home):
     review_problems, review_notes = grade_review_capture(script, loop_text)
     problems.extend(review_problems)
     for note in review_notes:
+        notes.append(note)
+
+    # ---- 7. SCRATCH: the host `git add -A` can only ever commit ignored scratch
+    scratch_problems, scratch_notes = grade_scratch(root, loop_text)
+    problems.extend(scratch_problems)
+    for note in scratch_notes:
         notes.append(note)
 
     for note in live_note(home):
@@ -796,10 +975,18 @@ def _mutate_once(root, needle, replacement, missing):
 
 
 def control_rename_review_scratch(root):
-    """The extractor reads a different scratch file than the reviewer arm writes."""
+    """The extractor reads a different scratch file than the reviewer arm writes.
+
+    The read path moves to `.turn-result.txt` — a name the SCRATCH roster already
+    knows — rather than to an invented one. Retyped here because the original
+    control invented `.turn-review-v2.txt`, and the SCRATCH leg's population pin
+    REFUSES an unrostered workspace name before any red is reported: the control
+    then proved that the roster works, not that REVIEW-CAPTURE can fail. A control
+    must trip its own leg, and no other.
+    """
     _mutate_once(root, REVIEW_CAPTURE_NEEDLE,
                  REVIEW_CAPTURE_NEEDLE.replace('"$PWD/.turn-review.txt"',
-                                               '"$PWD/.turn-review-v2.txt"'),
+                                               '"$PWD/.turn-result.txt"'),
                  "the verdict capture line is gone")
 
 
@@ -822,6 +1009,52 @@ def control_missing_workflow(root):
     os.remove(os.path.join(root, WORKFLOW_REL))
 
 
+# --- SCRATCH controls. Each provokes ONE of the four claims the leg makes, on
+# a COPY; the shipped tree is never written to.
+SCRATCH_SESS_NEEDLE = 'SESS="/workspace/.turn-sessions.tgz"'
+
+
+def control_unignore_scratch(root):
+    """The collect tarball loses its ignore line: the add -A would take it."""
+    rel = ".gitignore"
+    text = _read_file(root, rel)
+    if ".turn-sessions.tgz\n" not in text:
+        raise CannotRun("control: %s no longer carries the .turn-sessions.tgz line, so "
+                        "this control grades nothing" % rel)
+    _write_file(root, rel, text.replace(".turn-sessions.tgz\n", "", 1))
+
+
+def control_scratch_reaches_the_index(root):
+    """The d819f6e shape: scratch that got committed stays committed when ignored."""
+    path = os.path.join(root, ".turn-sessions.tgz")
+    with open(path, "wb") as fh:
+        fh.write(b"\x1f\x8b\x08\x00 control payload, never read\n")
+    done = subprocess.run(("git", "add", "-f", "--", ".turn-sessions.tgz"), cwd=root,
+                          capture_output=True, text=True)
+    if done.returncode != 0:
+        raise CannotRun("control: `git add -f` failed in the copy (%s) - the "
+                        "tracked-scratch claim cannot be provoked without git"
+                        % done.stderr.strip()[:140])
+
+
+def control_rename_session_tarball(root):
+    """A carrier starts writing a scratch name the roster has never heard of."""
+    _mutate_once(root, SCRATCH_SESS_NEEDLE,
+                 'SESS="/workspace/.turn-sessions-v2.tgz"',
+                 "the collect tarball path is not where the harness reads it")
+
+
+def control_replace_add_all(root):
+    """The host commit stops being a bare `git add -A`: the leg's subject is gone."""
+    _mutate_once(root, "  git add -A", "  git add -u",
+                 "the host commit is no longer the bare add -A this leg guards")
+
+
+def control_no_git_repo(root):
+    """No git to ask: the leg refuses rather than guessing gitignore semantics."""
+    shutil.rmtree(os.path.join(root, ".git"), ignore_errors=True)
+
+
 # (name, mutation, expected rc, expected text, build the green baseline first?)
 CONTROLS = (
     ("green baseline is green", control_no_change, 0, "SESSION-LOOP CHECK OK", True),
@@ -839,11 +1072,17 @@ CONTROLS = (
     ("workspace mount renamed", control_unmount_workspace, 1, "REVIEW-CAPTURE", True),
     ("carrier script missing", control_missing_carrier, 2, "CANNOT RUN", True),
     ("workflow file missing", control_missing_workflow, 2, "CANNOT RUN", False),
+    ("scratch ignore line lost", control_unignore_scratch, 1, "SCRATCH", True),
+    ("scratch reaches the index", control_scratch_reaches_the_index, 1,
+     "TRACKED in this tree", True),
+    ("unrostered scratch name", control_rename_session_tarball, 2, "unrostered", True),
+    ("add -A replaced by -u", control_replace_add_all, 2, "git add -A", True),
+    ("graded tree is not a repo", control_no_git_repo, 2, "CANNOT RUN", True),
 )
 
 # ELEVENTH harness law, on this harness's own roster: a deleted control is a
 # refusal, never a shorter SELFTEST OK.
-EXPECTED_CONTROLS = 14
+EXPECTED_CONTROLS = 19
 
 
 def selftest(root):

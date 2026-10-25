@@ -240,8 +240,15 @@ python3 scripts/chain_test_check.py --selftest # 18 controls: every leg proved a
 # file, the container mounts the host workspace under that path, and the extractor's own
 # pattern is replayed against every verdict literal the reviewer brief demands (three
 # review-missing runs 2026-10-24 recorded verdict=none while a reviewer lane was named)
+# — AND the loop's workspace scratch is invisible to its own commit: the host commits
+# with a bare `git add -A`, so every dot-path the carriers write into $PWD is derived
+# from them, pinned by roster, and asked of git (ignored via `check-ignore --no-index`,
+# untracked via `ls-files`). `.turn-sessions.tgz` is why this is not housekeeping — it
+# holds the session stores BEFORE the host scrub step, and the guard's grep cannot read
+# inside a gzip stream. Measured leaks of this same shape: `.turn-review.txt` (1a87144,
+# 7a4623d) and `demo-backend/.coverage` (d819f6e, still TRACKED until 2026-10-25)
 python3 scripts/chain_session_check.py        # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/chain_session_check.py --selftest # 14 controls: every leg proved able to fail
+python3 scripts/chain_session_check.py --selftest # 19 controls: every leg proved able to fail
 
 # the chat send-back's FIVE specced checks as ONE command — governance
 # (TEAM.md's MEMBER IDS reversal + its two rule headings), the color sweep of
