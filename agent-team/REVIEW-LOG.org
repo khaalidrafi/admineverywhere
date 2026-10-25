@@ -2654,3 +2654,13 @@
 :WHEN: [2026-10-25 Sun 19:35 UTC]
 :END:
   Merger outcome: review-missing (duty reviewer=groq/qwen3.8-27b@goose, verdict=none; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261024-2326 :empty-segment:
+:PROPERTIES:
+:AUTHOR: platform-engineer
+:REVIEWER: groq/qwen3.8-27b@goose
+:VERDICT: REJECTED
+:OUTCOME: empty-segment
+:WHEN: [2026-10-25 Sun 20:13 UTC]
+:END:
+  Merger outcome: empty-segment (duty reviewer=groq/qwen3.8-27b@goose, verdict=REJECTED; merge authority: Lead, executed by this gate).
