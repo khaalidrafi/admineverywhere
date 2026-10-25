@@ -424,6 +424,16 @@ case "$SEAT" in
          qoder -p "$BRIEF" --output-format json --model deepseek-v4.1-flash \
          --permission-mode bypassPermissions --max-turns 100; then
       echo "TURN_RESULT=qoder run OK (lane: deepseek-v4.1-flash@qoder)"
+    # BOOST rotation (Owner 2026-10-25 18:21Z "BOOST. SPEED UP.") +
+    # probe evidence 18:24Z run 40220339780: codebuddy DEAD (connect
+    # failed, RC=124), groq/qwen3.8-27b the ONLY 200-ALIVE free lane
+    # -> groq takes the FIRST API-fallback slot ahead of the 429 lanes.
+    elif env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
+         OPENAI_API_KEY="$GROQ_API_KEY" \
+         OPENAI_HOST="https://api.groq.com" \
+         OPENAI_BASE_PATH="/openai/v1/chat/completions" \
+         goose run --no-session -t "$BRIEF"; then
+      echo "TURN_RESULT=goose run OK (lane: groq/qwen3.8-27b@goose — boost rotation 2026-10-25)"
     elif env GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash \
          OPENAI_API_KEY="$ZAI_API_KEY" \
          OPENAI_HOST="https://api.z.ai" \
