@@ -261,6 +261,25 @@ python3 scripts/chat_feature_check.py --selftest # 12 controls: every leg proved
 python3 scripts/chain_slot_check.py           # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved able to fail
 
+# THE HANDOVER PATCHES in docs/ as ONE command. A seat cannot edit the chain's own
+# files, so a chain defect travels as `docs/<name>-fix.patch` plus the instruction to
+# run it — and BOTH instructions in the tree had gone dead when this was measured: the
+# session patch was cut against the workflow inline (the segment step moved to
+# .github/scripts/turn_segment.sh, so `git apply --check` fails at its recorded offset
+# while the header above it still says to apply it), and the slot patch proposes a
+# guard the Lead has ALREADY landed, in reworded form. STATUS is therefore a contract,
+# not a comment: a PROPOSAL must carry the APPLY line and must pass `git apply --check`
+# against a target that still exists — and when it does not apply, the verdict names
+# the other carrier that NOW holds the line the hunk removes ("the block moved"), which
+# is the sentence that would have saved this repo two review cycles; a RETIRED must name
+# `GRADED BY: <harness>`, must NOT keep an APPLY line, and is retired only while that
+# harness exists and EXITS 0 — the landed law is measured by the harness that owns the
+# file, never re-matched against the patch's own text, because the Lead rewords what it
+# lands and firing on a re-wording that keeps the law is the false red this whole family
+# exists to avoid.
+python3 scripts/chain_patch_check.py        # 0 ok / 1 a claim is false / 2 cannot run
+python3 scripts/chain_patch_check.py --selftest # every leg proved able to fail
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 

@@ -284,6 +284,31 @@ python3 scripts/chain_session_check.py --selftest # 14 controls: every leg prove
 python3 scripts/chain_slot_check.py           # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved able to fail
 
+# THE HANDOVER PATCHES — the law, stated for the reader who cannot edit the chain. A
+# seat that finds a defect in .github/workflows/* or .github/scripts/* may only hand it
+# over as `docs/<name>-fix.patch` plus the instruction to run it, so THAT INSTRUCTION IS
+# A CLAIM and the claim was false in both files that lived here: measured on the tree
+# before this harness existed, neither handover passed `git apply --check`, and one of
+# the two laws it describes is graded LIVE and green by scripts/chain_slot_check.py (the
+# non-clobber guard the Lead landed in reworded form). Five legs, all read-only:
+# POPULATION (docs holds exactly the pinned roster of handovers — a new patch nobody
+# counted, or one silently deleted, is CANNOT RUN because the harness would grade less
+# than it names), CLASSIFY (every patch carries `STATUS: PROPOSAL` or `STATUS: RETIRED`
+# and the line that status owes — a proposal without its APPLY instruction is prose, a
+# retired patch that still orders the reader to apply it is a dead command a reader
+# FOLLOWS), TARGET (the patched file still exists), APPLY (a live proposal must pass
+# `git apply --check`, and when it fails the verdict greps the other carriers for the
+# very line the hunk removes and NAMES the file it moved into — "cut against the inline
+# workflow block, later extracted into a script" is the whole history of the session
+# patch, and the sentence is worth a review cycle), GRADE (a retired patch is retired
+# only while the harness it names is on disk and exits 0 — the landed law is measured by
+# the harness that owns that file, deliberately never re-matched against the patch's own
+# added text, because the Lead rewords what it lands and firing on a re-wording that
+# keeps the law would be a false red on correct work, the ruling that keeps a stale
+# citation from grading a true one).
+python3 scripts/chain_patch_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/chain_patch_check.py --selftest # every leg proved able to fail
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
