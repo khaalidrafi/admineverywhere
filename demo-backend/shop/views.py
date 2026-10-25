@@ -200,14 +200,7 @@ class OrderViewSet(SearchableModelViewSet):
                 {"reason": "missing required field 'reason' (body: {\"reason\": <text>})"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        entry = AuditEntry.objects.create(
-            actor=_request_actor(request),
-            action="order.flag",
-            object_type="order",
-            object_id=str(order.pk),
-            summary=f"Order flagged: {reason}",
-            data={"reason": reason},
-        )
+        entry = AuditEntry.record_flag(order.pk, actor=_request_actor(request), reason=reason)
         return Response(AuditEntrySerializer(entry).data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
@@ -246,13 +239,12 @@ class OrderViewSet(SearchableModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         entries = [
-            AuditEntry.objects.create(
+            AuditEntry.record_flag(
+                flagged.pk,
                 actor=_request_actor(request),
-                action="order.flag",
-                object_type="order",
-                object_id=str(flagged.pk),
-                summary=f"Order flagged (bulk): {reason}",
-                data={"reason": reason, "bulk": True, "batch": len(wanted)},
+                reason=reason,
+                bulk=True,
+                batch=len(wanted),
             )
             for flagged in found
         ]
