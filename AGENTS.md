@@ -361,6 +361,27 @@ python3 scripts/review_preflight_check.py --selftest  # 13 controls on real fixt
 python3 scripts/review_verdict_check.py        # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/review_verdict_check.py --selftest # 15 controls: every leg proved able to fail
 
+# THE LANES' PROVIDER BUDGET as ONE command, read-only against the Lead-owned lane
+# script: a lane is a command line, and nobody asked whether the brain it names can
+# RECEIVE the request the repo itself builds. goose sends the repo's own AGENTS.md
+# inside every call — measured 68878 bytes as 22895 tokens, and 22892 in the live
+# workspace lane — while the rotated duty reviewer sits on a free tier whose input
+# budget is 7000 and whose output budget (1000, against the 1932 goose's own
+# compaction asked for) is also below one session. So that arm's FIRST call can never
+# be answered here, never: the review-missing beats it produced were arithmetic, not
+# load, and a branch with no verdict cannot land. The check derives the estimate from
+# the bytes in front of it (trim the carrier and the verdict moves), grades the lane
+# EACH ARM TRUSTS FIRST against the pinned budget table, refuses an ungradeable lane
+# (no host, no model, no key NAME) as CANNOT RUN, pins the goose population by host so
+# a deleted lane cannot shrink the compare, and refuses a review file that nothing reads
+# for the provider's OWN rejection markers — because a session that dies mid-flight
+# leaves its error text as the whole answer and the extractor only greps for a verdict
+# token. `--probe` re-measures the receipts with one refused request per pinned host
+# (nothing is billed: the provider rejects before it runs).
+python3 scripts/lane_budget_check.py           # 0 every trusted lane fits / 1 a lane can never answer / 2 cannot run
+python3 scripts/lane_budget_check.py --selftest # 6 controls: every leg proved able to fail
+python3 scripts/lane_budget_check.py --root /tmp/copy   # controls run on copies
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
