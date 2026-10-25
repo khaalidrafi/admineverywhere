@@ -227,27 +227,34 @@ jobs:
         run: |
           SUMMARY="$GITHUB_STEP_SUMMARY"
           echo "" >> "$SUMMARY"
-          echo "### OpenCode built-in lanes probe (wave-3 hires: bare zero-key ids on the in-image body)" >> "$SUMMARY"
+          echo "### OpenCode built-in lanes probe (wave-3 hires: CANONICAL registry ids on the in-image body)" >> "$SUMMARY"
           echo "" >> "$SUMMARY"
+          # 10-dj ROOT CAUSE (Owner 2026-10-25 19:19Z 'they must work'): the prior
+          # probe called BARE ids (glm-5.1-flash, nemotron-3.5-lightning, ...) that
+          # do not exist under those names -> RC=1 in ~2s, four DEAD rows with no
+          # error text. models.dev snapshot (fetched 2026-10-25 19:2xZ) shows the
+          # real free roster: nemotron-3.5-lightning-free, mimo-v2.6-flash-free,
+          # longcat-2.5-preview-free exist; 'glm-5.1-flash' does NOT (closest free
+          # GLM: glm-5.3-flash-free / glm-5-free — probed alongside for QA-4
+          # substitution evidence). Form is provider/model. Also: capture the FULL
+          # probe log (cat), not tail -3, so a dead row shows its real error class.
           # harness image: reuse the one the codebuddy probe built when present,
           # else build (gha cache makes a warm rebuild cheap)
           docker image inspect agent-harness:local > /dev/null 2>&1 || \
             docker buildx build --load --cache-from type=gha --cache-to type=gha,mode=max \
               -f docker/harness/Dockerfile -t agent-harness:local . > /tmp/harness-build2.log 2>&1 \
             || { echo "| opencode built-ins | SKIP | - | harness image build failed (see build log) |" >> "$SUMMARY"; tail -5 /tmp/harness-build2.log 2>/dev/null; cat "$SUMMARY" || true; exit 0; }
-          # bare ids = opencode's own console free roster; NO provider key needed
-          # if the client serves anonymous free usage — the probe MEASURES that
+          # canonical ids = opencode/<model> from models.dev 'opencode' provider;
+          # zero-key IF the client serves anonymous free usage — the probe MEASURES that
           # (a dead row with the exact error is honest evidence, not a fault)
-          for M in glm-5.1-flash nemotron-3.5-lightning mimo-v2.6 longcat-2.5; do
-            OUT=$(docker run --rm --entrypoint bash agent-harness:local -lc "timeout 240 opencode run --print-logs --model '$M' 'Reply with the single word: alive' > /tmp/oc-probe.log 2>&1; echo RC=\$? >> /tmp/oc-probe.log; tail -3 /tmp/oc-probe.log" 2>&1 || echo '(no output captured)')
+          for M in opencode/glm-5.3-flash-free opencode/glm-5-free opencode/nemotron-3.5-lightning-free opencode/mimo-v2.6-flash-free opencode/longcat-2.5-preview-free; do
+            OUT=$(docker run --rm --entrypoint bash agent-harness:local -lc "timeout 240 opencode run --print-logs --model '$M' 'Reply with the single word: alive' > /tmp/oc-probe.log 2>&1; echo RC=\$? >> /tmp/oc-probe.log; cat /tmp/oc-probe.log" 2>&1 || echo '(no output captured)')
             if printf '%s' "$OUT" | grep -q 'RC=0'; then VERDICT="LANE ALIVE"; else VERDICT="LANE DEAD/UNKNOWN"; fi
-            # 10-ba: the first probe round's `head -c 100` graded DOCKER NOISE (the
-            # wrapper's stderr), not the lane error — four DEAD rows landed with no
-            # nameable cause. Grep the failure CLASS out of the captured log first
-            # (auth/model/limits), fall back to the log tail; a dead row with the
-            # exact error is honest evidence, a dead row without is a guess.
-            SNIP=$(printf '%s' "$OUT" | grep -aoE 'RC=[0-9]+|level=(ERROR|WARN)[^,]{0,90}|[Ee]rror[^|\`]{0,90}|[Uu]nauthorized[^|\`]{0,60}|[Ff]orbidden[^|\`]{0,60}|not found[^|\`]{0,60}|[0-9]{3} (Unauthorized|Forbidden|Not Found)[^|\`]{0,40}' | tail -3 | tr '\n' ' ' | tr -d '|\`' | head -c 260)
-            [ -n "$SNIP" ] || SNIP=$(printf '%s' "$OUT" | tail -c 200 | tr '\n' ' ' | tr -d '|' | tr -d '\`')
+            # 10-dj: grep the failure CLASS from the FULL log (OUT now carries the
+            # whole /tmp/oc-probe.log); drop the bare RC= match from SNIP so the
+            # row shows the real error, and fall back to the log tail if no class
+            SNIP=$(printf '%s' "$OUT" | grep -aoE 'level=(ERROR|WARN)[^,]{0,90}|[Ee]rror[^|\`]{0,90}|[Uu]nauthorized[^|\`]{0,60}|[Ff]orbidden[^|\`]{0,60}|not found[^|\`]{0,60}|[0-9]{3} (Unauthorized|Forbidden|Not Found)[^|\`]{0,40}|No credentials[^|\`]{0,60}|[Aa]uth[^|\`]{0,70}' | tail -3 | tr '\n' ' ' | tr -d '|\`' | head -c 300)
+            [ -n "$SNIP" ] || SNIP=$(printf '%s' "$OUT" | grep -a 'RC=' | tail -1)
             echo "| opencode built-in ($M) | opencode console free roster | - | $VERDICT — $SNIP |" >> "$SUMMARY"
           done
           echo "" >> "$SUMMARY"
