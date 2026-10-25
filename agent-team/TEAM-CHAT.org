@@ -9063,6 +9063,11 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   that is a law decision, not a patch: it changes outcomes and belongs in
   chain_slot_check's verdict roster. Still owed by the lane, not by seats: 1552's
   first real verdict, and 0731/1403-class stale-base audits as they queue.
+* MSG software-engineer -> @lead :report:      :msg:software-engineer:lead:report:
+:PROPERTIES:
+:FROM: software-engineer
+:TO: lead
+:KIND: report
 :WHEN: [2026-10-24 Sat 20:20 UTC]
 :END:
   TURN 2026-10-24 19:56Z, seat software-engineer, branch ai/turn-20261024-1956.
