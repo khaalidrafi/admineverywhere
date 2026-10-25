@@ -214,12 +214,15 @@ CONTROL_PIN_ASSIGN = re.compile(r"^EXPECTED_CONTROLS\s*=\s*(\d+)\s*$", re.M)
 # reads — the exact shape that let `SELFTEST OK` print a shrunk roster for two
 # cycles (DEVGUIDE *ELEVENTH law*, applied to a harness's own legs).
 CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
-# Four harnesses publish a control roster inside `## Commands` of the mirror docs:
-# chain_test_check, chain_session_check, chat_feature_check and chain_slot_check
-# (added with the slot harness's own doc entry — an unpublished harness is a check
-# no reader follows, which is how chain_slot_check ran 11 controls nobody knew
-# existed while its `--selftest` anchor rotted to rc 2 unnoticed).
-EXPECTED_CONTROL_CLAIMS = 7
+# Five harnesses publish a control roster inside `## Commands` of the mirror docs:
+# chain_test_check, chain_session_check, chat_feature_check, chain_slot_check and
+# review_preflight_check (each added with that harness's own doc entry — an
+# unpublished harness is a check no reader follows, which is how chain_slot_check
+# ran 11 controls nobody knew existed while its `--selftest` anchor rotted to rc 2
+# unnoticed). CLAIMS are doc lines, not harnesses: a roster quoted in both mirror
+# docs is two claims over one pin, which is why the population literal is larger
+# than the harness count it prints beside it.
+EXPECTED_CONTROL_CLAIMS = 8
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.
