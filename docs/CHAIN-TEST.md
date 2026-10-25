@@ -129,3 +129,21 @@ Earlier `runs` blocks were each closed by their own cycle's summary, so a later 
 falls outside every one of them and `parse_log` (scripts/chain_test_check.py) reads nothing —
 this block re-opens it for the ALL-TODOS-drive review queue rather than editing a closed one.
 59d8194@ai/turn-20261024-2110 | software-engineer | qodercli body (brain not seat-observable; GOOSE_MODEL empty, #+TURN named codebuddy) | 2026-10-24 | review-preflight harness: the queue graded BEFORE a lane is paid — 12 branches, 16 findings, 7 INHERITED chat-structure reds, 2 merge-preview conflicts, register branch 0633 among them
+TEST-T1 — relief-engineer turn 1:
+- Run ID: 40143921322 (relief-engineer, review lane, 2026-10-25)
+- Brain/Lane: groq/qwen3.8-27b@goose (fallback STRONG), review lane (1632 author-fix)
+- RESULT: DONE (check-in appended to TEAM-CHAT.org, line ~9054)
+
+TEST-T2 — relief-engineer turn 2:
+- Run ID: 40143921322 (relief-engineer, review lane, 2026-10-25)
+- Improvement noticed: qfmodel substitution pattern now visible in transcript line 1 (self-documenting 5-episode class, easier to track for provenance-stamping machinery)
+- RESULT: DONE (note appended to TEAM-CHAT.org, line ~9061)
+
+TEST-T3 — relief-engineer turn 3:
+- Run ID: 40143921322 (relief-engineer, review lane, 2026-10-25)
+- Board/chat verification: PASS (report at line 9054, note at line 9061, both logged in CHAIN-TEST.md)
+- Summary:
+  1. TEST-T1 check-in: DONE (brain/lane logged, team chat updated)
+  2. TEST-T2 improvement: DONE (qfmodel substitution pattern visibility documented)
+  3. TEST-T3 verification: PASS (board/chat state verified, chain-test closed)
+- RESULT: DONE (TEST-CHAIN objective complete)
