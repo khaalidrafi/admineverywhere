@@ -219,7 +219,13 @@ CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
 # (added with the slot harness's own doc entry — an unpublished harness is a check
 # no reader follows, which is how chain_slot_check ran 11 controls nobody knew
 # existed while its `--selftest` anchor rotted to rc 2 unnoticed).
-EXPECTED_CONTROL_CLAIMS = 7
+
+# 7 claims over 5 harness sites inside `## Commands`: chain_test_check,
+# chain_session_check and chat_feature_check in AGENTS.md; chain_test_check and
+# chain_session_check again in docs/DEVGUIDE.md. chat_when_check carries the
+# third DEVGUIDE line and the fourth in AGENTS.md, so a mirror on ONE side only
+# would leave its own roster ungraded by a reader.
+EXPECTED_CONTROL_CLAIMS = 9
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.
