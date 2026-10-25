@@ -273,7 +273,7 @@ python3 scripts/chain_test_check.py --selftest # 18 controls: every leg proved a
 # indentation, so when the block moved the patch stopped applying and all eight controls
 # died before grading anything). Either way the fix is measured, not asserted.
 python3 scripts/chain_session_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
-python3 scripts/chain_session_check.py --selftest # 14 controls: every leg proved able to fail
+python3 scripts/chain_session_check.py --selftest # 19 controls: every leg proved able to fail
 
 # THE SEGREGATION-LAW PENDING SLOT as one command — graded READ-ONLY against the
 # Lead-owned merger, because the whole delivery loop hangs on ONE line of
