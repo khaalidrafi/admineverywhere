@@ -10,7 +10,7 @@
 #+STALL-COUNT: 1
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
-#+PENDING-REVIEW: branch=ai/turn-20261025-0547 | author=relief-engineer | sha=2f8987843e6da737d3e9169827c76fb298068b01
+#+PENDING-REVIEW: branch=ai/turn-20261025-1946 | author=software-engineer | sha=93e0f45cb49bc2cdf1483069344bb41d708952a8
 
 * Notes
 
