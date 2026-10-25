@@ -319,6 +319,30 @@ python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved a
 # EXPECTED_PATCHES moved in the same commit, which is the POPULATION leg's own rule.
 python3 scripts/chain_patch_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/chain_patch_check.py --selftest # every leg proved able to fail
+# THE CHAIN'S `:WHEN:` TIMESTAMPS AS ONE COMMAND — the FORMAT LAW writes an Org INACTIVE
+# timestamp `[YYYY-MM-DD Eee HH:MM UTC]`, and until now nothing in the family graded the
+# value: CHAT-FORMAT asks whether a drawer carries the `:WHEN:` KEY and the log
+# cross-check reads only the date out of it, so a WRONG DAY NAME rode green. Measured
+# cost: ai/turn-20261024-1632 was REJECTED seven times on 2026-10-24 and the Saturday
+# stamped "Fri" in its four new entries was re-found by hand each round (the reviewer's
+# transcript: `date -d 2026-10-24` -> Sat). Grades BOTH files that carry the drawer —
+# TEAM-CHAT.org and REVIEW-LOG.org — because a harness that reads one and claims two is
+# the blind spot this repo keeps paying for. Four legs: COVERAGE (exactly one column-0
+# stamp per `:PROPERTIES:` record — none is an undateable claim, two is the fold shape),
+# SHAPE (the literal grammar, so an ACTIVE `<…>` timestamp or a missing UTC label is
+# named as a shape problem, not a parse crash), DATE + CLOCK (2026-02-30 and 25:70 match
+# the shape and mean nothing), DAY (the name must be the weekday the date falls on, read
+# from a PINNED English table indexed by `date.weekday()` — never `strftime("%a")`, which
+# is locale-dependent and would answer RED on every legal stamp under LC_TIME=fr_FR).
+# Two classes were measured and DELIBERATELY excluded, because a leg that fires on correct
+# entries is worse than no leg: CHRONOLOGY (the chat tail legitimately carries `10:02`
+# before `06:24` — two lanes append at EOF and merge order is not clock order) and
+# INDENTED PROSE (bodies quote drawer keys; only column-0 lines are fields, and control 11
+# pins the excuse on a copy that must still be GREEN). Baseline on main: 362 records, 362
+# legal, rc 0; the leg's own proof is grading the rejected branch's chat, which prints the
+# four lines at :8289/:8299/:8314/:8327 the transcript hand-found.
+python3 scripts/chat_when_check.py            # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/chat_when_check.py --selftest # 11 controls: every leg proved able to fail
 
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
@@ -1288,9 +1312,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whole law is about, arriving from the doc side: a seat that adds tests and bumps the
   pin leaves a repo telling the next reader a suite size no gate owes, and a seat that
   edits the doc without the pin has re-numbered every report written from it.
-  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:728`) grades the docs' LIVE
+  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:734`) grades the docs' LIVE
   count claims against the pins, read from the gate's own source rather than re-spelled
-  here — `gate_pins()` (`scripts/release_readiness.py:692`) parses each literal AND imports
+  here — `gate_pins()` (`scripts/release_readiness.py:698`) parses each literal AND imports
   the module, and the two views must agree, because a pin that has become a computed
   value is a number a doc cannot honestly quote. Six doors, in two verdict words:
   a doc that states a different count than the pin is RED naming doc:line, the number,
@@ -1335,7 +1359,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   measured on this tree: AGENTS.md instructs `12 controls` for `scripts/chat_feature_check.py`,
   and that harness had no `EXPECTED_CONTROLS` at all, so deleting a control printed a
   smaller N in its own `SELFTEST OK` and left the instruction, and every report written
-  from it, promising the old number. `control_roster()` (`scripts/release_readiness.py:815`)
+  from it, promising the old number. `control_roster()` (`scripts/release_readiness.py:821`)
   reads THREE views of one intent and refuses to re-spell any of them: the number the doc
   line states, the harness's `EXPECTED_CONTROLS` literal, and the length of its `CONTROLS`
   roster counted from the AST. The harness must also COMPARE the pin against the roster in
