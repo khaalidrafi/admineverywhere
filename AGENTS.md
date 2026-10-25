@@ -294,6 +294,19 @@ python3 scripts/rbac_live_check.py --selftest # 11 controls: every leg proved ab
 # 3/3 on a patched copy)
 python3 scripts/slot_reader_probe.py          # 0 all readers find the slot / 1 a reader is blind / 2 cannot run
 
+# THE THREE SLOT READERS OF ONE LINE, executed — the third door chain_slot_check
+# cannot open. Its text legs MATCH patterns in .github/workflows/agent-team.yml; they
+# cannot tell whether grep 3.11 treats `\#` as a literal `#` or as an escaped `#`. The
+# merger's re-read and the guard's sed write shipped as two DIFFERENT dialects of the
+# same pattern, and only the `^#\+` form finds the live `#+PENDING-REVIEW:` line — so
+# CURSLOT is permanently empty, `[ -z "$CURSLOT" ]` admits every empty write, and the
+# non-clobber guard that exists to protect a Lead advance silently hands the slot back
+# (the 27748d9 and 10-bb clobbers). This harness runs each shipped reader against the
+# shipped control file: today it answers RED, 2 of 3 readers matching, with the
+# one-character repair named — the fix is Lead-owned machinery, the measurement is a
+# command any seat can re-run.
+python3 scripts/slot_reader_probe.py          # 0 all readers agree / 1 an inert reader / 2 cannot run
+
 # THE HANDOVER PATCHES in docs/ as ONE command. A seat cannot edit the chain's own
 # files, so a chain defect travels as `docs/<name>-fix.patch` plus the instruction to
 # run it — and BOTH instructions in the tree had gone dead when this was measured: the
@@ -360,6 +373,24 @@ python3 scripts/review_preflight_check.py --selftest  # 13 controls on real fixt
 # dead-lane marker before calling itself OK
 python3 scripts/review_verdict_check.py        # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/review_verdict_check.py --selftest # 15 controls: every leg proved able to fail
+
+# THE CHECK FAMILY ITSELF, as a check. Every grader in scripts/ is run BY INSTRUCTION —
+# measured: zero of them are invoked anywhere under .github/, so a seat or the Lead runs
+# the one a mirror doc told them to run. The `*_diff.py` twins are population-pinned by
+# landing_gate's EXPECTED_TWINS cross-check; the `*_check.py`/`*_probe.py` family was in
+# NOBODY's domain until this harness, and the first run named two live holes: the slot
+# reader probe landed with the 1552 merge cited by neither mirror doc (a RED finding
+# invisible to anyone who did not already know the command existed) and the chat feature
+# check was published in DEVGUIDE only as prose OUTSIDE its command table. Four legs: the
+# grader roster on disk must equal a pinned roster by name AND count (a vanished harness
+# is CANNOT RUN, never a smaller green); each must have a row inside `## Commands` of
+# AGENTS.md AND docs/DEVGUIDE.md (the region is the domain — prose elsewhere does not
+# tell a reader what to run); every `scripts/x.py --flag` a doc prints must be a flag that
+# harness declares (the inverse hazard: a doc promising a mode that does not exist gets
+# run and reported as tooling rot); and a doc instruction naming an absent file is
+# CANNOT RUN, not a finding about a file.
+python3 scripts/harness_roster_check.py      # 0 roster published / 1 an unpublished grader / 2 cannot run
+python3 scripts/harness_roster_check.py --selftest # controls: every leg proved able to fail
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
