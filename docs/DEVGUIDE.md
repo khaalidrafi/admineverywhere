@@ -261,6 +261,29 @@ python3 scripts/chain_test_check.py --selftest # 13 controls: every leg proved a
 python3 scripts/chain_session_check.py        # 0 = ok, 1 = a claim is false, 2 = cannot run
 python3 scripts/chain_session_check.py --selftest # 14 controls: every leg proved able to fail
 
+# THE SEGREGATION-LAW PENDING SLOT as one command — graded READ-ONLY against the
+# Lead-owned merger, because the whole delivery loop hangs on ONE line of
+# agent-team/TEAM-CONTROL.org (`#+PENDING-REVIEW`) and four separate times that line
+# was the reason nothing could land: an EMPTY slot could never bootstrap (the park
+# keyed on `approved`, which needs a pending branch to already exist), the merger
+# compared a SEAT KEY against member ids so QA reviewed its own branch, a timed-out
+# segment step handed the merger an EMPTY parse and it believed "no-pending" and
+# dropped the queued branch, and a slot the Lead had just re-queued was blanked 20
+# seconds later by a write computed BEFORE its own `git reset --hard`. Four legs:
+# merger-reread, park-bootstrap, verdict-retain, blank-guard. And the merger's own
+# VERDICT ROSTER is CLOSED before any leg runs: every literal `OUTCOME="<x>"` the
+# workflow writes must be a verdict a leg knows — the four park-excluded retain
+# outcomes, `rejected` (retained by its own clause) and the three resolved outcomes
+# that legitimately park this run's branch — so a verdict no leg has heard of is
+# CANNOT RUN naming it, never a quieter green over a roster the harness no longer
+# describes (measured: cycle 10-l added the `lane-dead` exclusion to the park gate
+# while this harness still pinned three, so the leg kept printing "all 3 retain
+# outcome(s)" and the control anchored to the OLD gate line raised CANNOT RUN, which
+# killed seven of the nine controls before they graded anything — the stale-anchor rot
+# this file's *ELEVENTH law* names, arriving at the harness's own controls this time).
+python3 scripts/chain_slot_check.py           # 0 = ok, 1 = a claim is false, 2 = cannot run
+python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved able to fail
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
@@ -1229,9 +1252,9 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   whole law is about, arriving from the doc side: a seat that adds tests and bumps the
   pin leaves a repo telling the next reader a suite size no gate owes, and a seat that
   edits the doc without the pin has re-numbered every report written from it.
-  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:723`) grades the docs' LIVE
+  THE FIX: `leg_doc_counts()` (`scripts/release_readiness.py:728`) grades the docs' LIVE
   count claims against the pins, read from the gate's own source rather than re-spelled
-  here — `gate_pins()` (`scripts/release_readiness.py:687`) parses each literal AND imports
+  here — `gate_pins()` (`scripts/release_readiness.py:692`) parses each literal AND imports
   the module, and the two views must agree, because a pin that has become a computed
   value is a number a doc cannot honestly quote. Six doors, in two verdict words:
   a doc that states a different count than the pin is RED naming doc:line, the number,
@@ -1276,7 +1299,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   measured on this tree: AGENTS.md instructs `12 controls` for `scripts/chat_feature_check.py`,
   and that harness had no `EXPECTED_CONTROLS` at all, so deleting a control printed a
   smaller N in its own `SELFTEST OK` and left the instruction, and every report written
-  from it, promising the old number. `control_roster()` (`scripts/release_readiness.py:810`)
+  from it, promising the old number. `control_roster()` (`scripts/release_readiness.py:815`)
   reads THREE views of one intent and refuses to re-spell any of them: the number the doc
   line states, the harness's `EXPECTED_CONTROLS` literal, and the length of its `CONTROLS`
   roster counted from the AST. The harness must also COMPARE the pin against the roster in
