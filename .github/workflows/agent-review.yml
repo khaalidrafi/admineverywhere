@@ -97,12 +97,18 @@ jobs:
           echo "merge-base: $BASE"
           git diff "$BASE"..."origin/$BR" > review-diff.txt || true
           git diff --stat "$BASE"..."origin/$BR" | tail -3
-          # size guard: keep the reviewer's context bounded
-          MAX=120000
+          # size guard: keep the reviewer's REQUEST under groq's cap —
+          # evidence: runs 40222194772/40222193160 hit HTTP 413 with a
+          # 120KB diff inside the JSON payload (Lead 10-dk). Cap the
+          # diff at 48KB with the stat preamble covering the full change.
+          MAX=48000
           if [ "$(wc -c < review-diff.txt)" -gt "$MAX" ]; then
-            head -c "$MAX" review-diff.txt > review-diff-trim.txt
-            echo "" >> review-diff-trim.txt
-            echo "... [DIFF TRUNCATED at ${MAX} bytes — reviewer must flag PARTIAL REVIEW in the verdict body]" >> review-diff-trim.txt
+            {
+              git diff --stat "$BASE"..."$BR" | tail -5
+              git diff "$BASE"..."$BR" | head -c "$MAX"
+              echo ""
+              echo "... [DIFF TRUNCATED at ${MAX} bytes — stat above covers the full change; reviewer must flag PARTIAL REVIEW in the verdict body]"
+            } > review-diff-trim.txt
             mv review-diff-trim.txt review-diff.txt
           fi
           echo "diff bytes: $(wc -c < review-diff.txt)"
