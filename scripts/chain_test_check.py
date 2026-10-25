@@ -1268,9 +1268,14 @@ def control_prose_lookalike(root):
     — so the PAIR grades discrimination from one base: this control asserts
     the problem text is ABSENT for the lookalike (!needle), its sibling
     asserts a real orphan still fires (needle present). BASE NOTE (Lead
-    2026-10-25: both live folds repaired + the 22:05 rewrite dispositioned): the
-    clean-base copy now grades GREEN, so this control expects rc 0 with the
-    orphan text ABSENT — the discrimination assertion is unchanged."""
+    2026-10-25: both live folds repaired + the 22:05 rewrite dispositioned + the
+    restructure rulings landed): the clean-base copy now grades GREEN, so this
+    control expects rc 0 with the orphan text ABSENT — the discrimination
+    assertion is unchanged. MECHANICS NOTE: the lookalike rides inside a NEW
+    well-formed entry the fixture appends, NOT as bare EOF prose — under the
+    per-entry law a non-headline append at EOF joins the last landed entry's
+    region and IS a rewrite (measured: f23966ed's fixture run went red on the
+    20:18 ruling entry), so the era's raw-EOF shape is itself illegal now."""
     text = _read_file(root, CHAT_REL)
     lines = text.splitlines()
     for number, _line, _owner in scan_orphan_drawers(text)[0]:
@@ -1278,7 +1283,12 @@ def control_prose_lookalike(root):
     text = "\n".join(lines) + "\n"
     if scan_orphan_drawers(text)[0]:
         raise CannotRun("control prose-lookalike: the orphan lines could not be neutralised")
-    text += ":PROPERTIES:, :WHEN:, :FROM:, :TO:, :KIND:, :END:.\n"
+    text += ("\n* MSG lead -> @all :note:      :msg:lead:all:note:\n"
+             ":PROPERTIES:\n:FROM: lead\n:TO: all\n:KIND: note\n"
+             ":WHEN: [2027-01-01 Fri 00:00 UTC]\n:END:\n"
+             "  control: the next line quotes drawer syntax at column 0, the exact\n"
+             ":PROPERTIES:, :WHEN:, :FROM:, :TO:, :KIND:, :END:. — shape that once\n"
+             "  false-positived as an orphan field (run 40113340018).\n")
     _write_file(root, CHAT_REL, text)
 
 
