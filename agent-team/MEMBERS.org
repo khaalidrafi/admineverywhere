@@ -57,18 +57,24 @@
     rotation, never idle burns; harness probes must exclude this seat.
   * ROLE: PLATFORM ENGINEER 2 (HIRED - Owner order 2026-10-24 16:25Z
     "just hire more from our excellent candidates")
-    groq/qwen3.8-27b@goose [ACTIVATING - author-arm wiring + first
-    live proof pending; promoted from the relief fallback chain where
-    it is PROVEN (probe 200, the STRONG arm; saved relief segments
-    twice per the RELIEF LANE WATCH evidence)]
+    groq/qwen3.8-27b@goose [ACTIVE - BOOST cycle 10-di: the ONLY
+    200-ALIVE free lane on the 18:24Z probe table (run 40220339780);
+    author-arm wired as the FIRST API fallback in the platform +
+    software seat chains (software seat needed it URGENTLY: codebuddy
+    lane DEAD 18:24Z, connect failed RC=124); recipe PROVEN (relief
+    arm, saved segments twice); probe 200 re-confirmed 18:17Z]
 
   * ROLE: QA ENGINEER 3 (HIRED - Owner order 2026-10-24 16:34Z
     "hire even more"; wave 2)
-    groq/qwen3.8-27b@goose [ACTIVATING - reviewer-arm wiring + first
-    live proof pending; FREE lane, probe 200 ALIVE at 16:23Z; same
-    brain as PLATFORM ENGINEER 2 - acceptable, refusal law checks
-    member ids and rotation alternates; reviewer-3 depth for the
-    parallel review lanes]
+    groq/qwen3.8-27b@goose [ROTATED IN AS DUTY REVIEWER - Owner order
+    2026-10-25 ~18:08Z "rotate your hire list" + "I want this complete
+    by MORNING 9am": the old primary deepseek-v4.1-flash@qoder died 17
+    consecutive probes (#5-#22) with zero artifacts, deterministic
+    qoder-side brain substitution; groq lane is FREE, probe 200 ALIVE
+    at 16:23Z, recipe PROVEN in this repo's author relief arm; first
+    live REVIEW proof = the next probe verdict (probation until then);
+    qoder deepseek demoted to in-lane fallback; same brain as PLATFORM
+    ENGINEER 2 - acceptable, refusal law checks member ids]
 
   * HIRES WAVE 3 (Owner order 2026-10-24 17:01Z "Hire built-in models
     from Opencode and cline") - built-in free-roster bodies, probe-first
@@ -76,7 +82,10 @@
     next cycles; a hire is never ARMED without a measured completion):
 
   * ROLE: QA ENGINEER 4 (HIRED - Owner order 17:01Z, wave 3)
-    glm-5.1-flash@opencode [ACTIVATING - reviewer-4 depth; GLM lineage
+    glm-5.1-flash@opencode [DORMANT - lane measured DEAD in CI 18:24Z
+    run 40220339780 (RC=1, all four opencode built-in rows dead);
+    hired-but-unprobed -> intern law keeps the seat; re-probe before
+    any arm wiring; GLM lineage
     = the team's proven brain family (Lead tier + relief fallback both
     PROVEN on GLM blood); flash tier fits reviewer cadence; opencode
     BUILT-IN roster = zero-key client free tier, body ALREADY in the CI

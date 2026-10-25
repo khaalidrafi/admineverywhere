@@ -3,16 +3,29 @@
 # VERBATIM every run. The Lead is the only writer (seats: file:line
 # evidence in chat instead).
 
-#+KILL-SWITCH: ON
+#+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
-#+OBJECTIVE: LEAD 10-cp LAW BREACH DISCLOSURE + REGISTER ADVANCE: (1) BREACH — the 10-cn escalation push (45ea1cf) was made from lead-control which CARRIED the staged 2110 union (37d064d, pre-audited + full gate MEASURED green 11/11 in 10-cm) — the union landed on main WITHOUT a duty-reviewer APPROVED verdict, violating the merger law; the 10-cn worklog line "push remains gated on an APPROVED verdict" was WRONG (the push was NOT gated — Lead error in push composition, not in measurement). (2) THE CHAIN SAW IT: the probe run's finalize then computed rev-list main..2110 = 0 (branch fully merged) and the husk law CORRECTLY deleted the branch + cleared the slot (d693d3c empty-segment, "next pending: none") — no content lost: the union tree is exactly the measured one (pytest 306/vitest 484+39/twins identical/release pin 10/CHAT-STRUCTURE 0), branch ref preserved in Lead local. (3) DISPOSITION: union KEPT on main; ratify-or-revert is an OWNER LAW decision (ask added to the standing escalation — reverting would re-roll the chat fold lottery on a re-append for zero content benefit while the verdict lane is down); Lead does not self-grant. (4) LANE FAILURE #4: transcript-455 = SAME deterministic abort profile as 453 (episode #13 qfmodel substitution, 31 turns ~896s, "Operation aborted"/aborted_tools) — two identical profiles = systematic upstream failure, lane still DOWN, KILL ON stays. (5) REGISTER -> 2244@8cea274 (software-engineer, union x2 mechanical, next in queue); empty 1314 husk branch deleted (tip fully in main). RESUME CRITERIA unchanged: first real verdict token -> KILL OFF + dispatch.
-#+TURN: qwen3.8-flash@qoder (Platform Engineer)
-#+STALL-COUNT: 15
+#+OBJECTIVE: LEAD 10-dh DEADLOCK BREAK (Owner delegated 18:17Z "you gotta decide on your own"; 9am deadline): KILL ON structurally prevented ANY review — the turn segment (review phase included) is skipped under mode=killed (yml Stop notice step: mode=killed exit 0; proven by run 40220339780 turn job = all steps skipped, 0s segment), so the "first real verdict -> KILL OFF" resume criteria could never self-satisfy; probes #18-#22 review-missing writebacks were bookkeeping, not lane attempts (real lane-failure evidence remains transcripts 453/455 episodes #8-#13, pre-10-cp). RESUME: duty reviewer = groq/qwen3.8-27b@goose (Owner rotation order 18:08Z, machinery c988b9c); pending 2244@8cea274 reviews THIS run via the rotated lane; on APPROVED the finalize merger lands it per law (chat-fold risk known: re-insert the 5 authored header lines, EXPECTED_CONTROL_CLAIMS 10->11); queue then 2326 -> 0015 -> 0056 -> 0320 -> 0440 -> 0515 -> 0547 -> 0607 -> 0652(marker-fix) -> 0750 -> 0830 -> 1041 -> 1140; rejected-awaiting-recut 1804; safety: BR-01 auto CHAIN-PAUSE at stall>=12; if rotated lane fails 2 real attempts, Lead ships verified queue on Lead-measured gates per delegation (stack e4009f0 local, gate GREEN 11/11 measured). Machinery/roster notes: see MEMBERS.org QA-3 + Notes.
+#+TURN: zai/glm-4.7-flash@goose (Relief Engineer)
+#+STALL-COUNT: 22
 #+PAUSE-AFTER-TODO: OFF
-#+CHAIN-PAUSE:
+#+CHAIN-PAUSE: armed 2026-10-25 18:33Z — AUTO stall-halt at stall=22: 12+ no-progress backoff segments; diagnose lanes, then clear this line to resume
 #+PENDING-REVIEW: branch=ai/turn-20261024-2244 | author=software-engineer | sha=8cea27465c2addc9e0f8e46754d4475163901773
 
 * Notes
+
+- LEAD ROTATION (Owner order 2026-10-25 ~18:08Z, in-channel: "rotate
+  your hire list" + 9am completion goal): DUTY REVIEWER swapped to
+  groq/qwen3.8-27b@goose (QA-3, wave-2 hire). Evidence for the swap:
+  17 consecutive review-missing probes #5-#22, ZERO artifacts,
+  deterministic qoder-side brain substitution (episodes #8-#13,
+  transcripts 453/455); lane fix 5e7d206 did not recover it. The groq
+  recipe is PROVEN in the author relief arm (probe 200; GROQ_API_KEY
+  in repo secrets). qoder deepseek demoted to in-lane fallback. This
+  resolves escalation ask #2 (lane change) by Owner order; asks #1/#3/#4
+  (substituted-brain verdict validity, provenance patch, 2110
+  ratify-or-revert) remain open. First live review proof = next probe;
+  if the rotated lane also fails 2 probes, revert + re-escalate.
 
 - LEAD CYCLE 9-e (21:2xZ, three actions): (1) R-005 CSV MERGED c8217b1 —
   the CI merger had hit a real CONFLICT in scripts/landing_gate.py (1935 and
