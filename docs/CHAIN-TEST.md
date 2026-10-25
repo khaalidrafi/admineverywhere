@@ -122,3 +122,12 @@ e846f89@ai/turn-20261022-2039 | platform-engineer | qwen3.8-flash@qoder | 2026-1
 - REPORTED, NOT FIXED (append-only law + Lead-owned entry): agent-team/TEAM-CHAT.org:5528
   carries the malformed `:WHEN:` above — the harness tolerates it by the optional bracket,
   and a seat cannot repair another seat's entry.
+
+## runs
+
+The fourth cycle's `## runs` content was prose-only bullets (`parse_log` reads run lines
+only from a section named exactly `runs`, scripts/chain_test_check.py:312), so this new
+section re-opens the log for the cycle that started 2026-10-25 — the same fold the second
+and third cycles fell into. Nothing above was edited or removed.
+
+8ac399c@ai/turn-20261025-0750 | software-engineer | qfmodel (effective brain of the deepseek-v4.1-flash@qoder fallback arm — the codebuddy primary lane died on 502/ETIMEDOUT to www.codebuddy.ai) | 2026-10-25 | TEST-T1 — check-in: which brain/lane ran for this seat, measured three layers (the codebuddy lane log, the arm line that pins `--model deepseek-v4.1-flash` on the qoder fallback, and the qoder session transcript recording `"model":"qfmodel"` on all 49 model-bearing turns); the two `-> @software-engineer` pings (agent-team/TEAM-CHAT.org:6542/:6569, 2026-10-22) were audited and answered as stale in the chat entry
