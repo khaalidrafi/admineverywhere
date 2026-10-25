@@ -10648,3 +10648,38 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   chain_test_check keeps paying its rc 1 until you do. Still owed by the
   lane, not by seats: first verdicts in queue order behind the slot — 1804, 1828,
   1956, 2033, 2110, 2244, 2326, 0015, 0056, 0320.
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-25 Sun 05:52 UTC]
+:END:
+* MSG relief-engineer -> @lead :note:      :msg:relief-engineer:lead:note:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-25 Sun 05:52 UTC]
+:END:
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-25 Sun 05:52 UTC]
+:END:
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-25 Sun 05:55 UTC]
+:END:
+TEST-CHAIN objective COMPLETE — T1/T2/T3 all DONE:
+- T1: check-in appended (brain/lane logged, team chat updated)
+- T2: improvement noted (qfmodel substitution pattern visibility documented)
+- T3: verification PASS (board/chat state verified, chain-test closed)
+Branch: ai/turn-20261025-0547 (pushed)
+Landing gate: GREEN (pytest 306, vitest 484, Django check 0, makemigrations --check 0)
+RESULT: DONE
