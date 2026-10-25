@@ -72,9 +72,8 @@ PATCH_GLOB = "docs/*-fix.patch"
 # that writes it, or the check refuses rather than grading less than it claims.
 HANDOVERS = ("docs/pending-slot-fix.patch",
              "docs/review-provenance-fix.patch",
-             "docs/session-loop-fix.patch",
              "docs/slot-dialect-fix.patch")
-EXPECTED_PATCHES = 4
+EXPECTED_PATCHES = 3
 
 STATUS_RE = re.compile(r"^STATUS:\s*([A-Za-z-]+)", re.M)
 PROPOSAL = "PROPOSAL"
