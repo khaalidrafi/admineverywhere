@@ -88,6 +88,7 @@ jobs:
             python3 demo-backend/manage.py makemigrations --check 2>&1 | tail -3
             echo "MIGRATIONS_RC=$?"
             echo "--- secret scan over the FULL diff (SECRET LAW pre-measure) ---"
+            BR="${{ steps.head.outputs.branch }}"
             BASE=$(git merge-base origin/ai/main "origin/$BR")
             SECRET_HITS=$(git diff "$BASE"..."origin/$BR" | grep -Eci "github_pat_[A-Za-z0-9_]+|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|BEGIN (RSA|EC|OPENSSH) PRIVATE KEY" || true)
             echo "SECRET_SCAN_HITS=$SECRET_HITS (0 = clean; full diff scanned, not the truncated body)"
