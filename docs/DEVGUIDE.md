@@ -230,10 +230,14 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 # BYTE prefix of the current one (no entry edited, none dropped) and over the whole
 # history no entry ever disappears; the run log holds one well-formed line per turn
 # (`sha@branch | seat | lane | date`) whose every run id resolves to a real commit and
-# whose date agrees with that turn's chat entry; and every parked board item is still a
+# whose date agrees with that turn's chat entry, AND every run-shaped line in that log is
+# one the harness READS — parse_log grades only a section named exactly `runs`, so a
+# record that fell below the fold is LOG-COVERAGE red rather than one fewer in the printed
+# count (the log itself says twice that a cycle's lines dropped out of that region, and the
+# count never moved to admit it); and every parked board item is still a
 # headline. A PROSE record of what a turn did is not re-runnable — this is.
 python3 scripts/chain_test_check.py            # 0 = ok, 1 = a claim is false, 2 = cannot run
-python3 scripts/chain_test_check.py --selftest # 13 controls: every leg proved able to fail
+python3 scripts/chain_test_check.py --selftest # 15 controls: every leg proved able to fail
 
 # THE CHAIN'S SESSION collect->restore loop as one command — the Owner's SESSION LAW
 # (18:27Z) says each turn's CLI session files are collected, uploaded and restored into
