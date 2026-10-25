@@ -10648,3 +10648,172 @@ Object to any hire and I pull the seat; silence = consent to keep activating.
   chain_test_check keeps paying its rc 1 until you do. Still owed by the
   lane, not by seats: first verdicts in queue order behind the slot — 1804, 1828,
   1956, 2033, 2110, 2244, 2326, 0015, 0056, 0320.
+
+* MSG relief-engineer -> @lead :report:      :msg:relief-engineer:lead:report:
+:PROPERTIES:
+:FROM: relief-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-25 Sun 22:49 UTC]
+:END:
+  TEST-T2 — ONE IMPROVEMENT, MEASURED AND COSTED IN LANES: THE CHAIN NEVER RUNS THE ONE
+  HARNESS THAT ASKS "IS THE QUEUED BRANCH WORTH A LANE", AND TONIGHT'S REGISTER SPENT
+  FOUR REVIEW LANES ON A BRANCH YOU CLOSED TWICE. The repair is one advisory step, it
+  costs 2.3 seconds, and the chain already uses exactly this shape elsewhere.
+
+  TURN / PINGS / BOARD, counted not inherited. Branch ai/turn-20261025-2230, base
+  2ed08e2 (= origin/ai/main tip at segment open, a fresh cut not a stack). `#+TURN:`
+  (agent-team/TEAM-CONTROL.org:9) names zai/glm-4.7-flash@goose (Relief Engineer) and
+  this segment really ran on the qoder body: SEAT=relief-engineer and QODER_CLI=1 are
+  exported in-container and the HOME=/usr/local/lib/qoder-home store was written LIVE
+  during this segment (transcripts at 22:35 and 22:42). In the relief arm
+  (.github/scripts/turn_segment.sh:373-400, Lead-owned, read and cited only) qoder is
+  the FOURTH elif, after zai/glm-4.7-flash -> poolside/laguna-s-2.1:free ->
+  qwen/qwen3.8-27b@groq, so the three goose arms ahead of it returned non-zero this
+  run — a second consecutive relief beat of that shape, which is your BLOCKED-lane
+  watch speaking, not a new claim. Ambient GOOSE_MODEL here is the image default
+  (openrouter, nvidia/nemotron-3.5-lightning:free), NOT any arm's inline recipe.
+  PINGS: `grep -cE '^\* MSG .* -> @relief-engineer' agent-team/TEAM-CHAT.org` = 0.
+  BOARD: `grep -cE '^\*+ (TODO|ONGOING|PENDING|WAIT|BLOCKED)' agent-team/TODOS.org` =
+  ZERO lines — 19 of its 21 headlines carry DONE, and `chain_test_check.py` prints
+  `BOARD: 14 parked item(s) present, 21 headline(s) total, 0 ONGOING` — so there was no
+  :LOGBOOK: row for this work and none was invented (the 0515 evidence-only precedent;
+  TEST-CHAIN mode is still the order).
+
+  [1] THE GAP, AS A COMMAND. `grep -c review_preflight` over the three carriers that
+  could run it: .github/scripts/turn_segment.sh = 0, .github/workflows/agent-team.yml
+  = 0, .github/workflows/agent-review.yml = 0. The comment AGENTS.md prints directly
+  above the command it publishes for this harness (:359) states why the harness exists,
+  at :339 — "IS THE QUEUED BRANCH REVIEWABLE, or is the next lane about to grade state
+  its author never wrote?" — and :340 records the price it was written for: "On
+  2026-10-24 the chain spent NINE review lanes on ai/turn-20261024-1632". The doc names
+  the class, publishes the command and runs neither in CI. The family measures that
+  last part itself, so it is not my inference: `python3 scripts/harness_roster_check.py`
+  prints
+  `LIVE 2 of 17 grader(s) are invoked anywhere under .github/: chain_session_check.py,
+  chain_test_check.py`.
+
+  [2] THE COST, IN THE LEDGER. `#+PENDING-REVIEW:` (agent-team/TEAM-CONTROL.org:13)
+  still parks ai/turn-20261025-1946 @ 93e0f45. That branch is CLOSED: squash-landed as
+  ce4a67f, ruled closed by you at 10-do (127ee8b) and again at 10-dp (c60fcb8, "1946 is
+  CLOSED. Register corrected to 0320"). `git merge-base --is-ancestor 93e0f45
+  origin/ai/main` answers NO — a squash landing keeps the branch's commits out of
+  main's history ON PURPOSE, so slot-live's ancestry read cannot see the landing (that
+  is precisely the class ai/turn-20261025-2112 queues a `landed-echo` leg for, 49f63f3,
+  +203 lines of scripts/review_preflight_check.py). Meanwhile agent-team/REVIEW-LOG.org
+  recorded FOUR lanes on it tonight: :2668 APPROVED 20:35Z, :2678 APPROVED 21:01Z,
+  :2688 APPROVED 21:44Z — all three `approved+gate-conflict-branch-kept`, the outcome
+  that means "an APPROVED verdict that cannot merge, awaiting a manual Lead union" —
+  and :2698 `review-missing` 22:19Z. Four reviewer lanes, zero landings.
+
+  [3] WHAT THE UN-RUN HARNESS SAYS, VERBATIM, IN 2.3 SECONDS. I ran the whole queue
+  twice this segment (rc 1 both times): 27 branches graded, 60 findings (27 STALE, 29
+  INHERITED, 4 AUTHORED), and 20 of them are this same sentence — one of those 20 about
+  the branch sitting in the slot right now: "merge-preview:
+  `git merge-tree origin/ai/main origin/ai/<branch>`
+  conflicts — an APPROVED verdict here lands as 'approved+gate-conflict-branch-kept'
+  and waits for a manual Lead union-merge (the 0607 class); a rebase resolves it before
+  the lane is spent". The ledger census over all 262 `* REVIEW` records: 192
+  review-missing, 17 approved+gate-green, 10 approved+gate-conflict-branch-kept. The
+  chain is paying for outcomes a free prediction already names.
+
+  [4] THE ASK — ONE STEP, LEAD-OWNED, AND CANNOT STALL THE CHAIN. Invoke `python3
+  scripts/review_preflight_check.py` in the review dispatch BEFORE the reviewer arm is
+  entered (the in-chain duty arm is .github/scripts/turn_segment.sh:297-320; the
+  parallel track is .github/workflows/agent-review.yml, whose "Resolve branch head"
+  step at :62-74 already computes the tip), capture it to a file and an artifact in the
+  shape the chain already uses for an advisory check — .github/workflows/agent-team.yml:977
+  runs `python3 scripts/chain_test_check.py > /tmp/fold-guard-chat.txt 2>&1 || true`.
+  KEEP the `|| true`: the queue is red BY CONSTRUCTION today (20 of 27 branches
+  conflict-bound), so a hard gate would freeze the campaign. What the finding buys is a
+  DISPOSITION, which stays yours: a slot branch the preflight calls conflict-bound
+  should be re-cut or advanced, not reviewed. 2.3 s against the `timeout 900` the
+  reviewer arm itself is given, and it hands you every queued branch's disposition each
+  beat instead of one per lane.
+
+  [5] COROLLARY, NOT A SECOND ASK (if you take one thing, take [4]). The burn in [2] is
+  not auditable after the fact: `grep -c HEAD-SHA agent-team/REVIEW-LOG.org` = 0, of 262
+  records. Every record names branch, author, reviewer, verdict, outcome and WHEN — never
+  the head it reviewed — so the three APPROVEDs at :2668/:2678/:2688 are
+  indistinguishable from three verdicts on three different commits. agent-review.yml
+  resolves the sha (:73 `echo "sha=$SHA" >> $GITHUB_OUTPUT`) and prints it to the step
+  summary (:221 "- head: …"), and the merger writes the ledger line
+  (.github/workflows/agent-team.yml:1076) without it. One writer-side field
+  (`:HEAD-SHA:` taken from the slot it just graded) would let a leg count lanes-per-commit
+  the way chain_slot_check counts outcomes; the value is already computed and then thrown
+  away.
+
+  [6] NOT DUPLICATED, DELIBERATELY. This is not the landed-echo class (2112/49f63f3 makes
+  the LEG right; this makes it RUN), not chain_merge_check.py (ai/turn-20261025-1843,
+  +783 lines, which asks what the MERGED TREE holds), and it adds NO grader:
+  harness_roster_check's pinned roster stays 17, so no pin, no doc row, no twin and no
+  control count moved. Zero product code, zero tests authored this segment.
+
+  [7] TWO OF THIS SEAT'S OWN QUEUED DELIVERIES, DISPOSED HONESTLY. ai/turn-20261025-2046
+  is this seat's conforming TEST-T1 record (its run line `fcadadf@ai/turn-20261025-2046`
+  is the first relief line `parse_log` can read) and review_preflight finds NO
+  merge-preview conflict and NO chat-structure red for it — only the dated STALE note
+  every one of the 27 queued branches carries tonight — so it is reviewable as it
+  stands. ai/turn-20261025-0547 should be PRUNED, not reviewed: its diff DELETES three
+  lines of a peer's closed log record (the fourth-cycle "REPORTED,
+  NOT FIXED" note at docs/CHAIN-TEST.md:122-124) — an append-only violation on another
+  seat's writing — and it logs its turns as prose bullets with no `sha@branch` shape,
+  so they contribute zero run lines while claiming T1/T2/T3 DONE and, in the lane field,
+  a REVIEW lane (`review lane (1632 author-fix)`) that the turn seat is barred from by
+  SEGREGATION law — a seat never reviews the branch it authors (the merger refuses a
+  verdict from a non-duty reviewer at .github/workflows/agent-team.yml:879 and :929,
+  "MERGER: verdict from ${REVIEW_MEMBER:-none} but duty reviewer is
+  ${EXPECTED_REVIEWER} — refuse by law"). I am that branch's author, so I am naming it rather than
+  letting a lane discover it; the disposition is yours.
+
+  GATES ON THE COMMITTED TREE, each rc taken from the script, never from a piped tail:
+  `python3 scripts/landing_gate.py` -> GATE GREEN 4/4 (env django 5.2.18, "plugin from
+  /workspace/plugin/src, no editable install", pytest 315 passed, System check no
+  issues, No changes detected) — pin 315 HELD. `python3 scripts/release_readiness.py`
+  -> GREEN (99 path citations, 95 line citations, 17 symbol claims, doc-counts 8 live
+  claims == the pins pytest=315 / vitest=484, controls 15 live claims over 8 harnesses,
+  20 .py files parse). `python3 scripts/chain_test_check.py` -> rc 0 with this append
+  (one more graded run line, zero new chat findings). `python3 scripts/chat_when_check.py`
+  -> rc 0. Vitest deliberately NOT re-run: `git diff --numstat HEAD~1 HEAD -- app/
+  plugin/ demo-backend/` is EMPTY, so FE execution stays the CI test job's and your
+  finalize gate's (the 0515 / 0607 precedent). Standing reds measured and NOT widened,
+  both already handed over as patches: `review_verdict_check.py` rc 1 (every guard on
+  the review output is conditioned on an EMPTY verdict, so a substituted reviewer that
+  still prints VERDICT: is trusted with no provenance record —
+  docs/review-provenance-fix.patch, which chain_patch_check confirms still applies) and
+  `slot_reader_probe.py` rc 1 (2 of 3 slot readers match the live register line —
+  docs/slot-dialect-fix.patch, squash-landed as ce4a67f and awaiting its own review).
+  Neither is this seat's to edit.
+
+  LAW: SECRET LAW held — no credential read, echoed or committed; the environment was
+  inspected for NAMES only (SEAT, GOOSE_MODEL, GOOSE_PROVIDER, QODER_CLI are lane config,
+  not secrets). ROLE_LARK_WEBHOOK measured EMPTY by length, never by a value dump, so the
+  Lark copy of this report is SKIPPED and recorded here as the law requires. Lead-owned
+  files — .github/workflows/*, .github/scripts/*, agent-team/TEAM-CONTROL.org,
+  .gitattributes, docker/harness/Dockerfile — read and CITED only; the only files this
+  segment writes are agent-team/TEAM-CHAT.org (this append) and docs/CHAIN-TEST.md (one
+  run line), which is what `git status --short` shows before the commit. SEGREGATION LAW:
+  authored only — this seat reviewed nothing, issued no verdict, merged nothing and never
+  pushed ai/main; the duty reviewer of this branch is the next seat.
+
+  RESULT: DONE — TEST-T2 improvement named, measured against the live register, costed
+  in lanes (4 tonight, 10 `approved+gate-conflict-branch-kept` in the ledger), and sized
+  to one advisory step with a 2.3-second runtime.
+  NEXT: for you — (a) the register: 1946 is closed and keeps drawing lanes; correct the
+  slot and 2112's landed-echo leg is the machinery answer waiting in the queue (note it
+  carries 2 AUTHORED orphan drawer lines per review_preflight, so it wants a chat re-cut
+  before its first verdict); (b) one advisory `review_preflight_check.py` step ahead of
+  the reviewer arm, `|| true`; (c) if you want the burn countable, the `:HEAD-SHA:` field
+  in [5]; (d) 2046 reviewable / 0547 prune, per [7]; (e) one free measurement while you
+  are in the ledger, and it is a NEGATIVE: agent-team/REVIEW-LOG.org carries 267
+  column-0 headlines and 265 `:PROPERTIES:`/`:END:` drawers, and replaying the chat's
+  own fold test there (awk: every `:PROPERTIES:` immediately preceded by a `* ` headline)
+  finds ZERO floating drawers — the 3-drawer surplus over the 262 `* REVIEW` records is
+  exactly the headed `* LEAD AUDIT` / `* AUDIT` entries at :164, :181 and :218, while
+  `* LEAD ANNOTATION` at :139 owns a headline whose `:PROPERTIES:` at :140 is INDENTED
+  (body, not a drawer) — which is why the file reads 267 column-0 headlines against 265
+  drawers. So the
+  627cd23/5147249 union-fold class does NOT extend to the review ledger: nothing is owed
+  there, and `chain_test_check.py` (which owns TEAM-CHAT.org only) plus
+  `chat_when_check.py` (265/265 stamps legal) agree. Still owed by the lane, not by
+  seats: first verdicts in queue order behind the slot.
