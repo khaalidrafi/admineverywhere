@@ -1,0 +1,204 @@
+REVIEW-BRAIN PROVENANCE — proposal patch for the agent-team chain's own merger.
+Lead-owned files: a seat may ONLY read and cite them, never edit them (chain law
+11), so this file is the handover and the fix travels as hunks.
+
+TARGET: .github/scripts/turn_segment.sh   (the review-output extractor, :548-574)
+TARGET: .github/workflows/agent-team.yml  (the turn job outputs :313-316 and the
+        "SEGREGATION bookkeeping" step that writes agent-team/REVIEW-LOG.org)
+STATUS: PROPOSAL — NOT APPLIED. Both targets are Lead-owned.
+APPLY:  git apply --check docs/review-provenance-fix.patch
+        git apply       docs/review-provenance-fix.patch
+ROT-PROOF: python3 scripts/chain_patch_check.py grades THAT this patch still
+        applies to the files it names. Its handover roster and pin now count
+        THREE patches — that literal moved in the same commit as this patch, per
+        the POPULATION leg's own rule ("a new handover must be added here in the
+        same commit that writes it, or the check refuses rather than grading less
+        than it claims").
+WHAT IS BROKEN — measured, not replayed from a Lead note:
+
+  The chain has taken FIVE verdicts in a row from a provider-SUBSTITUTED reviewer
+  brain while the record read as the duty reviewer's own work. Evidence quoted in
+  TEAM-CONTROL.org:8 (Lead cycles 10-az, 10-bc, 10-bf, 10-bh, 10-bj — "qfmodel
+  substitution 3RD/4TH/5TH CONSECUTIVE EPISODE", transcripts review-transcript-420
+  / -421 / -422 / -425, first line each: "Model deepseek-v4.1-flash is not
+  available right now; using qfmodel instead"). Lead 10-bh scheduled the fix:
+  "automated provenance stamping (grep transcript line 1 for the substitution
+  pattern, stamp the ci-review record) scheduled for the next machinery pass".
+
+  Why the existing plumbing cannot see it: .github/scripts/turn_segment.sh:561
+  conditions the marker grep on `[ -z "$REVIEW_VERDICT" ]`, so the substitution
+  string is only consulted when NO verdict parsed. A substituted reviewer that
+  still prints `VERDICT:` therefore answers lane_dead=0 (:574) and the merger
+  writes a REVIEW-LOG record naming the DUTY reviewer as the brain — the record
+  group at agent-team.yml:1056-1066 emits only AUTHOR / REVIEWER / VERDICT /
+  OUTCOME / WHEN, so nothing in the durable audit trail says which brain judged.
+
+WHAT THIS PATCH DOES:
+
+  1. turn_segment.sh computes the substitution stamp UNCONDITIONALLY (whenever a
+     branch was pending), capturing the substitute's own name from its marker
+     line, whitelisted to [A-Za-z0-9._:@-] and length-capped, and exports
+     review_substituted / review_sub_brain as step outputs next to the existing
+     review_lane_dead. lane_dead keeps its own condition and value: the patch
+     does not reclassify anything.
+  2. agent-team.yml maps the two new outputs into the job outputs (beside
+     review_lane_dead, :316) and passes them into the bookkeeping step as an
+     `env:` mapping — NOT inline `${{ }}` interpolation: the value is a fragment
+     of the reviewer CLI's stdout, so it must never be written into the script
+     text that bash executes.
+  3. The REVIEW-LOG record gains `:SUBSTITUTED: no` or `:SUBSTITUTED: yes
+     (<brain> substituted)` between VERDICT and OUTCOME, and the record body
+     names the same fact. It is provenance ONLY: OUTCOME, NEWPENDING, the verdict
+     roster and the stall law are untouched, so a produced verdict stays a
+     verdict — exactly the Lead's ruling in 10-az ("NOT counted a review-miss (a
+     verdict was produced)").
+
+WHAT IT DELIBERATELY DOES NOT CHANGE:
+
+  * No outcome, no park/retain rule, no merge decision. The record of a verdict
+    judged by a substitute is still an APPROVED/REJECTED verdict; the stamp makes
+    the substitution visible so the Lead's audit can weigh it, which is the class
+    of false trust 10-az recorded when a substitute also violated the read-only
+    brief and committed inside the container (e47baab).
+  * The existing honest-lane guard (lead cycle 10-l, job 120814481260) is kept
+    verbatim; the new block sits after its `fi` and reuses its marker string, so
+    the two can never disagree about what a substitution is.
+
+MEASURED on this tree before shipping (nothing here is asserted from prose):
+
+  * `git apply --check` CLEAN against the untouched carriers, and the hunks apply
+    and re-apply on a clean checkout; after applying: `bash -n` clean on
+    turn_segment.sh and the workflow parses as YAML.
+  * Functional controls over the EXTRACTED block (the shipped text, run against
+    fabricated review outputs, never against the repo):
+      A substituted + `VERDICT: APPROVED` (the 5-episode class) -> review_verdict
+        =APPROVED, lane_dead=0, substituted=1, sub_brain=qfmodel;
+      B honest duty reviewer -> substituted=0, sub_brain empty;
+      C substituted + NO verdict -> lane_dead=1 AND substituted=1 (the old guard
+        still fires — no regression);
+      D reviewer stdout carrying `$(touch …)` / backticks in the brain slot -> no
+        file created, exported value carries no shell metacharacter;
+      E no pending branch -> substituted=0 (no stamp without a review).
+  * Functional controls over the EXTRACTED record block: `:SUBSTITUTED:` renders
+    for substituted / honest / output-absent (an older turn job writes no value,
+    so the record says `no`, never a guess) and a hostile env value is inert.
+  * Carrier graders, patched vs base: `scripts/chain_slot_check.py` 4/4 GREEN on
+    BOTH (rc 0); `scripts/chain_session_check.py` output BYTE-IDENTICAL patched
+    vs base (still the known 12 Lead-owned problems — this patch does not claim
+    to touch the session loop; docs/session-loop-fix.patch owns that).
+  * `python3 scripts/chain_patch_check.py` -> rc 0 counting 3 handovers;
+    `--selftest` -> rc 0, 12/12 controls (the extra-handover control's needle is
+    decoupled from the count, so a roster bump can never false-red it).
+
+RISK NOTE: the marker string is the qoder CLI's own wording ("is not available
+right now; using … instead"), the same one 10-l already depends on. A harness
+that rewords it silently degrades to `:SUBSTITUTED: no` — a lost stamp, never a
+false accusation. If the Lead wants the stamp to GRADE anything (refuse an
+APPROVED verdict from a substituted brain, or escalate after N substitutions),
+that is a separate law decision: it changes outcomes and belongs in
+chain_slot_check's verdict roster, not in this handover.
+
+ON LANDING: relabel this file `STATUS: RETIRED` and DELETE it from docs/ in the
+same commit that bumps HANDOVERS/EXPECTED_PATCHES in
+scripts/chain_patch_check.py — the POPULATION leg refuses a roster that does not
+match docs/ on disk, so a retired-but-kept handover must still be graded by a
+harness that exits 0, and nothing today grades the `:SUBSTITUTED:` record line.
+Naming a grader that does not exist is the shape this patch family exists to
+refuse (see docs/pending-slot-fix.patch, retired against chain_slot_check.py
+because that harness really does measure the landed guard).
+
+diff --git a/.github/scripts/turn_segment.sh b/.github/scripts/turn_segment.sh
+index be9549c..f3ff099 100644
+--- a/.github/scripts/turn_segment.sh
++++ b/.github/scripts/turn_segment.sh
+@@ -563,7 +563,24 @@ if [ -z "$REVIEW_VERDICT" ] && [ -n "$PENDING_BRANCH" ] \
+   REVIEW_LANE_DEAD=1
+   echo "REVIEW LANE DEAD-MARKER: reviewer model substituted and no VERDICT token — recording lane-dead, not review-missing (job 120814481260 evidence)."
+ fi
+-echo "review verdict for ${PENDING_BRANCH:-none}: ${REVIEW_VERDICT:-none} lane_dead=${REVIEW_LANE_DEAD}"
++# REVIEW-BRAIN PROVENANCE (Lead cycles 10-az / 10-bc / 10-bf / 10-bh / 10-bj —
++# FIVE consecutive verdicts judged by a substituted brain while `lane_dead=0`
++# made the record read as the duty reviewer's own work). The guard above only
++# consults the substitution marker when NO verdict parsed, so a substituted
++# reviewer that still prints `VERDICT:` is trusted with no trace of it in
++# REVIEW-LOG, and every triage since has had to open the transcript artifact by
++# hand to learn which brain judged. The stamp below is unconditional: it records
++# provenance WITHOUT changing any outcome (a produced verdict stays a verdict —
++# the Lead's ruling), so the audit trail names the brain that actually judged.
++REVIEW_SUBSTITUTED=0
++REVIEW_SUB_BRAIN=""
++if [ -n "$PENDING_BRANCH" ] \
++   && grep -q 'is not available right now; using' "$PWD/.turn-review.txt" 2>/dev/null; then
++  REVIEW_SUBSTITUTED=1
++  REVIEW_SUB_BRAIN=$(sed -n 's/.*is not available right now; using \([^ ]*\) instead.*/\1/p' \
++                     "$PWD/.turn-review.txt" 2>/dev/null | head -1 | tr -cd 'A-Za-z0-9._:@-' | cut -c1-60)
++fi
++echo "review verdict for ${PENDING_BRANCH:-none}: ${REVIEW_VERDICT:-none} lane_dead=${REVIEW_LANE_DEAD} substituted=${REVIEW_SUBSTITUTED}${REVIEW_SUB_BRAIN:+ (brain: ${REVIEW_SUB_BRAIN})}"
+ echo "pending_branch=${PENDING_BRANCH}" >> "$GITHUB_OUTPUT"
+ echo "pending_author=${PENDING_AUTHOR}" >> "$GITHUB_OUTPUT"
+ echo "pending_sha=${PENDING_SHA}" >> "$GITHUB_OUTPUT"
+@@ -572,6 +589,8 @@ echo "review_evid=${REVIEW_EVID}" >> "$GITHUB_OUTPUT"
+ echo "review_seat=${REVIEWER_SEAT}" >> "$GITHUB_OUTPUT"
+ echo "review_member=${REVIEWER_MEMBER}" >> "$GITHUB_OUTPUT"
+ echo "review_lane_dead=${REVIEW_LANE_DEAD}" >> "$GITHUB_OUTPUT"
++echo "review_substituted=${REVIEW_SUBSTITUTED}" >> "$GITHUB_OUTPUT"
++echo "review_sub_brain=${REVIEW_SUB_BRAIN}" >> "$GITHUB_OUTPUT"
+ # HOST-SIDE COMMIT (run 39488529938: the seat EDITED + VERIFIED but
+ # its sandbox denied git/pytest — the edits died in the container,
+ # branch pushed empty, work lost). The host commits the workspace
+diff --git a/.github/workflows/agent-team.yml b/.github/workflows/agent-team.yml
+index fde4c99..bfccb43 100755
+--- a/.github/workflows/agent-team.yml
++++ b/.github/workflows/agent-team.yml
+@@ -314,6 +314,8 @@ jobs:
+       review_seat: ${{ steps.seg.outputs.review_seat }}         # duty reviewer that ran (quality-assurance-engineer | visiting-engineer)
+       review_member: ${{ steps.seg.outputs.review_member }}     # duty reviewer's member ID (merger enforces the duty-role law)
+       review_lane_dead: ${{ steps.seg.outputs.review_lane_dead }} # 1 = substitution marker in the review output with no VERDICT token (honest lane-dead; Lead cycle 10-l, job 120814481260 evidence)
++      review_substituted: ${{ steps.seg.outputs.review_substituted }} # 1 = the reviewer BRAIN was provider-substituted, verdict or no verdict — provenance only, changes no outcome (Lead cycles 10-az..10-bj: five verdicts judged by a substitute while lane_dead=0)
++      review_sub_brain: ${{ steps.seg.outputs.review_sub_brain }}   # the substitute's own name, from its marker line (empty when the duty brain answered)
+     runs-on: ubuntu-latest
+     timeout-minutes: 50   # raised 35->50 (Lead, cycle 9-f): must exceed the seg step's 45 so the step's own timeout is what fails first, with artifacts still collected
+     continue-on-error: true
+@@ -995,6 +997,13 @@ jobs:
+       - name: SEGREGATION bookkeeping — record review, set next pending (merger law)
+         id: segregate
+         if: always()
++        env:
++          # PROVENANCE pass-through as ENV, not inline interpolation: the value is
++          # a fragment of the reviewer CLI's own stdout, so it must never be
++          # written into the script text. turn_segment.sh already whitelists it
++          # to [A-Za-z0-9._:@-]; env is the second door.
++          REVIEW_SUBSTITUTED: ${{ needs.turn.outputs.review_substituted }}
++          REVIEW_SUB_BRAIN: ${{ needs.turn.outputs.review_sub_brain }}
+         run: |
+           git config user.name "agent-team-ci"
+           git config user.email "agent-team-ci@users.noreply.github.com"
+@@ -1014,6 +1023,15 @@ jobs:
+           AUTHOR_ID=$(printf '%s' "$SEAT" | cut -d' ' -f1)
+           OUT="$OUTCOME"
+           [ "$OUTCOME" = "approved" ] && OUT="approved+gate-${GATE:-n/a}"
++          # Reviewer-brain PROVENANCE (Lead 10-az..10-bj: five verdicts in a row
++          # were judged by a provider-substituted model while the record said
++          # lane_dead=0, i.e. the duty reviewer answered). This changes NO
++          # outcome — a produced verdict remains a verdict — it only stops the
++          # record from claiming a brain it cannot prove ran.
++          SUB_NOTE="no"
++          if [ "${REVIEW_SUBSTITUTED:-0}" = "1" ]; then
++            SUB_NOTE="yes (${REVIEW_SUB_BRAIN:-unidentified} substituted)"
++          fi
+           # Which branch is pending NEXT? BOOTSTRAP LAW (platform-seat
+           # TEST-T2, measured live 18:41Z — the slot could NEVER fill
+           # from empty: the old write keyed on OUTCOME=approved, but
+@@ -1059,10 +1077,11 @@ jobs:
+                 echo ":AUTHOR: ${PENDING_AUTHOR:-unknown}"
+                 echo ":REVIEWER: ${REVIEW_MEMBER:-unknown}"
+                 echo ":VERDICT: ${VERDICT:-none}"
++                echo ":SUBSTITUTED: ${SUB_NOTE}"
+                 echo ":OUTCOME: ${OUT}"
+                 echo ":WHEN: [${WHEN}]"
+                 echo ":END:"
+-                echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}; merge authority: Lead, executed by this gate)."
++                echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}, reviewer brain substituted=${SUB_NOTE}; merge authority: Lead, executed by this gate)."
+               } >> "$RLOG"
+             fi
+             # NON-CLOBBER SLOT GUARD (Lead hardening of relief-seat patch
