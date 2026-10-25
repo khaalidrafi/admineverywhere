@@ -3451,7 +3451,7 @@ source in the schema = no filtering, everything visible.
 - State "ONGOING" from "TODO" [2026-10-20 Tue 23:16 UTC] :: Seat
   platform-engineer, WORK ORDER item 11 (last open board item).
 :END:
-*** PENDING FR-R007-LIVE — seeded non-superuser demo user (live rejection path) :BE:
+*** DONE FR-R007-LIVE — seeded non-superuser demo user (live rejection path; harness rbac_live_check landed union 10-dn, machine-APPROVED run 40231158131, gate GREEN 11/11, live rig 7/7 legs; remaining: the human browser pass this row always named — harness grades the DOM-free equivalent and says so in docs/rbac.md) :BE:
 Closes the one UNVERIFIED line left on the item above: the rig had only a
 superuser, so a live smoke could never show a gated surface hidden.
 :LOGBOOK:
