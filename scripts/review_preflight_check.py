@@ -40,6 +40,32 @@ tree (0339 / 0454 / 0527 / 20261022-2340 — reviewers rejected for
 `.turn-review.txt` in the tree), and a branch that edits a Lead-owned file
 (auto-REJECT by the brief).
 
+A THIRD state had no reader at all until the platform seat measured it
+(ai/turn-20261025-0830, 2026-10-25 08:47Z): the chat MERGE FOLD. `.gitattributes`
+gives agent-team/TEAM-CHAT.org the `merge=union` driver, so two appends whose
+leading lines are identical — every entry of one seat to one addressee with one
+kind opens with the SAME five lines — are read as common context and folded into
+one header. Measured on ai/turn-20261024-1956: merge base 0 orphan drawer lines,
+branch tip 0, main 0, `git merge-tree --write-tree` 2 (the software entry's
+`:WHEN:`/`:END:` welded onto the platform entry, its headline eaten) — and that
+command answered rc 0, CONFLICT-FREE, which is why the merge-preview leg below
+passed it and the lane was spent anyway. The defect lives in NO tree either side
+carries, so the only read that can see it is the merged blob itself, taken from
+the merge-tree output and scanned with chain_test_check's OWN
+`scan_orphan_drawers` — the same reader the shipped CHAT-STRUCTURE leg uses, not
+a re-spelled grammar (DEVGUIDE *EIGHTH law*).
+
+That read is now made TWICE, on opposite sides of the lane. The Lead landed a
+finalize-side guard (f3e0f63, LEAD 10-ci): after the auto-merge it runs
+chain_test_check on the merged tree and undoes the merge on any CHAT-STRUCTURE
+ground. Correct, and it is why a fold can no longer LAND silently — but it fires
+AFTER a ~30-minute review lane has been paid for a branch that was never going
+to merge. This leg is the pre-lane half of the same claim: it predicts the fold
+before the register is flipped, names it INHERITED (the author's content is
+legal; the repair is a fresh base, not a rework), and the two readers stay
+independent because they use different mechanisms (a workflow grep of the
+shipped harness's output vs this harness's direct read of the merge-tree blob).
+
 LEGS (pinned roster, one per claim a queued branch must satisfy):
 
   slot-live        the #+PENDING-REVIEW branch exists on the remote, carries
@@ -59,6 +85,10 @@ LEGS (pinned roster, one per claim a queued branch must satisfy):
   merge-preview    `git merge-tree` main+branch is conflict-free; a conflict
                    means an APPROVED verdict still will not land without a
                    manual union-merge.
+  merged-fold      when that merge IS conflict-free, its chat blob is scanned:
+                   orphan drawer lines or a missing `* MSG` headline that NEITHER
+                   side authored are the union driver folding two appends onto one
+                   header — `MERGE-ONLY FOLD`, INHERITED, repair = rebase.
 
 Verdicts follow the house convention (docs/DEVGUIDE.md *EIGHTH* + *ELEVENTH*
 harness laws): 0 = every queued branch is review-ready, 1 = a branch is not
@@ -104,8 +134,8 @@ LEAD_OWNED_PREFIXES = (".github/workflows/", ".github/scripts/")
 LEAD_OWNED_FILES = ("agent-team/TEAM-CONTROL.org", ".gitattributes")
 
 LEG_ROSTER = ("slot-live", "stale-base", "chat-structure", "tree-hygiene",
-              "merge-preview")
-EXPECTED_LEGS = 5
+              "merge-preview", "merged-fold")
+EXPECTED_LEGS = 6
 
 PENDING_RE = re.compile(r"^\#\+PENDING-REVIEW:\s*(.*)$", re.M)
 FIELD_RE = re.compile(r"\b(branch|author|sha)=([^ |\s]+)")
@@ -232,6 +262,27 @@ def orphan_row(ctc, repo, ref):
     return len(orphans), headlines
 
 
+def merged_chat(ctc, repo, tree):
+    """The same scan over the MERGE RESULT — the one state a fold can live in.
+
+    Neither parent carries it (measured on ai/turn-20261024-1956: base 0,
+    branch 0, main 0 orphans, merged 2), so this read is not a repeat of
+    `orphan_row`: it is the only read of a state the chain merges into. The
+    population rule is the shipped one — a scan that finds no headline is
+    grading nothing, so it refuses rather than printing a green.
+    """
+    text = show(repo, tree, CHAT_REL)
+    if text is None:
+        raise CannotRun("the merge tree %s carries no %s — the merged-fold leg "
+                        "has nothing to scan" % (tree[:7], CHAT_REL))
+    orphans, _owned = ctc.scan_orphan_drawers(text)
+    headlines = len(re.findall(r"^\* MSG ", text, re.M))
+    if headlines == 0:
+        raise CannotRun("merged %s holds 0 `* MSG` headlines — a merged-fold scan "
+                        "over nothing is CANNOT RUN, never a green" % CHAT_REL)
+    return len(orphans), headlines
+
+
 # ---------------------------------------------------------------------- legs
 def is_lead_owned(path):
     return (path.startswith(LEAD_OWNED_PREFIXES) or path in LEAD_OWNED_FILES)
@@ -270,9 +321,10 @@ def grade_branch(ctc, repo, main, main_sha, short, sha):
                         "grading nothing and its verdict would be fiction"
                         % (short, CHAT_REL))
     if stale:
-        base_orphans, _ = orphan_row(ctc, repo, mb)
+        base_orphans, base_heads = orphan_row(ctc, repo, mb)
     else:
-        base_orphans = 0
+        # mb IS main here, so the base state is main's own state — not zero.
+        base_orphans, base_heads = orphan_row(ctc, repo, main_sha)
     authored = br_orphans - base_orphans
     if authored > 0:
         findings.append(("AUTHORED", "chat-structure: this branch put %d orphan "
@@ -303,8 +355,14 @@ def grade_branch(ctc, repo, main, main_sha, short, sha):
                              "the review brief refuses this on sight (seats may only "
                              "read and cite them)" % ", ".join(lead)))
 
-    # merge-preview
-    rc, _out = git(repo, "merge-tree", "--write-tree", main_sha, sha)
+    # main's own chat state: the fold bound starts here, and the owed
+    # headline count is main's plus this branch's authored headlines.
+    main_orphans, main_heads = orphan_row(ctc, repo, main_sha)
+    # merge-preview + merged-fold — ONE `git merge-tree` read, two claims taken
+    # off it: whether the merge conflicts, and whether the state it produces is
+    # legal. A conflict is the first claim's own finding and its output carries
+    # markers rather than a chat, so the fold read runs on the conflict-free half.
+    rc, out = git(repo, "merge-tree", "--write-tree", main_sha, sha)
     if rc != 0:
         findings.append(("INHERITED", "merge-preview: `git merge-tree %s %s` "
                          "conflicts — an APPROVED verdict here lands as "
@@ -312,6 +370,39 @@ def grade_branch(ctc, repo, main, main_sha, short, sha):
                          "manual Lead union-merge (the 0607 class); a rebase "
                          "resolves it before the lane is spent"
                          % (main, short)))
+    else:
+        tree = out.split("\n", 1)[0].strip()
+        if not re.match(r"^[0-9a-f]{40}$", tree):
+            raise CannotRun("merge-tree %s %s answered rc 0 but no tree oid "
+                            "(%r) — the merged-fold read has no object to scan"
+                            % (main, short, tree[:20]))
+        mg_orphans, mg_heads = merged_chat(ctc, repo, tree)
+        owed_heads = main_heads + (br_heads - base_heads)
+        # A merge may carry orphan lines one side already had: main's own, plus
+        # whatever this branch authored. Anything past that bound was put there
+        # by the merge, which is the only author of a fold.
+        bound = main_orphans + max(authored, 0)
+        if mg_orphans > bound or mg_heads < owed_heads:
+            findings.append(("MERGE-ONLY FOLD", "INHERITED: merging %s into %s "
+                             "folds the chat — the merged blob carries %d orphan "
+                             "drawer line(s) against the bound %d (main %d + this "
+                             "branch's own %d) and %d `* MSG` headline(s) where %d "
+                             "are owed. Neither parent carries this: the "
+                             "`merge=union` driver reads two appends that open with "
+                             "the SAME header lines as common context and welds them "
+                             "onto one headline (measured on ai/turn-20261024-1956: "
+                             "base/branch/main 0 orphans, merged 2, merge-tree rc 0). "
+                             "Repair = rebase onto current %s so the append lands at "
+                             "the moved EOF — NOT a content rework, the entries are "
+                             "legal on their own bases; the finalize fold-guard "
+                             "f3e0f63 will undo this merge after the lane is spent"
+                             % (short.split("/")[-1], main, mg_orphans, bound,
+                                main_orphans, max(authored, 0), mg_heads, owed_heads,
+                                main)))
+        else:
+            notes.append("merged-fold clean: %d orphan(s) within bound %d, %d "
+                         "headline(s) of %d owed"
+                         % (mg_orphans, bound, mg_heads, owed_heads))
     return findings, notes, stale, br_orphans
 
 
@@ -365,7 +456,8 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
     for short, sha in rows:
         findings, bnotes, stale, orphans = grade_branch(
             ctc, repo, main, main_sha, short, sha)
-        for leg in ("stale-base", "chat-structure", "tree-hygiene", "merge-preview"):
+        for leg in ("stale-base", "chat-structure", "tree-hygiene", "merge-preview",
+                    "merged-fold"):
             ran.add(leg)
         for tag, text in findings:
             problems.append("%s [%s] %s" % (short.split("/")[-1], tag, text))
@@ -429,6 +521,28 @@ CONTROL = ("#+TITLE: fixture control (Lead-owned in the real repo)\n"
            "#+PENDING-REVIEW: branch=%s | author=software-engineer | sha=%s\n")
 
 TURN_BRANCH = "ai/turn-20260101-0000"
+ENTRY_SIBLING = ("* MSG software-engineer -> @lead :report:      "
+                 ":msg:software-engineer:lead:report:\n"
+                 ":PROPERTIES:\n"
+                 ":FROM: software-engineer\n"
+                 ":TO: lead\n"
+                 ":KIND: report\n"
+                 ":WHEN: [2026-10-25 Sun 08:47 UTC]\n"
+                 ":END:\n"
+                 "  the other side's entry, same five header lines\n")
+
+# The fold shape: the five header lines eaten, the tail survived.
+ORPHAN = (":WHEN: [2026-10-24 Sat 21:00 UTC]\n"
+          ":END:\n"
+          "  body whose headline was folded away\n")
+
+CONTROL = ("#+TITLE: fixture control (Lead-owned in the real repo)\n"
+           "#+PENDING-REVIEW: branch=%s | author=software-engineer | sha=%s\n")
+
+# Mirrors the real .gitattributes: the chat carries the union merge driver, and
+# without it a fixture can only ever produce a CONFLICT, never the fold — which
+# is the whole class this leg exists to see.
+GITATTRIBUTES = ("%s merge=union\n" % CHAT_REL)
 
 
 def sh(repo, *args):
@@ -474,6 +588,7 @@ def fixture(orphan_in_base=False, no_headlines=False):
     write(repo, CHAT_REL, chat)
     write(repo, "agent-team/TODOS.org", "* TODO an item\n")
     write(repo, ".gitignore", "/.turn-*.txt\n")
+    write(repo, ".gitattributes", GITATTRIBUTES)
     write(repo, CONTROL_REL, CONTROL % (TURN_BRANCH, "0" * 40))
     commit(repo, "base")
     sh(repo, "checkout", "-q", "-b", TURN_BRANCH)
@@ -534,13 +649,34 @@ def c_lead_owned_edit():
 
 
 def c_merge_conflict():
-    def work():
-        bump(base, CHAT_REL, ENTRY)
-        commit(base, "turn: both sides appended at EOF")
+    """A conflict on a path WITHOUT the union driver — the merge-preview class,
+    kept distinct from the fold class so neither control can answer for the
+    other. Two identical chat appends do NOT conflict under `merge=union`; they
+    fold, which is the next control's job."""
+    def branch_edit():
+        bump(base, "agent-team/TODOS.org", "** ONGOING an item the branch opened\n")
+        commit(base, "turn: edited a non-union file")
+
+    def main_edit():
+        bump(base, "agent-team/TODOS.org", "** DONE an item main closed\n")
+        commit(base, "main: edited the same non-union file")
     base = fixture()
-    _on(base, TURN_BRANCH, work)
-    bump(base, CHAT_REL, ENTRY)
-    commit(base, "main: also appended at EOF")
+    _on(base, TURN_BRANCH, branch_edit)
+    main_edit()  # `_on` leaves the repo on main
+    return base
+
+
+def c_merge_only_fold():
+    """The state ai/turn-20261024-1956 left on main: both sides append an entry
+    whose first five lines are identical, `git merge-tree` answers rc 0, and the
+    merged blob carries the branch's orphaned drawer tail. Nothing in either
+    parent shows it, so this control is the proof the leg reads a state the
+    other two reads cannot."""
+    def work():
+        bump(base, CHAT_REL, ENTRY_SIBLING)
+        commit(base, "main: appended a sibling entry at EOF")
+    base = fixture()
+    _on(base, "main", work)
     return base
 
 
@@ -603,6 +739,8 @@ CONTROLS = [
     ("harness leak file in the tree", c_leak_file, 1, "harness-leak", ()),
     ("Lead-owned file edited by the branch", c_lead_owned_edit, 1, "Lead-owned", ()),
     ("merge-preview conflicts", c_merge_conflict, 1, "merge-preview", ()),
+    ("merged chat folds a header (union driver)", c_merge_only_fold, 1,
+     "MERGE-ONLY FOLD", ("INHERITED",)),
     ("register names a dead branch", c_slot_branch_gone, 1, "slot-live", ()),
     ("register names an already-merged branch", c_slot_already_merged, 1, "slot-live", ()),
     ("register head sha is stale", c_slot_sha_stale, 1, "slot-live", ()),
@@ -611,7 +749,7 @@ CONTROLS = [
     ("main ref unresolvable", c_missing_main_ref, 2, "CANNOT RUN", ()),
     ("leg roster drift", c_roster_drift, 2, "CANNOT RUN", ()),
 ]
-EXPECTED_CONTROLS = 13
+EXPECTED_CONTROLS = 14
 
 
 def selftest():
