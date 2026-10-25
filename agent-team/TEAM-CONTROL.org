@@ -6,7 +6,7 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: LEAD 10-dh DEADLOCK BREAK (Owner delegated 18:17Z "you gotta decide on your own"; 9am deadline): KILL ON structurally prevented ANY review — the turn segment (review phase included) is skipped under mode=killed (yml Stop notice step: mode=killed exit 0; proven by run 40220339780 turn job = all steps skipped, 0s segment), so the "first real verdict -> KILL OFF" resume criteria could never self-satisfy; probes #18-#22 review-missing writebacks were bookkeeping, not lane attempts (real lane-failure evidence remains transcripts 453/455 episodes #8-#13, pre-10-cp). RESUME: duty reviewer = groq/qwen3.8-27b@goose (Owner rotation order 18:08Z, machinery c988b9c); pending 2244@8cea274 reviews THIS run via the rotated lane; on APPROVED the finalize merger lands it per law (chat-fold risk known: re-insert the 5 authored header lines, EXPECTED_CONTROL_CLAIMS 10->11); queue then 2326 -> 0015 -> 0056 -> 0320 -> 0440 -> 0515 -> 0547 -> 0607 -> 0652(marker-fix) -> 0750 -> 0830 -> 1041 -> 1140; rejected-awaiting-recut 1804; safety: BR-01 auto CHAIN-PAUSE at stall>=12; if rotated lane fails 2 real attempts, Lead ships verified queue on Lead-measured gates per delegation (stack e4009f0 local, gate GREEN 11/11 measured). Machinery/roster notes: see MEMBERS.org QA-3 + Notes.
-#+TURN: qwen3.8-flash@qoder (Platform Engineer)
+#+TURN: zai/glm-4.7-flash@goose (Relief Engineer)
 #+STALL-COUNT: 22
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE: armed 2026-10-25 18:33Z — AUTO stall-halt at stall=22: 12+ no-progress backoff segments; diagnose lanes, then clear this line to resume
