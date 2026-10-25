@@ -46,6 +46,17 @@ LEGS (pinned roster, one per claim a queued branch must satisfy):
                    commits main does not (an already-merged branch means the
                    duty is SKIPPED and the lane spent on nothing), and its
                    head sha still matches the sha the register parked.
+  landed-echo      the branch the register parks is not already LANDED. A
+                   squash landing keeps the branch's commits out of main's
+                   ancestry ON PURPOSE (Lead 10-do: defective ancestry stays
+                   on the branch ref as evidence), so slot-live's main..branch
+                   count cannot see it and the slot can be written back to a
+                   CLOSED branch — the 10-dp write-cross, where the machinery
+                   re-registered 1946@93e0f45 seconds after the Lead landed the
+                   same sha and a parallel review lane was dispatched over it.
+                   The record this leg reads is the repo's own landing
+                   convention: a commit whose SUBJECT opens with the landing
+                   verb and names the branch as its object.
   stale-base       main has moved since the branch's merge base AND the branch
                    touched a file main also changed since then — the region
                    where an inherited repair reads as an author defect, and
@@ -103,12 +114,25 @@ LEAK_FILES = (".turn-review.txt", ".turn-inside.sh", ".turn-result.txt")
 LEAD_OWNED_PREFIXES = (".github/workflows/", ".github/scripts/")
 LEAD_OWNED_FILES = ("agent-team/TEAM-CONTROL.org", ".gitattributes")
 
-LEG_ROSTER = ("slot-live", "stale-base", "chat-structure", "tree-hygiene",
-              "merge-preview")
-EXPECTED_LEGS = 5
+LEG_ROSTER = ("slot-live", "landed-echo", "stale-base", "chat-structure",
+              "tree-hygiene", "merge-preview")
+EXPECTED_LEGS = 6
 
 PENDING_RE = re.compile(r"^\#\+PENDING-REVIEW:\s*(.*)$", re.M)
 FIELD_RE = re.compile(r"\b(branch|author|sha)=([^ |\s]+)")
+
+# A landing record, as this repo actually writes one: the verb OPENS the
+# subject and the branch ref is its object — "union landing of ai/turn-...
+# (squash)", "Merge branch 'ai/turn-...' into ai/main", "merge ai/turn-...
+# (Lead union-merge)". Co-occurrence anywhere in the subject is NOT enough:
+# main's own history carries prose like "control: re-queue ai/turn-20261022-1904
+# (...) Lead audit-merge owed", which names a live branch next to a merge word —
+# firing on that would red a genuinely queued slot, and a leg that fires on a
+# correct state is worse than no leg (DEVGUIDE *ELEVENTH law*).
+LANDING_RECORD_RE = re.compile(
+    r"^(?:[A-Za-z]+ )?(?:landing|merge)\b(?:\s+of)?(?:\s+remote-tracking)?"
+    r"(?:\s+branch)?\s+'?(?:origin/)?(?:refs/heads/)?(ai/turn-\d{8}-\d{4})'?\b",
+    re.I)
 
 
 class CannotRun(Exception):
@@ -237,6 +261,69 @@ def is_lead_owned(path):
     return (path.startswith(LEAD_OWNED_PREFIXES) or path in LEAD_OWNED_FILES)
 
 
+def branch_tail(ref):
+    """ai/turn-YYYYMMDD-HHMM from any spelling of the ref (register, remote,
+    refs/heads) — the landing record names the plain branch, the register may
+    not."""
+    ref = (ref or "").strip().replace("refs/heads/", "").replace("refs/remotes/", "")
+    for cut in ("origin/", "heads/"):
+        if ref.startswith(cut):
+            ref = ref[len(cut):]
+    return ref
+
+
+def landing_records(repo, main_sha):
+    """{branch tail: (record sha, commit date, subject)} over main's history.
+
+    One `git log` read, so the scan costs the same whether the queue holds one
+    branch or thirty; a history that will not be read is CANNOT RUN, never a
+    quieter green.
+    """
+    rc, out = git(repo, "log", "--format=%H%x09%ct%x09%s", main_sha)
+    if rc != 0:
+        raise CannotRun("git log over %s failed — the landing-record scan would "
+                        "grade nothing and report every slot as queued"
+                        % main_sha[:7])
+    found = {}
+    for line in out.splitlines():
+        parts = line.split("\t", 2)
+        if len(parts) != 3:
+            continue
+        sha, when, subject = parts[0], parts[1], parts[2].strip()
+        match = LANDING_RECORD_RE.match(subject)
+        if not match or not when.isdigit():
+            continue
+        tail = match.group(1)
+        prev = found.get(tail)
+        if prev is None or int(when) >= prev[1]:
+            found[tail] = (sha, int(when), subject)
+    return found
+
+
+def tip_date(repo, sha):
+    rc, out = git(repo, "log", "-1", "--format=%ct", sha)
+    if rc != 0 or not out.strip().isdigit():
+        raise CannotRun("%s: no committer date on the branch tip — the landing "
+                        "record cannot be ordered against it" % sha[:7])
+    return int(out.strip())
+
+
+def echo_record(repo, sha, tail, records):
+    """The landing record that SWALLOWS this branch, or None.
+
+    One ordering rule, both call sites: a record not older than the tip means the
+    branch's content is already shipped and the slot is an echo; a record OLDER
+    than the tip means the author delivered NEW work after the landing, so the
+    branch is genuinely queued again.
+    """
+    record = records.get(tail)
+    if record is None:
+        return None
+    if record[1] < tip_date(repo, sha):
+        return None
+    return record
+
+
 def grade_branch(ctc, repo, main, main_sha, short, sha):
     """Every branch-level claim, as a list of tagged findings for one branch."""
     findings = []
@@ -330,6 +417,7 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
                             "or not present in this repo)" % only)
 
     slot = pending_slot(repo, main_sha)
+    records = landing_records(repo, main_sha)
     problems = []
     notes = []
     ran = set()
@@ -362,6 +450,46 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
             notes.append("slot-live: %s queued, head %s, author %s"
                          % (slot["branch"], (live or "?")[:7], slot["author"] or "?"))
 
+    # landed-echo — the class ancestry tests are blind to by design: a SQUASH
+    # landing ships the branch's content onto main and deliberately keeps its
+    # commits out of main's history (10-do: "defective ancestry kept out of
+    # ai/main, branch ref retained"), so `main..branch` still counts commits and
+    # slot-live still calls a CLOSED branch queued. Measured cost of not seeing
+    # it: run 40231536995 wrote the slot back to 1946@93e0f45 seconds after the
+    # Lead landed that very sha, and 10-dp spent a beat correcting the register
+    # plus a dispatched review lane on a branch the ruling had already closed.
+    ran.add("landed-echo")
+    if slot is None:
+        notes.append("landed-echo: register empty — nothing is parked to echo")
+    else:
+        tail = branch_tail(slot["branch"])
+        record = records.get(tail)
+        live = resolve(repo, "origin/" + tail) or resolve(repo, tail)
+        if record is None:
+            notes.append("landed-echo: no landing record on %s names %s — the slot "
+                         "is genuinely queued" % (main, tail))
+        elif live is None:
+            notes.append("landed-echo: %s has a landing record (%s) but the branch "
+                         "does not resolve here, so its tip cannot be ordered — "
+                         "slot-live already named that" % (tail, record[0][:7]))
+        else:
+            swallowed = echo_record(repo, live, tail, records)
+            if swallowed is None:
+                notes.append("landed-echo: %s was landed by %s but its tip is NEWER "
+                             "(post-landing rework) — the slot parks live work, not "
+                             "an echo" % (tail, record[0][:7]))
+            else:
+                problems.append("landed-echo: the register parks %s, but %s already "
+                                "carries a landing record for it — %s %r — and that "
+                                "record is not older than the branch tip: the work "
+                                "SHIPPED, the slot is a stale echo. Disposition is "
+                                "the Lead's (10-dp): close it and advance the "
+                                "register with the landing commit as the receipt — a "
+                                "review lane spent here grades state the author "
+                                "already delivered"
+                                % (slot["branch"], main, swallowed[0][:7],
+                                   swallowed[2][:120]))
+
     for short, sha in rows:
         findings, bnotes, stale, orphans = grade_branch(
             ctc, repo, main, main_sha, short, sha)
@@ -372,6 +500,23 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
         notes.append("%-22s %s%s" % (short.split("/")[-1],
                                      " ".join(bnotes) if bnotes else "up to date",
                                      "" if findings else "  REVIEW-READY"))
+
+    # The same scan over the whole queue, as evidence for the Lead's queue
+    # disposition (a note, never a finding: the branches stay on the remote BY
+    # RULING — 10-do keeps 1946 up as the defect record — so grading them as
+    # queue work would be the false red this family exists to avoid). Only
+    # branches whose record SWALLOWS the tip are listed; one that shipped new
+    # work after its landing is queue business again.
+    evidence = []
+    for short, head in rows:
+        tail = branch_tail(short)
+        if tail not in evidence and echo_record(repo, head, tail, records):
+            evidence.append(tail)
+    evidence.sort()
+    if evidence:
+        notes.append("landed-echo: %d live branch(es) are swallowed by a landing "
+                     "record on %s — retained evidence refs, not queue work: %s"
+                     % (len(evidence), main, ", ".join(evidence)))
 
     missing = [leg for leg in LEG_ROSTER if leg not in ran]
     if missing and rows:
@@ -446,9 +591,20 @@ def write(repo, rel, text):
         fh.write(text)
 
 
-def commit(repo, msg, force=False):
+def commit(repo, msg, force=False, when=None):
+    """Commit the tree. `when` is a GIT date string applied to BOTH author and
+    committer clocks — the landed-echo controls order a landing record against a
+    tip date, and an order decided by wall-clock luck is not a control."""
     sh(repo, "add", "-A", *(["-f"] if force else []))
-    sh(repo, "-c", "user.name=f", "-c", "user.email=f@e", "commit", "-qm", msg)
+    env = dict(os.environ)
+    if when:
+        env["GIT_COMMITTER_DATE"] = when
+        env["GIT_AUTHOR_DATE"] = when
+    proc = subprocess.run(["git", "-C", repo, "-c", "user.name=f",
+                           "-c", "user.email=f@e", "commit", "-qm", msg],
+                          capture_output=True, text=True, env=env)
+    if proc.returncode != 0:
+        raise CannotRun("fixture commit failed: %s" % proc.stdout)
 
 
 def bump(repo, rel, text):
@@ -566,6 +722,37 @@ def c_slot_sha_stale():
     return base
 
 
+def c_landed_echo():
+    """A SQUASH landing, then the register left pointing at the landed branch —
+    the 10-dp write-cross, reproduced on real git state. The branch's commits are
+    deliberately NOT main's ancestry (that is what a squash means here), so
+    slot-live stays green over this fixture and only landed-echo can see the
+    work already shipped."""
+    base = fixture()
+    sh(base, "checkout", "-q", "main")
+    sh(base, "merge", "-q", "--squash", TURN_BRANCH)
+    commit(base, "union landing of %s (squash) — defective ancestry kept off main"
+           % TURN_BRANCH)
+    return base
+
+
+def c_landed_rework():
+    """The exemption, graded: an author who ships NEW work on top of the landing
+    is queued again, not echoed. The rework commit is dated after the landing
+    record on purpose, so the order is decided by the fixture, not by luck."""
+    base = c_landed_echo()
+    landed = tip_date(base, "main")
+    sh(base, "checkout", "-q", TURN_BRANCH)
+    sh(base, "reset", "-q", "--hard", "main")
+    bump(base, CHAT_REL, ENTRY.replace("21:00 UTC", "21:05 UTC"))
+    commit(base, "turn: re-delivered on top of the landing", when=str(landed + 120))
+    head = _head(base, TURN_BRANCH)
+    sh(base, "checkout", "-q", "main")
+    write(base, CONTROL_REL, CONTROL % (TURN_BRANCH, head))
+    commit(base, "control: re-park the re-delivered head", when=str(landed + 121))
+    return base
+
+
 def c_slot_empty():
     base = fixture()
     write(base, CONTROL_REL, "#+TITLE: fixture control\n#+PENDING-REVIEW: \n")
@@ -605,13 +792,17 @@ CONTROLS = [
     ("merge-preview conflicts", c_merge_conflict, 1, "merge-preview", ()),
     ("register names a dead branch", c_slot_branch_gone, 1, "slot-live", ()),
     ("register names an already-merged branch", c_slot_already_merged, 1, "slot-live", ()),
+    ("register re-parks a squash-landed branch", c_landed_echo, 1, "stale echo",
+     ("landed-echo",)),
+    ("rework shipped on top of the landing record", c_landed_rework, 0,
+     "post-landing rework", ()),
     ("register head sha is stale", c_slot_sha_stale, 1, "slot-live", ()),
     ("register empty", c_slot_empty, 0, "register empty", ()),
     ("chat holds no headlines (blind scan)", c_blind_chat, 2, "CANNOT RUN", ()),
     ("main ref unresolvable", c_missing_main_ref, 2, "CANNOT RUN", ()),
     ("leg roster drift", c_roster_drift, 2, "CANNOT RUN", ()),
 ]
-EXPECTED_CONTROLS = 13
+EXPECTED_CONTROLS = 15
 
 
 def selftest():
