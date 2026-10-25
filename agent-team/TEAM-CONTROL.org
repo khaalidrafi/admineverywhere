@@ -9,7 +9,7 @@
 #+TURN: qwen3.8-flash@qoder (Platform Engineer)
 #+STALL-COUNT: 22
 #+PAUSE-AFTER-TODO: OFF
-#+CHAIN-PAUSE:
+#+CHAIN-PAUSE: armed 2026-10-25 18:33Z — AUTO stall-halt at stall=22: 12+ no-progress backoff segments; diagnose lanes, then clear this line to resume
 #+PENDING-REVIEW: branch=ai/turn-20261024-2244 | author=software-engineer | sha=8cea27465c2addc9e0f8e46754d4475163901773
 
 * Notes
