@@ -272,3 +272,37 @@ class AuditEntry(models.Model):
 
     def __str__(self):
         return f"{self.action} on {self.object_type}#{self.object_id}"
+
+    # ONE WRITER for the reference action's row shape. The `flag` / `bulk_flag`
+    # @actions and `manage.py seed_demo` both call this, so a seeded trail and a
+    # live click cannot drift apart on summary wording or payload keys — the
+    # divergence the export twins are guarded against, closed at the write side.
+    FLAG_ACTION = "order.flag"
+
+    @classmethod
+    def record_flag(cls, order_id, actor=None, reason="", bulk=False, batch=None):
+        """Append one ``order.flag`` audit entry and return it.
+
+        ``bulk`` mirrors the bulk-scope action's payload (provenance: the
+        batch size), never a separate action slug — one entry per target.
+        ``actor`` is whatever the caller derived server-side (the
+        authenticated request user for the API, the named demo user for the
+        seed); it is never taken from the request body.
+        """
+        if bulk:
+            return cls.objects.create(
+                actor=actor,
+                action=cls.FLAG_ACTION,
+                object_type="order",
+                object_id=str(order_id),
+                summary=f"Order flagged (bulk): {reason}",
+                data={"reason": reason, "bulk": True, "batch": batch},
+            )
+        return cls.objects.create(
+            actor=actor,
+            action=cls.FLAG_ACTION,
+            object_type="order",
+            object_id=str(order_id),
+            summary=f"Order flagged: {reason}",
+            data={"reason": reason},
+        )
