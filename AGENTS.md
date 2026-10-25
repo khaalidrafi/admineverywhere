@@ -211,12 +211,17 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 # scripted turns each landed as a commit on the main ref, the chat carries the FROM in
 # every headline and a complete :PROPERTIES: drawer AND no drawer line floats free of a
 # headline (a merge that folds two concurrent EOF appends eats the second entry's
-# header and CHAT-FORMAT cannot see the orphaned tail), the chat was never edited or
-# dropped inside the objective's window, the run log holds one well-formed line per
-# turn (every run id resolving to a real commit), and every parked board item is
-# still a headline — an order cannot be restored over a deleted item.
+# header and CHAT-FORMAT cannot see the orphaned tail), and — PER ENTRY, because a
+# whole-file byte-prefix read fires on every union-merged concurrent append while
+# nothing was touched — no entry inside the objective's window was edited, dropped or
+# reordered (a landed entry whose bytes changed is red unless the repair is pinned in
+# ACCEPTED_REPAIRS beside the chat line recording the ruling; a pinned repair matching
+# nothing is CANNOT RUN), while over the whole history no entry vanishes or moves; the
+# run log holds one well-formed line per turn (every run id resolving to a real commit),
+# and every parked board item is still a headline — an order cannot be restored over a
+# deleted item.
 python3 scripts/chain_test_check.py            # 0 ok / 1 a claim is false / 2 cannot run
-python3 scripts/chain_test_check.py --selftest # 13 controls: every leg proved able to fail
+python3 scripts/chain_test_check.py --selftest # 16 controls: every leg proved able to fail
 
 # the chain's SESSION collect->restore loop (Owner order 2026-10-21 18:27Z) as a
 # check, read-only against the Lead-owned turn script WHEREVER IT LIVES — the workflow
