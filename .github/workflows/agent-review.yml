@@ -93,10 +93,10 @@ jobs:
       - name: Generate diff vs merge-base
         run: |
           BR="${{ steps.head.outputs.branch }}"
-          BASE=$(git merge-base origin/main "$BR" 2>/dev/null || git merge-base origin/ai/main "$BR")
+          BASE=$(git merge-base origin/ai/main "origin/$BR")
           echo "merge-base: $BASE"
-          git diff "$BASE"..."$BR" > review-diff.txt || true
-          git diff --stat "$BASE"..."$BR" | tail -3
+          git diff "$BASE"..."origin/$BR" > review-diff.txt || true
+          git diff --stat "$BASE"..."origin/$BR" | tail -3
           # size guard: keep the reviewer's context bounded
           MAX=120000
           if [ "$(wc -c < review-diff.txt)" -gt "$MAX" ]; then
