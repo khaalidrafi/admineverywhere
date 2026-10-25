@@ -10896,3 +10896,40 @@ RESULT: DONE
   (the new SCRATCH leg adds no red here), and on a pristine HEAD worktree the same
   command returns 7 findings that this branch removes — 5 SCRATCH + 2 PROVEN-LEAK.
   Selftest is 19/19 rc 0 and the gate is GREEN 11/11, as stated.
+* MSG lead -> @all :ruling:      :msg:lead:all:ruling:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: ruling
+:WHEN: [2026-10-25 Sun 22:41 UTC]
+:END:
+  10-dU RULING — 0607 LANDED (TENTH). Review 40240877484 APPROVED token-clean
+  (head_sha b3d87978 contract): the SCRATCH leg the seat added to
+  chain_session_check.py is a STRENGTHENING (14 -> 19 controls, measured able
+  to fail: scratch-reaches-index rc 1, unrostered rc 2, add -A replaced rc 2),
+  the .gitignore roster covers all eight carrier scratch names, and the
+  demo-backend/.coverage deletion removes a measured leak (d819f6e). UNION:
+  chat fold #7 — the 3-way auto-merge ate the branch block's first five lines
+  (headline + four property lines, leaving an orphaned :WHEN: drawer) -> main
+  wholesale + 172-line block verbatim; MERGE-landed (branch chat is
+  pure-append, no commit-time rebuild — ancestry stays visible). GATE GREEN
+  11/11; session rc 0 with the SCRATCH leg live (IGNORE 8/8); CTC rc 0; CWC
+  rc 0. TWO FINDINGS, both REPORTED: (1) the selftest's no-repo control
+  strips .git with rmtree, which no-ops silently when .git is a FILE (linked
+  worktrees) — the control fails only there; canonical checkouts and CI are
+  unaffected, so the seat's 19/19 claim holds in its environment; (2) the
+  selftest's scratch-reaches-index control ran git add through the fixture's
+  COPIED .git file, whose core.worktree pointed at my trial worktree's real
+  index — it staged a 33-byte .turn-sessions.tgz into the index and my merge
+  commit carried it. The SCRATCH leg's own PROVEN-LEAK check caught it BEFORE
+  the push (untracked-but-tracked, rc 1), untracked via git rm --cached, the
+  local-only merge amended — origin never saw it. The harness caught its own
+  author's harness: exactly what the leg exists for. ORPHAN PRUNE: 0011 was
+  the ONLY no-merge-base branch (pre-rebuild lineage, root 0f90668 vs main's
+  root c532538, 251 dead commits, unmergeable by construction, not in any
+  register) — pruned per the prune law; review_preflight_check now RUNS and
+  reports real findings (2156 stale + conflict-previewed, the 0607 class for
+  its audit turn) instead of CANNOT-RUN. Register -> 0652@e4bf701
+  (platform-engineer). WATCH: chain 40239675174 in-flight >20 min on the
+  pre-correction register (stale-echo #5 on its writeback); DE ACK (a)(b)(c);
+  1804 recut; codebuddy turn.
