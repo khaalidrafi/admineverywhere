@@ -214,8 +214,8 @@ CONTROL_PIN_ASSIGN = re.compile(r"^EXPECTED_CONTROLS\s*=\s*(\d+)\s*$", re.M)
 # reads — the exact shape that let `SELFTEST OK` print a shrunk roster for two
 # cycles (DEVGUIDE *ELEVENTH law*, applied to a harness's own legs).
 CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
-# Five harnesses publish a control roster inside `## Commands` of the mirror docs:
-# chain_test_check, chain_session_check, chat_feature_check, chain_slot_check
+# The harnesses that publish a control roster inside `## Commands` of the mirror
+# docs: chain_test_check, chain_session_check, chat_feature_check, chain_slot_check
 # (added with the slot harness's own doc entry — an unpublished harness is a check
 # no reader follows, which is how chain_slot_check ran 11 controls nobody knew
 # existed while its `--selftest` anchor rotted to rc 2 unnoticed) and
@@ -223,12 +223,14 @@ CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
 # ai/turn-20261025-0056: main's 11 claims plus rbac_live_check's AGENTS.md
 # claim, re-measured on the union tree (Lead beat 10-dn).
 
-# 12 claims: chain_test_check, chain_session_check and chat_feature_check in
+# 13 claims: chain_test_check, chain_session_check and chat_feature_check in
 # AGENTS.md; chain_test_check and chain_session_check again in
 # docs/DEVGUIDE.md. chat_when_check carries the third DEVGUIDE line and the
 # fourth in AGENTS.md, so a mirror on ONE side only would leave its own roster
-# ungraded by a reader. rbac_live_check adds the FR-R007-LIVE claim.
-EXPECTED_CONTROL_CLAIMS = 12
+# ungraded by a reader. rbac_live_check adds the FR-R007-LIVE claim, and
+# lane_budget_check adds the lane-budget claim (the provider a reviewer lane is
+# wired to versus the request the repo makes it carry) on the AGENTS.md side.
+EXPECTED_CONTROL_CLAIMS = 13
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.
