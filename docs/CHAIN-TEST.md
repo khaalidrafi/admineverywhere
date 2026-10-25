@@ -147,3 +147,12 @@ TEST-T3 — relief-engineer turn 3:
   2. TEST-T2 improvement: DONE (qfmodel substitution pattern visibility documented)
   3. TEST-T3 verification: PASS (board/chat state verified, chain-test closed)
 - RESULT: DONE (TEST-CHAIN objective complete)
+
+## runs
+
+The fourth cycle's `## runs` content was prose-only bullets (`parse_log` reads run lines
+only from a section named exactly `runs`, scripts/chain_test_check.py:312), so this new
+section re-opens the log for the cycle that started 2026-10-25 — the same fold the second
+and third cycles fell into. Nothing above was edited or removed.
+
+8ac399c@ai/turn-20261025-0750 | software-engineer | qfmodel (effective brain of the deepseek-v4.1-flash@qoder fallback arm — the codebuddy primary lane died on 502/ETIMEDOUT to www.codebuddy.ai) | 2026-10-25 | TEST-T1 — check-in: which brain/lane ran for this seat, measured three layers (the codebuddy lane log, the arm line that pins `--model deepseek-v4.1-flash` on the qoder fallback, and the qoder session transcript recording `"model":"qfmodel"` on all 49 model-bearing turns); the two `-> @software-engineer` pings (agent-team/TEAM-CHAT.org:6542/:6569, 2026-10-22) were audited and answered as stale in the chat entry
