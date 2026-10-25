@@ -78,15 +78,16 @@ jobs:
         run: |
           {
             echo "=== FAST GATE SUBSET ==="
+            echo "SCOPE NOTE: measured on the MACHINERY tree (ai/main checkout), NOT on the reviewed branch — the branch's test delta (e.g. added tests raising 306->308) is NOT executed here; judge branch tests from the diff and the manifest only."
             echo "--- pytest (plugin/tests) ---"
             python3 -m pytest plugin/tests -p no:cacheprovider -q 2>&1 | tail -5
-            echo "PYTEST_RC=$?"
+            echo "PYTEST_RC=${PIPESTATUS[0]}"
             echo "--- manage.py check ---"
             python3 demo-backend/manage.py check 2>&1 | tail -3
-            echo "CHECK_RC=$?"
+            echo "CHECK_RC=${PIPESTATUS[0]}"
             echo "--- makemigrations --check ---"
             python3 demo-backend/manage.py makemigrations --check 2>&1 | tail -3
-            echo "MIGRATIONS_RC=$?"
+            echo "MIGRATIONS_RC=${PIPESTATUS[0]}"
             echo "--- secret scan over the FULL diff (SECRET LAW pre-measure) ---"
             BR="${{ steps.head.outputs.branch }}"
             BASE=$(git merge-base origin/ai/main "origin/$BR")
@@ -162,9 +163,11 @@ jobs:
               "board flips carry :DELIVERED: evidence with branch + sha; TEAM-CHAT entries in legal format. "
               "If the author is quality-assurance-engineer or visiting-engineer (same role as you), the verdict is REJECTED (reason: reviewer-equals-author). "
               "If the diff was truncated, open with PARTIAL REVIEW and judge the visible hunks plus the stat summary. "
-              "Be terse and concrete. The LAST line of your answer MUST be exactly one of:\n"
+              "BUDGET LAW (v15 evidence: run 40226344420 wrote a full 5-section analysis and the 900-token cap cut it BEFORE the verdict -> review-missing): "
+              "answer in UNDER 250 WORDS. The FIRST line of your answer MUST be exactly one of:\n"
               "VERDICT: APPROVED\n"
-              "VERDICT: REJECTED - <one line of reasons>")
+              "VERDICT: REJECTED - <one line of reasons>\n"
+              "AFTER the verdict line give at most 4 short bullet reasons (law checks, gate evidence, code risks). Nothing else.")
           usrmsg = (
               "Pending branch: " + os.environ.get("BR_NAME", "") +
               " (authored by " + os.environ.get("BR_AUTHOR", "") + ", head " + os.environ.get("BR_SHA", "") + ").\n\n"
