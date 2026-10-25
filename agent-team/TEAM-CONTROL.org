@@ -6,7 +6,7 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: LEAD 10-dl FIRST REVIEWED LANDING: 2326@b1d3280 (platform-engineer: seed manager/manager123 non-superuser holding exactly managers - the ACCEPTANCE half of the FR-R007-LIVE gate demo; auditor keeps the denial half; 2 new tests pin both directions without the superuser bypass; EXPECTED_PYTEST 306->308) LANDED per SEGREGATION law: duty-reviewer APPROVED (v16 = run 40226992941, single-shot groq verdict-first recipe b15c3bd - 1st APPROVED machine verdict in campaign history) + Lead audit clean + Lead-measured full gate GREEN 11/11 (pytest 308 = re-derived pin) + release readiness GREEN. Parallel-track fixes this beat: v15 (40226344420) wrote a full 5-section analysis the 900-token cap cut BEFORE the verdict -> verdict-first budget law (FIRST line = VERDICT, <=250 words); gate-out gains SCOPE NOTE (machinery-tree measurement) + PIPESTATUS rc honesty. v15's flagged 306-vs-308 confusion was the tree-scope artifact - pre-answered by the SCOPE NOTE now. Register -> 0015@2754f09 (software-engineer, chat append-only law grading); queue then 0056 -> 0320 -> 0440 -> 0515 -> 0547 -> 0607 -> 0652 -> 0750 -> 0830 -> 1041 -> 1140; rejected-awaiting-recut 1804. WATCHES: opencode canonical-id probe verdicts ride in-flight chain run 40226800590; 1929 turn branch = EMPTY (tip == main, zero commits - relief-engineer no-op, not a fault signal yet); next turn deepseek-v4.1-flash@codebuddy is the NETWORK-DEAD lane (DoE complaint ask (a)) - expect a skip/stall, do not diagnose as new breakage. DE complaint 6bdd535 ACK pending.
-#+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
+#+TURN: qwen3.8-flash@qoder (Platform Engineer)
 #+STALL-COUNT: 1
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
