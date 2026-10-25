@@ -114,6 +114,50 @@ def test_seed_demo_gives_a_nonsuperuser_single_role_holder(api):
     assert admin_body["roles"] == ["auditors", "managers"]
 
 
+def test_seed_demo_gives_a_nonsuperuser_managers_holder(api):
+    """The rig must demonstrate the ACCEPTANCE path without the superuser bypass.
+
+    Every gated surface in the reference app requires `managers`
+    (Modules.svelte, Branding.svelte, actions/bulk_flag.ts), and
+    `roleAllows()` short-circuits to allow for a superuser — so with only
+    `admin` + `auditor` seeded there is NO login where the gate opens
+    because the caller actually holds the role: admin opens everything by
+    bypass, auditor sees everything hidden. `manager` is the missing half:
+    a plain non-staff/non-superuser holding exactly `managers`.
+    """
+    call_command("seed_demo", verbosity=0)
+    manager = User.objects.get(username="manager")
+    assert manager.is_superuser is False and manager.is_staff is False
+    body = _authed_client(manager).get("/api/me/").json()
+    assert body == {
+        "username": "manager",
+        "is_staff": False,
+        "is_superuser": False,
+        "roles": ["managers"],
+    }
+
+
+def test_seed_demo_covers_both_gate_directions_without_a_superuser(api):
+    """Population pin: one non-superuser per direction of the gate.
+
+    A rig that silently drops either user goes back to proving one half
+    only, and nothing else in the suite can see that (the unit tests build
+    their own users). So: exactly one seeded non-superuser whose roles do
+    NOT satisfy a `managers` gate, and one whose roles DO — never the
+    superuser standing in for the second.
+    """
+    call_command("seed_demo", verbosity=0)
+    plain = list(
+        User.objects.filter(is_superuser=False).values_list("username", flat=True)
+    )
+    assert set(plain) >= {"auditor", "manager"}, plain
+    denied = _authed_client(User.objects.get(username="auditor")).get("/api/me/").json()
+    allowed = _authed_client(User.objects.get(username="manager")).get("/api/me/").json()
+    assert "managers" not in denied["roles"], denied
+    assert "managers" in allowed["roles"], allowed
+    assert allowed["is_superuser"] is False and denied["is_superuser"] is False
+
+
 def test_seed_demo_role_assignment_is_idempotent(api):
     """Rerunning the seed must not drift the claims (rigs get re-seeded)."""
     call_command("seed_demo", verbosity=0)
@@ -123,6 +167,8 @@ def test_seed_demo_role_assignment_is_idempotent(api):
     body = _authed_client(auditor).get("/api/me/").json()
     assert body["roles"] == ["auditors"]
     assert body["is_superuser"] is False
+    manager = User.objects.get(username="manager")
+    assert list(manager.groups.values_list("name", flat=True)) == ["managers"]
 
 
 def test_schema_advertises_me_path(tmp_path):
