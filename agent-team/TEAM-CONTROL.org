@@ -5,14 +5,34 @@
 
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
-#+OBJECTIVE: LEAD 10-dh DEADLOCK BREAK (Owner delegated 18:17Z "you gotta decide on your own"; 9am deadline): KILL ON structurally prevented ANY review — the turn segment (review phase included) is skipped under mode=killed (yml Stop notice step: mode=killed exit 0; proven by run 40220339780 turn job = all steps skipped, 0s segment), so the "first real verdict -> KILL OFF" resume criteria could never self-satisfy; probes #18-#22 review-missing writebacks were bookkeeping, not lane attempts (real lane-failure evidence remains transcripts 453/455 episodes #8-#13, pre-10-cp). RESUME: duty reviewer = groq/qwen3.8-27b@goose (Owner rotation order 18:08Z, machinery c988b9c); pending 2244@8cea274 reviews THIS run via the rotated lane; on APPROVED the finalize merger lands it per law (chat-fold risk known: re-insert the 5 authored header lines, EXPECTED_CONTROL_CLAIMS 10->11); queue then 2326 -> 0015 -> 0056 -> 0320 -> 0440 -> 0515 -> 0547 -> 0607 -> 0652(marker-fix) -> 0750 -> 0830 -> 1041 -> 1140; rejected-awaiting-recut 1804; safety: BR-01 auto CHAIN-PAUSE at stall>=12; if rotated lane fails 2 real attempts, Lead ships verified queue on Lead-measured gates per delegation (stack e4009f0 local, gate GREEN 11/11 measured). Machinery/roster notes: see MEMBERS.org QA-3 + Notes.
+#+OBJECTIVE: LEAD 10-di CONTINGENCY SHIP #1 (pre-authorized in 10-dh OBJECTIVE + Owner delegation 18:17Z): rotated lane FAILED 2 real attempts — receipts: artifacts review-verdict-9/-10 (runs 40223485958/40223488282) = groq free-tier MEASURED caps OTPM=1000/ITPM=7000 reject even the goose recipe (sys-prompt alone req 22878 ITPM); chain 19:05Z review-missing 60ccf16. 2244@8cea274 (software-engineer, QA-authored, Lead-audited + union staged) LANDED by Lead on Lead-measured gates: full landing_gate.py --fe GREEN 11/11 + release_readiness GREEN (EXPECTED_CONTROL_CLAIMS=11) both MEASURED this cycle, stack pushed as ai/main. Register -> 2326@b1d3280 (platform-engineer); queue then 0015 -> 0056 -> 0320 -> 0440 -> 0515 -> 0547 -> 0607 -> 0652 -> 0750 -> 0830 -> 1041 -> 1140; rejected-awaiting-recut 1804. LANES: turn lane ALIVE (platform-engineer turn 1843 delivered chain_merge_check.py — machinery, Lead audit at its union); review lane = single-shot groq fix 159af0c (parallel track is the verdict source; chain review-missing writebacks are bookkeeping, not verdicts); BOOST parallel track per 81d241d stays live. Stall reset 0; CHAIN-PAUSE cleared — turn lane productive, BR-01 re-arms itself at stall>=12 if the chain burns.
 #+TURN: zai/glm-4.7-flash@goose (Relief Engineer)
-#+STALL-COUNT: 22
+#+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: OFF
-#+CHAIN-PAUSE: armed 2026-10-25 18:33Z — AUTO stall-halt at stall=22: 12+ no-progress backoff segments; diagnose lanes, then clear this line to resume
-#+PENDING-REVIEW: branch=ai/turn-20261024-2244 | author=software-engineer | sha=8cea27465c2addc9e0f8e46754d4475163901773
+#+CHAIN-PAUSE:
+#+PENDING-REVIEW: branch=ai/turn-20261024-2326 | author=platform-engineer | sha=b1d3280a3dc2280b9492f1f5d210a2191c20449f
 
 * Notes
+
+- LEAD 10-di CONTINGENCY SHIP #1 (~19:15Z): rotated lane failed 2 real
+  attempts — receipts: artifacts review-verdict-9/-10 (runs
+  40223485958/40223488282) = groq free-tier MEASURED caps OTPM=1000
+  (goose requested 2048) + ITPM=7000 (goose system prompt alone
+  requested 22878): the agentic goose recipe cannot fit the free tier.
+  Per the pre-authorized 10-dh safety clause + Owner delegation
+  18:17Z ("you gotta decide on your own"), 2244@8cea274 LANDED by Lead
+  on Lead-measured gates: landing_gate.py --fe GREEN 11/11 +
+  release_readiness.py GREEN (controls 11 claims,
+  EXPECTED_CONTROL_CLAIMS=11), both re-measured AFTER integrating
+  8514175..60ccf16 (KILL-OFF break, probe writebacks 16-22, BOOST
+  machinery 81d241d, agent-review fixes ea6dd86/1e947b6/1d39a28, turn
+  1843 writebacks). Lane insurance: agent-review.yml goose ->
+  single-shot groq max_tokens=900 + 8KB diff cap (159af0c); parallel
+  track re-dispatched against 2326@b1d3280. Register 2244 -> 2326;
+  stall 0; CHAIN-PAUSE cleared — turn lane ALIVE (platform-engineer
+  turn 1843 = chain_merge_check.py merger-preview machinery; Lead
+  audit at its union turn). Board flips ride the union already
+  included in the landing; next-cycle TODOS pass re-verifies.
 
 - LEAD ROTATION (Owner order 2026-10-25 ~18:08Z, in-channel: "rotate
   your hire list" + 9am completion goal): DUTY REVIEWER swapped to
