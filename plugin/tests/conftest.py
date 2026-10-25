@@ -22,7 +22,13 @@ from django.conf import settings
 DEMO_ROOT = Path(__file__).resolve().parents[2] / "demo-backend"
 
 # Modules (basenames) that run against the demo rig.
-DEMO_RIG_MODULES = {"test_order_lifecycle", "test_audit_actions", "test_csv_export", "test_rbac_roles"}
+DEMO_RIG_MODULES = {
+    "test_order_lifecycle",
+    "test_audit_actions",
+    "test_csv_export",
+    "test_rbac_roles",
+    "test_seed_demo",
+}
 
 # Demo-rig DRF policy (lives here so the override stays in one place).
 DEMO_REST_FRAMEWORK = {

@@ -140,6 +140,14 @@ answers `["auditors"]` vs `["auditors","managers"]` (+ `is_superuser`
 false/true), which is the whole decision input — pinned by
 `test_seed_demo_gives_a_nonsuperuser_single_role_holder`.
 
+The seed also carries the DATA those gated screens read, so a first login is
+not an empty card: six record-scope `order.flag` entries authored by `admin`,
+one three-order batch authored by `auditor`, and every refund hop of the
+lifecycle trail attributed to `auditor` too. `#/activity` and a record's audit
+half therefore paint rows on a freshly seeded rig — pinned by
+`plugin/tests/test_seed_demo.py`, which reads the log back through the API with
+the non-superuser's own token.
+
 ## The line that must not blur
 
 Hiding is **UX, not security**. Every gate above is client-side; the
