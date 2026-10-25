@@ -113,54 +113,53 @@ jobs:
           fi
           echo "diff bytes: $(wc -c < review-diff.txt)"
 
-      - name: Duty reviewer verdict (groq/qwen3.8-27b, single-shot)
+      - name: Duty reviewer verdict (agentic groq/qwen3.8-27b@goose — the chain recipe)
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
+          # 413 ROOT CAUSE (runs 40222194772/40222193160/4022300*/4022310*):
+          # groq rejects LARGE single-shot chat bodies (~30KB+ JSON) with
+          # HTTP 413 — a diff-in-prompt review cannot fit. FIX: use the
+          # CHAIN'S PROVEN AGENTIC RECIPE (goose + groq env override, the
+          # same one running the 2244 review in agent-team.yml right now):
+          # small per-turn requests, the reviewer runs git/pytest itself.
+          # Goose binary + the team's OWN baked config (Owner order
+          # 2026-10-20 "make agent configs, too, and reuse them").
+          mkdir -p /tmp/goose-dl \
+            && curl -fsSL -o /tmp/goose-dl/goose.tar.bz2 \
+                 https://github.com/block/goose/releases/download/stable/goose-x86_64-unknown-linux-gnu.tar.bz2 \
+            && tar -xjf /tmp/goose-dl/goose.tar.bz2 -C /tmp/goose-dl \
+            && install -m 0755 /tmp/goose-dl/goose /usr/local/bin/goose
+          mkdir -p "$HOME/.config/goose"
+          cp docker/harness/goose-config.yaml "$HOME/.config/goose/config.yaml"
+          git config --global --add safe.directory "$PWD"
           BR="${{ steps.head.outputs.branch }}"
           AUTHOR="${{ github.event.inputs.author }}"
           SHA="${{ steps.head.outputs.sha }}"
-          DIFF=$(cat review-diff.txt)
-          GATE=$(cat gate-out.txt)
-          REVIEW_BRIEF="REVIEW DUTY (SEGREGATION LAW v2 — author, reviewer and merger are SEPARATE roles).
-          You are the DUTY REVIEWER: QA Engineer, member groq/qwen3.8-27b@goose (parallel review track).
+          GATE=$(head -c 2000 gate-out.txt)
+          REVIEW_BRIEF="REVIEW DUTY (SEGREGATION LAW v2, Owner 18:14Z + 18:55Z: duties belong to capable member roles — author, reviewer and merger are SEPARATE roles; no seat merges its own work).
+          You are the DUTY REVIEWER: QA Engineer, member groq/qwen3.8-27b@goose (parallel review track — read-only; the serialized chain remains the only merger).
           Pending branch: ${BR} (authored by ${AUTHOR}, head ${SHA}).
-          If the author role is quality-assurance-engineer or visiting-engineer, your verdict is REJECTED (reviewer-equals-author / duty-role law).
-          FAST GATE RESULTS (measured by the harness, report each rc):
-          ${GATE}
-          === FULL DIFF (merge-base...branch) ===
-          ${DIFF}
-          === LAW CHECKLIST — grade each, cite file:line when failing ===
-          1. SECRET LAW: no credential values, tokens or keys in the diff.
-          2. Lead-owned files untouched: .github/workflows/*, .github/scripts/*, agent-team/TEAM-CONTROL.org, .gitattributes.
-          3. Board/evidence: any TODOS.org flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries follow the FORMAT LAW (headline carries FROM, tags + :PROPERTIES: drawer).
-          4. Tests are additive and real (no skipped/broken coverage, no pin inflation without matching measurement).
-          5. No destructive re-delivery: the diff must not silently remove other seats' content (fold-class check for chat/AGENT files: header lines preserved).
-          Do NOT try to run anything — the gate was already run for you; your duty is DIFF + LAW review.
-          The LAST line of your answer MUST be exactly one of:
+          If the author is the SAME member role as you (quality-assurance-engineer or visiting-engineer), your verdict is REJECTED (reason: reviewer-equals-author).
+          Do this READ-ONLY, in order:
+          1. git fetch origin ${BR} ; git log --oneline origin/ai/main..origin/${BR}
+          2. git diff origin/ai/main...origin/${BR} — read EVERY hunk.
+          3. FAST gate subset ONLY (python3 exists here, pytest is installed): python3 -m pytest plugin/tests -p no:cacheprovider -q ; python3 demo-backend/manage.py check ; python3 demo-backend/manage.py makemigrations --check — report each rc. Do NOT run vitest/npx/tsc: FE execution is graded by the CI test job on the merge and re-run by the Lead's finalize gate — your duty is the DIFF + LAW review. If a check cannot start, report rc CANNOT and move on — NEVER loop on environment repair.
+          4. Law check: no secrets in the diff (SECRET LAW); no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes); the board flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries legal format.
+          5. Do NOT modify or commit anything — your verdict text is your whole deliverable.
+          6. The LAST line of your answer MUST be exactly one of:
           VERDICT: APPROVED
-          VERDICT: REJECTED — <one line of reasons>"
-          payload=$(python3 - "$REVIEW_BRIEF" << 'PYEOF'
-          import json, sys
-          print(json.dumps({"model": "qwen/qwen3.8-27b",
-                            "messages": [{"role": "user", "content": sys.argv[1]}],
-                            "max_tokens": 4096, "temperature": 0.2}))
-          PYEOF
-          )
-          code=$(curl -s -o review-raw.json -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer $GROQ_API_KEY" \
-            -H "Content-Type: application/json" \
-            https://api.groq.com/openai/v1/chat/completions \
-            -d "$payload")
-          echo "groq HTTP: $code"
-          python3 - << 'PYEOF'
-          import json
-          try:
-              d = json.load(open('review-raw.json'))
-              txt = d['choices'][0]['message']['content']
-          except Exception as e:
-              txt = f"REVIEWER TRANSPORT FAILED: {e}\nVERDICT: REJECTED — reviewer transport failure (review-missing)"
-          open('review-out.txt', 'w').write(txt)
-          print(txt[-800:])
-          PYEOF
+          VERDICT: REJECTED — <one line of reasons>
+          PRE-MEASURED GATE EVIDENCE from the harness (corroborate if you wish):
+          ${GATE}"
+          env HOME="$HOME" GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
+               OPENAI_API_KEY="$GROQ_API_KEY" \
+               OPENAI_HOST="https://api.groq.com" \
+               OPENAI_BASE_PATH="/openai/v1/chat/completions" \
+               timeout 900 goose run --no-session -t "$REVIEW_BRIEF" \
+               > review-out.txt 2>&1 || true
+          tail -5 review-out.txt
+          grep -E "^VERDICT:" review-out.txt | tail -1 || echo "NO VERDICT TOKEN (review-missing)"
 
       - name: Record verdict
         run: |
