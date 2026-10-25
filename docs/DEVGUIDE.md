@@ -225,15 +225,22 @@ python3 scripts/doc_field_roster_diff.py --root /tmp/copy   # controls run on co
 # a commit on the main ref; the chat carries the FROM in EVERY headline and a complete
 # :PROPERTIES: drawer AND no drawer line floats free of a headline (a merge folding two
 # concurrent EOF appends eats the second entry's header, and CHAT-FORMAT cannot see the
-# orphaned tail — it parses as the previous entry's body); inside the objective's window
-# every historical chat version is a
-# BYTE prefix of the current one (no entry edited, none dropped) and over the whole
-# history no entry ever disappears; the run log holds one well-formed line per turn
+# orphaned tail — it parses as the previous entry's body); INSIDE the objective's window
+# every entry every historical version held is still THERE, in order, byte-identical —
+# graded PER ENTRY, not by comparing the whole file to a byte prefix of today, because a
+# union-merged concurrent append breaks that read while nothing was touched (it printed
+# 115 red lines on ai/main for interleaving, Lead fold-repairs and one recorded FORMAT-LAW
+# correction, so the leg carried no signal at all). An entry whose bytes changed after it
+# landed is RED naming the entry, the line and the before/after bytes, unless the repair is
+# PINNED in ACCEPTED_REPAIRS with the chat line that records the ruling — and a pinned
+# repair that matches nothing is CANNOT RUN, never a quieter green. Over the whole history
+# no entry ever disappears and none reorders; a region reworded BEFORE the window is a
+# note naming the entry. The run log holds one well-formed line per turn
 # (`sha@branch | seat | lane | date`) whose every run id resolves to a real commit and
 # whose date agrees with that turn's chat entry; and every parked board item is still a
 # headline. A PROSE record of what a turn did is not re-runnable — this is.
 python3 scripts/chain_test_check.py            # 0 = ok, 1 = a claim is false, 2 = cannot run
-python3 scripts/chain_test_check.py --selftest # 13 controls: every leg proved able to fail
+python3 scripts/chain_test_check.py --selftest # 16 controls: every leg proved able to fail
 
 # THE CHAIN'S SESSION collect->restore loop as one command — the Owner's SESSION LAW
 # (18:27Z) says each turn's CLI session files are collected, uploaded and restored into
