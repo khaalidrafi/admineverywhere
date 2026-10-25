@@ -970,6 +970,22 @@ jobs:
               sleep 15
               continue
             fi
+            # FOLD-GUARD (Lead 10-ci, run 40178324559 evidence): TEAM-CHAT.org is
+            # union-merged (.gitattributes), and the union driver can silently eat
+            # a stale-base append's entry header (1956 landed as 1e249f1 with 5
+            # header lines gone -> CHAT-STRUCTURE red on main). chain_test_check's
+            # exit rc is NOT a usable signal here (the standing historical-prefix
+            # flood keeps rc=1 even on clean trees), so probe the signature only:
+            # a fold-free merge adds ZERO CHAT-STRUCTURE grounds. File-capture +
+            # separate grep: pipefail+set -e killed a finalize step this way once
+            # already (run 39761029125 evidence, in-file comment below).
+            python3 scripts/chain_test_check.py > /tmp/fold-guard-chat.txt 2>&1 || true
+            if grep -q 'CHAT-STRUCTURE' /tmp/fold-guard-chat.txt; then
+              git reset --hard origin/ai/main
+              RESULT=fold
+              echo "fold-guard: merged chat carries CHAT-STRUCTURE grounds — merge undone, branch kept for the Lead union-merge"
+              break
+            fi
             if bash .github/scripts/gate.sh; then
               bash .github/scripts/secret-guard.sh staged
               if git push origin "ai/main"; then RESULT=green; break; fi
