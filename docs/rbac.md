@@ -146,6 +146,25 @@ decision input, pinned by
 `test_seed_demo_gives_a_nonsuperuser_managers_holder` and
 `test_seed_demo_covers_both_gate_directions_without_a_superuser`.
 
+That recipe used to be something a seat did by hand and described in prose.
+It is now a command: `python3 scripts/rbac_live_check.py` boots the real rig on a
+throwaway database, discovers the claims path from the LIVE document (GET-only — a
+`POST …/me/` is refused, the same rule `openapi.ts` applies when it binds
+`schema.mePath`), authenticates BOTH seeded logins over HTTP, asserts their exact
+bodies plus the anonymous 401, then hands those live bytes to the GLOBBED action
+registry and `roleAllows()` and grades the difference: the gated label survives for
+the caller who holds the role, disappears for the one who does not, the ungated
+label survives for both, and `claims = null` filters nothing. It also flags one
+record as that non-superuser and reads the trail back to prove the actor is
+server-derived, and it re-seeds to prove the claims do not drift. Population is
+pinned before any of that (the glob must carry the reference actions and exactly
+one role-gated entry), because an empty registry answers "identical sets" for both
+callers and would otherwise look like a gate that hides nothing. 0 = as published,
+1 = a claim is false, 2 = cannot run (no rig, no `app/node_modules`) — and
+`--selftest` mutates copies to prove each leg can fire. What the command cannot do
+is sit in a browser: nobody has watched the pixel vanish in a real window, so that
+row of the board stays a human pass, not a green harness.
+
 ## The line that must not blur
 
 Hiding is **UX, not security**. Every gate above is client-side; the
