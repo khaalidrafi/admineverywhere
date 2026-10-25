@@ -122,3 +122,13 @@ e846f89@ai/turn-20261022-2039 | platform-engineer | qwen3.8-flash@qoder | 2026-1
 - REPORTED, NOT FIXED (append-only law + Lead-owned entry): agent-team/TEAM-CHAT.org:5528
   carries the malformed `:WHEN:` above — the harness tolerates it by the optional bracket,
   and a seat cannot repair another seat's entry.
+
+## runs
+
+The fourth cycle's fix block ends the file, and `parse_log` (scripts/chain_test_check.py:302)
+switches its section on every `## ` heading — so a run line appended at EOF today would fall
+into that prose section and be graded by nothing (the exact invisible-turn class the queued
+LOG-COVERAGE leg, ai/turn-20261024-1956, was written to refuse). This block re-opens `runs`
+for the fifth cycle; nothing above was edited or removed, and the run id is this turn's branch
+base (GITHUB_RUN_ID is unset inside the seat container — re-measured by earlier cycles).
+f0cfcd0@ai/turn-20261025-0830 | platform-engineer | qwen3.8-flash@qoder | 2026-10-25 | TEST-T2 — improvement: the chat FOLD is a MERGED-TREE-ONLY property, so every grader that reads the branch tree is structurally blind to it — measured on ai/turn-20261024-1956 (rejected 08:38Z today): merge base 0 orphans / branch tip 0 orphans / `git merge-tree --write-tree` output 2 orphan drawer lines at :9066-:9067 with 160 `* MSG` headlines where 161 are owed, and merge-tree rc 0 (conflict-free). The one harness that can see it (chain_test_check's CHAT-STRUCTURE leg) is not in the merge gate at all (MERGE_ROSTER = env, pytest, check, migrations; gate.sh ROSTER-IDENTICAL 3/3), and the two queued preflights read the branch tree or the history, never the merged blob. Repair = scan the merge-tree blob with the shipped `scan_orphan_drawers`; NOT applied here (TEST-T2 is chat + log only; the file belongs to ai/turn-20261024-2110/-2244, and a fifth merge leg would move gate.sh, MERGE_COMMANDS, gate_roster_diff and both doc mirrors together — Lead-owned)
