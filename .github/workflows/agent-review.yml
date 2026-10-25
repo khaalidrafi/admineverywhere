@@ -1,0 +1,185 @@
+name: agent-review
+# PARALLEL REVIEW TRACK (Owner order 2026-10-25 18:21Z "Run concurrent
+# tasks in CI with branches. BOOST. SPEED UP."):
+#   - One workflow_dispatch = one READ-ONLY duty review of ONE branch.
+#   - Different branches run CONCURRENTLY (concurrency group is keyed
+#     per-branch; the serialized chain in agent-team.yml is untouched
+#     and stays the ONLY writer of ai/main).
+#   - No push, no control-file write, no merge. The verdict lands in
+#     the step summary + a review-verdict artifact (30-day retention).
+#   - The Lead may execute a merge on such an APPROVED verdict per the
+#     SEGREGATION law (merger=Lead via CI gate on duty-reviewer APPROVED
+#     + Lead-measured full 11-leg landing gate), re-checking the diff
+#     delta at merge time — a review is evidence against the main that
+#     existed when it ran; staleness is the Lead's to re-verify.
+#   - Reviewer: groq/qwen3.8-27b (duty reviewer since the 10-df
+#     rotation; probe 200 ALIVE 18:17Z run 40220339780). The review
+#     recipe mirrors the chain's: fast gate subset (pytest + check +
+#     migrations, no vitest) + full diff + law checklist + a final
+#     VERDICT token line.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Pending branch to review (e.g. ai/turn-20261024-2326)'
+        required: true
+      author:
+        description: 'Authoring seat/role of the branch'
+        required: true
+        default: 'unknown'
+      head_sha:
+        description: 'Expected head sha (evidence contract, optional)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: review-${{ github.event.inputs.branch }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install project deps
+        run: |
+          pip install -r demo-backend/requirements.txt pytest
+          pip install -e plugin
+
+      - name: Resolve branch head (evidence contract)
+        id: head
+        run: |
+          BR="${{ github.event.inputs.branch }}"
+          git fetch origin "$BR" --quiet
+          SHA=$(git rev-parse --verify "origin/${BR#origin/}" 2>/dev/null || git rev-parse --verify "$BR")
+          echo "resolved head: $SHA"
+          WANT="${{ github.event.inputs.head_sha }}"
+          if [ -n "$WANT" ] && [ "$SHA" != "$WANT" ]; then
+            echo "::warning::head $SHA != expected $WANT — reviewing the PUSHED tip (the chain reviews what was pushed, never a laptop state)"
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "branch=$BR" >> "$GITHUB_OUTPUT"
+
+      - name: Fast gate subset (same recipe as the chain reviewer)
+        id: gate
+        run: |
+          {
+            echo "=== FAST GATE SUBSET ==="
+            echo "--- pytest (plugin/tests) ---"
+            python3 -m pytest plugin/tests -p no:cacheprovider -q 2>&1 | tail -5
+            echo "PYTEST_RC=$?"
+            echo "--- manage.py check ---"
+            python3 demo-backend/manage.py check 2>&1 | tail -3
+            echo "CHECK_RC=$?"
+            echo "--- makemigrations --check ---"
+            python3 demo-backend/manage.py makemigrations --check 2>&1 | tail -3
+            echo "MIGRATIONS_RC=$?"
+          } > gate-out.txt 2>&1
+          cat gate-out.txt
+
+      - name: Generate diff vs merge-base
+        run: |
+          BR="${{ steps.head.outputs.branch }}"
+          BASE=$(git merge-base origin/main "$BR" 2>/dev/null || git merge-base origin/ai/main "$BR")
+          echo "merge-base: $BASE"
+          git diff "$BASE"..."$BR" > review-diff.txt || true
+          git diff --stat "$BASE"..."$BR" | tail -3
+          # size guard: keep the reviewer's context bounded
+          MAX=120000
+          if [ "$(wc -c < review-diff.txt)" -gt "$MAX" ]; then
+            head -c "$MAX" review-diff.txt > review-diff-trim.txt
+            echo "" >> review-diff-trim.txt
+            echo "... [DIFF TRUNCATED at ${MAX} bytes — reviewer must flag PARTIAL REVIEW in the verdict body]" >> review-diff-trim.txt
+            mv review-diff-trim.txt review-diff.txt
+          fi
+          echo "diff bytes: $(wc -c < review-diff.txt)"
+
+      - name: Duty reviewer verdict (groq/qwen3.8-27b, single-shot)
+        run: |
+          BR="${{ steps.head.outputs.branch }}"
+          AUTHOR="${{ github.event.inputs.author }}"
+          SHA="${{ steps.head.outputs.sha }}"
+          DIFF=$(cat review-diff.txt)
+          GATE=$(cat gate-out.txt)
+          REVIEW_BRIEF="REVIEW DUTY (SEGREGATION LAW v2 — author, reviewer and merger are SEPARATE roles).
+          You are the DUTY REVIEWER: QA Engineer, member groq/qwen3.8-27b@goose (parallel review track).
+          Pending branch: ${BR} (authored by ${AUTHOR}, head ${SHA}).
+          If the author role is quality-assurance-engineer or visiting-engineer, your verdict is REJECTED (reviewer-equals-author / duty-role law).
+          FAST GATE RESULTS (measured by the harness, report each rc):
+          ${GATE}
+          === FULL DIFF (merge-base...branch) ===
+          ${DIFF}
+          === LAW CHECKLIST — grade each, cite file:line when failing ===
+          1. SECRET LAW: no credential values, tokens or keys in the diff.
+          2. Lead-owned files untouched: .github/workflows/*, .github/scripts/*, agent-team/TEAM-CONTROL.org, .gitattributes.
+          3. Board/evidence: any TODOS.org flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries follow the FORMAT LAW (headline carries FROM, tags + :PROPERTIES: drawer).
+          4. Tests are additive and real (no skipped/broken coverage, no pin inflation without matching measurement).
+          5. No destructive re-delivery: the diff must not silently remove other seats' content (fold-class check for chat/AGENT files: header lines preserved).
+          Do NOT try to run anything — the gate was already run for you; your duty is DIFF + LAW review.
+          The LAST line of your answer MUST be exactly one of:
+          VERDICT: APPROVED
+          VERDICT: REJECTED — <one line of reasons>"
+          payload=$(python3 - "$REVIEW_BRIEF" << 'PYEOF'
+          import json, sys
+          print(json.dumps({"model": "qwen/qwen3.8-27b",
+                            "messages": [{"role": "user", "content": sys.argv[1]}],
+                            "max_tokens": 4096, "temperature": 0.2}))
+          PYEOF
+          )
+          code=$(curl -s -o review-raw.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $GROQ_API_KEY" \
+            -H "Content-Type: application/json" \
+            https://api.groq.com/openai/v1/chat/completions \
+            -d "$payload")
+          echo "groq HTTP: $code"
+          python3 - << 'PYEOF'
+          import json
+          try:
+              d = json.load(open('review-raw.json'))
+              txt = d['choices'][0]['message']['content']
+          except Exception as e:
+              txt = f"REVIEWER TRANSPORT FAILED: {e}\nVERDICT: REJECTED — reviewer transport failure (review-missing)"
+          open('review-out.txt', 'w').write(txt)
+          print(txt[-800:])
+          PYEOF
+
+      - name: Record verdict
+        run: |
+          VERDICT=$(grep -E "^VERDICT:" review-out.txt | tail -1 || echo "VERDICT: MISSING — review-missing (no token)")
+          {
+            echo "## Parallel review verdict — ${{ steps.head.outputs.branch }}"
+            echo ""
+            echo "- head: ${{ steps.head.outputs.sha }}"
+            echo "- author: ${{ github.event.inputs.author }}"
+            echo "- reviewer: groq/qwen3.8-27b (parallel track, dispatch ${{ github.run_id }})"
+            echo "- **$VERDICT**"
+            echo ""
+            echo "<details><summary>full reviewer output</summary>"
+            echo ""
+            echo '```'
+            cat review-out.txt
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: review-verdict-${{ github.run_number }}
+          path: |
+            review-out.txt
+            review-diff.txt
+            gate-out.txt
+          retention-days: 30
