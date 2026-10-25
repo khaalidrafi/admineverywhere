@@ -4,7 +4,9 @@
 WHY this exists (measured, not assumed). A seat cannot edit the chain's own files
 (`.github/workflows/*` and `.github/scripts/*` are Lead-owned, chain law 11), so a
 chain defect can only be handed over as a PATCH in docs/ plus the instruction to
-run it. docs/ carried two of them and BOTH were dead:
+run it. docs/ carried two of them and BOTH were dead (measured when this harness
+was written; the roster has since grown with live proposals — the POPULATION leg
+counts what is on disk and refuses a patch added without its roster entry):
 
   * `docs/session-loop-fix.patch` — its own NOTE says `git apply --check` has failed
     since eaf34bd extracted the segment step out of the workflow inline, yet the
@@ -72,8 +74,9 @@ PATCH_GLOB = "docs/*-fix.patch"
 # that writes it, or the check refuses rather than grading less than it claims.
 HANDOVERS = ("docs/pending-slot-fix.patch",
              "docs/review-provenance-fix.patch",
-             "docs/session-loop-fix.patch")
-EXPECTED_PATCHES = 3
+             "docs/session-loop-fix.patch",
+             "docs/slot-guard-dialect-fix.patch")
+EXPECTED_PATCHES = 4
 
 STATUS_RE = re.compile(r"^STATUS:\s*([A-Za-z-]+)", re.M)
 PROPOSAL = "PROPOSAL"
@@ -451,6 +454,28 @@ def control_no_hunks(root):
     _write(root, name, head + "(content unavailable in this copy)\n")
 
 
+def control_guard_already_landed(root):
+    """APPLY: the Lead landed THIS proposal, so it must stop claiming PROPOSAL.
+
+    The counterfactual the shipped tree cannot show: the dialect patch is the only
+    handover whose hunk mutates the NON-CLOBBER SLOT GUARD's own read, so the day
+    the Lead applies it, `git apply --check` must start refusing — a patch that
+    still says APPLY after its fix landed is the dead instruction that cost this
+    repo two review cycles (the header's own note). The mutation edits the
+    WORKFLOW in a copy only: a seat never edits the shipped carrier, and the
+    harness reads it through `--root`."""
+    rel = ".github/workflows/agent-team.yml"
+    broken = "grep -E '^\\#+PENDING-REVIEW:'"
+    fixed = "grep -E '^#\\+PENDING-REVIEW:'"
+    body = read(os.path.join(root, rel))
+    if broken not in body:
+        raise AssertionError("the shipped workflow no longer carries the guard read "
+                             "this control mutates (%s) — the counterfactual is "
+                             "unreachable, so retarget the control, never delete it"
+                             % broken)
+    _write(root, rel, body.replace(broken, fixed, 1))
+
+
 CONTROLS = (
     ("shipped tree is green", control_no_change, 0, "PATCH HANDOVER OK"),
     ("patched file is gone", control_target_deleted, 1, "TARGET"),
@@ -464,12 +489,14 @@ CONTROLS = (
     ("retired still says APPLY", control_retired_apply_line, 1, "still tells the reader"),
     ("retired grader answers red", control_grader_red, 1, "exits 1"),
     ("patch has no parsable hunk", control_no_hunks, 2, "no parsable"),
+    ("guard proposal landed, hunk now stale", control_guard_already_landed, 1,
+     "slot-guard-dialect-fix"),
 )
 
 # PINNED, not derived (chain_test_check's EXPECTED_CONTROLS law): a roster whose
 # length is only printed cannot see its own coverage, so deleting a control would
 # shrink the claim instead of refusing.
-EXPECTED_CONTROLS = 12
+EXPECTED_CONTROLS = 13
 
 
 def selftest(root):
