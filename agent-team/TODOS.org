@@ -3659,6 +3659,80 @@ superuser, so a live smoke could never show a gated surface hidden.
 :END:
 * OPEN ITEMS
 
+** PENDING mcode-lane-activation — harness bake landed; arm wiring + secret are Lead/Owner (:DELIVERED: ai/turn-20261025-0652@9ea106e) :CI:
+:LOGBOOK:
+- Note taken on [2026-10-25 Sun 07:03 UTC] :: :DELIVERED: MCODE BAKE LANDED —
+  one file: =docker/harness/Dockerfile=, commit 9ea106e on branch
+  ai/turn-20261025-0652 (board row and this chat entry follow in the next
+  commit of the same branch; DONE is the Lead's gate).
+  RE-CUT DISCIPLINE: this replaces ai/turn-20261024-1736@6e5e3c7, REJECTED
+  three times (05:36Z / 05:56Z / 06:41Z, REVIEW-LOG.org:2308/2318/2328) on an
+  UNCHANGED tip — the reviewer's substance finding was a single item, the
+  board-evidence contract: this row carried prose evidence but no commit sha
+  and no :DELIVERED: marker, while the Dockerfile claims were verified
+  independently and the law/gate legs were clean. The approved bake content is
+  replayed BYTE-IDENTICAL (measured: the only difference between this tree's
+  Dockerfile and 1736's is the 10-ba non-fatal cline block, which is main's own
+  repair and is carried, not re-authored); what changed is this row's evidence
+  and its numbers, re-measured on the current base rather than copied.
+  Lead 10-ay deferred this "own machinery pass, with its own evidence" and
+  recorded the blocker as "Debian bookworm Node 18"; measured IN this harness
+  container the blocker is real but the number is not — system node is v20.19.2, and
+  @minimax-ai/code@0.6.13's postinstall hard-refuses it
+  ("[MCode] Unsupported Node.js environment. Detected: linux-x64, Node 20.19.2
+  (ABI 115) / Supported: Node 22.19+, 24, 25, 26", rc 1, package never lands).
+  Recipe = a PRIVATE Node 24.22.1 under /usr/local/lib/mcode-node plus a
+  /usr/local/bin/mcode wrapper that execs only that node, so the five proven
+  bodies keep the system nodejs untouched. Every command was replayed
+  verbatim in this image as uid 1001 (prefixes remapped to /tmp/replay,
+  leading `RUN` stripped, bash rc 0): sha256 verify OK -> node v24.22.1 ->
+  npm install lands -> computer-use payload deleted -> wrapper prints 0.6.13.
+  Two measured facts that changed the recipe: no xz binary in this image
+  (tar -xJf dies, so the .tar.gz form is mandatory) and nodejs.org serves no
+  .asc for the tarball (404) with no gpg here, so it is SHA256-pinned instead.
+  RE-MEASURED THIS CUT (2026-10-25, not inherited): fetching
+  https://nodejs.org/dist/v24.22.1/SHASUMS256.txt lists
+  =eb6728e77c576a35162c122c45ccadf224d89ff00abc8dae46cc2897c6002d7c  node-v24.22.1-linux-x64.tar.gz=
+  — byte-for-byte the pin in the first RUN step (the .tar.xz sibling is a
+  different digest, 6c172a9a…, so the pin is form-specific and the form is the
+  one this image can untar) — and
+  https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.gz.asc answers
+  HTTP 404 again, so the signature-file path is still not available.
+  TRAP recorded for whoever edits this step: `--ignore-scripts` looks like CI
+  hygiene but deletes better-sqlite3's native binding (measured: absent with
+  the flag, present and FUNCTIONAL — :memory: CREATE/INSERT/SELECT — without
+  it; the binding comes from prebuild-install, no compiler needed).
+  Trim measured: the 228M embedded/computer-use payload carries only
+  darwin-arm64/darwin-x64/win32-arm64/win32-x64 — NO linux build — and
+  deleting it leaves `mcode --version`, `mcode exec` and `mcode provider list`
+  identical (package 340M -> 112M; layer cost 253M total).
+  Headless contract for the (Lead-owned) turn_segment.sh arm:
+  `mcode exec --permission full --output-format json -o <file> --cwd <ws>
+  "<prompt>"` — the `ask` policy needs a TUI. Skip-guard measured: with no
+  credential, exec refuses with "Sign in to MiniMax to use Agent features.
+  Run `mcode login`, then retry." and ZERO requests. Restore target for
+  MCODE_AUTH_JSON: $MINIMAX_DATA_DIR/auth.json (default ~/.minimax, with
+  auth-state.json/auth.lock beside it).
+  GATES ON THE COMMITTED TREE, re-measured on this base:
+  =python3 scripts/landing_gate.py= rc 0 — GATE GREEN 4/4 (env deps importable
+  from plugin/src with django 5.2.18, pytest 306 passed, `manage.py check` no
+  issues, `makemigrations --check` no changes). No product code, no suite pin
+  moved (306 is main's current pinned count); the bake is one harness file, so
+  the six twin harnesses have nothing to compare — the full 11-leg --fe is the
+  merger's to run on landing, as always.
+  FORMAT STATE after this cut: 161 `* MSG` headlines = 161 :PROPERTIES: = 161
+  :WHEN: = 161 :END: in TEAM-CHAT.org (main sits at 160/160/160/160 after the
+  10-bu fold repair), and chain_test_check's finding SET is identical to a
+  pristine origin/ai/main worktree run beside it (APPEND-ONLY 67 / NO-DROP 65 /
+  CHAT-STRUCTURE 0, sorted finding lists diff empty) — this row's own chat
+  append adds no orphan, and its :WHEN: day name is Sun, verified against
+  `date -u -d 2026-10-25` (the 1632 defect class).
+  Lane stays paper-armed until a measured in-lane completion (probe-first
+  law) — this pass proves the BODY bakes and runs, not that a token completes
+  a turn; MCODE_AUTH_JSON (Owner/Lead sealing) and the turn_segment.sh arm are
+  still the two gates this row cannot close from the seat side.
+:END:
+
 ** DONE CHAT-PREVIEW — live rebrand preview (apply/revert pure module) (:DELIVERED: kept; Lead sweep flip 2026-10-23; renamed from COOL-PREVIEW per Owner 2026-10-23) :FE:
 :LOGBOOK:
 - Note taken on [2026-10-21 Wed 19:43 UTC] :: THE BRAND CSS TWIN CLAIM BECAME A
