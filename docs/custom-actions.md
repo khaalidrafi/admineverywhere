@@ -170,7 +170,14 @@ and both action request bodies are documented automatically
   filters — the response shape is the contract; keep it stable.
 - Lifecycle transitions deliberately do NOT double-write audit entries:
   `OrderHistory` is the lifecycle trail; `AuditEntry` is for custom actions.
-- `seed_demo` does not fabricate audit entries; the log fills as actions run.
+- `seed_demo` appends flag entries so a freshly seeded rig is not an empty
+  audit screen — and it writes them through the SAME call the @action makes,
+  `AuditEntry.record_flag()` (`shop/models.py`), the one writer of the flag
+  row shape. `plugin/tests/test_seed_demo.py` compares the two products
+  through the serializer, so demo data and live data cannot drift on summary
+  wording or payload keys. Re-running the seed wipes the log with the other
+  shop rows: entries name their target loosely (`object_type`/`object_id`),
+  so rows surviving an order wipe would be ghosts the screen renders as fact.
 - The OpenAPI fixture used by the client's normalizer tests
   (`app/src/lib/__tests__/fixtures/openapi.json`) is recaptured from the live
   rig, so it carries the audit registration — and the capture is guarded:

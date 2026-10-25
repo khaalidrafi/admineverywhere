@@ -186,8 +186,12 @@ documents `transition` as `[post]` and `history` as `[get]`, which is the eviden
   MVP behavior, kept additive for the thin client's schema-driven forms.
   The transition endpoint is the governed path; a future hardening ticket
   may make the field read-only once all clients are migrated.
-- `seed_demo` gives every seeded order its creation trail row (actor null),
-  so demo data reads coherently through the history endpoint.
+- `seed_demo` walks every seeded order through `apply_transition()` — the
+  creation row (`from_status: ""`, actor null) plus one row per legal hop to
+  the status the order ends on, refunds performed by the seeded non-superuser
+  `auditor`. The trail is produced by the machine, never hand-written, so a
+  demo trail can never show a hop the endpoint would refuse with 409;
+  `plugin/tests/test_seed_demo.py` grades exactly that invariant.
 - The client's proof fixture `app/src/lib/__tests__/fixtures/openapi.json` IS
   the captured document of this rig (recaptured 2026-10-21 from a running
   `manage.py runserver` + `GET /api/schema/?format=json`: 16 paths, 5 models,
