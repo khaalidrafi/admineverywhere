@@ -271,6 +271,17 @@ python3 scripts/chat_feature_check.py --selftest # 12 controls: every leg proved
 # that ungraded fourth exclusion while the harness still pinned three
 python3 scripts/chain_slot_check.py           # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chain_slot_check.py --selftest # 11 controls: every leg proved able to fail
+# the FR-R007-LIVE board row as ONE command (the proof that used to be a seat's
+# hand-started rig described in prose): boot the real demo rig on a THROWAWAY db,
+# discover the claims path from the LIVE document under the client's own GET-and-not-POST
+# evidence law, authenticate both seeded logins plus the anonymous 401, assert their exact
+# claim bodies, then feed those live bytes through the GLOBBED action registry and
+# `roleAllows()` and grade the DIFFERENCE (the gated label survives for the caller who
+# holds the role, vanishes for the one who does not, `claims = null` filters nothing),
+# prove the audit actor is server-derived and that a re-seed does not drift the claims.
+# What it cannot do is sit in a browser, so the pixel row stays a human pass.
+python3 scripts/rbac_live_check.py            # 0 as published / 1 a claim is false / 2 cannot run (no rig, no app/node_modules)
+python3 scripts/rbac_live_check.py --selftest # 11 controls: every leg proved able to fail
 
 # THE HANDOVER PATCHES in docs/ as ONE command. A seat cannot edit the chain's own
 # files, so a chain defect travels as `docs/<name>-fix.patch` plus the instruction to

@@ -3500,6 +3500,108 @@ superuser, so a live smoke could never show a gated surface hidden.
   0 in this seat's env -> the Lark copy of this seat's report is SKIPPED, not
   lost). SEGREGATION LAW: authored only; nothing reviewed or merged here;
   ai/main never pushed; Lead-owned files untouched.
+- Note [2026-10-24 Sat 14:36 UTC] :: :DELIVERED (RE-DELIVERED, LEAK-FREE):
+  branch ai/turn-20261024-1403, commit f75d7b7 — carries the substance of my
+  ai/turn-20261024-0527 (sha d4358a6), which the review lane could not process
+  four times (REVIEW-LOG.org: review-missing 11:23 / lane-dead 12:01 /
+  review-missing 12:56 / review-missing 13:52) and which commits the harness
+  scratch .turn-review.txt — the exact class 0339 and 0454 were REJECTED for.
+  0527's merge-base predates the .gitignore line that 0659 added, so the turn
+  host swept the scratch in; THIS tree is cut from main, where
+  .gitignore:18-19 keeps that class out, and `git ls-files | grep -c 'turn-'`
+  answers 0 here.
+  WHAT LANDED (f75d7b7, four files):
+  - scripts/rbac_live_check.py (741L) — the row's proof as ONE command instead
+    of a seat's hand-started rig described in prose: rig booted on a THROWAWAY
+    db, claims path discovered from the LIVE document under the client's own
+    GET-and-not-POST law, both seeded claim bodies asserted exactly + the
+    anonymous 401, then those live bytes fed through the GLOBBED action
+    registry and roleAllows() in a per-run vitest probe that grades the
+    DIFFERENCE (bulk_flag survives for the managers holder, vanishes for the
+    auditor, ungated flag stays, claims=null filters nothing), plus the
+    server-derived audit actor and the re-seed that must not drift.
+  - THE GAP IN MY OWN 0527, closed here: the harness carried no
+    EXPECTED_CONTROLS pin, so a control deleted from its roster would have
+    printed a smaller N under `SELFTEST OK` while AGENTS.md kept promising the
+    old one — the class ai/turn-20261024-0912 graded for the other harnesses.
+    It now pins 11 AND compares it against len(CONTROLS), and AGENTS.md
+    publishes `11 controls` in `## Commands` (release_readiness.py:217
+    EXPECTED_CONTROL_CLAIMS 5 -> 6 in the same commit).
+  EVIDENCE (all measured on THIS tree, f75d7b7):
+  - [X] `python3 scripts/rbac_live_check.py` rc 0, 7 legs: CLAIMS admin
+        {is_superuser:true, roles:[auditors,managers]} / auditor
+        {is_staff:false, roles:[auditors]} / anon 401 from the LIVE /api/me/;
+        REJECTION `bulk for admin ['Flag batch'] vs auditor []`.
+  - [X] `--selftest` rc 0 — 11/11 controls fired; three of them re-run by me
+        for the new pin: doc retyped 11->10 -> release_readiness RED naming
+        AGENTS.md:258 and the pin; a control deleted -> rc 2 "the control
+        roster holds 10 entries, the pin says 11"; the pin made
+        non-assignable -> rc 2 "publishes no `EXPECTED_CONTROLS`".
+  - [X] `python3 scripts/landing_gate.py --fe` -> GATE GREEN 11/11: pytest 300,
+        System check no issues, No changes detected, vitest 484 (39 files),
+        csv-twin BYTE-IDENTICAL 3070 cells / 56287 B, brand-twin 302 over
+        pinned 350, parity/gate/registry/doc twins identical.
+  - [X] `release_readiness.py` rc 0 (doc-counts 8 claims == pins; controls 6
+        live claims over 4 harnesses), `doc_field_roster_diff.py` rc 0 (88
+        claims), `registry_roster_diff.py` rc 0. No suite count moved.
+  STILL OPEN, unchanged by this note: the human E2E line — nobody literally
+  watched the button vanish in a window. This harness grades the DOM-free
+  equivalent over a live server; it does not replace the Owner's pass, and
+  docs/rbac.md now says so in the section this commit adds.
+  SECRET LAW held: no credential value read, echoed or committed — presence
+  tested with `[ -z ]` only (ROLE_LARK_WEBHOOK empty in this seat's env -> the
+  Lark copy of the report is SKIPPED, not lost). Lead-owned files
+  (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, .gitattributes)
+  read and cited only. State left PENDING — DONE is the Lead's gate.
+  SEGREGATION LAW: this seat is 0527's AUTHOR, so it reviewed nothing and
+  merged nothing; ai/main was never pushed. Advancing the register from the
+  dead 0527 slot to this branch is the Lead's call, not this seat's.
+- Note [2026-10-25 Sun 01:10 UTC] :: :DELIVERED (BASE-REPAIR RE-DELIVERY):
+  branch ai/turn-20261025-0056 — 1403@80af3f65 carried the STALE-BASE CAUTION
+  (Lead 10-bp: cut at 0a8c8a2, 13:53Z, nine merges behind) and the register
+  verdict on it is review-missing 00:45Z, so the merge fate was unmeasured.
+  MEASURED here: `git merge origin/ai/turn-20261024-1403` into current main
+  CONFLICTS in exactly two files — AGENTS.md (both sides appended a `##
+  Commands` block at the same spot: main's chain_slot_check entry vs this
+  branch's rbac_live_check entry) and scripts/release_readiness.py
+  (`EXPECTED_CONTROL_CLAIMS`: main took 5 -> 7 with 1037's landing, the branch
+  took 5 -> 6 on its stale base). Resolved per the union-merge law (keep main
+  content + take additive): both blocks kept, the pin derived fresh as 7 + 1
+  (rbac_live_check is the fifth published harness) = 8, comment re-headed to
+  name all five.
+  ONE REAL DEFECT the moved base exposed, fixed in-lane, not papered: this
+  harness's `rig_python` probed the interpreter exactly once, so after the
+  2154 merge (rig bootstraps from plugin/src via core/devpaths.py) the harness
+  still answered CANNOT RUN in a setuptools-less lane — 9 of 11 `--selftest`
+  controls died on the preflight, the exact LANE NOTE class 2154 closed for the
+  gate. `rig_python` now mirrors `landing_gate.leg_env`: probe as-is, retry
+  once with this checkout's `plugin/src` on PYTHONPATH, print WHICH carried
+  the import, refuse only when the deps are genuinely absent (EIGHTH law).
+  EVIDENCE (all measured on THIS merged tree):
+  - [X] `python3 scripts/rbac_live_check.py` rc 0 — 7/7 legs on a LIVE rig on
+        a throwaway DB: env line "plugin from /workspace/plugin/src, no
+        editable install"; CLAIMS admin superuser roles
+        [auditors,managers] / auditor non-superuser roles [auditors] / anon
+        401 from the discovered GET-only /api/me/; REJECTION bulk ['Flag
+        batch'] vs [] for the auditor; AUDIT server-derived actor; re-seed
+        does not drift.
+  - [X] `--selftest` rc 0 — 11/11 controls fire (was 2/11 before the probe
+        fix on this base).
+  - [X] `python3 scripts/landing_gate.py --fe` rc 0 — GATE GREEN 11/11:
+        pytest 306, check no issues, migrations no changes, vitest 484/39,
+        csv/brand/parity/gate/registry/doc twins all identical.
+  - [X] `release_readiness.py` rc 0 — controls leg now reads "8 live claims
+        over 5 harnesses", the derived pin graded against its own roster;
+        doc-counts 8 == pins. `chain_slot_check` rc 0 4/4,
+        `chat_feature_check` rc 0; `chain_test_check` rc 1 == main's own
+        accepted-noise baseline (APPEND-ONLY/NO-DROP merge-as-prefix family),
+        this note adds no new class.
+  NOTE: 1403 itself is NOT touched or pruned by this seat — segregation law
+  says author reviews/merges nothing; supersession and prune are the Lead's.
+  SECRET LAW held: no credential value read, echoed or committed;
+  ROLE_LARK_WEBHOOK empty in this seat's env -> Lark copy SKIPPED, not lost.
+  Lead-owned files read and cited only. State stays PENDING — DONE is the
+  Lead's gate.
 - Note [2026-10-24 Sat 07:07 UTC] :: :DELIVERED (RE-DELIVERED): branch
   ai/turn-20261024-0659, commit 77eb04c — the clean re-delivery of what
   ai/turn-20261024-0339 (sha ece17f8) was REJECTED for: that branch committed
