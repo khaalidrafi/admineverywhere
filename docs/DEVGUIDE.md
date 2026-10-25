@@ -17,7 +17,8 @@ client that talks to any DRF + drf-spectacular API with token auth. The
 whole CRUD UI, dashboard widgets and the Ctrl+K streaming chat are derived
 from the OpenAPI schema. `demo-backend/` is a throwaway rig: fixture source
 for tests plus a live backend for browser E2E (login `admin` / `admin123`,
-or `auditor` / `audit123` to see FR-R007 role gating actually hide something).
+`auditor` / `audit123` to see FR-R007 role gating actually hide something,
+`manager` / `manager123` to see the same gate open on a real claim).
 
 Product constraints — do not relax:
 
@@ -60,9 +61,11 @@ Product constraints — do not relax:
   SHIPPED glob (which also pins that each nav group has a live gated page to lose). Hiding is UX,
   never security — the server re-validates everything, and the demo
   `/api/me/` (`core/views.py`) emits Django Group names as roles. Because a
-  superuser short-circuits `roleAllows()`, `seed_demo` also creates a
-  non-superuser holding exactly one Group (`auditor` / `audit123`) — a rig
-  of superusers can prove acceptance but never a hidden button. The
+  superuser short-circuits `roleAllows()`, `seed_demo` also creates TWO
+  non-superusers each holding exactly one Group (`auditor` / `audit123`,
+  who loses the managers-gated surfaces, and `manager` / `manager123`, who
+  keeps them because of the claim, not the bypass) — a rig of superusers can
+  prove acceptance only by bypass and never a hidden button. The
   activity screen (`app/src/pages/Activity.svelte`) is just an R-006
   drop-in reading the R-003 audit model through its schema-discovered
   `listPath` (`findAuditModel`), never a hand-written `/api/audit/` — and the
@@ -129,7 +132,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (306 pytest, written first) |
+| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (308 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (484 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
@@ -160,7 +163,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 # tests
 cd app && npm test                          # 484 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 306 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 308 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
