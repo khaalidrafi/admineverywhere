@@ -263,6 +263,36 @@ python3 scripts/chain_session_check.py --selftest # 19 controls: every leg prove
 python3 scripts/chat_feature_check.py         # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chat_feature_check.py --selftest # 12 controls: every leg proved able to fail
 
+# IS THE QUEUED BRANCH REVIEWABLE, or is the next review lane about to grade state its
+# author never wrote? On 2026-10-24 the chain spent NINE lanes on ai/turn-20261024-1632;
+# the Lead's triage sorted them as 2 checker false-reds, 2 INHERITED folds, 1 lost
+# transcript and 4 real authored defects. The inherited class is the one a seat can see for
+# free: the branch's base predated the chat fold repair, so the branch TREE carried orphan
+# drawer lines main had already fixed, and the duty brief grades "TEAM-CHAT entries legal
+# format" against that tree. This harness asks the same question of the WHOLE queue before a
+# lane is paid: the register's pending branch is live, unmerged and at the parked sha
+# (slot-live); main moved inside a region the branch also edited (stale-base); orphan drawer
+# lines are attributed AUTHORED (the branch's own fold — rework) or INHERITED (main's stale
+# state — rebase, precedent 950f71e); no harness-leak file in the tree and no Lead-owned
+# file in the branch's delta (the standing reject classes); `git merge-tree` against main is
+# conflict-free, because a conflict turns an APPROVED verdict into a manual Lead union-merge
+# (the 0607 class) — AND, when it is conflict-free, the MERGED chat blob is scanned with
+# chain_test_check's own `scan_orphan_drawers`, because `.gitattributes` gives the chat the
+# `merge=union` driver and two appends that open with the same five header lines are read as
+# common context and welded onto ONE headline. That fold lives in no tree either side
+# carries: measured on ai/turn-20261024-1956 — merge base, branch tip and main all hold 0
+# orphan drawer lines, the merge result holds 2 (`:WHEN:`/`:END:` at :9066-:9067, the
+# `* MSG` headline and drawer header eaten) and `git merge-tree` answered rc 0, CONFLICT-FREE,
+# which is why every branch-local check passed it and the Lead's finalize guard f3e0f63 only
+# catches it AFTER the lane is spent. The merged read is tagged `MERGE-ONLY FOLD` and
+# dispositioned INHERITED — rebase, never rework, because both entries are legal on their own
+# bases. Read-only over git; it issues no verdict, writes nothing, and reads the Lead-owned
+# register as data. Not `*_diff.py`: that glob IS the landing gate's twin roster, and this
+# grades a branch against main, not an artifact against its twin
+python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
+python3 scripts/review_preflight_check.py --since 20261025  # one day's queue only
+python3 scripts/review_preflight_check.py --selftest # 14 controls on real fixture repos: every leg proved able to fail
+
 # the SEGREGATION-LAW pending slot as ONE command, read-only against the Lead-owned
 # merger. The whole delivery loop hangs on one line of agent-team/TEAM-CONTROL.org,
 # and four separate times it was the reason nothing could land: an EMPTY slot could
@@ -365,7 +395,7 @@ python3 scripts/chat_when_check.py --selftest # 11 controls: every leg proved ab
 # roster, and this grades a branch against main, not an artifact against its twin
 python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
 python3 scripts/review_preflight_check.py --since 20261024   # one day's queue only
-python3 scripts/review_preflight_check.py --selftest  # 13 controls on real fixture repos: every leg able to fail
+python3 scripts/review_preflight_check.py --selftest  # 14 controls on real fixture repos: every leg able to fail
 # THE REVIEW LANE ITSELF as a check, read-only against the Lead-owned chain: the
 # verdict a branch lives or dies by is ONE token, spelled in three places nothing
 # compared — the duty reviewer's BRIEF (which must instruct it as the last line of
