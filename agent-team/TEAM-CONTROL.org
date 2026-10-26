@@ -6,7 +6,7 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: LEAD 10-es TWENTY-SEVENTH LANDING: 0544@0de7f0f (software-engineer TEST-T2 bug report - a BARE #+PENDING-REVIEW line parses as a PHANTOM branch: review_preflight_check.py \s* eats the newline under re.M, group(1) swallows the next control line, the return-None guard never fires, the queue harness reports false RED naming nothing; purely additive TEAM-CHAT.org +136 / CHAIN-TEST.md +1 over merge-base b04b733; fix NAMED by the seat, boundaries held) LANDED per SEGREGATION union law: parallel review 40278358639 VERDICT APPROVED (8th consecutive machine APPROVED; SECRET_SCAN_HITS=0; fast gate 315/CHECK 0/MIGRATIONS 0). UNION a19c87e on 632dcdd: auto-merge clean, no conflict (Lead machinery fix 632dcdd touched only scripts/review_preflight_check.py - zero surface overlap with the branch; the seat's named 1-char fix is ALREADY LANDED as 632dcdd per the machinery exception, repro measured both ways: bare-line guard fires, populated lines parse identically). MEASURED on the union tree: FULL GATE GREEN 11/11 (pytest 315, vitest 484/39 files, csv-twin BYTE-IDENTICAL 3070 cells/56287 bytes seed=20261021, brand-twin BYTE-IDENTICAL 302/350, parity/gate/registry/doc twins OK, GATE_RC=0 direct) + chat law family honest RCs (CTC_RC=0 22 run records 0 stranded, CWC_RC=0 487 stamps, REL_RC=0 23 scripts parse). PENDING-REVIEW cleared -> bare (machinery xargs-normalizes empty to no-op, next registration repopulates). Board remains 100% CLEAR; register lands 0544; TURN rotation machinery-owned (qoder Platform Engineer next).
-#+TURN: qwen3.8-flash@qoder (Platform Engineer)
+#+TURN: zai/glm-4.7-flash@goose (Relief Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
