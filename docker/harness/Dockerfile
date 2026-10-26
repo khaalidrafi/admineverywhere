@@ -142,23 +142,29 @@ RUN set -e \
 #     send fires — the CI clock lands at the exact send moment. Exit 42
 #     = the batch lane is unavailable -> direct CLI lane (unchanged).
 ARG AGENT_ORG_PIN=bbe8ca2d4567eaf455ab58f557b9eed3ac375742
-# FULL RUNTIME DEP SET MEASURED + SATISFIED (Lead 10-fp, evidence run
-# 40339371283 job 121631387783: the 10-fo libasound2-only fix installed
-# cleanly (libasound2t64 1.2.14 via trixie Provides) but the verify then
-# died exit 127 on the NEXT absent lib "libdbus-1.so.3" — a fresh trixie
-# base carries almost none of emacs-nox's runtime set. MEASURED NEEDED
-# (readelf on the pinned deb): libasound/acl/attr/dbus/xml2/gpm/tinfo/
-# selinux/gnutls/lcms2/m/z/systemd/gmp/gccjit/tree-sitter/sqlite3/libc.
-# One apt-get satisfy derived FROM the pinned deb's own Depends covers
-# every resolvable name (trixie index verified: libasound2/libgnutls30
-# resolve via t64 Provides; dry-run on Debian 13.7 lists resolved clean).
-# libtree-sitter0 is the ONE name trixie cannot provide (renamed
-# libtree-sitter0.22, soname .so.0.22, NO Provides for .so.0) — the
-# bookworm deb is byte-pinned and relocated into /opt/emacs30 (SONAME
-# libtree-sitter.so.0 verified, needs libc6 only). The trailing ENV does
-# NOT apply inside THIS RUN, so both in-RUN emacs verifies carry
-# LD_LIBRARY_PATH explicitly (10-fo's "system loader path" note holds
-# for the satisfy-installed libs; they land in /usr via apt).
+# FULL RUNTIME DEP SET MEASURED + SATISFIED (Lead 10-fp, two evidence runs:
+# 40339371283 job 121631387783 — the 10-fo libasound2-only fix installed
+# cleanly (libasound2t64 1.2.14 via trixie Provides) but the verify died
+# exit 127 on the NEXT absent lib "libdbus-1.so.3": a fresh trixie base
+# carries almost none of emacs-nox's runtime set. MEASURED NEEDED (readelf
+# on the pinned deb): libasound/acl/attr/dbus/xml2/gpm/tinfo/selinux/
+# gnutls/lcms2/m/z/systemd/gmp/gccjit/tree-sitter/sqlite3/libc.
+# 40342641149 job 121643249434 — with the dep set satisfied (apt triggers
+# ran clean) the verify STILL exited 1 on DATA dirs: "Error:
+# /usr/share/emacs/30.1/etc/charsets: No such file or directory" — the
+# trailing ENV block does NOT apply inside the RUN that creates the paths.
+# FIX: the ENV block is HOISTED ABOVE this RUN so both in-RUN emacs
+# verifies inherit the loader AND data paths. The satisfy is derived FROM
+# the pinned deb's own Depends (trixie index verified: libasound2/
+# libgnutls30 resolve via t64 Provides; dry-run on Debian 13.7 lists
+# resolved clean). libtree-sitter0 is the ONE name trixie cannot provide
+# (renamed libtree-sitter0.22, soname .so.0.22, NO Provides for .so.0) —
+# the bookworm deb is byte-pinned and relocated into /opt/emacs30 (SONAME
+# libtree-sitter.so.0 verified, needs libc6 only).
+ENV LD_LIBRARY_PATH=/opt/emacs30/usr/lib/x86_64-linux-gnu \
+    EMACSDATA=/opt/emacs30/usr/share/emacs/30.1/etc \
+    EMACSLOADPATH=/opt/emacs30/usr/share/emacs/30.1/lisp \
+    EMACSNATIVELOADPATH=""
 RUN mkdir -p /opt/emacs30 /opt/deb \
  && apt-get update -qq \
  && curl -fsSL -o /opt/deb/emacs-common.deb \
@@ -181,18 +187,13 @@ RUN mkdir -p /opt/emacs30 /opt/deb \
  && rm -rf /opt/deb \
  && printf '#!/bin/sh\nexec /opt/emacs30/usr/bin/emacs-nox "$@"\n' > /usr/local/bin/emacs \
  && chmod 0755 /usr/local/bin/emacs \
- && LD_LIBRARY_PATH=/opt/emacs30/usr/lib/x86_64-linux-gnu emacs --batch --eval '(message "emacs %s relocated ok" emacs-version)' \
+ && emacs --batch --eval '(message "emacs %s relocated ok" emacs-version)' \
  && git clone --quiet https://github.com/khaalidrafi/agent-org /opt/agent-org \
  && git -C /opt/agent-org checkout --quiet "${AGENT_ORG_PIN}" \
  && curl -fsSL https://raw.githubusercontent.com/xenodium/acp.el/v0.14.3/acp.el -o /opt/agent-org/acp.el \
  && curl -fsSL https://raw.githubusercontent.com/xenodium/acp.el/v0.14.3/acp-traffic.el -o /opt/agent-org/acp-traffic.el \
- && LD_LIBRARY_PATH=/opt/emacs30/usr/lib/x86_64-linux-gnu emacs --batch -L /opt/agent-org --eval '(require (quote agent-org-batch))' \
+ && emacs --batch -L /opt/agent-org --eval '(require (quote agent-org-batch))' \
  && echo "agent-org batch lane baked (pin ${AGENT_ORG_PIN})"
-
-ENV LD_LIBRARY_PATH=/opt/emacs30/usr/lib/x86_64-linux-gnu \
-    EMACSDATA=/opt/emacs30/usr/share/emacs/30.1/etc \
-    EMACSLOADPATH=/opt/emacs30/usr/share/emacs/30.1/lisp \
-    EMACSNATIVELOADPATH=""
 
 # --- Non-root run user (matches the Actions runner uid 1001) -----------
 RUN useradd -m -u 1001 agent
