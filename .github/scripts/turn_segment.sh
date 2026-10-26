@@ -20,25 +20,16 @@ BRANCH="ai/turn-$(date -u +%Y%m%d-%H%M)"
 git checkout -b "$BRANCH"
 echo "TURN_BRANCH=$BRANCH" >> "$GITHUB_ENV"
 # TIME LAW (Owner 2026-10-26 10:42Z #hq): the clock-in is AUTOMATED at
-# the exact prompt-send moment. The HOST flips the item the WORK ORDER
-# will assign to ONGOING and stamps the open clock BEFORE the agent body
-# runs; members never clock. Best-effort while TEST-CHAIN mode parks the
-# feature work order: the marker is the first open item, oldest-first,
-# and the dispatch note names it so a mismatch is visible at review.
-# Canonical script: khaalidrafi/agent-team.el agent-team/tools/
-# clock_in.py at a pinned sha (no-dup law); a failed fetch/match skips
-# the clock, never the segment.
+# the exact prompt-send moment. The clock lives INSIDE the segment now:
+# the agent-org batch lane's AGENT_ORG_CLOCK_CMD runs the clock_in.py
+# twin (pinned, no-dup law) at the EXACT send moment, and the
+# direct-lane fallback clocks at dispatch time inside the container
+# (the batch_send failure path). The host no longer clocks the WORK
+# item — one clock per item, never two (the twin is idempotent either
+# way); a failed fetch skips the clock, never the segment. The REVIEW
+# clock stays host-side at review dispatch (its own clock, R-2-78).
 WORK_ITEM=$(grep -E '^\*+ (TODO|ONGOING|PENDING|WAIT|PROGRESS)' "$BOARD" | head -1 | sed 's/^[*]* //' || true)
-if [ -n "${WORK_ITEM:-}" ]; then
-  curl -fsSL -H "Authorization: Bearer ${CLOCK_TOKEN:-}" \
-    "https://raw.githubusercontent.com/khaalidrafi/agent-team.el/396848263242bb3686f35c12615e5f7da9957e49/agent-team/tools/clock_in.py" \
-    -o .clock_in.py \
-  && python3 .clock_in.py "$BOARD" "$WORK_ITEM" >> "$SUMMARY" 2>&1 \
-  && git add "$BOARD" \
-  && git commit -q -m "board: TIME LAW automated clock-in at dispatch (Owner 2026-10-26 10:42Z)" \
-  || echo "clock-in: skipped (fetch/match/commit failed) — segment continues" >> "$SUMMARY"
-  rm -f .clock_in.py
-else
+if [ -z "${WORK_ITEM:-}" ]; then
   echo "clock-in: no open board item — skipped" >> "$SUMMARY"
 fi
 # REVIEW CLOCK (Owner 2026-10-26 10:55Z): the review leg is a SEPARATE
@@ -324,6 +315,75 @@ if [ -d /workspace/app ] && [ ! -d /workspace/app/node_modules/.bin ]; then
   (cd /workspace/app && npm install --no-audit --no-fund -q 2>/dev/null) || true
 fi
 # -------------------------------------------------------------
+# AGENT-ORG BATCH LANE (Owner R-2-77 endgame 2026-10-26 #hq: team CI
+# sends run through agent-org).  When the image has emacs-nox + agent-org
+# baked, the send goes THROUGH agent-org-batch.el: the SAME prompt-send
+# hook an interactive Emacs send fires, and AGENT_ORG_CLOCK_CMD clocks
+# the dispatched item at the EXACT send moment (TIME LAW; the
+# clock_in.py twin is idempotent).  Exit 42 = fall back to the direct
+# CLI lanes below — the batch path only ADDS a working send, never
+# removes one; the fallback clock inside batch_send covers them.
+printf '%s' "$BRIEF" > /tmp/.turn-brief.txt
+{
+  printf '%s\n' '#!/usr/bin/env bash'
+  printf '%s\n' 'curl -fsSL -H "Authorization: Bearer ${CLOCK_TOKEN:-}" \\'
+  printf '%s\n' '  "https://raw.githubusercontent.com/khaalidrafi/agent-team.el/a623e727f23926ad623b0009f50aec8b46c8d3e3/agent-team/tools/clock_in.py" \\'
+  printf '%s\n' '  -o /tmp/.clock_in.py 2>/dev/null || exit 0'
+  printf '%s\n' 'python3 /tmp/.clock_in.py /workspace/agent-team/TODOS.org "${WORK_ITEM:-}" >/dev/null 2>&1 || true'
+  printf '%s\n' 'rm -f /tmp/.clock_in.py'
+} > /tmp/.ci-clock.sh
+chmod 0755 /tmp/.ci-clock.sh
+batch_send() { # $1 provider-id  $2 ACP command  $3 model pin  $4 clock cmd ("" = none)  $5 prompt file  $6 out file
+  if [ -x /usr/bin/emacs ] && [ -f /opt/agent-org/agent-org-batch.el ]; then
+    if [ -n "${3:-}" ]; then export AGENT_ORG_MODEL="$3"; else unset AGENT_ORG_MODEL || true; fi
+    if [ -n "${4:-}" ]; then export AGENT_ORG_CLOCK_CMD="$4"; else unset AGENT_ORG_CLOCK_CMD || true; fi
+    AGENT_ORG_PROVIDER="$1" \
+    AGENT_ORG_PROVIDER_COMMAND="$2" \
+    AGENT_ORG_PROMPT="$5" \
+    AGENT_ORG_OUT="$6" \
+    AGENT_ORG_TIMEOUT=900 \
+    AGENT_ORG_LOAD_PATH="/opt/agent-org" \
+    emacs --batch -l /opt/agent-org/agent-org-batch.el \
+      --eval '(agent-org-batch-send)' && return 0
+    echo "agent-org batch lane failed (rc=$?) — direct CLI lane fallback"
+  fi
+  [ -n "${4:-}" ] && [ -x "${4:-}" ] && "${4}" || true   # dispatch-time clock for the direct lane
+  return 42
+}
+# ONE batch attempt for this segment's PRIMARY lane; on 42 the proven
+# per-seat chains below run unchanged (the honest-lane law: the verdict
+# line names the lane that ACTUALLY ran).
+seg_via_batch() {
+  case "$SEAT" in
+    platform-engineer)
+      batch_send qoder "env HOME=/usr/local/lib/qoder-home qoder --acp" "" "/tmp/.ci-clock.sh" /tmp/.turn-brief.txt /tmp/.turn-batch-response.txt ;;
+    quality-assurance-engineer)
+      batch_send qoder "env HOME=/usr/local/lib/qoder-home qoder --acp" "deepseek-v4.1-flash" "/tmp/.ci-clock.sh" /tmp/.turn-brief.txt /tmp/.turn-batch-response.txt ;;
+    relief-engineer)
+      export GOOSE_PROVIDER=openai GOOSE_MODEL=glm-4.7-flash OPENAI_API_KEY="$ZAI_API_KEY" \
+             OPENAI_HOST="https://api.z.ai" OPENAI_BASE_PATH="/api/paas/v4/chat/completions"
+      batch_send goose "goose acp" "glm-4.7-flash" "/tmp/.ci-clock.sh" /tmp/.turn-brief.txt /tmp/.turn-batch-response.txt ;;
+    software-engineer)
+      export CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1
+      batch_send codebuddy "codebuddy --acp" "deepseek-v4.1-flash" "/tmp/.ci-clock.sh" /tmp/.turn-brief.txt /tmp/.turn-batch-response.txt
+      local rc=$?
+      # the dead-socket guard rides the batch path too (run 39834624187:
+      # an exit-0 over a dead socket is a FAILED lane)
+      [ "$rc" = 0 ] \
+        && grep -qE 'ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|网络请求超时|502 Bad Gateway' /tmp/.turn-batch-response.txt 2>/dev/null \
+        && return 42
+      return "$rc" ;;
+    visiting-engineer)
+      export CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1
+      batch_send codebuddy "codebuddy --acp" "glm-5.3" "/tmp/.ci-clock.sh" /tmp/.turn-brief.txt /tmp/.turn-batch-response.txt ;;
+    *) return 42 ;;
+  esac
+}
+BATCH_OK=0
+if seg_via_batch; then
+  BATCH_OK=1
+  echo "TURN_RESULT=agent-org batch send OK (primary lane via agent-org — clock at the exact send moment)"
+fi
 # REVIEW PHASE (SEGREGATION LAW v2, Owner 18:14Z + 18:55Z): the
 # DUTY REVIEWER is a capable member ROLE, not the turn seat — the
 # host already selected REVIEWER_SEAT/REVIEWER_MEMBER and passed
@@ -342,6 +402,30 @@ fi
 python3 scripts/review_preflight_check.py > /workspace/.review-preflight.txt 2>&1 || true
 echo "REVIEW-PREFLIGHT: advisory queue grade captured ($(wc -l < /workspace/.review-preflight.txt 2>/dev/null || echo 0) lines, rc ignored) — disposition input, not a gate"
 : > /workspace/.turn-review.txt 2>/dev/null || true
+# REVIEW BATCH (agent-org send law): the duty reviewer's send goes
+# through agent-org too. The REVIEW clock stays host-side at review
+# dispatch (its own clock, R-2-78) — the batch send carries no clock
+# command, so nothing double-fires.
+REVIEW_BATCH_OK=0
+if [ -n "$PENDING_BRANCH" ] && [ -n "$REVIEW_BRIEF" ]; then
+  printf '%s' "$REVIEW_BRIEF" > /tmp/.turn-review-brief.txt
+  case "$REVIEWER_SEAT" in
+    quality-assurance-engineer)
+      if batch_send qoder "env HOME=/usr/local/lib/qoder-home qoder --acp" "deepseek-v4.1-flash" "" \
+             /tmp/.turn-review-brief.txt /workspace/.turn-review.txt; then
+        echo "REVIEW: qoder run OK via agent-org batch (review lane: deepseek-v4.1-flash@qoder — lane-budget demotion 2026-10-25)"
+        REVIEW_BATCH_OK=1
+      fi ;;
+    visiting-engineer)
+      export CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1
+      if batch_send codebuddy "codebuddy --acp" "glm-5.3" "" \
+             /tmp/.turn-review-brief.txt /workspace/.turn-review.txt; then
+        echo "REVIEW: codebuddy run OK via agent-org batch (visiting senior lane)"
+        REVIEW_BATCH_OK=1
+      fi ;;
+  esac
+fi
+if [ "$REVIEW_BATCH_OK" = 0 ]; then
 if [ -n "$PENDING_BRANCH" ]; then
   # DUTY-REVIEWER lanes (Owner 18:55Z: the review duty belongs to a
   # capable member ROLE, not to whoever happens to hold the turn):
@@ -399,6 +483,8 @@ if [ -n "$PENDING_BRANCH" ]; then
 else
   echo "REVIEW: no pending branch this run"
 fi
+fi
+if [ "$BATCH_OK" = 0 ]; then
 case "$SEAT" in
   platform-engineer)
     # qwen3.8-flash@qoder — the body PROVEN on this team's CI.
@@ -670,6 +756,7 @@ case "$SEAT" in
     echo "TURN_RESULT=BLOCKED (unknown seat ${SEAT} — rotation case gap)"
     ;;
 esac
+fi
 # SESSION COLLECT (Owner order 18:27Z): persist THIS turn's CLI
 # session files — the container is --rm, they die here unless
 # captured. Scrubbing happens on the host before upload.
@@ -716,6 +803,7 @@ docker run --rm --user 1001:1001 \
   -v "$PWD":/workspace -w /workspace \
   -v "$PWD/.sessions-restore":/sessions-restore:ro \
   -e SEAT="${SEAT}" -e BRIEF="${BRIEF}" \
+  -e WORK_ITEM="${WORK_ITEM:-}" -e CLOCK_TOKEN="${CLOCK_TOKEN:-}" \
   -e REVIEW_BRIEF="${REVIEW_BRIEF}" \
   -e PENDING_BRANCH="${PENDING_BRANCH}" -e PENDING_AUTHOR="${PENDING_AUTHOR}" \
   -e REVIEWER_SEAT="${REVIEWER_SEAT}" -e REVIEWER_MEMBER="${REVIEWER_MEMBER}" \
