@@ -550,38 +550,6 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
                             "or not present in this repo)" % only)
 
     slot = pending_slot(repo, main_sha)
-    problems = []
-    notes = []
-    ran = set()
-
-    # slot-live — the register is the single slot the chain spends a lane on
-    if slot is None:
-        ran.add("slot-live")
-        notes.append("slot-live: register empty — no branch is queued for review")
-    else:
-        ran.add("slot-live")
-        sha_map = dict((s, h) for s, h in rows)
-        by_short = slot["branch"].replace("refs/heads/", "")
-        full = by_short if by_short.startswith("origin/") else "origin/" + by_short
-        live = resolve(repo, full) or resolve(repo, by_short)
-        if live is None:
-            problems.append("slot-live: %s names %s, which this repo does not have "
-                            "— the review arm skips the duty and the run reports "
-                            "review-missing, the 0659 / 21:00Z class"
-                            % (CONTROL_REL, slot["branch"]))
-        elif int(count(repo, "%s..%s" % (main_sha, live)) or 0) == 0:
-            problems.append("slot-live: %s is registered for review but is already "
-                            "fully merged into %s — the duty would be skipped, so "
-                            "the register needs advancing" % (slot["branch"], main))
-        elif slot["sha"] and not _same_head(slot["sha"], live):
-            problems.append("slot-live: register parks head %s but the branch head is "
-                            "%s — the reviewer grades the live tip; a rebase moves it "
-                            "(a stale sha is informational until the next writeback)"
-                            % (slot["sha"][:7], live[:7]))
-        else:
-            notes.append("slot-live: %s queued, head %s, author %s"
-                         % (slot["branch"], (live or "?")[:7], slot["author"] or "?"))
-
     records = landing_records(repo, main_sha)
     problems = []
     notes = []
@@ -593,7 +561,6 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
         notes.append("slot-live: register empty — no branch is queued for review")
     else:
         ran.add("slot-live")
-        sha_map = dict((s, h) for s, h in rows)
         by_short = slot["branch"].replace("refs/heads/", "")
         full = by_short if by_short.startswith("origin/") else "origin/" + by_short
         live = resolve(repo, full) or resolve(repo, by_short)
