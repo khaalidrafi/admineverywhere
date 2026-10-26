@@ -73,6 +73,22 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "branch=$BR" >> "$GITHUB_OUTPUT"
 
+      - name: Advisory review preflight (the queue graded BEFORE the lane is paid)
+        run: |
+          # TEST-T2 ask (ai/turn-20261025-2230), Lead-wired 2026-10-26. rc is IGNORED
+          # on purpose: the queue is red by construction while most queued branches
+          # carry stale-base notes, so a hard gate would freeze the campaign. The
+          # finding buys the merger a DISPOSITION — a slot the preflight calls
+          # conflict-bound or stale should be re-cut or advanced, not reviewed —
+          # and it costs ~2.3s against the timeout 900 the reviewer arm itself
+          # gets. || true: the review below runs regardless.
+          python3 scripts/review_preflight_check.py > review-preflight.txt 2>&1 || true
+          {
+            echo "=== ADVISORY REVIEW PREFLIGHT (rc ignored — disposition input, never a gate) ==="
+            echo "STALE = stale base (re-cut or rebase first) | INHERITED = the merge itself does it, resolve per the printed repair | AUTHORED = the branch must rework before any lane."
+            tail -n 40 review-preflight.txt
+          } >> "$GITHUB_STEP_SUMMARY" || true
+
       - name: Fast gate subset (same recipe as the chain reviewer)
         id: gate
         run: |
@@ -237,4 +253,5 @@ jobs:
             review-out.txt
             review-diff.txt
             gate-out.txt
+            review-preflight.txt
           retention-days: 30
