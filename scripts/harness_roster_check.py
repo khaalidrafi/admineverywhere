@@ -72,9 +72,10 @@ GRADER_SUFFIXES = ("_diff.py", "_check.py", "_probe.py")
 # PINNED, not derived (landing_gate's EXPECTED_TWINS law, chain_slot_check's
 # EXPECTED_CONTROLS law): the roster is the harness's own expectation, so a file
 # vanishing or arriving is a refusal this harness understands, not a smaller green.
-EXPECTED_HARNESS = 17
+EXPECTED_HARNESS = 18
 EXPECTED_NAMES = (
     "brand_twin_diff.py",
+    "chain_merge_check.py",
     "chain_patch_check.py",
     "chain_session_check.py",
     "chain_slot_check.py",
@@ -314,9 +315,12 @@ def control_uncited_newcomer(root):
 def control_retune_pin(root):
     path = os.path.join(root, "scripts", "harness_roster_check.py")
     text = _read(path)
-    if "EXPECTED_HARNESS = 17" not in text:
+    # the literal is derived, not hardcoded: a pin bump in a landing commit must
+    # not rot this control (the retune target's SHAPE is the contract, not the era's number)
+    pin = "EXPECTED_HARNESS = %d" % EXPECTED_HARNESS
+    if pin not in text:
         raise AssertionError("the pin this control retunes is not spelled as expected")
-    _write(path, text.replace("EXPECTED_HARNESS = 17", "EXPECTED_HARNESS = 12", 1))
+    _write(path, text.replace(pin, "EXPECTED_HARNESS = 12", 1))
 
 
 def control_missing_region(root):
