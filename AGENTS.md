@@ -509,6 +509,33 @@ python3 scripts/lane_budget_check.py           # 0 every trusted lane fits / 1 a
 python3 scripts/lane_budget_check.py --selftest # 6 controls: every leg proved able to fail
 python3 scripts/lane_budget_check.py --root /tmp/copy   # controls run on copies
 
+# THE HARNESS IMAGE RECIPE, PREVIEWED BEFORE A BUILD IS PAID. The image IS the turn
+# lane: no image means no turn, no reviewer, no verdict, so review-missing and the stall
+# grows. Between 13:51Z and 15:00Z on 2026-10-26 the chain paid FIVE build attempts (runs
+# 40334271125, 40335134249, 40336007896, 40339371283, 40342641149) for two defects a text
+# read answers before a single layer is built: `apt-get satisfy` was handed a HAND-LISTED
+# dep set (run 40339371283 died exit 127 on `libdbus-1.so.3` — one of nineteen NEEDED
+# libraries had been listed), and an `ENV` block sat BELOW the RUN it serves, which a
+# Dockerfile never applies inside that RUN (run 40342641149: the in-RUN verify could not
+# find its own character maps). Both are landed by Lead 10-fp — 85a1989 derives the deps
+# from the pinned deb's own Depends, f039fdd hoists the ENV above the RUN — and the
+# recipe is machinery a seat does not rewrite behind a running repair, so what the seat
+# keeps is the measurement, read-only, that any seat can re-run (docker is not even
+# installed in the container this runs in, so no leg can execute a layer). Six legs: the
+# exec-time ENV reaches the RUN that verifies, the dep set is DERIVED and every relocated
+# deb is excluded from it, each hand-written `/usr/local/bin` wrapper is chmod-ed AND
+# exec'd inside its own step, nothing credential-shaped carries a literal VALUE (SECRET
+# LAW: names travel, values do not), all seven agent bodies are still baked
+# (lane_budget_check grades the LANE script; nothing graded the IMAGE), and every UNPINNED
+# body install is ruled `strict` or `degrades` — the 10-ba BUILD LAW, measured on run
+# 40117823054 where one flaky npm install of a DORMANT body bricked the image and killed
+# the whole chain. Each leg prints how many inputs it read, and a leg that read zero is
+# RED naming its own vacuity: coverage a harness does not have is never a quieter green
+# (DEVGUIDE *ELEVENTH harness law*, arriving at the build).
+python3 scripts/harness_image_check.py         # 0 recipe coherent / 1 a build would pay for it / 2 cannot run
+python3 scripts/harness_image_check.py --selftest # 11 controls: every leg proved able to fail
+python3 scripts/harness_image_check.py --root /tmp/copy   # controls run on copies
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
