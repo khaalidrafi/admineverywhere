@@ -346,12 +346,14 @@ jobs:
       tg_chat: ${{ steps.ingest.outputs.chat_id }}   # owner-locked chat id (secret TELEGRAM_OWNER_ID)
       base_sha: ${{ steps.control.outputs.base_sha }} # ai/main before this segment — the Discord chat-mirror diff base
       seat: ${{ steps.control.outputs.seat }}        # which seat ran — surfaced in the Telegram verdict
+      mode: ${{ steps.control.outputs.mode }}        # 0615 identity-stamp pass-through: WHY a turn delivered no reviewer identity (Lead 10-fg)
       pending_branch: ${{ steps.seg.outputs.pending_branch }}   # SEGREGATION LAW: branch awaiting THIS run's review
       pending_author: ${{ steps.seg.outputs.pending_author }}   # who authored it (merger refuses same-member reviews)
       pending_sha: ${{ steps.seg.outputs.pending_sha }}
       review_verdict: ${{ steps.seg.outputs.review_verdict }}   # APPROVED | REJECTED | empty (review-missing)
       review_seat: ${{ steps.seg.outputs.review_seat }}         # duty reviewer that ran (quality-assurance-engineer | visiting-engineer)
       review_member: ${{ steps.seg.outputs.review_member }}     # duty reviewer's member ID (merger enforces the duty-role law)
+      seg_outcome: ${{ steps.seg.outcome }}             # 0615 identity-stamp pass-through: success|skipped|failure|cancelled (Lead 10-fg)
       review_lane_dead: ${{ steps.seg.outputs.review_lane_dead }} # 1 = substitution marker in the review output with no VERDICT token (honest lane-dead; Lead cycle 10-l, job 120814481260 evidence)
       review_substituted: ${{ steps.seg.outputs.review_substituted }} # 1 = the reviewer BRAIN was provider-substituted, verdict or no verdict — provenance only, changes no outcome (Lead cycles 10-az..10-bj: five verdicts judged by a substitute while lane_dead=0)
       review_sub_brain: ${{ steps.seg.outputs.review_sub_brain }}   # the substitute's own name, from its marker line (empty when the duty brain answered)
@@ -1075,6 +1077,25 @@ jobs:
           VERDICT="${{ needs.turn.outputs.review_verdict }}"
           REVIEW_MEMBER="${{ needs.turn.outputs.review_member }}"
           SEAT="${{ needs.turn.outputs.seat }}"
+          # 0615 IDENTITY STAMP (Lead 10-fg; TEST-T2 finding turn-20261026-0615):
+          # 186 of 271 merger-outcome records carried `duty reviewer=unknown` —
+          # indistinguishable from the 10 REAL lane deaths. When the turn gave no
+          # identity, say WHY: designed skip -> skipped(mode=...), seg died ->
+          # empty(seg step ...), ran and answered nothing -> unknown(turn-outputs-empty).
+          # Blast radius measured: no harness reads the :REVIEWER: VALUE or the
+          # `duty reviewer=` prose (all rg hits are comments/prose/source anchors);
+          # no new OUTCOME literal (chain_slot_check roster untouched); stall law
+          # untouched (PROGRESS gates on AUTHOR_BRANCH, not identity).
+          SEG_OUTCOME="${{ needs.turn.outputs.seg_outcome }}"
+          CONTROL_MODE="${{ needs.turn.outputs.mode }}"
+          ID_STAMP="$REVIEW_MEMBER"
+          if [ -z "$REVIEW_MEMBER" ]; then
+            case "${SEG_OUTCOME:-unknown}" in
+              success) ID_STAMP="unknown(turn-outputs-empty)" ;;
+              skipped) ID_STAMP="skipped(mode=${CONTROL_MODE:-unknown})" ;;
+              *)       ID_STAMP="empty(seg step ${SEG_OUTCOME:-unknown})" ;;
+            esac
+          fi
           AUTHOR_BRANCH="${{ steps.merge.outputs.author_branch }}"
           AUTHOR_ID=$(printf '%s' "$SEAT" | cut -d' ' -f1)
           OUT="$OUTCOME"
@@ -1131,7 +1152,7 @@ jobs:
                 echo "* REVIEW ${PENDING_BRANCH} :${OUT}:"
                 echo ":PROPERTIES:"
                 echo ":AUTHOR: ${PENDING_AUTHOR:-unknown}"
-                echo ":REVIEWER: ${REVIEW_MEMBER:-unknown}"
+                echo ":REVIEWER: ${ID_STAMP}"
                 echo ":VERDICT: ${VERDICT:-none}"
                 echo ":SUBSTITUTED: ${SUB_NOTE}"
                 echo ":OUTCOME: ${OUT}"
@@ -1147,7 +1168,7 @@ jobs:
                 echo ":HEAD-SHA: ${PENDING_SHA:-unknown}"
                 echo ":WHEN: [${WHEN}]"
                 echo ":END:"
-                echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}, reviewer brain substituted=${SUB_NOTE}; merge authority: Lead, executed by this gate)."
+                echo "  Merger outcome: ${OUT} (duty reviewer=${ID_STAMP}, verdict=${VERDICT:-none}, reviewer brain substituted=${SUB_NOTE}; merge authority: Lead, executed by this gate)."
               } >> "$RLOG"
             fi
             # NON-CLOBBER SLOT GUARD (Lead hardening of relief-seat patch
