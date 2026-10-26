@@ -133,6 +133,41 @@ RUN set -e \
  && chmod 0755 /usr/local/bin/mcode \
  && timeout 120 mcode --version
 
+# --- agent-org batch send lane (Owner R-2-77 endgame 2026-10-26 #hq:
+#     team CI sends run THROUGH agent-org). emacs 30.1 from the Debian
+#     bookworm backport, dpkg-relocated (no apt conflicts, deterministic
+#     bytes), plus agent-org at a PINNED sha and the pinned acp.el.
+#     One `emacs --batch` then spawns the provider's ACP agent, sends
+#     ONE prompt and fires the SAME prompt-send hook an interactive
+#     send fires — the CI clock lands at the exact send moment. Exit 42
+#     = the batch lane is unavailable -> direct CLI lane (unchanged).
+ARG AGENT_ORG_PIN=bbe8ca2d4567eaf455ab58f557b9eed3ac375742
+RUN mkdir -p /opt/emacs30 /opt/deb \
+ && curl -fsSL -o /opt/deb/emacs-common.deb \
+      "http://deb.debian.org/debian/pool/main/e/emacs/emacs-common_30.1+1-6~bpo12+1_all.deb" \
+ && curl -fsSL -o /opt/deb/emacs-bin-common.deb \
+      "http://deb.debian.org/debian/pool/main/e/emacs/emacs-bin-common_30.1+1-6~bpo12+1_amd64.deb" \
+ && curl -fsSL -o /opt/deb/emacs-nox.deb \
+      "http://deb.debian.org/debian/pool/main/e/emacs/emacs-nox_30.1+1-6~bpo12+1_amd64.deb" \
+ && dpkg -x /opt/deb/emacs-common.deb /opt/emacs30 \
+ && dpkg -x /opt/deb/emacs-bin-common.deb /opt/emacs30 \
+ && dpkg -x /opt/deb/emacs-nox.deb /opt/emacs30 \
+ && rm -rf /opt/deb \
+ && printf '#!/bin/sh\nexec /opt/emacs30/usr/bin/emacs-nox "$@"\n' > /usr/local/bin/emacs \
+ && chmod 0755 /usr/local/bin/emacs \
+ && emacs --batch --eval '(message "emacs %s relocated ok" emacs-version)' \
+ && git clone --quiet https://github.com/khaalidrafi/agent-org /opt/agent-org \
+ && git -C /opt/agent-org checkout --quiet "${AGENT_ORG_PIN}" \
+ && curl -fsSL https://raw.githubusercontent.com/xenodium/acp.el/v0.14.3/acp.el -o /opt/agent-org/acp.el \
+ && curl -fsSL https://raw.githubusercontent.com/xenodium/acp.el/v0.14.3/acp-traffic.el -o /opt/agent-org/acp-traffic.el \
+ && emacs --batch -L /opt/agent-org --eval '(require (quote agent-org-batch))' \
+ && echo "agent-org batch lane baked (pin ${AGENT_ORG_PIN})"
+
+ENV LD_LIBRARY_PATH=/opt/emacs30/usr/lib/x86_64-linux-gnu \
+    EMACSDATA=/opt/emacs30/usr/share/emacs/30.1/etc \
+    EMACSLOADPATH=/opt/emacs30/usr/share/emacs/30.1/lisp \
+    EMACSNATIVELOADPATH=""
+
 # --- Non-root run user (matches the Actions runner uid 1001) -----------
 RUN useradd -m -u 1001 agent
 
