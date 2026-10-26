@@ -3849,8 +3849,20 @@ superuser, so a live smoke could never show a gated surface hidden.
 :END:
 * OPEN ITEMS
 
-** PENDING mcode-lane-activation — harness bake landed; arm wiring + secret are Lead/Owner (:DELIVERED: ai/turn-20261025-0652@9ea106e) :CI:
+** CANCELLED mcode-lane-activation — harness bake landed; arm wiring + secret are Lead/Owner (:DELIVERED: ai/turn-20261025-0652@9ea106e) :CI:
 :LOGBOOK:
+- State "CANCELLED" from "PENDING" [2026-10-26 Mon 05:05 UTC]
+- Note taken on [2026-10-26 Mon 05:05 UTC] :: CANCELLED BY OWNER ORDER —
+  in-channel 2026-10-26 04:57Z, verbatim: "Bruh, mcode isn't part of the
+  project. The project is admincraft. Forget mcode." mcode is not an
+  admincraft deliverable; the lane is machinery-side integration with an
+  external agent product, not project scope. Lead flip per the flip law
+  (Lead-only DONE/CANCELLED). Nothing is left PENDING on the board —
+  FR R-001..R-008 all DONE, extras DONE. The machinery mcode wiring
+  stays dormant in the harness (harmless, no product surface); probe
+  re-measurement stops being a watch item. DE report TEAM-REPLY #2
+  (f946065) stands as the historical record of why activation never
+  happened (sealed credential refused by the CLI, 2-for-2 measured).
 - Note taken on [2026-10-26 Mon 04:05 UTC] :: :MEASURED: THE MCODE PROBE GRADED
   THE LANE DEAD — chain 40265217231's probe job ran the bake's exact lane
   contract (auth.json restore under pinned HOME, exec --permission full) and
