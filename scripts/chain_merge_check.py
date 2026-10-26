@@ -47,7 +47,7 @@ WHAT THIS HARNESS DOES
 ----------------------
 Read-only over git (`merge-tree --write-tree` writes objects, not refs; nothing is
 checked out, nothing is pushed, no verdict is issued). For a target branch it
-pre-computes the merge and grades four claims, then PRINTS THE REPAIR: the exact
+pre-computes the merge and grades five claims, then PRINTS THE REPAIR: the exact
 header block to re-insert and the merged-file line it belongs above, recovered by
 matching the surviving `:WHEN:` value back to the branch's own entry.
 
@@ -71,6 +71,38 @@ LEGS (pinned roster — one per claim):
                   turn-20261024-2244: EXPECTED_CONTROL_CLAIMS base 5 / main 10 /
                   branch 6 -> UNION 11, which is the number the objective's note
                   asked the Lead to retype by hand.
+  main-loss       landing is cumulative: a merge may not silently un-land work that
+                  is already on main. Nothing in the family answered this — pin-union
+                  speaks only for a CONFLICTED path and only about `EXPECTED_*`
+                  integers, conflict-paths says WHERE not WHAT, and preflight says
+                  "conflicts" without naming the landed content a hand resolution is
+                  about to eat. The leg reads main's OWN post-base diff (`--unified=0`,
+                  keyed on its `+++ b/<path>` headers, so every number is a landed line
+                  rather than a guess) and dispositions each text/code path three ways:
+                  DROPPED from the predicted merged tree (the machine's own union driver
+                  writes an identical both-side append ONCE — the only shape that eats a
+                  landed line without a conflict), AT RISK because the path conflicts or
+                  the branch DELETES it while main landed on it (modify/delete: git keeps
+                  main's version in the tree, so the landing dies exactly when a human
+                  answers the path from one side), or SAFE, counted in the note. The
+                  precedent is landed, not hypothetical: the 1520 union re-materialised
+                  the `sha_map` line a delivered branch had removed, and its resolution
+                  ate a `docs/CHAIN-TEST.md` record the same way — both were manual
+                  repairs discovered AFTER the merge was spent. Measured 2026-10-26 over
+                  the live queue: 13 targets, 0 landed lines dropped by the machine, 28
+                  AT-RISK findings over 10 of them (5,718 landed lines counted — the very
+                  stale 2026-10-22 branches own most of that, and the number is the point:
+                  a five-day-old base is not "a few commits", it is a thousand landed
+                  lines sitting under a hand resolution), and the register's own pending
+                  branch fires —
+                  ai/turn-20261026-1556 is based on 8774021 (before the 1520 landing) and
+                  conflicts at `docs/CHAIN-TEST.md`, where the line under the conflict IS
+                  the 1520 run record: a take-branch-side resolve un-lands the landing
+                  that repaired the very file it collides in. The same read answers the
+                  part a hand cannot: that branch's AGENTS.md still says `17 controls`
+                  while the merged tree carries main's 18 and `_LEG_LEDGER` 3/3, i.e.
+                  auto-merge preserved the landing there — proven by reading the merged
+                  blob, never assumed.
 
 Exit codes, the family's three: 0 = every target merges AS AUTHORED (the entry
 survives, no conflict, no pin decision) / 1 = a finding, with the repair printed /
@@ -101,9 +133,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAIN_REF = "origin/ai/main"
 BRANCH_PREFIX = "ai/turn-"
 CHAT_REL = "agent-team/TEAM-CHAT.org"
+LOG_REL = "docs/CHAIN-TEST.md"
+LOG_BASE = "# fixture run log\n## runs\noriginal run line\n"
+LOG_RELISTED = "re-listed run line (identical on both sides)\n"
 
-LEG_ROSTER = ("preview-runs", "chat-fidelity", "conflict-paths", "pin-union")
-EXPECTED_LEGS = 4
+LEG_ROSTER = ("preview-runs", "chat-fidelity", "conflict-paths", "pin-union", "main-loss")
+EXPECTED_LEGS = 5
 
 PIN_ASSIGN = re.compile(r"^(EXPECTED_[A-Z0-9_]+)\s*=\s*(\d+)\s*$", re.M)
 TREE_OID = re.compile(r"^[0-9a-f]{40}$")
@@ -291,8 +326,57 @@ def classify(repo, main_sha, path):
     return "doc/text"
 
 
+MAIN_LOSS_EXTS = (".py", ".md", ".ts", ".json", ".txt", ".sh", ".yml", ".toml", ".scm")
+
+
+def _deleted_paths(repo, mb, sha):
+    """Paths this commit removed since the base — the modify/delete half of the
+    resolver's hazard: git leaves the OTHER side in the tree and announces it, so a
+    one-sided `checkout` answers it by destroying the surviving landings."""
+    rc, out = git(repo, "diff", "--diff-filter=D", "--name-only", "--no-renames", mb, sha)
+    if rc != 0:
+        return set()
+    return set(p for p in out.splitlines() if p.strip())
+
+
+def _added_lines(repo, mb, sha):
+    """{path: Counter(lines this side ADDED since the base)} — multiplicity kept,
+    so a line that legitimately appears twice is not read as one lost line. The
+    `+++ b/<path>` header is the only reliable key: a unified diff carries no other
+    per-hunk filename."""
+    rc, out = git(repo, "diff", "--unified=0", "--no-color", "--no-renames", mb, sha)
+    if rc != 0:
+        return None
+    by_path = {}
+    current = None
+    for line in out.split("\n"):
+        if line.startswith("+++ b/"):
+            current = line[6:].rstrip("\r")
+            if current == "/dev/null":
+                current = None
+            else:
+                by_path.setdefault(current, Counter())
+        elif line.startswith("--- "):
+            continue
+        elif line.startswith("+") and not line.startswith("+++") and current:
+            text = line[1:].rstrip("\r")
+            if text.strip():
+                by_path[current][text] += 1
+    return by_path
+
+
+def _lost_lines(main_text, merged_text):
+    """Lines main carries that the merged tree drops, by multiplicity."""
+    if main_text is None:
+        return Counter()
+    if merged_text is None:
+        return Counter(l.rstrip("\r") for l in main_text.splitlines() if l.strip())
+    return Counter(l.rstrip("\r") for l in main_text.splitlines() if l.strip()) - \
+        Counter(l.rstrip("\r") for l in merged_text.splitlines() if l.strip())
+
+
 def grade_branch(repo, ctc, main_sha, sha, short):
-    """All four claims for one target. Returns (findings, notes)."""
+    """All five claims for one target. Returns (findings, notes)."""
     findings = []
     notes = []
     ran = set()
@@ -411,6 +495,79 @@ def grade_branch(repo, ctc, main_sha, sha, short):
                              % (name, m, b))
     ran.add("pin-union")
 
+    # ---- main-loss: does this merge put main's already-landed work in the way of a
+    # hand resolution? Landing is cumulative, and the loss vector is NOT git's
+    # auto-merge — measured 2026-10-26 in throwaway repos: a neighbouring-hunk edit, a
+    # whole-file rewrite from the branch's own base and a tail append ALL merge with
+    # main's added lines kept (rc 0, no conflicted path). What does drop landed work is
+    # the resolver's hand: a path that CONFLICTS (the 1520 union re-materialised the
+    # `sha_map` line a delivered branch had deleted, and ate a `CHAIN-TEST.md` record
+    # the same way), and a path one side DELETES while the other landed on it (git
+    # leaves main's version in the tree and announces modify/delete — a
+    # `checkout --theirs` answers it by destroying it). Both are graded here by line
+    # COUNT, never by guess: the diff is read with `--unified=0` and its `+++ b/<path>`
+    # headers, so every number names lines main added after this branch's own base.
+    main_added = _added_lines(repo, mb, main_sha)
+    branch_added = _added_lines(repo, mb, sha)
+    branch_deleted = _deleted_paths(repo, mb, sha)
+    rpc = _rpc()
+    if main_added is None or branch_added is None:
+        findings.append("CANNOT SELF-GRADE main-loss: a side diff would not parse, so "
+                        "nothing about landed lines in this target is known")
+        main_added = {}
+        branch_added = {}
+        main_landing_paths = []
+    else:
+        main_landing_paths = sorted(
+            p for p, added in main_added.items()
+            if added and p != CHAT_REL and p.endswith(MAIN_LOSS_EXTS)
+            and not rpc.is_lead_owned(p))
+    at_risk = 0
+    kept_here = 0
+    for path in main_landing_paths:
+        landed = main_added[path]
+        merged_text = blob(repo, tree, path)
+        lost = _lost_lines(blob(repo, main_sha, path), merged_text) & landed
+        if lost:
+            at_risk += sum(lost.values())
+            findings.append(
+                "%s main-loss: `%s` — the predicted merged tree DROPS %d landed line(s) "
+                "main added since base %s (the union driver at `.gitattributes` writes "
+                "an identical both-side append ONCE). Lines already gone: %s"
+                % ("INHERITED" if path in conflicts else "AUTHORED", path,
+                   sum(lost.values()), mb[:7],
+                   " / ".join("`%s`" % t.strip()[:70] for t in list(lost)[:3])))
+        elif path in conflicts or path in branch_deleted:
+            at_risk += sum(landed.values())
+            if path in branch_deleted:
+                how = ("is DELETED by the branch while main landed on it "
+                       "(modify/delete; git leaves main's version in the tree, so the "
+                       "landing dies only when the resolver answers the path from the "
+                       "branch)")
+            else:
+                how = "conflicts at merge"
+            findings.append(
+                "INHERITED main-loss: `%s` %s and main added %d landed line(s) there "
+                "since base %s. They survive only if the resolution keeps BOTH sides: "
+                "`checkout --ours/--theirs <path>` un-lands them — the `sha_map` "
+                "re-materialise on the 1520 union was this exact hazard resolved by "
+                "hand. Landings: %s"
+                % (path, how, sum(landed.values()), mb[:7],
+                   " / ".join("`%s`" % t.strip()[:70] for t in list(landed)[:3])))
+        else:
+            kept_here += sum(landed.values())
+    branch_only_paths = sorted(p for p in (set(main_added) - set(branch_added)
+                                           - set(branch_deleted))
+                               if main_added[p] and p.endswith(MAIN_LOSS_EXTS)
+                               and not rpc.is_lead_owned(p) and p != CHAT_REL)
+    branch_only_lines = sum(sum(main_added[p].values()) for p in branch_only_paths)
+    if not at_risk:
+        notes.append("main-loss: %d landed line(s) across %d path(s) sit in NO "
+                     "resolver's way (auto-merged or untouched); %d landed line(s) "
+                     "main added since base %s on paths this branch never moved"
+                     % (kept_here, len(main_landing_paths), branch_only_lines, mb[:7]))
+    ran.add("main-loss")
+
     verdict = "MERGES AS AUTHORED" if not findings else "%d FINDING(S)" % len(findings)
     notes.append(verdict)
     return findings, notes, ran
@@ -514,6 +671,7 @@ CONTROL_TMPL = ("#+TITLE: fixture control (Lead-owned in the real repo)\n"
                 "#+PENDING-REVIEW: %s\n")
 GATE_PY = "# fixture pin carrier (stands in for scripts/release_readiness.py)\n" \
           "EXPECTED_X = %d\nEXPECTED_Y = %d\n"
+LANDED_LINE = "LANDED_BY_MAIN = 1  # a fix a later landing put on main\n"
 TURN_BRANCH = "ai/turn-20991231-0000"
 ATTR_UNION = "agent-team/TEAM-CHAT.org merge=union\n"
 
@@ -534,7 +692,8 @@ def write(repo, rel, text):
 
 def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
                  branch_bumps_pin=False, union=True, branch_deletes=False,
-                 extra_note_conflict=False, register=True):
+                 extra_note_conflict=False, register=True, branch_deletes_notes=False,
+                 main_lands_notes=False):
     """A two-sided queue: main and one turn branch, both legal, then whatever the
     control needs. Real `git commit` objects, real `git merge-tree` — the fold is a
     property of the merge machinery, so the control must run the machinery."""
@@ -568,6 +727,8 @@ def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
         write(repo, "scripts/fake_gate.py", GATE_PY % (6, 3))
     if extra_note_conflict:
         write(repo, "notes.md", "shared prose\nbranch line\n")
+    if branch_deletes_notes:
+        os.remove(os.path.join(repo, "notes.md"))
     sh(repo, "add", "-A")
     sh(repo, "commit", "-q", "--allow-empty", "-m", "turn")
     sh(repo, "checkout", "-q", "main")
@@ -579,6 +740,8 @@ def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
         write(repo, "scripts/fake_gate.py", GATE_PY % (7, 3))
     if extra_note_conflict:
         write(repo, "notes.md", "shared prose\nmain line\n")
+    if main_lands_notes:
+        write(repo, "notes.md", "shared prose\nmain landed record\n")
     sh(repo, "add", "-A")
     sh(repo, "commit", "-q", "--allow-empty", "-m", "main moved")
     return repo
@@ -666,6 +829,22 @@ def c_queue_empty():
     return repo
 
 
+def c_mainland_conflict():
+    # notes.md moves on both sides with DIFFERENT text and main's side carries a
+    # landed record, with no chat append competing: the conflict-paths leg already
+    # calls this RED, and main-loss must name how much already-delivered work the
+    # hand resolution is standing on.
+    return repo_fixture(main_entry=None, extra_note_conflict=True)
+
+
+def c_mainland_delete():
+    # The branch deletes a path main landed on after the base: git leaves main's
+    # version in the tree (modify/delete), so the ONLY way the landing dies is the
+    # resolver answering the path from the branch — which is what must be printed.
+    return repo_fixture(main_entry=OTHER_SEAT_MAIN, branch_deletes_notes=True,
+                        main_lands_notes=True)
+
+
 CONTROLS = [
     ("branch merges as authored (no competing EOF append)", c_clean,
      dict(branch_args=[TURN_BRANCH]), 0, "CHAIN MERGE PREVIEW OK", ()),
@@ -680,6 +859,13 @@ CONTROLS = [
     ("both sides bump one pin -> the union is printed", c_pinunion,
      dict(branch_args=[TURN_BRANCH]), 1, "pin-union",
      ("base 5 -> main 7", "EXPECTED_X = 8")),
+    ("a conflicted path carries main's landed lines -> named", c_mainland_conflict,
+     dict(branch_args=[TURN_BRANCH]), 1, "main-loss",
+     ("notes.md", "landed line(s)")),
+    ("the branch deletes a path main landed on -> modify/delete named",
+     c_mainland_delete,
+     dict(branch_args=[TURN_BRANCH]), 1, "main-loss",
+     ("notes.md", "modify/delete")),
     ("the branch itself deletes a headline -> AUTHORED", c_deleted,
      dict(branch_args=[TURN_BRANCH]), 1, "chat-fidelity", ("DELETES",)),
     ("chat holds no headline (blind scan)", c_blind_chat,
@@ -693,7 +879,7 @@ CONTROLS = [
     ("--all over a queue with nothing left to merge", c_queue_empty,
      dict(want_all=True), 2, "CANNOT RUN", ("target list is empty",)),
 ]
-EXPECTED_CONTROLS = 11
+EXPECTED_CONTROLS = 13
 
 
 def _capture(build, kwargs):

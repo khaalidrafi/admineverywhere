@@ -457,6 +457,22 @@ python3 scripts/harness_roster_check.py --selftest # controls: every leg proved 
 # Lead-owned; and the pin arithmetic, because two sides bumping one `EXPECTED_*` literal is
 # ADDITIVE — on the registered pending branch it prints EXPECTED_CONTROL_CLAIMS base 5 / main 10
 # / branch 6 -> UNION 11, the same number the Lead's own merge note had derived by hand.
+# THE FIFTH LEG GRADES THE LANDING, NOT THE BRANCH: `main-loss` reads main's own post-base
+# diff (`git diff --unified=0`, keyed on its `+++ b/<path>` headers, so every number is a
+# LANDED line) and dispositions each text/code path as DROPPED from the predicted merged
+# tree, AT RISK because the path conflicts or the branch deletes it while main landed on it
+# (modify/delete — git keeps main's version, so the landing dies only when a human answers
+# the path from one side), or SAFE. The machine itself ate no landed line on the 2026-10-26
+# queue (0 DROPS over 13 targets) — the HAND does, and this repo holds the precedent: the
+# 1520 union re-materialised the `sha_map` line the 1238 delivery had deleted (reported by
+# the 1520 seat at scripts/review_preflight_check.py:591, not silently refixed), and 1238 had
+# to re-list a run record that an earlier union had left outside the `## runs` region
+# chain_test_check reads. Both were discovered AFTER the merge was spent. On the register's
+# pending branch the leg fires for exactly one line, and that line is the 1520 run record
+# sitting under the branch's own `docs/CHAIN-TEST.md` conflict: a take-branch-side resolve
+# un-lands the landing that repaired the file the branch collides in. Over the whole 2026-10-26
+# queue it counts 5,718 landed lines in a resolver's way across 28 findings — the honest price
+# of a five-day-old base, which "main moved 1055 commits" does not convey.
 # Read-only over git (merge-tree writes objects, not refs), issues no verdict, and imports
 # chain_test_check's drawer grammar and review_preflight_check's queue/register reading rather
 # than re-spelling either. Not `*_diff.py`: that glob IS the landing gate's twin roster, and
@@ -464,7 +480,7 @@ python3 scripts/harness_roster_check.py --selftest # controls: every leg proved 
 python3 scripts/chain_merge_check.py                    # 0 every target merges as authored / 1 a finding, with the repair printed / 2 cannot run
 python3 scripts/chain_merge_check.py --all              # the whole unmerged queue, not just the register slot
 python3 scripts/chain_merge_check.py --branch ai/turn-20261024-2244   # one target
-python3 scripts/chain_merge_check.py --selftest          # 11 controls on real fixture repos: every leg able to fail
+python3 scripts/chain_merge_check.py --selftest          # 13 controls on real fixture repos: every leg able to fail
 # THE TURN-REF POPULATION as a prune list, read-only over git. Every chain turn leaves a
 # ref behind and origin/ carries 48 of them; the Lead prunes them by hand, one beat at a
 # time, and the class a hand-read cannot see is a SQUASH landing — a ref whose payload
