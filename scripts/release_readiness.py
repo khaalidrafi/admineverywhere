@@ -223,12 +223,13 @@ CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
 # ai/turn-20261025-0056: main's 11 claims plus rbac_live_check's AGENTS.md
 # claim, re-measured on the union tree (Lead beat 10-dn).
 
-# 12 claims: chain_test_check, chain_session_check and chat_feature_check in
+# 18 claims: chain_test_check, chain_session_check and chat_feature_check in
 # AGENTS.md; chain_test_check and chain_session_check again in
 # docs/DEVGUIDE.md. chat_when_check carries the third DEVGUIDE line and the
-# fourth in AGENTS.md, so a mirror on ONE side only would leave its own roster
-# ungraded by a reader. rbac_live_check adds the FR-R007-LIVE claim.
-EXPECTED_CONTROL_CLAIMS = 16
+# fourth in AGENTS.md; rbac_live_check adds FR-R007-LIVE; chain_merge_check
+# adds one claim per mirror (1843 union, re-measured on the tree; the seat's
+# AGENTS-only comment predates the roster publish law's both-docs requirement).
+EXPECTED_CONTROL_CLAIMS = 18
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.
