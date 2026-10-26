@@ -142,34 +142,51 @@ RUN set -e \
 #     send fires — the CI clock lands at the exact send moment. Exit 42
 #     = the batch lane is unavailable -> direct CLI lane (unchanged).
 ARG AGENT_ORG_PIN=bbe8ca2d4567eaf455ab58f557b9eed3ac375742
-# libasound2 RESTORED (Lead 10-fo, evidence run 40334271125 job 121613206484:
-# the relocate verify `emacs --batch` died exit 127 "libasound.so.2: cannot
-# open shared object file" — dpkg -x resolves NO dependencies, so emacs-nox's
-# ALSA lib must exist in the SYSTEM loader path before the verify; the same
-# recipe passed at 12:59Z (40326803759) and failed from 13:51Z (snapshot
-# drift pulled the lib from the layer). apt keeps the rev drifting with the
-# pool; the emacs debs above stay byte-pinned per the Owner's design.
+# FULL RUNTIME DEP SET MEASURED + SATISFIED (Lead 10-fp, evidence run
+# 40339371283 job 121631387783: the 10-fo libasound2-only fix installed
+# cleanly (libasound2t64 1.2.14 via trixie Provides) but the verify then
+# died exit 127 on the NEXT absent lib "libdbus-1.so.3" — a fresh trixie
+# base carries almost none of emacs-nox's runtime set. MEASURED NEEDED
+# (readelf on the pinned deb): libasound/acl/attr/dbus/xml2/gpm/tinfo/
+# selinux/gnutls/lcms2/m/z/systemd/gmp/gccjit/tree-sitter/sqlite3/libc.
+# One apt-get satisfy derived FROM the pinned deb's own Depends covers
+# every resolvable name (trixie index verified: libasound2/libgnutls30
+# resolve via t64 Provides; dry-run on Debian 13.7 lists resolved clean).
+# libtree-sitter0 is the ONE name trixie cannot provide (renamed
+# libtree-sitter0.22, soname .so.0.22, NO Provides for .so.0) — the
+# bookworm deb is byte-pinned and relocated into /opt/emacs30 (SONAME
+# libtree-sitter.so.0 verified, needs libc6 only). The trailing ENV does
+# NOT apply inside THIS RUN, so both in-RUN emacs verifies carry
+# LD_LIBRARY_PATH explicitly (10-fo's "system loader path" note holds
+# for the satisfy-installed libs; they land in /usr via apt).
 RUN mkdir -p /opt/emacs30 /opt/deb \
  && apt-get update -qq \
- && apt-get install -y -qq --no-install-recommends libasound2 \
  && curl -fsSL -o /opt/deb/emacs-common.deb \
       "http://deb.debian.org/debian/pool/main/e/emacs/emacs-common_30.1+1-6~bpo12+1_all.deb" \
  && curl -fsSL -o /opt/deb/emacs-bin-common.deb \
       "http://deb.debian.org/debian/pool/main/e/emacs/emacs-bin-common_30.1+1-6~bpo12+1_amd64.deb" \
  && curl -fsSL -o /opt/deb/emacs-nox.deb \
       "http://deb.debian.org/debian/pool/main/e/emacs/emacs-nox_30.1+1-6~bpo12+1_amd64.deb" \
+ && curl -fsSL -o /opt/deb/libtree-sitter0.deb \
+      "http://deb.debian.org/debian/pool/main/t/tree-sitter/libtree-sitter0_0.20.7-1_amd64.deb" \
+ && LIBDEPS="$(dpkg-deb -f /opt/deb/emacs-nox.deb Depends \
+      | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+      | grep -v -E '^(emacs-|emacsen-|install-info|libtree-sitter0)' \
+      | paste -sd, -)" \
+ && DEBIAN_FRONTEND=noninteractive apt-get satisfy -y -qq --no-install-recommends "$LIBDEPS" \
  && dpkg -x /opt/deb/emacs-common.deb /opt/emacs30 \
  && dpkg -x /opt/deb/emacs-bin-common.deb /opt/emacs30 \
  && dpkg -x /opt/deb/emacs-nox.deb /opt/emacs30 \
+ && dpkg -x /opt/deb/libtree-sitter0.deb /opt/emacs30 \
  && rm -rf /opt/deb \
  && printf '#!/bin/sh\nexec /opt/emacs30/usr/bin/emacs-nox "$@"\n' > /usr/local/bin/emacs \
  && chmod 0755 /usr/local/bin/emacs \
- && emacs --batch --eval '(message "emacs %s relocated ok" emacs-version)' \
+ && LD_LIBRARY_PATH=/opt/emacs30/usr/lib/x86_64-linux-gnu emacs --batch --eval '(message "emacs %s relocated ok" emacs-version)' \
  && git clone --quiet https://github.com/khaalidrafi/agent-org /opt/agent-org \
  && git -C /opt/agent-org checkout --quiet "${AGENT_ORG_PIN}" \
  && curl -fsSL https://raw.githubusercontent.com/xenodium/acp.el/v0.14.3/acp.el -o /opt/agent-org/acp.el \
  && curl -fsSL https://raw.githubusercontent.com/xenodium/acp.el/v0.14.3/acp-traffic.el -o /opt/agent-org/acp-traffic.el \
- && emacs --batch -L /opt/agent-org --eval '(require (quote agent-org-batch))' \
+ && LD_LIBRARY_PATH=/opt/emacs30/usr/lib/x86_64-linux-gnu emacs --batch -L /opt/agent-org --eval '(require (quote agent-org-batch))' \
  && echo "agent-org batch lane baked (pin ${AGENT_ORG_PIN})"
 
 ENV LD_LIBRARY_PATH=/opt/emacs30/usr/lib/x86_64-linux-gnu \
