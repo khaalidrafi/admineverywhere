@@ -111,7 +111,8 @@ quietly grades less is the one class of red a green cannot show: a roster leg
 that NEVER ran, and a leg marked PAST its code paths — the second is the
 union-fold class this file itself carried (slot-live written twice by 49f63f3,
 the duplicate re-initialising the accumulators so the first copy's findings were
-eaten), and a set cannot see a repeat, so the marks are counted.
+eaten), and a set cannot see a repeat, so the marks are counted — per pass, not
+per instance (see `_LegMarks`).
 
 This grades BRANCH STATE only. It never issues a verdict: author, reviewer and
 merger stay separate roles (Owner 2026-10-22 18:14Z), so the output is evidence
@@ -192,6 +193,9 @@ class LegRed(Exception):
     pass
 
 
+_LEG_LEDGER = {}
+
+
 class _LegMarks:
     """Which legs ran, counted — not just which ran.
 
@@ -202,10 +206,22 @@ class _LegMarks:
     eaten before the door ever saw them. Both copies add the SAME member, so the
     set read identically either way — the fold was invisible to every leg of the
     harness whose job is to grade leg coverage.
+
+    The tally lives in ONE ledger per pass, not per instance, because an instance
+    is not a pass: the fold's own shape is `ran = _LegMarks()` followed by the
+    duplicated block, so a per-instance count restarts at zero exactly when a fold
+    happens. Measured before this change: two instances carrying one mark each
+    answered `doubled_legs(...) == []`. Only begin() resets — nothing else in a
+    pass may re-initialise marks without naming itself to the door.
     """
 
     def __init__(self):
-        self.counts = {}
+        self.counts = _LEG_LEDGER
+
+    @classmethod
+    def begin(cls):
+        """Start a pass: discard the previous pass's tally, keep this one shared."""
+        _LEG_LEDGER.clear()
 
     def add(self, leg):
         self.counts[leg] = self.counts.get(leg, 0) + 1
@@ -563,6 +579,7 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
     slot = pending_slot(repo, main_sha)
     problems = []
     notes = []
+    _LegMarks.begin()          # one pass, one tally — see _LegMarks
     ran = _LegMarks()
 
     # slot-live — the register is the single slot the chain spends a lane on
@@ -989,6 +1006,33 @@ def c_duplicated_leg():
     raise AssertionError("a leg marked twice was not refused")
 
 
+def c_fold_reinitialises_marks():
+    """The fold as it actually shipped: the duplicated block did not mark twice on
+    one object, it wrote `ran = _LegMarks()` again and marked ONCE on the fresh
+    instance — the shape `c_duplicated_leg` above imitates by double-marking one
+    object, which is why that control could stay green over the real defect. This
+    one injects the re-initialisation, so the door must refuse a second mark over
+    the same code path whoever's tally it lands in."""
+    base = fixture()
+    write(base, CONTROL_REL, "#+TITLE: fixture control\n#+PENDING-REVIEW: \n")
+    commit(base, "control: clear the slot")
+    old_add = _LegMarks.add
+    state = {"injected": False}
+
+    def add_then_reinit(self, leg):
+        old_add(self, leg)
+        if leg == "slot-live" and not state["injected"]:
+            state["injected"] = True
+            old_add(_LegMarks(), leg)      # the second copy: NEW instance, one mark
+
+    _LegMarks.add = add_then_reinit
+    try:
+        grade(base, main="main")
+    finally:
+        _LegMarks.add = old_add
+    raise AssertionError("a folded leg block that re-initialised its marks was not refused")
+
+
 CONTROLS = [
     ("green queue", c_no_change, 0, "REVIEW PREFLIGHT OK", ()),
     ("branch authored an orphan drawer", c_authored_orphan, 1, "AUTHORED", ("chat-structure",)),
@@ -1005,6 +1049,8 @@ CONTROLS = [
      ("landed-echo",)),
     ("one leg marked twice (folded leg block)", c_duplicated_leg, 2,
      "marked past their code paths", ()),
+    ("folded block re-initialises its marks (new instance, same pass)",
+     c_fold_reinitialises_marks, 2, "marked past their code paths", ()),
     ("rework shipped on top of the landing record", c_landed_rework, 0,
      "post-landing rework", ()),
     ("register empty", c_slot_empty, 0, "register empty", ()),
@@ -1012,7 +1058,7 @@ CONTROLS = [
     ("main ref unresolvable", c_missing_main_ref, 2, "CANNOT RUN", ()),
     ("leg roster drift", c_roster_drift, 2, "CANNOT RUN", ()),
 ]
-EXPECTED_CONTROLS = 17
+EXPECTED_CONTROLS = 18
 
 
 def selftest():
