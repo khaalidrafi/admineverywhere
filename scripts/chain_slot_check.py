@@ -636,7 +636,14 @@ SED_WRITE_LINE = ('              sed -i "s%^\\#+PENDING-REVIEW:.*%'
                   '\\#+PENDING-REVIEW: ${NEWPENDING}%"\n')
 SED_WRITE_FIXED = ('              sed -i "s%^\\#+PENDING-REVIEW:.*%'
                    '\\#+PENDING-REVIEW: ${NEWPENDING}%" "$CTL"\n')
-LANDED_REREAD = ('            CURSLOT="$(grep -E \'^\\#+PENDING-REVIEW:\' "$CTL" | head -1 | '
+# HEAD-SHA beat retarget (Lead 10-eg, the 10-eb/10-ee dated-closure pattern):
+# this needle pinned the pre-fix grep shape `^\#+` — the shipped workflow's
+# grep was corrected to `^#\+` (the shape that actually matches the control
+# line) between f271785 (10-23 18:04) and 805bc4c (10-23 19:18) without
+# updating this constant, so the "loop slot re-read deleted" control has
+# CANNOT-RUN'd for three days while sweeps exercised the LIVE legs only.
+# The selftest caught it the first time --selftest ran against the tree.
+LANDED_REREAD = ('            CURSLOT="$(grep -E \'^#\\+PENDING-REVIEW:\' "$CTL" | head -1 | '
                  'sed \'s/^#+PENDING-REVIEW:[[:space:]]*//\' | xargs || true)"\n')
 LANDED_GUARD = ('            if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || '
                 '{ [ -n "${PENDING_BRANCH:-}" ] && [ "$SLOTISOURS" = "1" ]; }; then\n')
