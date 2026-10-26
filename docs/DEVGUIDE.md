@@ -306,7 +306,7 @@ python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a 
 python3 scripts/review_preflight_check.py --since 20261024   # one day's queue only
 python3 scripts/review_preflight_check.py --selftest  # 18 controls on real fixture repos: every leg able to fail
 python3 scripts/chain_merge_check.py --all            # 0 every queued target merges as authored / 1 a finding, with the repair printed / 2 cannot run
-python3 scripts/chain_merge_check.py --selftest       # 11 controls on real fixture repos: every leg able to fail
+python3 scripts/chain_merge_check.py --selftest       # 13 controls on real fixture repos: every leg able to fail
 
 python3 scripts/ref_prune_check.py        # 0 no slot hazard / 1 the register parks a prunable ref / 2 cannot run
 python3 scripts/ref_prune_check.py --since 20261026  # one day's refs only
