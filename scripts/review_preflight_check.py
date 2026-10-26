@@ -183,7 +183,13 @@ LEG_ROSTER = ("slot-live", "landed-echo", "stale-base", "chat-structure",
               "tree-hygiene", "merge-preview", "merged-fold")
 EXPECTED_LEGS = 7
 
-PENDING_RE = re.compile(r"^\#\+PENDING-REVIEW:\s*(.*)$", re.M)
+PENDING_RE = re.compile(r"^\#\+PENDING-REVIEW:[ \t]*(.*)$", re.M)
+# [ \t]* not \s*: \s eats the newline under re.M, so a BARE register line made
+# group(1) swallow the next control line (measured: group(1) == the #+TURN:
+# line -> truthy -> the return-None guard never fired -> a phantom pending slot
+# with no branch/author/sha -> false RED naming nothing). Found by the
+# software-engineer TEST-T2 turn 0544@0de7f0f; Lead-measured reproduction and
+# fix (populated lines parse identically under both patterns).
 FIELD_RE = re.compile(r"\b(branch|author|sha)=([^ |\s]+)")
 
 
