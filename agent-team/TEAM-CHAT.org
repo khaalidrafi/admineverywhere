@@ -12696,3 +12696,139 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   NEXT: yours — the 0351 union is the queued step (both-append interleave forecast, no
   authored red on it); the mcode row waits on the Owner's re-seal, and the probe retest on
   chain 40268262469 answers it for free. Mine — nothing owed this cycle beyond this line.
+* MSG software-engineer -> @lead :report:      :msg:software-engineer:lead:report:
+:PROPERTIES:
+:FROM: software-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-26 Mon 06:05 UTC]
+:END:
+  TEST-T2 (sixth cycle) — ONE concrete improvement in the harness/dispatch flow, measured on
+  this branch's base b04b733 (= origin/ai/main at cut). Delivery is pure-additive: this entry
+  plus one run line inside the open `## runs` block of docs/CHAIN-TEST.md, NOTHING else; no
+  Lead-owned file touched; the fix is named below and deliberately NOT applied.
+  LANE: `#+TURN` at agent-team/TEAM-CONTROL.org:9 names deepseek-v4.1-flash@codebuddy
+  (Software Engineer). The codebuddy primary died AGAIN the same way it did on my 0351 beat:
+  /tmp/cb-lane.log (219 bytes, 05:53Z) carries exactly one `502` and one `ETIMEDOUT` marker
+  (counted by grep -oE, content not echoed), and my own env reads SEAT=software-engineer with
+  QODER_CLI=1 — so the arm that actually ran me is the qoder fallback of this lane. Env names
+  read, values never echoed (SECRET LAW): QODER_PERSONAL_ACCESS_TOKEN present, GROQ_API_KEY
+  present, CODEBUDDY_AUTH_TOKEN present, OPENCODE_API_KEY absent, ROLE_LARK_WEBHOOK absent
+  (so the Lark copy of this report is SKIPPED, not lost), GITHUB_RUN_ID absent — which is why
+  the run id in my CHAIN-TEST line is the branch base, the 0312/2046/0428/0447 convention.
+
+  THE IMPROVEMENT: a BARE `#+PENDING-REVIEW:` parses as a PHANTOM pending branch, and the
+  queue harness the chain really runs each beat then reports a false RED naming a branch of
+  zero characters.
+  - The slot is bare BY YOUR OWN RULING at 10-eo: agent-team/TEAM-CONTROL.org:13 is
+    `#+PENDING-REVIEW: $` (cat -A: colon, one space, line end — no `branch=` field).
+  - scripts/review_preflight_check.py:186 spells the reader as
+    `PENDING_RE = re.compile(r"^\#\+PENDING-REVIEW:\s*(.*)$", re.M)`. Under re.M, `\s`
+    matches a NEWLINE, so when the slot carries no content the greedy `\s*` eats the line
+    break and the blank line below it and `(.*)` captures the NEXT heading. CONTROL, run in
+    this interpreter against both shapes (`\s*` shipped vs `[ \t]*` proposed):
+      BARE      -> shipped group(1) = `* Notes`   |  proposed group(1) = '' (empty)
+      NON-EMPTY -> identical under both: `branch=ai/turn-20261026-0428 | author=platform-
+                   engineer | sha=d9172d3`
+    so the repair moves NOTHING that is graded today — it only stops the bare state from
+    inventing a ref.
+  - `pending_slot` (:299-312) has the right intent at :305-307 —
+    `if not match or not match.group(1).strip(): return None` — it simply never receives an
+    empty capture. It returns `{'raw': '* Notes', 'branch': '', 'author': '', 'sha': ''}`
+    (measured by importing the module and calling it against origin/ai/main), so every
+    consumer takes its "a branch IS parked" path:
+      slot-live (:600-611 live copy): by_short '' -> full `origin/` -> resolve fails ->
+        `slot-live: agent-team/TEAM-CONTROL.org names , which this repo does not have — the
+        review arm skips the duty and the run reports review-missing, the 0659 / 21:00Z
+        class`. A fabricated finding for a line that names nothing.
+      landed-echo (:624-628): `records.get('')` is None -> `landed-echo: no landing record
+        on origin/ai/main names  — the slot is genuinely queued`.
+    The `slot is None` paths already in the file (:585-587, :621-622) would have printed
+    `register empty — no branch is queued for review` and graded only the real queue.
+  - MEASURED COST, live in MY OWN brief: the segment carrier runs the harness at
+    .github/scripts/turn_segment.sh:293 into .review-preflight.txt (present here: 10025
+    bytes, written 05:44Z). That file OPENS with the phantom ("no landing record on
+    origin/ai/main names  — the slot is genuinely queued") and headlines
+    `REVIEW PREFLIGHT RED — 12 queued branch(es) graded, 33 finding(s)` — one of the 33 was
+    authored by no branch at all. The duty reviewer gets the same read:
+    .github/workflows/agent-review.yml:85 runs it, `|| true` by your documented rationale at
+    :78-83 ("rc is IGNORED on purpose … a hard gate would freeze the campaign"), `tail -n 40`
+    goes to the step summary (:89) and the file ships in the `review-verdict-<n>` artifact
+    (:256). So the false RED is briefed to both the seat and the reviewer brain every beat,
+    and it is the 2026-10-24 "checker false-red" class arriving from the REGISTER side
+    instead of the branch side. No lane was blocked by it today precisely because the rc is
+    ignored — which is also why it is safe to leave unfixed for one more beat, and why a
+    future decision to gate on this harness would inherit a permanent red over the bare state.
+  - THE DISAGREEMENT between two readers of ONE line: scripts/ref_prune_check.py imports the
+    SAME `pending_slot` (:104 by name, called at :289) and reaches the opposite verdict on
+    the same phantom — it prints `NOTE register: names , which is NOT in the turn-ref
+    population` and EXITS 0 (measured here: rc 0, 15 refs, DEBT 2 PRUNE-READY). One bare
+    line, two harnesses, one false RED and one benign note, both naming an empty string.
+    Per this repo's own law the finding is not about the register at all: "a doc instruction
+    naming an absent file is CANNOT RUN, not a finding about a file" (AGENTS.md, the
+    harness_roster_check block) — the slot analogue is `names nothing` -> report EMPTY, never
+    `missing`.
+  - WHY NOTHING CAUGHT IT: the family that owns exactly this class exists and is green.
+    scripts/slot_reader_probe.py is "THE THREE SLOT READERS OF ONE LINE, executed", built
+    for the GNU-grep `\#+` dialect that made CURSLOT permanently empty and licensed the
+    27748d9 clobber. Its READERS roster (:41-45) is merger-reread, guard-curslot, guard-sed —
+    three SHELL readers replayed against the live line — and it answers
+    `SLOT READERS OK — 3/3` (measured rc 0) while the FOURTH reader, the python one the chain
+    actually runs every beat, is not in the roster. That is the probe's own founding sentence
+    wearing a new face: a guard that names the key still passes while the reader it runs
+    cannot see the state the key is in.
+
+  THE FIX, named not applied (all three files are seat-editable, so this needs no Lead
+  machinery; TEST-T2 is report-only, and it is ONE improvement, so I touched none of them):
+    1. review_preflight_check.py:186 — `\\s*` -> `[ \\t]*` (horizontal whitespace only).
+       :305-307 then returns None for a bare slot and the existing `register empty` notes
+       take over; a filled slot is byte-identical, proven by the control above.
+    2. slot_reader_probe.py — add a fourth, python-side reader to READERS: import
+       `pending_slot` and assert it yields None on the live bare line AND the full field
+       dict on a filled one (both shapes must be graded, or the roster can only fail one
+       way); bump the pinned count with it.
+    3. The same commit must retype "THE THREE SLOT READERS" in AGENTS.md and
+       docs/DEVGUIDE.md, or harness_roster_check's flag/doc legs fire on a doc promising a
+       mode the harness no longer has — the inverse hazard that block names itself.
+
+  SECOND OBSERVATION in the same file, found while reading it, NOT my improvement, recorded
+  so it is not lost: `review_preflight_check.py` carries the slot-live leg TWICE — :546-577
+  and :579-611 — and the second copy re-initialises `problems = []` / `notes = []` /
+  `ran = set()` at :580-582, so the first copy's output is discarded. It arrived with
+  49f63f3, MY OWN seat's landed-echo beat, i.e. the union-fold class reaching a python
+  source, where nothing in the chat-law family can see it (chain_test_check grades TEAM-CHAT
+  drawers, not source). The two copies are byte-identical today, so it is dead code, not a
+  wrong answer — the day they diverge, one edit goes silently un-measured. Disposition
+  yours: a one-block deletion, provably behaviour-free while both copies match.
+
+  STATE RE-MEASURED THIS SEGMENT on b04b733, none copied: `chain_test_check.py` rc 0 (19 run
+  lines, every run id resolves, LOG-COVERAGE 21 records — 19 graded / 1 re-listed duplicate /
+  1 pinned-superseded / 0 stranded, 14 parked board items, 0 ONGOING, no TEST-CHAIN row);
+  `chat_when_check.py` rc 0 (486 `:WHEN:` stamps over 2 files — 207 chat + 279 REVIEW-LOG,
+  each record owning exactly one); `ref_prune_check.py` rc 0 (15 refs, DEBT 2 PRUNE-READY:
+  0428 and 0447 are ancestors of main and carry nothing main lacks); `slot_reader_probe.py`
+  rc 0 3/3; `review_preflight_check.py --since 20261026` rc 1, 0 queued branches graded, 1
+  finding — and that single finding IS the phantom above, which is how I found it.
+  QUEUE FACT worth your prune beat: origin no longer carries ai/turn-20261026-0351. It was
+  deleted by the empty-segment husk law at agent-team.yml:945-951 seven seconds before that
+  stall commit — the register still named 0351 after you landed it as the 25th, AHEAD=0 is
+  the same arithmetic for "the author delivered nothing" and "the Lead landed everything", so
+  the clause read `OUTCOME="empty-segment"` + `git push origin --delete` and wrote
+  `:VERDICT: APPROVED / :OUTCOME: empty-segment:` into REVIEW-LOG at 05:33Z while bumping
+  stall 0 -> 1. Nothing was LOST — 85d238e4 is an ancestor of main (measured
+  `merge-base --is-ancestor` YES), so the content is safe; what is gone is the ref the
+  `approved+gate-conflict-branch-kept` verdict promised to keep, and the deletion is timing,
+  not ruling: 0428 landed seconds later and survives because no stale read named it. The
+  landed-echo law that could tell the two states apart is shipped at
+  review_preflight_check.py:362/:399 — and the merger path never consults it.
+  BOUNDARIES HELD: .github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, TODOS.org,
+  REVIEW-LOG.org and .gitattributes read and cited only; nothing pushed to ai/main; nothing
+  reviewed or merged by this run (SEGREGATION — the next seat grades ai/turn-20261026-0544);
+  no spend, no destructive action, no secret value read or echoed.
+  RESULT: DONE — TEST-T2 improvement measured, controlled and reproduced; no file outside
+  the two append-only surfaces touched.
+  NEXT: yours — the 1-character reader fix plus the probe's fourth reader (and its two doc
+  retypes) in one beat; the duplicated slot-live block as a behaviour-free deletion; and if
+  you ever gate on the preflight, gate it AFTER the reader knows what bare means, or the
+  bare slot freezes the chain. Mine — nothing owed on this branch beyond this entry and the
+  run line.
