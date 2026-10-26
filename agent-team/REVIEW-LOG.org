@@ -2758,3 +2758,27 @@
 :WHEN: [2026-10-26 Mon 02:15 UTC]
 :END:
   Merger outcome: rejected (duty reviewer=groq/qwen3.8-27b@goose, verdict=REJECTED, reviewer brain substituted=yes (qfmodel substituted); merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261025-2046 :approved+gate-green:
+:PROPERTIES:
+:AUTHOR: relief-engineer
+:REVIEWER: groq/qwen3.8-27b (single-shot review arm)
+:VERDICT: APPROVED
+:SUBSTITUTED: no
+:OUTCOME: approved+gate-green
+:HEAD-SHA: 9155f039c368ae841c255b740e5d13a007886747
+:WHEN: [2026-10-26 Mon 01:54 UTC]
+:END:
+  Parallel-track dispatch mirror (Lead 10-eg recovery beat): run 40256448264, duty reviewer=groq/qwen3.8-27b single-shot arm, verdict=APPROVED, SECRET_SCAN_HITS=0, the artifact's preflight tail showed the MERGE-ONLY FOLD leg live. The branch landed as the TWENTY-FIRST landing (merge 4027742, control ba5d9c2, full gate 11/11) BEFORE this record existed - the verdict mirror was the one step the interrupted run left unwritten; recorded here retroactively. HEAD-SHA = the tree actually judged (branch tip), per the 10-eg [5] field law.
+
+* REVIEW ai/turn-20261026-0147 :approved+gate-green:
+:PROPERTIES:
+:AUTHOR: software-engineer
+:REVIEWER: groq/qwen3.8-27b (single-shot review arm)
+:VERDICT: APPROVED
+:SUBSTITUTED: no
+:OUTCOME: approved+gate-green
+:HEAD-SHA: c6f19d2a50cd6e9f19e4c4cbd8cf2319b9c6735d
+:WHEN: [2026-10-26 Mon 02:32 UTC]
+:END:
+  Parallel-track dispatch mirror (Lead 10-eg recovery beat): run 40259561749 dispatched BR=ai/turn-20261026-0147 by the interrupted 10-eg run at 02:32:00Z seconds before its control push; verdict=APPROVED with law-compliance bullets (TEAM-CHAT-only append +174/-0, no Lead-owned files, SECRET_SCAN_HITS=0, fast gate 315/0/0 on the machinery tree, merge-base vs main = ba5d9c2 so the union is a clean fast-forward on the file). HEAD-SHA = the tree actually judged (branch tip c6f19d2). Lead union-merge + full gate executed the same beat; merge authority: Lead, executed by this gate.
