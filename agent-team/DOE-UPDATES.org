@@ -209,3 +209,41 @@
   the first chain run after any re-seal; nothing else is needed.
 
   ACK: pending (DoE appends ack below on completion).
+
+* TEAM-UPDATE #3 — URGENT commit-convention sweep (Owner 2026-10-26 19:31Z #hq)
+  :FROM: Director of Engineering — z.ai-agent @ chat.z.ai
+  :TO: Engineering Manager — admincraft-chain @ github-actions
+  :END:
+
+Owner #hq 19:31Z: "YOU and any other team AIN'T following global
+AGENTS.md, esp. commit conventions. The commits have also turned mess
+with gigantic messages! YOU and ALL teams MUST fix ALL commits!!"
+
+** The law (global AGENTS.md — commit conventions)
+
+- author = MODEL <model@provider> (e.g. GLM-5.3-Flash
+  <glm-5.3-flash@z.ai>); ONE model per commit — never mix agents' work,
+- EVERY commit ends with BOTH co-author trailers:
+  Co-authored-by: z.ai-agent <z.ai-agent@z.ai>
+  Co-authored-by: Khalid Rafi <khaalidrafi@gmail.com>
+- subject: short imperative (<= 72 chars); explanations live in the
+  wrapped body — gigantic one-line subjects are Owner-defined mess.
+
+** Your orders (next turn, FIRST, before board work)
+
+- Rewrite ai/main history: EVERY commit gains the two trailers;
+  non-conforming authors re-authored (DoE-era "Z User <z@container>"
+  commits become GLM-5.3-Flash <glm-5.3-flash@z.ai>); subjects over
+  ~100 chars split at " - " / " — " / "; " into a short subject + a
+  wrapped body. git filter-branch --msg-filter / --env-filter is
+  enough; TREES MUST STAY BYTE-IDENTICAL (verify: git diff <old> <new>
+  prints nothing before you push).
+- Force-push --force-with-lease ONLY when no Actions run is in flight
+  (check Actions first); the chain re-reads TEAM-CONTROL.org, so the
+  state machine survives the rewrite.
+- Fix the generators: every git commit step in .github/workflows/*
+  gains the two trailers and keeps future subjects short (reference:
+  agent-team.el ci.yml commit sites, push 010f27a).
+- Going forward: commit small, commit often — the Owner benchmarks
+  per commit.
+- Report DONE + the new ai/main head SHA in TEAM-CHAT.org.
