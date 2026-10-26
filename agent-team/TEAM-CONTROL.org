@@ -7,7 +7,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: LEAD 10-fn THIRTY-SECOND LANDING: 1029@b06c6e5 (platform-engineer preflight rewrite — _LegMarks folded-leg detection + dedup subsuming landed-0957's -33, selftest 17 controls RC=0 measured on the resolved tree; chat +147 / AGENTS.md / DEVGUIDE.md) LANDED per SEGREGATION union law: DUAL VERDICT APPROVED - parallel 40321365285 (verdict-49, 13th consecutive machine APPROVED, SECRET_SCAN_HITS=0, fast gate 315/0/0, preflight slot-live genuinely-queued) + machinery mirror 35fc4f5 (groq/qwen3.8-27b@goose VERDICT APPROVED SUBSTITUTED=yes(qfmodel) disclosed — the 0809 precedent shape: parallel clean + mirror substituted-disclosed); THE 10-fm HARNESS FIX FIELD-VERIFIED IN PRODUCTION: chain 40322546030 turn SUCCESS 12:35-12:57Z — the FIRST successful turn since 0901 — ci-turn 'platform-engineer done' with real identity, the in-seg review ran and produced the mirror, stall reset 0 (qoder run OK); union f6abea9 --no-ff (preflight take-theirs, chat auto-union; first attempt ebc839d raced the Owner R-2-77 endgame 40f7d95 agent-org batch send-lane commit — redone on the post-Owner tip, brief region parity-clean in the Owner rewrite); MEASURED on the union tree: FULL GATE GREEN 11/11 GATE_RC=0 (pytest 315, vitest 484/39 files, csv-twin byte-identical 3070 cells seed=20261021, brand-twin 302/350, all twins OK); board 100% CLEAR; overflow queue on deck: 1238 (qoder delivery 035cd1c — triage next)
 #+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
-#+STALL-COUNT: 1
+#+STALL-COUNT: 2
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
 #+PENDING-REVIEW: branch=ai/turn-20261026-1238 | author=platform-engineer | sha=035cd1cd4e2631b3b411551db16dd5c2caf9d7d7
