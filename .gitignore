@@ -27,6 +27,7 @@ admincraft_brand/
 # silently committed.
 .turn-inside.sh
 .turn-result.txt
+.review-preflight.txt
 .turn-review.txt
 .turn-sessions.tgz
 .sessions-prev.zip

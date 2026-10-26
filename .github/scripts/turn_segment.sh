@@ -283,6 +283,15 @@ fi
 # /workspace/.turn-review.txt and the HOST extracts it; the merger
 # (finalize, on LEAD authority) acts only on APPROVED from the
 # duty reviewer, who is never the author.
+# ADVISORY PREFLIGHT (the TEST-T2 ask, ai/turn-20261025-2230, Lead-wired 2026-10-26):
+# the queue graded BEFORE a lane is paid. rc is IGNORED — the queue is red by
+# construction while most queued branches carry stale-base notes, so a hard gate
+# would freeze the campaign; the finding buys the merger a DISPOSITION (a slot the
+# preflight calls conflict-bound or stale should be re-cut or advanced, not
+# reviewed) at ~2.3s against the timeout 900 the reviewer arm itself gets.
+# || true: the duty-review lane below runs regardless.
+python3 scripts/review_preflight_check.py > /workspace/.review-preflight.txt 2>&1 || true
+echo "REVIEW-PREFLIGHT: advisory queue grade captured ($(wc -l < /workspace/.review-preflight.txt 2>/dev/null || echo 0) lines, rc ignored) — disposition input, not a gate"
 : > /workspace/.turn-review.txt 2>/dev/null || true
 if [ -n "$PENDING_BRANCH" ]; then
   # DUTY-REVIEWER lanes (Owner 18:55Z: the review duty belongs to a
