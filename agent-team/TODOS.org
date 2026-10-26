@@ -3851,6 +3851,15 @@ superuser, so a live smoke could never show a gated surface hidden.
 
 ** PENDING mcode-lane-activation — harness bake landed; arm wiring + secret are Lead/Owner (:DELIVERED: ai/turn-20261025-0652@9ea106e) :CI:
 :LOGBOOK:
+- Note taken on [2026-10-26 Mon 04:05 UTC] :: :MEASURED: THE MCODE PROBE GRADED
+  THE LANE DEAD — chain 40265217231's probe job ran the bake's exact lane
+  contract (auth.json restore under pinned HOME, exec --permission full) and
+  the CLI refused at the credential guard: "Sign in to MiniMax to use Agent
+  features. Run mcode login, then retry." RC=3, zero requests. The wiring
+  (machinery a5b61b0) and the Owner's secret seal are delivered; what blocks
+  ACTIVATION is the sealed credential itself (Owner-domain re-seal). Row stays
+  PENDING per the 10-eh flip law (measured ALIVE required); every chain run's
+  probe re-measures for free.
 - Note taken on [2026-10-25 Sun 07:03 UTC] :: :DELIVERED: MCODE BAKE LANDED —
   one file: =docker/harness/Dockerfile=, commit 9ea106e on branch
   ai/turn-20261025-0652 (board row and this chat entry follow in the next
