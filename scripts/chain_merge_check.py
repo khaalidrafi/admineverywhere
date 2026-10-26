@@ -47,9 +47,27 @@ WHAT THIS HARNESS DOES
 ----------------------
 Read-only over git (`merge-tree --write-tree` writes objects, not refs; nothing is
 checked out, nothing is pushed, no verdict is issued). For a target branch it
-pre-computes the merge and grades four claims, then PRINTS THE REPAIR: the exact
+pre-computes the merge and grades five claims, then PRINTS THE REPAIR: the exact
 header block to re-insert and the merged-file line it belongs above, recovered by
 matching the surviving `:WHEN:` value back to the branch's own entry.
+
+THE SECOND SHAPE OF THE SAME DEFECT (Lead ruling 2026-10-26 19:16Z, union 54d0d0c)
+----------------------------------------------------------------------------------
+A folded HEADER is visible: the headline count drops, an orphan drawer floats free of
+it. A welded BODY is not. The same dedup rule that eats the five header lines also
+eats any OTHER block both sides add identically — and every seat's report ends with
+the same SECRET LAW / SEGREGATION tail, so two concurrent appends share 13 lines at
+the BOTTOM as well as five at the TOP. Measured on the 35th landing: `chain_merge_check`
+answered "merge-tree CLEAN / MERGES AS AUTHORED", the headline count and the orphan
+scan agreed, and the union still moved three landed entries' bodies — software-engineer
+15:45 lost its 13-line tail (83 -> 70 lines), platform-engineer 16:21 gained a block
+that is not its own, software-engineer 15:52 grew 20 -> 28. `chain_test_check` caught it
+as three APPEND-ONLY REWRITTEN records only AFTER the merge was on the ref. That read
+replays here BEFORE the merge is spent, as the `body-ownership` leg: every entry either
+side MOVED out of the merge base must appear in the merged tree with the same body, byte
+for byte. It is exact — the merged chat blob this harness computes for 187eefb + 0f50d95
+is BYTE-IDENTICAL to the landed union 54d0d0c (measured: `diff` empty over 13,814
+lines), so what this leg prints is what the merger will commit, not a model of it.
 
 LEGS (pinned roster — one per claim):
   preview-runs    `git merge-tree` produced a tree for every target; a target that
@@ -60,6 +78,21 @@ LEGS (pinned roster — one per claim):
                   folds (authored > survived) and orphan drawers the merge creates;
                   plus any headline the branch DELETES from the chat (an append-only
                   violation the author can fix before the merge, not after).
+  body-ownership  every entry either side MOVED from the merge base — a landed entry
+                  main repaired, or the append this branch is delivering — must land
+                  in the merged tree with its body byte-identical. A shrink is printed
+                  with the exact lines to splice back; a growth is printed with the
+                  exact lines that belong to another message, and named as the block
+                  its donor lost. An entry whose routing+`:WHEN:` cannot be attributed
+                  (no WHEN, a malformed headline, the same identity twice) is reported,
+                  never skipped silently, and the leg prints how many bodies it
+                  compared. When the chat itself conflicts the merged blob holds
+                  conflict markers rather than a merge result, so the leg says it
+                  skipped instead of grading markers.
+  conflict-paths  the conflicted path list, with each path classified (append-only
+                  log / code or doc / Lead-owned) — the union scope the merger needs
+                  before it touches anything. Preflight says "conflicts"; it does
+                  not say WHERE, so the Lead discovers it mid-merge.
   conflict-paths  the conflicted path list, with each path classified (append-only
                   log / code or doc / Lead-owned) — the union scope the merger needs
                   before it touches anything. Preflight says "conflicts"; it does
@@ -72,9 +105,10 @@ LEGS (pinned roster — one per claim):
                   branch 6 -> UNION 11, which is the number the objective's note
                   asked the Lead to retype by hand.
 
-Exit codes, the family's three: 0 = every target merges AS AUTHORED (the entry
-survives, no conflict, no pin decision) / 1 = a finding, with the repair printed /
-2 = CANNOT RUN (a leg that cannot evaluate is never a green).
+Exit codes, the family's three: 0 = every target merges AS AUTHORED (the entry survives
+with its own headline AND its own body bytes, no conflict, no pin decision) / 1 = a
+finding, with the repair printed / 2 = CANNOT RUN (a leg that cannot evaluate is never
+a green).
 
 Deliberately NOT `*_diff.py`: that glob is `scripts/landing_gate.py`'s twin roster
 and a file in it must be wired into `EXPECTED_TWINS` — this compares a branch's
@@ -89,6 +123,7 @@ SECRET LAW: reads no credential, echoes no value. Lead-owned files are read and
 cited only; this harness writes nothing outside a fixture dir it creates itself.
 """
 
+import difflib
 import importlib.util
 import os
 import re
@@ -102,8 +137,8 @@ MAIN_REF = "origin/ai/main"
 BRANCH_PREFIX = "ai/turn-"
 CHAT_REL = "agent-team/TEAM-CHAT.org"
 
-LEG_ROSTER = ("preview-runs", "chat-fidelity", "conflict-paths", "pin-union")
-EXPECTED_LEGS = 4
+LEG_ROSTER = ("preview-runs", "chat-fidelity", "body-ownership", "conflict-paths", "pin-union")
+EXPECTED_LEGS = 5
 
 PIN_ASSIGN = re.compile(r"^(EXPECTED_[A-Z0-9_]+)\s*=\s*(\d+)\s*$", re.M)
 TREE_OID = re.compile(r"^[0-9a-f]{40}$")
@@ -279,6 +314,165 @@ def when_near_merged(merged_lines, number):
     return None
 
 
+# ------------------------------------------------------------------ body identity
+def entry_index(text, ctc):
+    """identity -> (headline line, body), plus the entries NOTHING can attribute.
+
+    `parse_messages` keys a message by its routing plus its `:WHEN:` — the part the
+    FORMAT LAW fixes — and that key is what survives a folded headline, which is why
+    body ownership can be graded per entry while a headline count cannot. An entry
+    with no WHEN, a headline the routing regex refused, or the SAME identity twice is
+    returned in `unattributable`: comparing it against a sibling that shares its empty
+    key would be a guess, and a guess here prints as a weld the merge never made.
+    """
+    index = {}
+    counts = {}
+    unattributable = []
+    if text is None:
+        return index, unattributable
+    for message in ctc.parse_messages(text):
+        ident = message["identity"]
+        if ident is None or not message["head_ok"] or not ident[3]:
+            unattributable.append(ident or message["headline"])
+            continue
+        counts[ident] = counts.get(ident, 0) + 1
+        index[ident] = (message["line"], message["body"])
+    for ident, count in counts.items():
+        if count > 1:
+            # Two entries with ONE routing+`:WHEN:`: which body is this entry's? A
+            # collision is a chat defect in itself, and grading either copy against a
+            # merged tree that orders them differently would print a weld that is only
+            # the collision, so both copies step out of the compare — counted, printed,
+            # never quietly dropped.
+            index.pop(ident, None)
+            unattributable.append(ident)
+    return index, unattributable
+
+
+def describe_identity(ident):
+    seat, to, kind, when = ident
+    return "`%s -> @%s :%s:` (`:WHEN: %s`)" % (seat, to, kind, when)
+
+
+def moved_blocks(wanted_body, got_body):
+    """(removed, added) line-blocks, each a list of lines, in file order."""
+    want = wanted_body.split("\n")
+    got = got_body.split("\n")
+    removed = []
+    added = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, want, got).get_opcodes():
+        if tag in ("delete", "replace"):
+            removed.append(want[i1:i2])
+        if tag in ("insert", "replace"):
+            added.append(got[j1:j2])
+    return removed, added
+
+
+def body_ownership(chat_base, chat_main, chat_branch, chat_merged, ctc, conflicted,
+                   headers_folded=False):
+    """(findings, note). Every body either side MOVED must land byte-identical.
+
+    Authoritative side per entry: the side that moved it away from the merge base.
+    That single rule is what keeps a STALE BASE from wearing a fold's clothes — main
+    repaired a landed entry at 570fb3e and branch bases older than that repair still
+    carry the folded bytes, so comparing the merged tree against the BRANCH's copy
+    would blame the merge for main's own fix. Measured: the registered pending branch
+    (turn-20261026-1834, base dcdd930, three landed entries it predates) answers ZERO
+    welds here, while the same read over the 35th landing's two parents names the three
+    bodies that union 54d0d0c actually welded.
+    """
+    findings = []
+    if CHAT_REL in conflicted:
+        return findings, ("bodies: SKIPPED — %s conflicts, so the merged blob holds "
+                          "conflict markers, not a merge result (conflict-paths owns it)"
+                          % CHAT_REL)
+    i_base, u_base = entry_index(chat_base, ctc)
+    i_main, u_main = entry_index(chat_main, ctc)
+    i_branch, u_branch = entry_index(chat_branch, ctc)
+    i_merged, u_merged = entry_index(chat_merged, ctc)
+    unattributable = len(u_base) + len(u_main) + len(u_branch) + len(u_merged)
+
+    graded = 0
+    welds = []
+    for side, index, other_index in (("main", i_main, i_branch),
+                                     ("branch", i_branch, i_main)):
+        for ident, (line, body) in index.items():
+            base_entry = i_base.get(ident)
+            moved = base_entry is None or base_entry[1] != body
+            if not moved:
+                continue
+            other = other_index.get(ident)
+            other_moved = other is not None and (base_entry is None or other[1] != base_entry[1])
+            if other_moved:
+                # Both sides carry different bytes for ONE landed entry: the merge base
+                # cannot say which is authoritative, so grade it once, from the branch,
+                # and call it what it is — an append-only edit by this branch's author.
+                if side != "branch":
+                    continue
+                graded += 1
+                findings.append("AUTHORED  body-ownership: this branch rewrites the landed "
+                                "entry %s (main holds %d body line(s), the branch %d) — a "
+                                "landed message is append-only, so the merge can only weld "
+                                "one side's bytes"
+                                % (describe_identity(ident),
+                                   len(i_main[ident][1].split("\n")) if ident in i_main else 0,
+                                   len(body.split("\n"))))
+                continue
+            graded += 1
+            merged_entry = i_merged.get(ident)
+            if merged_entry is None:
+                findings.append("INHERITED body-ownership: %s — the entry %s delivers "
+                                "VANISHES from the merged tree (its routing+`:WHEN:` is in "
+                                "no merged entry): the union ate its headline and its body "
+                                "landed under a neighbour's%s"
+                                % (("this branch appends" if side == "branch" else "main holds"),
+                                   describe_identity(ident),
+                                   " — the same fold chat-fidelity above prints the header "
+                                   "repair for" if headers_folded else ""))
+                continue
+            if merged_entry[1] != body:
+                welds.append((side, line, ident, body, merged_entry))
+
+    weld_blocks = {}
+    for side, line, ident, body, merged_entry in welds:
+        weld_blocks[ident] = moved_blocks(body, merged_entry[1])
+
+    for side, line, ident, body, merged_entry in welds:
+        removed, added = weld_blocks[ident]
+        lost = sum(len(block) for block in removed)
+        gained = sum(len(block) for block in added)
+        who = ("this branch's own append" if side == "branch" else "a landed entry main holds")
+        shape = ("its body SHRINKS by %d line(s)" % lost if lost and not gained else
+                 "its body GROWS by %d line(s)" % gained if gained and not lost else
+                 "%d line(s) are replaced by %d" % (lost, gained))
+        findings.append("INHERITED body-ownership: the merged tree welds %s — %s, %s line "
+                        "%d -> merged line %d, %d -> %d body line(s): %s. The union driver "
+                        "writes a block ONCE when both sides add it identically, and every "
+                        "seat's report ends on the same SECRET LAW / SEGREGATION tail, so no "
+                        "headline count and no orphan-drawer scan can see this."
+                        % (who, describe_identity(ident), side, line, merged_entry[0],
+                           len(body.split("\n")), len(merged_entry[1].split("\n")), shape))
+        for block in removed:
+            findings.append("    SPLICE these %d line(s) back into the entry above (verbatim "
+                            "from its own side):\n      %s" % (len(block), "\n      ".join(block)))
+        for block in added:
+            donor = None
+            for other_ident, (other_removed, _other_added) in weld_blocks.items():
+                if other_ident == ident:
+                    continue
+                if block in other_removed:
+                    donor = other_ident
+                    break
+            findings.append("    REMOVE these %d line(s) from the merged entry — they are the "
+                            "welded block%s"
+                            % (len(block), " that belongs to %s" % describe_identity(donor)
+                               if donor else " that is not this message's"))
+    note = ("bodies: %d entry(ies) moved on either side compared against the merged tree, "
+            "%d welded, %d unattributable (no WHEN / malformed headline / identity reused)"
+            % (graded, len(welds), unattributable))
+    return findings, note
+
+
 # ------------------------------------------------------------------------ legs
 def classify(repo, main_sha, path):
     rpc = _rpc()
@@ -292,7 +486,7 @@ def classify(repo, main_sha, path):
 
 
 def grade_branch(repo, ctc, main_sha, sha, short):
-    """All four claims for one target. Returns (findings, notes)."""
+    """All five claims for one target. Returns (findings, notes)."""
     findings = []
     notes = []
     ran = set()
@@ -365,6 +559,20 @@ def grade_branch(repo, ctc, main_sha, sha, short):
     notes.append("chat: main %d headlines / merged %d / this branch authored %d"
                  % (h_main, h_merged, authored))
     ran.add("chat-fidelity")
+
+    # ---- body-ownership: does the merge keep every moved entry's BYTES?
+    chat_base = blob(repo, mb, CHAT_REL)
+    chat_branch = blob(repo, sha, CHAT_REL)
+    if chat_base is None or chat_branch is None:
+        raise CannotRun("the merge base or the branch does not carry %s — body ownership "
+                        "has no authoritative side to compare the merged tree against"
+                        % CHAT_REL)
+    body_findings, body_note = body_ownership(chat_base, chat_main, chat_branch,
+                                              chat_merged, ctc, conflicts,
+                                              headers_folded=bool(authored and survived < authored))
+    findings.extend(body_findings)
+    notes.append(body_note)
+    ran.add("body-ownership")
 
     # ---- conflict-paths
     if conflicts:
@@ -494,8 +702,8 @@ def report(n, problems, notes, main, out=sys.stdout):
               "merge stay the Lead's.", file=out)
         return 1
     print("CHAIN MERGE PREVIEW OK — %d target(s) merge AS AUTHORED against %s: every "
-          "appended chat entry keeps its own headline in the merged tree, no path "
-          "conflicts, no pin needs reconciling" % (n, main), file=out)
+          "appended chat entry keeps its own headline AND its own body bytes in the "
+          "merged tree, no path conflicts, no pin needs reconciling" % (n, main), file=out)
     return 0
 
 
@@ -559,9 +767,12 @@ def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
     sh(repo, "commit", "-q", "-m", "base")
     sh(repo, "checkout", "-q", "-b", TURN_BRANCH)
     if branch_entry:
-        write(repo, CHAT_REL, base_chat + ENTRY % {
+        # A str is a fully built entry (the tail-weld control needs its own body);
+        # True is this fixture's default single-line append.
+        text = base_chat + (branch_entry if isinstance(branch_entry, str) else ENTRY % {
             "seat": "software-engineer", "when": "2026-10-25 Sun 10:00 UTC",
             "body": "the branch's own report"})
+        write(repo, CHAT_REL, text)
     if branch_deletes:
         write(repo, CHAT_REL, base_chat.split("\n", 2)[0] + "\n")
     if branch_bumps_pin:
@@ -591,6 +802,16 @@ OTHER_SEAT_MAIN = ENTRY % {"seat": "platform-engineer",
                            "when": "2026-10-25 Sun 11:30 UTC",
                            "body": "main appended a DIFFERENT headline, no fold"}
 
+# The block every seat's report really ends on, in miniature: byte-identical, and
+# added by BOTH sides of a concurrent append. The union driver writes it once, so
+# one entry loses its tail while both HEADLINES stay intact — the shape the
+# headline count and the orphan-drawer scan are blind to (union 54d0d0c).
+SHARED_TAIL = ("\n"
+               "  SECRET LAW: env read by NAME only, values never echoed.\n"
+               "  SESSION LAW measured, not asserted: the restore mount is empty.\n"
+               "  RESULT: DONE. I lay no verdict on my own branch (SEGREGATION) and\n"
+               "  do NOT claim OBJECTIVE-STATE: COMPLETE.")
+
 
 def c_clean():
     # main never appends at EOF, so nothing competes with the branch's entry.
@@ -599,6 +820,19 @@ def c_clean():
 
 def c_fold():
     return repo_fixture(main_entry=SAME_SEAT_MAIN)
+
+
+def c_tailweld():
+    """Two DIFFERENT seats append at once, so no header folds — but their bodies end
+    on the identical 4-line tail block, and the union driver writes that block once.
+    The headline count and the orphan scan stay clean; only a body read sees it. This
+    is the 54d0d0c shape, and it is the claim the 35th landing paid for."""
+    main_e = ENTRY % {"seat": "software-engineer", "when": "2026-10-25 Sun 11:30 UTC",
+                      "body": "main's report, ending on the shared tail:" + SHARED_TAIL}
+    branch_e = ENTRY % {"seat": "platform-engineer", "when": "2026-10-25 Sun 10:00 UTC",
+                        "body": "the branch's report, ending on the same tail:"
+                        + SHARED_TAIL}
+    return repo_fixture(main_entry=main_e, branch_entry=branch_e)
 
 
 def c_union_off():
@@ -674,7 +908,13 @@ CONTROLS = [
      ("MERGE KEEPS 0 headline", "REPAIR merged line", ":FROM: software-engineer")),
     ("without merge=union the same fold is a loud conflict", c_union_off,
      dict(branch_args=[TURN_BRANCH]), 1, "conflict-paths",
-     (CHAT_REL,)),
+     (CHAT_REL, "bodies: SKIPPED")),
+    ("a shared tail block welds one entry's body, headers intact", c_tailweld,
+     dict(branch_args=[TURN_BRANCH]), 1, "body-ownership",
+     ("SPLICE these", "SECRET LAW: env read by NAME only", "main line 10 -> merged line 10")),
+    ("one entry's bytes moved while its headline survived: the count read is satisfied",
+     c_tailweld, dict(branch_args=[TURN_BRANCH]), 1,
+     "chat: main 2 headlines / merged 3 / this branch authored 1", ()),
     ("a non-chat path conflict is listed and classified", c_note_conflict,
      dict(branch_args=[TURN_BRANCH]), 1, "conflict-paths", ("notes.md",)),
     ("both sides bump one pin -> the union is printed", c_pinunion,
@@ -693,7 +933,7 @@ CONTROLS = [
     ("--all over a queue with nothing left to merge", c_queue_empty,
      dict(want_all=True), 2, "CANNOT RUN", ("target list is empty",)),
 ]
-EXPECTED_CONTROLS = 11
+EXPECTED_CONTROLS = 13
 
 
 def _capture(build, kwargs):
