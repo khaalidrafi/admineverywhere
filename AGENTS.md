@@ -429,6 +429,32 @@ python3 scripts/review_verdict_check.py --selftest # 15 controls: every leg prov
 python3 scripts/harness_roster_check.py      # 0 roster published / 1 an unpublished grader / 2 cannot run
 python3 scripts/harness_roster_check.py --selftest # controls: every leg proved able to fail
 
+# THE MERGE ITSELF, PREVIEWED BEFORE IT IS SPENT. review_preflight asks whether a LANE is
+# worth paying; nothing asked what the MERGER produces once the verdict is APPROVED — and the
+# answer is not "what was authored". `.gitattributes:1` declares `agent-team/TEAM-CHAT.org
+# merge=union` so concurrent EOF appends merge instead of stopping the chain, and the union
+# driver writes a line ONCE when both sides add it identically, while the FORMAT LAW makes the
+# first five lines of a same-seat report byte-identical (`* MSG <seat> -> @lead :report:`,
+# `:PROPERTIES:`, `:FROM:`, `:TO:`, `:KIND:`). So the header folds, the body lands under another
+# message's headline and merge-tree answers 0: the fold is SILENT in exactly the branches the
+# merger accepts. Measured 2026-10-25 over the 27 unmerged refs: 20 lose at least one entry
+# header in the predicted merge and 6 of those merge CLEAN (1736 / 2326 / 0320 / 0440 / 0607 /
+# 0652) — a merger reading only merge-tree commits them blind. This harness prints the REPAIR
+# instead of leaving it to be discovered mid-union: for every folded entry, the merged-file line
+# to splice above (found by matching the surviving `:WHEN:` back to the branch's own entry) plus
+# the verbatim header block; the conflicted paths, each classified append-only / code / doc /
+# Lead-owned; and the pin arithmetic, because two sides bumping one `EXPECTED_*` literal is
+# ADDITIVE — on the registered pending branch it prints EXPECTED_CONTROL_CLAIMS base 5 / main 10
+# / branch 6 -> UNION 11, the same number the Lead's own merge note had derived by hand.
+# Read-only over git (merge-tree writes objects, not refs), issues no verdict, and imports
+# chain_test_check's drawer grammar and review_preflight_check's queue/register reading rather
+# than re-spelling either. Not `*_diff.py`: that glob IS the landing gate's twin roster, and
+# this compares a branch's predicted merge against main, not an artifact against its twin
+python3 scripts/chain_merge_check.py                    # 0 every target merges as authored / 1 a finding, with the repair printed / 2 cannot run
+python3 scripts/chain_merge_check.py --all              # the whole unmerged queue, not just the register slot
+python3 scripts/chain_merge_check.py --branch ai/turn-20261024-2244   # one target
+python3 scripts/chain_merge_check.py --selftest          # 11 controls on real fixture repos: every leg able to fail
+
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435
 
