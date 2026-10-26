@@ -68,6 +68,10 @@ side MOVED out of the merge base must appear in the merged tree with the same bo
 for byte. It is exact — the merged chat blob this harness computes for 187eefb + 0f50d95
 is BYTE-IDENTICAL to the landed union 54d0d0c (measured: `diff` empty over 13,814
 lines), so what this leg prints is what the merger will commit, not a model of it.
+That replay has to be a COMMAND a reader can run, not a module import: those two parents
+are commits main carries and no ref points at them, so
+`python3 scripts/chain_merge_check.py --main 187eefb --branch 0f50d95` names each side by
+commit id and re-prints the three welded bodies.
 
 LEGS (pinned roster — one per claim):
   preview-runs    `git merge-tree` produced a tree for every target; a target that
@@ -86,13 +90,12 @@ LEGS (pinned roster — one per claim):
                   its donor lost. An entry whose routing+`:WHEN:` cannot be attributed
                   (no WHEN, a malformed headline, the same identity twice) is reported,
                   never skipped silently, and the leg prints how many bodies it
-                  compared. When the chat itself conflicts the merged blob holds
-                  conflict markers rather than a merge result, so the leg says it
-                  skipped instead of grading markers.
-  conflict-paths  the conflicted path list, with each path classified (append-only
-                  log / code or doc / Lead-owned) — the union scope the merger needs
-                  before it touches anything. Preflight says "conflicts"; it does
-                  not say WHERE, so the Lead discovers it mid-merge.
+                  compared AND what it could not compare: the unattributable reads are
+                  a SUM beside the DISTINCT entries behind them, because one collided
+                  chat identity steps out of all four reads at once and a bare "4"
+                  would read as four separate holes. When the chat itself conflicts the
+                  merged blob holds conflict markers rather than a merge result, so the
+                  leg says it skipped instead of grading markers.
   conflict-paths  the conflicted path list, with each path classified (append-only
                   log / code or doc / Lead-owned) — the union scope the merger needs
                   before it touches anything. Preflight says "conflicts"; it does
@@ -115,9 +118,26 @@ and a file in it must be wired into `EXPECTED_TWINS` — this compares a branch'
 PREDICTED MERGE against main, which is not an artifact-and-its-twin identity.
 
     python3 scripts/chain_merge_check.py                     # the registered pending branch
-    python3 scripts/chain_merge_check.py --branch ai/turn-20261024-2326
     python3 scripts/chain_merge_check.py --all               # every unmerged queued branch
+    python3 scripts/chain_merge_check.py --branch <ref>      # one target, by branch name
+    python3 scripts/chain_merge_check.py --main <sha> --branch <sha>
+                                                            # replay ONE LANDED merge: the
+                                                            # two parents, named as commit
+                                                            # ids. A landed union's parents
+                                                            # carry no live ref (the prune
+                                                            # law), so a target is resolved
+                                                            # as a ref OR as a commit — the
+                                                            # fold proof below is only real
+                                                            # if a reader can re-run it.
     python3 scripts/chain_merge_check.py --selftest          # controls: every leg able to fail
+
+A target the queue does not hold is refused with the ONE reason that applies, never a
+conflated guess: `no ref and no commit by that name` (a turn ref pruned after its payload
+landed) is a different fact from `that ref resolves and main already carries every commit
+on it` (nothing left to preview — the class `scripts/ref_prune_check.py` dispositions).
+Naming a COMMIT is an explicit replay, so a merged commit stays gradeable: the refusal is
+for refs, and it is what stops an already-landed branch from being previewed as if it were
+queue work.
 
 SECRET LAW: reads no credential, echoes no value. Lead-owned files are read and
 cited only; this harness writes nothing outside a fixture dir it creates itself.
@@ -202,6 +222,44 @@ def git(repo, *args):
 def resolve(repo, ref):
     rc, out = git(repo, "rev-parse", "--verify", "%s^{commit}" % ref)
     return out.strip() if rc == 0 else None
+
+
+def is_ancestor(repo, sha, other_sha):
+    rc, _out = git(repo, "merge-base", "--is-ancestor", sha, other_sha)
+    return rc == 0
+
+
+COMMIT_ID = re.compile(r"\A[0-9a-fA-F]{7,40}\Z")
+
+
+def resolve_target(repo, main_sha, want, ref):
+    """One target outside the queued list -> (short, sha), refused with its OWN reason.
+
+    Two different facts used to share one message, and the reader could not tell them
+    apart (platform-engineer's review of d08bba7, DEFECT 1): a turn ref pruned after its
+    payload landed resolves NOWHERE, while a ref the Lead keeps up by ruling resolves
+    fine and simply has nothing main lacks. Both printed `(no such ref, or it carries no
+    commit main lacks)`, and the resolution order only tried `origin/<token>` — so a
+    COMMIT id, the one thing a landed merge's parents still are, was refused too. That
+    killed the documented replay (`--main 187eefb --branch 0f50d95`) for every reader who
+    does not import this module, which is the whole point of a proof.
+    """
+    live = resolve(repo, ref)
+    if live is None:
+        live = resolve(repo, "origin/" + ref)
+    if live is None:
+        raise CannotRun("--branch %s resolves as NEITHER a ref NOR a commit in this repo. "
+                        "The usual cause is a turn ref pruned after its payload landed — "
+                        "the name is gone while the bytes are on main. `--all` lists what "
+                        "the queue still holds; to replay a landed merge name the commit "
+                        "ids of its two parents (--main <sha> --branch <sha>)" % want)
+    if not COMMIT_ID.match(ref) and is_ancestor(repo, live, main_sha):
+        raise CannotRun("--branch %s resolves to %s, and main already carries EVERY commit "
+                        "on that ref — there is nothing to preview. The ref lives on "
+                        "because the Lead keeps it by ruling (scripts/ref_prune_check.py "
+                        "dispositions these); a landed merge is replayed by COMMIT id, not "
+                        "by branch name" % (want, live[:7]))
+    return (ref, live)
 
 
 def blob(repo, rev, rel):
@@ -350,6 +408,8 @@ def entry_index(text, ctc):
 
 
 def describe_identity(ident):
+    if not isinstance(ident, tuple):
+        return "`%s`" % ident
     seat, to, kind, when = ident
     return "`%s -> @%s :%s:` (`:WHEN: %s`)" % (seat, to, kind, when)
 
@@ -366,6 +426,32 @@ def moved_blocks(wanted_body, got_body):
         if tag in ("insert", "replace"):
             added.append(got[j1:j2])
     return removed, added
+
+
+def unattributable_note(reads):
+    """The SUM of skipped reads beside the DISTINCT entries behind it, never the sum alone.
+
+    ONE collided chat identity steps out of all four reads (base, main, branch, merged),
+    so a bare count prints "4" while the repo holds exactly ONE hole — measured on the
+    live slot and on the 54d0d0c replay: 1, 1, 1, 1, all four the same
+    `relief-engineer -> @lead :report:` carrying `[2026-10-25 Sun 05:52 UTC]` twice
+    (DEFECT 2 of the d08bba7 review). The sum stays printed because it IS the honest count
+    of compares the leg gave up; the distinct set rides beside it, capped, so a reader can
+    size the repair instead of chasing three defects that do not exist.
+    """
+    distinct = []
+    seen = set()
+    for item in reads:
+        label = describe_identity(item)
+        if label not in seen:
+            seen.add(label)
+            distinct.append(label)
+    text = "%d unattributable read(s) over %d distinct entrie(s)" % (len(reads), len(distinct))
+    if distinct:
+        text += ": " + ", ".join(distinct[:3])
+        if len(distinct) > 3:
+            text += " (+%d more)" % (len(distinct) - 3)
+    return text
 
 
 def body_ownership(chat_base, chat_main, chat_branch, chat_merged, ctc, conflicted,
@@ -390,7 +476,7 @@ def body_ownership(chat_base, chat_main, chat_branch, chat_merged, ctc, conflict
     i_main, u_main = entry_index(chat_main, ctc)
     i_branch, u_branch = entry_index(chat_branch, ctc)
     i_merged, u_merged = entry_index(chat_merged, ctc)
-    unattributable = len(u_base) + len(u_main) + len(u_branch) + len(u_merged)
+    holes = unattributable_note(u_base + u_main + u_branch + u_merged)
 
     graded = 0
     welds = []
@@ -468,8 +554,9 @@ def body_ownership(chat_base, chat_main, chat_branch, chat_merged, ctc, conflict
                             % (len(block), " that belongs to %s" % describe_identity(donor)
                                if donor else " that is not this message's"))
     note = ("bodies: %d entry(ies) moved on either side compared against the merged tree, "
-            "%d welded, %d unattributable (no WHEN / malformed headline / identity reused)"
-            % (graded, len(welds), unattributable))
+            "%d welded, %s (a read is skipped for no WHEN / malformed headline / identity "
+            "reused)"
+            % (graded, len(welds), holes))
     return findings, note
 
 
@@ -644,11 +731,7 @@ def pick_targets(repo, main, main_sha, branch_args, want_all, rpc):
         ref = want.replace("refs/heads/", "")
         row = index.get(ref) or by_tail.get(ref.split("/")[-1])
         if row is None:
-            live = resolve(repo, ref if "/" in ref else "origin/" + ref)
-            if live is None:
-                raise CannotRun("--branch %s does not resolve in this repo (no such ref, "
-                                "or it carries no commit main lacks)" % want)
-            row = (ref, live)
+            row = resolve_target(repo, main_sha, want, ref)
         rows.append(row)
     return rows
 
@@ -742,7 +825,7 @@ def write(repo, rel, text):
 
 def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
                  branch_bumps_pin=False, union=True, branch_deletes=False,
-                 extra_note_conflict=False, register=True):
+                 extra_note_conflict=False, register=True, base_extra=""):
     """A two-sided queue: main and one turn branch, both legal, then whatever the
     control needs. Real `git commit` objects, real `git merge-tree` — the fold is a
     property of the merge machinery, so the control must run the machinery."""
@@ -755,7 +838,8 @@ def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
     sh(repo, "config", "commit.gpgsign", "false")
     base_chat = ("#+TITLE: fixture chat\n"
                  + ENTRY % {"seat": "lead", "when": "2026-10-24 Sat 09:00 UTC",
-                            "body": "the entry both sides descend from"})
+                            "body": "the entry both sides descend from"}
+                 + base_extra)
     write(repo, ".gitattributes", ATTR_UNION if union else "")
     write(repo, CHAT_REL, base_chat)
     write(repo, "agent-team/TEAM-CONTROL.org",
@@ -900,6 +984,32 @@ def c_queue_empty():
     return repo
 
 
+def c_merged_remote():
+    """The same merged branch as `c_queue_empty`, but held ONLY as its remote-tracking
+    ref — the shape a seat's workspace has once the local head is gone. The `origin/`
+    resolution form must still FIND the ref (so it cannot be reported as a dead name) and
+    still refuse it as already carried, not grade a landed branch as queue work."""
+    repo = c_queue_empty()
+    tip = git(repo, "rev-parse", TURN_BRANCH)[1].strip()
+    sh(repo, "branch", "-D", TURN_BRANCH)
+    sh(repo, "update-ref", "refs/remotes/origin/%s" % TURN_BRANCH, tip)
+    return repo
+
+
+# The live chat defect the body-ownership compare steps around, in miniature (main today
+# carries exactly this pair — `relief-engineer -> @lead :report:` at
+# `[2026-10-25 Sun 05:52 UTC]`, TWICE, both bodies empty). ONE identity, so the leg gives
+# up four compares; a note that prints only the sum tells a reader there are four holes.
+COLLIDED_PAIR = (ENTRY % {"seat": "relief-engineer", "when": "2026-10-25 Sun 05:52 UTC",
+                          "body": ""}
+                 + ENTRY % {"seat": "relief-engineer", "when": "2026-10-25 Sun 05:52 UTC",
+                            "body": ""})
+
+
+def c_collided_base():
+    return repo_fixture(main_entry=OTHER_SEAT_MAIN, base_extra=COLLIDED_PAIR)
+
+
 CONTROLS = [
     ("branch merges as authored (no competing EOF append)", c_clean,
      dict(branch_args=[TURN_BRANCH]), 0, "CHAIN MERGE PREVIEW OK", ()),
@@ -932,8 +1042,26 @@ CONTROLS = [
      dict(), 2, "CANNOT RUN", ("pending slot is empty",)),
     ("--all over a queue with nothing left to merge", c_queue_empty,
      dict(want_all=True), 2, "CANNOT RUN", ("target list is empty",)),
+    # --- target resolution: the fold proof is only a proof if a reader can re-run it
+    #     (DEFECT 1 of the d08bba7 review — the replay was importable, not runnable).
+    ("a target named by COMMIT ID is graded: the landed-merge replay", c_tailweld,
+     dict(branch_args=["@TIP"]), 1, "body-ownership", ("SPLICE these",)),
+    ("a commit id main already carries is GRADED, never refused", c_tailweld,
+     dict(branch_args=["@MAIN_TIP"]), 0, "MERGES AS AUTHORED",
+     ("bodies: 0 entry(ies) moved",)),
+    ("a merged branch held as a local head is refused as already carried", c_queue_empty,
+     dict(branch_args=[TURN_BRANCH]), 2, "already carries", ()),
+    ("the same merged branch held only as its remote ref is refused alike",
+     c_merged_remote, dict(branch_args=[TURN_BRANCH]), 2, "already carries", ()),
+    ("a name that is neither a ref nor a commit says only that", c_clean,
+     dict(branch_args=["ai/turn-19991231-2359"]), 2, "NEITHER a ref NOR a commit", ()),
+    # --- coverage honesty: skipped reads are a SUM, the holes behind them are DISTINCT
+    #     (DEFECT 2 of the d08bba7 review — one collision printed as four).
+    ("one collided identity skips four reads and reports ONE hole", c_collided_base,
+     dict(branch_args=[TURN_BRANCH]), 0,
+     "4 unattributable read(s) over 1 distinct entrie(s)", ("relief-engineer",)),
 ]
-EXPECTED_CONTROLS = 13
+EXPECTED_CONTROLS = 19
 
 
 def _capture(build, kwargs):
@@ -944,9 +1072,16 @@ def _capture(build, kwargs):
         return 2, "CANNOT RUN — %s" % exc
     buf = StringIO()
     main = kwargs.get("main", "main")
+    branch_args = kwargs.get("branch_args")
+    if branch_args:
+        # A control may need to name its target by COMMIT rather than by ref, which is
+        # the only shape a landed merge has left once the Lead prunes the ref. The tip
+        # lives in the fixture, so it is read from the fixture, never hard-coded.
+        branch_args = [rev_from(repo, a, kwargs.get("tip_ref", TURN_BRANCH), main)
+                       for a in branch_args]
     try:
         n, problems, notes = grade(repo, main=main,
-                                   branch_args=kwargs.get("branch_args"),
+                                   branch_args=branch_args,
                                    want_all=kwargs.get("want_all", False))
         rc = report(n, problems, notes, main, out=buf)
     except CannotRun as exc:
@@ -954,6 +1089,15 @@ def _capture(build, kwargs):
     finally:
         subprocess.run(["rm", "-rf", os.path.dirname(repo)], capture_output=True)
     return rc, buf.getvalue()
+
+
+def rev_from(repo, token, tip_ref, main):
+    """Expand a control's `@TIP` / `@MAIN_TIP` marker into a real commit id."""
+    if token == "@TIP":
+        return git(repo, "rev-parse", tip_ref)[1].strip()
+    if token == "@MAIN_TIP":
+        return git(repo, "rev-parse", main)[1].strip()
+    return token
 
 
 def selftest():

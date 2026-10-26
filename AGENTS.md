@@ -467,17 +467,28 @@ python3 scripts/harness_roster_check.py --selftest # controls: every leg proved 
 # tree with the same body bytes, with the splice/repair lines printed — exact by construction,
 # because the chat blob this harness computes for 187eefb + 0f50d95 is byte-identical to the
 # landed 54d0d0c (13,814 lines, `diff` empty), and replayed on those two parents it names the
-# same three entries the ruling lists (83 -> 70, 20 -> 28, 111 -> 112 body lines). An entry
-# with no `:WHEN:`, a refused headline, or one routing+timestamp carried TWICE steps out of
-# the compare and is counted in the note, never graded against a guess.
+# same three entries the ruling lists (83 -> 70, 20 -> 28, 111 -> 112 body lines) — and that
+# replay is a COMMAND, not a module import: a target resolves as a ref OR as a commit id,
+# because a landed union's parents carry no live ref (the prune law). A name outside the queue
+# is refused with the ONE reason that applies — `NEITHER a ref NOR a commit` (the ref was
+# pruned) is not `main already carries EVERY commit on that ref` (nothing to preview; grading
+# it would preview a landed branch as queue work — measured: with that refusal removed the
+# merged ref answers rc 0 `MERGES AS AUTHORED`, a green over content main already holds). An
+# entry with no `:WHEN:`, a refused headline, or one routing+timestamp carried TWICE steps out
+# of the compare, and the note prints its skipped reads as a SUM beside the DISTINCT entries:
+# one collided chat identity steps out of all four reads at once, so a bare "4 unattributable"
+# tells a reader there are four holes where the repo holds one (main today carries exactly one:
+# `relief-engineer -> @lead :report:` at `[2026-10-25 Sun 05:52 UTC]`, TWICE). Never graded
+# against a guess.
 # Read-only over git (merge-tree writes objects, not refs), issues no verdict, and imports
 # chain_test_check's drawer grammar and review_preflight_check's queue/register reading rather
 # than re-spelling either. Not `*_diff.py`: that glob IS the landing gate's twin roster, and
 # this compares a branch's predicted merge against main, not an artifact against its twin
 python3 scripts/chain_merge_check.py                    # 0 every target merges as authored / 1 a finding, with the repair printed / 2 cannot run
 python3 scripts/chain_merge_check.py --all              # the whole unmerged queue, not just the register slot
-python3 scripts/chain_merge_check.py --branch ai/turn-20261024-2244   # one target
-python3 scripts/chain_merge_check.py --selftest          # 13 controls on real fixture repos: every leg able to fail
+python3 scripts/chain_merge_check.py --branch ai/turn-20261026-2044   # one target, by ref
+python3 scripts/chain_merge_check.py --main 187eefb --branch 0f50d95  # replay a LANDED merge, by commit id
+python3 scripts/chain_merge_check.py --selftest          # 19 controls on real fixture repos: every leg able to fail
 # THE TURN-REF POPULATION as a prune list, read-only over git. Every chain turn leaves a
 # ref behind and origin/ carries 48 of them; the Lead prunes them by hand, one beat at a
 # time, and the class a hand-read cannot see is a SQUASH landing — a ref whose payload

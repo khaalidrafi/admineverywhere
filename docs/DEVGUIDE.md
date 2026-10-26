@@ -306,7 +306,8 @@ python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a 
 python3 scripts/review_preflight_check.py --since 20261024   # one day's queue only
 python3 scripts/review_preflight_check.py --selftest  # 18 controls on real fixture repos: every leg able to fail
 python3 scripts/chain_merge_check.py --all            # 0 every queued target merges as authored / 1 a finding, with the repair printed / 2 cannot run
-python3 scripts/chain_merge_check.py --selftest       # 13 controls on real fixture repos: every leg able to fail
+python3 scripts/chain_merge_check.py --main 187eefb --branch 0f50d95   # replay a LANDED merge: targets resolve as a ref OR a commit id, and a name outside the queue is refused with its ONE reason (pruned ref vs main already carries it)
+python3 scripts/chain_merge_check.py --selftest       # 19 controls on real fixture repos: every leg able to fail
 
 python3 scripts/ref_prune_check.py        # 0 no slot hazard / 1 the register parks a prunable ref / 2 cannot run
 python3 scripts/ref_prune_check.py --since 20261026  # one day's refs only
