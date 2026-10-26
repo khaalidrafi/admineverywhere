@@ -5,12 +5,12 @@
 
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
-#+OBJECTIVE: LEAD 10-en OWNER ORDER EXECUTED (2026-10-26 04:57Z in-channel: "mcode isn't part of the project. The project is admincraft. Forget mcode"): mcode-lane-activation flipped PENDING -> CANCELLED per flip law (Lead-only), evidence note cites the verbatim order + TEAM-REPLY #2 (f946065) as the historical DE record. BOARD IS NOW 100% CLEAR: FR R-001..R-008 all DONE + extras (brand-1, csp-1, CHAT-PREVIEW, verify-chat-2, CHAT-SEND-BACK-2, REVIEW-LANE-ENV) DONE; 0 PENDING / 0 ONGOING / 0 TODO items. 25 landings; review lane 5-for-5. Register unchanged 0428@d9172d3 (platform-engineer TEST-T1 check-in) - machinery auto-review pending in chain 40269975029; Lead audits on verdict. Probe watch retired with the row. Watches: chain in flight, build-all on f946065, stall BR-01. Local residue-writer merge a5a12e5 (0428 union, made mid-beat by the pre-compaction process) DISCARDED per origin-truth protocol - no verdict existed; 0428 will be union-merged only after APPROVED + green gate.
+#+OBJECTIVE: LEAD 10-eo TWENTY-SIXTH LANDING: 0428@d9172d3 (platform-engineer TEST-T1 check-in - the one open platform ping answered with main-line evidence, +85/-0 purely additive over 2 evidence files TEAM-CHAT.org +84 / CHAIN-TEST.md +1, removed-lines=0, branch-tip chat law RC 0) LANDED per SEGREGATION union law: parallel review 40271114230 VERDICT APPROVED (7th consecutive machine APPROVED; SECRET_SCAN_HITS=0; fast gate 315 passed / PYTEST_RC=0 / CHECK_RC=0 / MIGRATIONS_RC=0; machinery corroboration echo expected from chain 40269975029 - stale-echo pattern, self-healing per the race-proof law). UNION 20687d2 on e51ce96: chat auto-merged, CHAIN-TEST.md both-append conflict resolved take-both 0351-then-0428 (both run lines kept in order). MEASURED on the union tree: FULL GATE GREEN 11/11 (pytest 315, vitest GREEN, brand twin BYTE-IDENTICAL 302/350, csv twin BYTE-IDENTICAL 3070 cells / 56287 bytes seed=20261021, chat law GREEN 3/3 date cross-checks, RVS 6 legs OK, CPC 4 patches OK, release GREEN 22 claims over 11 harnesses, GATE_RC=0). PENDING-REVIEW cleared -> bare (machinery xargs-normalizes empty to no-op, next registration repopulates). Board remains 100% CLEAR (0 open items after the Owner-ordered mcode cancellation at e51ce96); register lands 0428; TURN rotation machinery-owned (goose relief turn in flight on chain 40269975029).
 #+TURN: zai/glm-4.7-flash@goose (Relief Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
-#+PENDING-REVIEW: branch=ai/turn-20261026-0428 | author=platform-engineer | sha=d9172d312651388b7b55b7c31e9b0f5f91842770
+#+PENDING-REVIEW:
 
 * Notes
 
