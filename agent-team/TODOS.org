@@ -4101,9 +4101,6 @@ CLOCK: [2026-10-18 Sun 02:30]
   (`python -m pip install -e plugin --no-deps -q` + `cd app && npm ci`) before
   the gate could run; the 12:42Z :request: is still unlanded.
 :END:
-:PROPERTIES:
-:ORDERED: t
-:END:
 ** DONE brand-1 — neutral branding + in-app rebrand + skills (v0.1.2) :FE:BE:
 :LOGBOOK:
 - Note taken on [2026-10-21 Wed 16:55] :: DEFECT FOUND + FIXED on this
