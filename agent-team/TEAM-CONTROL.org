@@ -7,7 +7,7 @@
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: LEAD 10-fq THIRTY-FOURTH LANDING: 1520@00af888 (software-engineer delivery — preflight _LegMarks per-pass ledger fix: folded-leg blocks previously escaped detection when _LegMarks instances were isolated across passes; module-level ledger cleared at pass boundaries; selftest 17->18 controls; TEAM-CHAT +117 / preflight +52) LANDED per SEGREGATION union law DUAL: parallel verdict-51 APPROVED (run 40353443243, artifact 12664018442, 15th consecutive machine APPROVED, SECRET_SCAN_HITS=0, fast gate 315/0/0, preflight genuinely-queued REVIEW-READY) + machinery mirror APPROVED (REVIEW-LOG in fa935c6, reviewer groq/qwen3.8-27b@goose, SUBSTITUTED=yes honestly disclosed — the 0809/1238 precedent shape); union 03916f8 --no-ff on fa935c6 CLEAN (5 files +170/-6, zero conflicts — branch base was the tip); MEASURED on the union tree: FULL GATE GREEN 11/11 GATE_RC=0 (pytest 315, vitest 484/39, csv-twin 3070 cells seed=20261021, brand-twin 302/350, all twins roster-exact); push RC=0 race-checked fa935c6..03916f8; CONTEXT: harness lane HEALED and field-verified (10-fp fixes 85a1989+f039fdd; green builds + two real turns 15:44Z/16:24Z, stall reset 0); NEXT: re-queue 1556 (platform-engineer, harness_image_check.py pre-build grader) + dispatch parallel review; stall 0; board watch
 #+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
-#+STALL-COUNT: 0
+#+STALL-COUNT: 1
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
 #+PENDING-REVIEW: branch=ai/turn-20261026-1556 | author=platform-engineer | sha=0f50d95b50826705319d44e6dd7bb74f54bc3b96
