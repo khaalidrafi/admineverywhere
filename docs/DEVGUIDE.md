@@ -437,6 +437,34 @@ python3 scripts/lane_budget_check.py           # 0 every trusted lane fits / 1 a
 python3 scripts/lane_budget_check.py --selftest # 6 controls: every leg proved able to fail
 python3 scripts/lane_budget_check.py --root /tmp/copy   # controls run on copies
 
+# THE HARNESS IMAGE RECIPE AS A CHECK, BEFORE THE BUILD IS PAID. The image is the turn
+# lane, so a red recipe is not a red job — it is no turn, no reviewer, no verdict, and a
+# growing stall. Five build attempts went away on 2026-10-26 (runs 40334271125,
+# 40335134249, 40336007896, 40339371283, 40342641149) over two things a text read says
+# first: `apt-get satisfy` fed a HAND-LISTED dep set (run 40339371283: exit 127 on
+# `libdbus-1.so.3`, one of the nineteen NEEDED libraries the pinned deb actually declares),
+# and an `ENV` block written BELOW the RUN it serves — a Dockerfile never applies an ENV
+# inside the RUN above it, so the relocate verify ran without its data paths and died
+# looking for its character maps (run 40342641149). The Lead landed both (10-fp: 85a1989
+# derives the dep set from the deb's own Depends, f039fdd hoists the ENV above the RUN);
+# the recipe stays machinery a seat reads, and the seat keeps the re-runnable measurement.
+# Six legs, all of them TEXT reads (there is no docker in the container this runs in, so
+# no leg can execute a layer and none pretends to): the exec-time ENV precedes the RUN that
+# verifies, the dep set is DERIVED from the pinned deb and every relocated deb is EXCLUDED
+# from it, each hand-written `/usr/local/bin` wrapper is chmod-ed and exec'd in its own step
+# (`ln -sf` and `install -m` carry their own mode and are deliberately out of that leg),
+# nothing credential-shaped carries a literal VALUE — only names, per SECRET LAW — all seven
+# bodies are still baked (lane_budget_check grades the LANE script; nothing graded the
+# IMAGE), and every UNPINNED body install carries a ruling, `strict` for a proven body or
+# `degrades` for a dormant one that must retry and then fail into a loud ABSENT marker (the
+# 10-ba BUILD LAW: run 40117823054 lost the whole chain to one flaky npm install of a body
+# nobody was using). Every leg prints the number of inputs it read and a leg that read zero
+# is RED against its own vacuity, because a law nobody reads is not a green — it is coverage
+# that vanished (DEVGUIDE *ELEVENTH harness law*, applied to the build itself).
+python3 scripts/harness_image_check.py         # 0 recipe coherent / 1 a build would pay for it / 2 cannot run
+python3 scripts/harness_image_check.py --selftest # 11 controls: every leg proved able to fail
+python3 scripts/harness_image_check.py --root /tmp/copy   # controls run on copies
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 

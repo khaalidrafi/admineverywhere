@@ -72,7 +72,7 @@ GRADER_SUFFIXES = ("_diff.py", "_check.py", "_probe.py")
 # PINNED, not derived (landing_gate's EXPECTED_TWINS law, chain_slot_check's
 # EXPECTED_CONTROLS law): the roster is the harness's own expectation, so a file
 # vanishing or arriving is a refusal this harness understands, not a smaller green.
-EXPECTED_HARNESS = 20
+EXPECTED_HARNESS = 21
 EXPECTED_NAMES = (
     "brand_twin_diff.py",
     "chain_merge_check.py",
@@ -85,6 +85,7 @@ EXPECTED_NAMES = (
     "csv_twin_diff.py",
     "doc_field_roster_diff.py",
     "gate_roster_diff.py",
+    "harness_image_check.py",
     "harness_roster_check.py",
     "lane_budget_check.py",
     "parity_table_diff.py",
