@@ -394,8 +394,26 @@ case "$SEAT" in
          OPENAI_BASE_PATH="/openai/v1/chat/completions" \
          goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: qwen3.8-27b@groq — relief hire 2026-10-22)"
+    # mcode arm (Lead 10-eh, board item mcode-lane-activation): the MiniMax
+    # coding-agent CLI baked in the harness (ai/turn-20261025-0652@9ea106e)
+    # on the Owner-sealed credential (MCODE_AUTH_JSON, 2026-10-25T20:39Z —
+    # the Owner's own activation act; DISTINCT from the minimax-m3.1-flash
+    # MODEL the 2026-10-24 BURN-LAW bans). LAST-RESORT fallback, never
+    # trusted-first: its budget is unmeasured in-lane until the probe job
+    # or a real completion answers (probe-first law). Skip-guard measured
+    # in the bake: no valid credential -> exec refuses "Sign in to MiniMax"
+    # with ZERO requests -> dead-lane record below, never a faked turn.
+    elif MC_LOG=/tmp/mcode-lane.log && mkdir -p /tmp/mcode-home/.minimax \
+         && printf '%s' "$MCODE_AUTH_JSON" > /tmp/mcode-home/.minimax/auth.json \
+         && [ -s /tmp/mcode-home/.minimax/auth.json ] \
+         && env HOME=/tmp/mcode-home mcode exec --permission full --output-format json \
+              -o /tmp/mcode-out.json --cwd /workspace "$BRIEF" >"$MC_LOG" 2>&1 \
+         && ! grep -qE 'Sign in to MiniMax|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN' "$MC_LOG"; then
+      tail -n 3 "$MC_LOG"
+      echo "TURN_RESULT=mcode run OK (lane: minimax-agent@mcode — arm wired 2026-10-26)"
     else
-      echo "TURN_RESULT=BLOCKED (qoder+zai+laguna+groq lanes all failed — check the harness)"
+      echo "mcode lane not answered (credential empty or provider refusal): $(tail -c 160 ${MC_LOG:-/tmp/mcode-lane.log} 2>/dev/null | tr '\n' ' ')"
+      echo "TURN_RESULT=BLOCKED (qoder+zai+laguna+groq+mcode lanes all failed — check the harness)"
     fi
     ;;
   relief-engineer)
@@ -427,8 +445,22 @@ case "$SEAT" in
          qoder -p "$BRIEF" --output-format json \
          --permission-mode bypassPermissions --max-turns 100; then
       echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder)"
+    # mcode arm — same contract as the platform-engineer arm above (Lead
+    # 10-eh, mcode-lane-activation): Owner-sealed credential restored to a
+    # pinned writable HOME, last-resort fallback, measured skip-guard,
+    # dead-lane honesty. Label also fixes the stale minimax name (the
+    # 2026-10-23 relief swap made this chain's lanes zai/laguna/groq/qoder).
+    elif MC_LOG=/tmp/mcode-lane.log && mkdir -p /tmp/mcode-home/.minimax \
+         && printf '%s' "$MCODE_AUTH_JSON" > /tmp/mcode-home/.minimax/auth.json \
+         && [ -s /tmp/mcode-home/.minimax/auth.json ] \
+         && env HOME=/tmp/mcode-home mcode exec --permission full --output-format json \
+              -o /tmp/mcode-out.json --cwd /workspace "$BRIEF" >"$MC_LOG" 2>&1 \
+         && ! grep -qE 'Sign in to MiniMax|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN' "$MC_LOG"; then
+      tail -n 3 "$MC_LOG"
+      echo "TURN_RESULT=mcode run OK (lane: minimax-agent@mcode — arm wired 2026-10-26)"
     else
-      echo "TURN_RESULT=BLOCKED (zai+minimax+groq+qoder lanes all failed — check the harness)"
+      echo "mcode lane not answered (credential empty or provider refusal): $(tail -c 160 ${MC_LOG:-/tmp/mcode-lane.log} 2>/dev/null | tr '\n' ' ')"
+      echo "TURN_RESULT=BLOCKED (zai+laguna+groq+qoder+mcode lanes all failed — check the harness)"
     fi
     ;;
   software-engineer)
@@ -488,8 +520,20 @@ case "$SEAT" in
          OPENAI_BASE_PATH="/api/v1/chat/completions" \
          goose run -t "$BRIEF"; then
       echo "TURN_RESULT=goose run OK (lane: openrouter/laguna-s-2.1:free@goose)"
+    # mcode arm — same contract as the platform-engineer arm above (Lead
+    # 10-eh, mcode-lane-activation): Owner-sealed credential, last-resort
+    # fallback, measured skip-guard, dead-lane honesty.
+    elif MC_LOG=/tmp/mcode-lane.log && mkdir -p /tmp/mcode-home/.minimax \
+         && printf '%s' "$MCODE_AUTH_JSON" > /tmp/mcode-home/.minimax/auth.json \
+         && [ -s /tmp/mcode-home/.minimax/auth.json ] \
+         && env HOME=/tmp/mcode-home mcode exec --permission full --output-format json \
+              -o /tmp/mcode-out.json --cwd /workspace "$BRIEF" >"$MC_LOG" 2>&1 \
+         && ! grep -qE 'Sign in to MiniMax|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN' "$MC_LOG"; then
+      tail -n 3 "$MC_LOG"
+      echo "TURN_RESULT=mcode run OK (lane: minimax-agent@mcode — arm wired 2026-10-26)"
     else
-      echo "TURN_RESULT=BLOCKED (codebuddy+qoder-ds+zai+laguna lanes all failed — check the harness)"
+      echo "mcode lane not answered (credential empty or provider refusal): $(tail -c 160 ${MC_LOG:-/tmp/mcode-lane.log} 2>/dev/null | tr '\n' ' ')"
+      echo "TURN_RESULT=BLOCKED (codebuddy+qoder-ds+zai+laguna+mcode lanes all failed — check the harness)"
     fi
     fi
     ;;
@@ -519,8 +563,20 @@ case "$SEAT" in
          qoder -p "$BRIEF" --output-format json \
          --permission-mode bypassPermissions --max-turns 100; then
       echo "TURN_RESULT=qoder run OK (lane: qwen3.8-flash@qoder — default brain)"
+    # mcode arm — same contract as the platform-engineer arm above (Lead
+    # 10-eh, mcode-lane-activation): Owner-sealed credential, last-resort
+    # fallback, measured skip-guard, dead-lane honesty.
+    elif MC_LOG=/tmp/mcode-lane.log && mkdir -p /tmp/mcode-home/.minimax \
+         && printf '%s' "$MCODE_AUTH_JSON" > /tmp/mcode-home/.minimax/auth.json \
+         && [ -s /tmp/mcode-home/.minimax/auth.json ] \
+         && env HOME=/tmp/mcode-home mcode exec --permission full --output-format json \
+              -o /tmp/mcode-out.json --cwd /workspace "$BRIEF" >"$MC_LOG" 2>&1 \
+         && ! grep -qE 'Sign in to MiniMax|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN' "$MC_LOG"; then
+      tail -n 3 "$MC_LOG"
+      echo "TURN_RESULT=mcode run OK (lane: minimax-agent@mcode — arm wired 2026-10-26)"
     else
-      echo "TURN_RESULT=BLOCKED (qoder-ds+codebuddy+groq+qoder lanes all failed — check the harness)"
+      echo "mcode lane not answered (credential empty or provider refusal): $(tail -c 160 ${MC_LOG:-/tmp/mcode-lane.log} 2>/dev/null | tr '\n' ' ')"
+      echo "TURN_RESULT=BLOCKED (qoder-ds+codebuddy+groq+qoder+mcode lanes all failed — check the harness)"
     fi
     ;;
   visiting-engineer)
@@ -615,7 +671,7 @@ docker run --rm --user 1001:1001 \
   -e PENDING_BRANCH="${PENDING_BRANCH}" -e PENDING_AUTHOR="${PENDING_AUTHOR}" \
   -e REVIEWER_SEAT="${REVIEWER_SEAT}" -e REVIEWER_MEMBER="${REVIEWER_MEMBER}" \
   -e QODER_PERSONAL_ACCESS_TOKEN -e ZAI_API_KEY -e OPENROUTER_API_KEY \
-  -e GROQ_API_KEY -e CODEBUDDY_AUTH_TOKEN \
+  -e GROQ_API_KEY -e CODEBUDDY_AUTH_TOKEN -e MCODE_AUTH_JSON \
   agent-harness:local bash /workspace/.turn-inside.sh \
   > /tmp/.turn-out.txt 2>&1 &
 DOCKER_PID=$!

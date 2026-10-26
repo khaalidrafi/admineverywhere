@@ -285,6 +285,50 @@ jobs:
           echo "" >> "$SUMMARY"
           cat "$SUMMARY" || true
 
+      - name: Probe mcode lane (real CLI in the harness image — board item mcode-lane-activation, Owner credential sealed 2026-10-25T20:39Z)
+        continue-on-error: true
+        env:
+          MCODE_AUTH_JSON: ${{ secrets.MCODE_AUTH_JSON }}
+        run: |
+          SUMMARY="$GITHUB_STEP_SUMMARY"
+          echo "" >> "$SUMMARY"
+          echo "### mcode lane probe (the lane itself: CLI + Owner token + baked private node 24)" >> "$SUMMARY"
+          echo "" >> "$SUMMARY"
+          if [ -z "$MCODE_AUTH_JSON" ]; then
+            echo "| mcode lane | SKIP | - | MCODE_AUTH_JSON not set in repo secrets |" >> "$SUMMARY"
+            cat "$SUMMARY" || true
+            exit 0
+          fi
+          # reuse the image the codebuddy probe built when present (gha cache)
+          docker image inspect agent-harness:local > /dev/null 2>&1 || \
+            docker buildx build --load --cache-from type=gha --cache-to type=gha,mode=max \
+              -f docker/harness/Dockerfile -t agent-harness:local . > /tmp/harness-build-mcode.log 2>&1 \
+              || { echo "| mcode lane | SKIP | - | harness image build failed (see build log) |" >> "$SUMMARY"; tail -5 /tmp/harness-build-mcode.log; cat "$SUMMARY" || true; exit 0; }
+          # the EXACT lane contract from the bake (Dockerfile + the 0652
+          # delivery): exec --permission full, JSON to -o, work in --cwd;
+          # the Owner token restored to ~/.minimax/auth.json under a pinned
+          # writable HOME. The refusal marker is the bake's measured
+          # skip-guard — it grades the credential, not the network.
+          docker run --rm --entrypoint bash -e MCODE_AUTH_JSON \
+            agent-harness:local -lc '
+              mkdir -p /tmp/mcode-home/.minimax && printf "%s" "$MCODE_AUTH_JSON" > /tmp/mcode-home/.minimax/auth.json
+              timeout 300 env HOME=/tmp/mcode-home mcode exec --permission full --output-format json -o /tmp/mcode-out.json --cwd /tmp "Reply with the single word: alive" > /tmp/mc-probe.log 2>&1
+              echo "RC=$?" >> /tmp/mc-probe.log
+              tail -3 /tmp/mc-probe.log
+            ' > /tmp/mc-out.log 2>&1
+          MCLOG=$(cat /tmp/mc-out.log 2>/dev/null || echo "(no output captured)")
+          if printf '%s' "$MCLOG" | grep -qE 'Sign in to MiniMax|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN'; then
+            VERDICT="LANE DEAD (refusal or network marker present)"
+          elif printf '%s' "$MCLOG" | grep -q 'RC=0'; then
+            VERDICT="LANE ALIVE"
+          else
+            VERDICT="LANE UNKNOWN (no marker, nonzero rc)"
+          fi
+          SNIPPET=$(printf '%s' "$MCLOG" | head -c 120 | tr '\n' ' ' | tr -d '|' | tr -d '\`')
+          echo "| mcode lane (minimax-agent) | MiniMax coding agent via CLI, auth.json restore | account auth (no host ping) | $VERDICT — $SNIPPET |" >> "$SUMMARY"
+          echo "" >> "$SUMMARY"
+          cat "$SUMMARY" || true
+
   # ONE TURN OF WORK. Reads agent-team/TEAM-CONTROL.org:
   #   #+KILL-SWITCH: ON           -> stop everything, exit green.
   #   #+OBJECTIVE-STATE: COMPLETE -> objective closed, exit green.
@@ -320,6 +364,7 @@ jobs:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}   # minimax relief lane
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # qwen3.8-27b relief lane (Lead fix 2026-10-22: qoder quota-dead, zai rate-limited)
       CODEBUDDY_AUTH_TOKEN: ${{ secrets.CODEBUDDY_AUTH_TOKEN }}   # deepseek-v4.1-flash free-offer hire (Owner 2026-10-22)
+      MCODE_AUTH_JSON: ${{ secrets.MCODE_AUTH_JSON }}   # MiniMax coding-agent CLI (Owner-sealed 2026-10-25T20:39Z; board item mcode-lane-activation — Lead arm 10-eh)
       GOMODEL_MASTER_KEY: ${{ secrets.GOMODEL_MASTER_KEY }}   # Jev judgment layer (health-gated; URL comes from the resolve step)
     steps:
       - uses: actions/checkout@v4
