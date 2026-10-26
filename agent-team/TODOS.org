@@ -1,7 +1,7 @@
 #+TITLE: TODOS — admincraft
 #+TODO: TODO(t) ONGOING(o) WAIT(w@) PENDING(p@) | DONE(d!) CANCELLED(c@) DEFERRED(f@)
 #+COLUMNS: %40ITEM %TODO %EFFORT %CLOCKSUM(Clocked)
-# Hiring rule (SEGREGATION LAW, Owner 18:14Z): the assignee (AUTHOR) flips its item to ONGOING at task start and to PENDING with :DELIVERED: evidence on delivery; the NEXT seat (REVIEWER) reviews the branch read-only; the CI merger (MERGER) lands it only on the reviewer's APPROVED verdict. Marking DONE/CANCELLED is Lead-only.
+# Hiring rule (SEGREGATION LAW, Owner 18:14Z): the assignee (AUTHOR) is clocked in to ONGOING by AUTOMATION at the exact dispatch (Owner 2026-10-26 10:42Z — never by hand) and flips the item to PENDING with :DELIVERED: evidence on delivery; the NEXT seat (REVIEWER) reviews the branch read-only; the CI merger (MERGER) lands it only on the reviewer's APPROVED verdict. Marking DONE is the duty REVIEWER's when everything is clear (Owner 2026-10-26 10:55Z); CANCELLED/DEFERRED stay Lead-only.
 #+PROPERTY: Effort_ALL 0 0:25 0:50 1:00 2:00 4:00
 #+PROPERTY: ORDERED t
 # TIME LAW (Owner 2026-10-26 10:42 #hq): strict time discipline, Org-powered.
@@ -18,6 +18,27 @@
 #    the exact send time.
 # 4. A TODO closed without clock evidence bounces at review.
 # 5. The closing report carries one line: :EFFORT: vs clocked variance.
+# REVIEW CLOCK LAW (Owner 2026-10-26 10:55 #hq; Org manual "Breaking
+# down tasks" + clocking: child TODOs nest one level under the parent,
+# statistics cookies count the subtree, a parent's clocksum aggregates
+# its subtree's clocks):
+# 1. Every lead-assigned work TODO carries a REVIEW TODO nested
+#    underneath it — one Org level deeper, headline
+#    `*** TODO review: <parent title>', with its own :EFFORT: (inside
+#    its :PROPERTIES: drawer, the reviewer's rung of the Effort_ALL
+#    ladder) and its own :LOGBOOK: clock.
+# 2. FINISH time and REVIEW time are SEPARATE clocks: work clock on the
+#    parent, review clock on the child; the variance line reports them
+#    apart (columnview rolls the child's clock into the parent's
+#    %CLOCKSUM).
+# 3. The REVIEWER sets DONE — on the review TODO first, then on the
+#    parent — when everything is clear: verdict + green gate + evidence.
+#    The author never grades their own work; CANCELLED/DEFERRED stay
+#    Lead-only.
+# 4. Automation: work dispatches clock the parent (clock_in.py work
+#    mode — never a review child); review dispatches clock the review
+#    child (review mode; the marker may match the child's evidence
+#    lines, so cite branch=/author= in its body).
 
 * FR-FREShorama — ROADLOG R-001..R-008 approved 2026-10-17 (order: R-001 -> R-003 -> R-002 doc -> R-004 -> R-005 -> R-006 -> R-008 -> R-007)
 # RENAME LAW (Owner 2026-10-23 17:37Z "Remove the cool naming"): the three

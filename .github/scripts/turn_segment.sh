@@ -31,7 +31,7 @@ echo "TURN_BRANCH=$BRANCH" >> "$GITHUB_ENV"
 WORK_ITEM=$(grep -E '^\*+ (TODO|ONGOING|PENDING|WAIT|PROGRESS)' "$BOARD" | head -1 | sed 's/^[*]* //' || true)
 if [ -n "${WORK_ITEM:-}" ]; then
   curl -fsSL -H "Authorization: Bearer ${CLOCK_TOKEN:-}" \
-    "https://raw.githubusercontent.com/khaalidrafi/agent-team.el/5bf6618b82ce22dc8e2c96b00b0dede23d044237/agent-team/tools/clock_in.py" \
+    "https://raw.githubusercontent.com/khaalidrafi/agent-team.el/396848263242bb3686f35c12615e5f7da9957e49/agent-team/tools/clock_in.py" \
     -o .clock_in.py \
   && python3 .clock_in.py "$BOARD" "$WORK_ITEM" >> "$SUMMARY" 2>&1 \
   && git add "$BOARD" \
@@ -40,6 +40,21 @@ if [ -n "${WORK_ITEM:-}" ]; then
   rm -f .clock_in.py
 else
   echo "clock-in: no open board item — skipped" >> "$SUMMARY"
+fi
+# REVIEW CLOCK (Owner 2026-10-26 10:55Z): the review leg is a SEPARATE
+# clock on its own nested review TODO — clocked here, not on the work
+# item. Marker = the pending branch (cited in the review child's
+# evidence lines); best-effort like the work clock: a failed fetch or a
+# missing review child skips the clock, never the review.
+if [ -n "${PENDING_BRANCH:-}" ]; then
+  curl -fsSL -H "Authorization: Bearer ${CLOCK_TOKEN:-}" \
+    "https://raw.githubusercontent.com/khaalidrafi/agent-team.el/396848263242bb3686f35c12615e5f7da9957e49/agent-team/tools/clock_in.py" \
+    -o .clock_in.py \
+  && python3 .clock_in.py "$BOARD" "$PENDING_BRANCH" review >> "$SUMMARY" 2>&1 \
+  && git add "$BOARD" \
+  && git commit -q -m "board: TIME LAW review clock-in at dispatch (Owner 2026-10-26 10:55Z)" \
+  || echo "review clock-in: skipped (fetch/match failed) — review continues" >> "$SUMMARY"
+  rm -f .clock_in.py
 fi
 # ----------------------------------------------------------------
 # SEGREGATION LAW v2 — DUTY ROLES (Owner 18:14Z "Separate author,
@@ -120,7 +135,15 @@ Do this READ-ONLY, in order:
 3. FAST gate subset ONLY (Lead 2026-10-24 04:45Z, runs 40054713038/40058532383 evidence: reviewers died at max-turns running the FULL gate in-container — vitest alone is 469 tests; `python` does not exist here, use python3): python3 -m pytest plugin/tests -p no:cacheprovider -q ; python3 demo-backend/manage.py check ; python3 demo-backend/manage.py makemigrations --check — report each rc. Do NOT run vitest/npx/tsc: FE execution is graded by the CI test job on the merge and re-run by the Lead's finalize gate — your duty is the DIFF + LAW review. If a check cannot start, report rc CANNOT and move on — NEVER loop on environment repair (the rig is preinstalled and preflighted).
 4. Law check: no secrets in the diff (SECRET LAW); no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes) — that list is EXHAUSTIVE: agent-team/TEAM-CHAT.org, agent-team/TODOS.org and docs/CHAIN-TEST.md are lawful seat delivery surfaces (append-only evidence files — grade entry legality, never reject a diff for touching them); the board flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries legal format.
 5. Do NOT modify or commit anything — your verdict text is your whole deliverable.
-6. The LAST line of your answer MUST be exactly one of:
+6. REVIEW CLOCK LAW (Owner 2026-10-26 10:55Z): your review time is
+   clocked SEPARATELY on a nested TODO — 'review: <parent title>' one
+   level under the work item, its own :EFFORT: (in :PROPERTIES:),
+   citing "branch: ${PENDING_BRANCH}" in its body (the automation
+   matched that citation to clock you in at dispatch). When everything
+   is clear YOU set DONE — on the review TODO first, then on the parent
+   (the author never grades their own work); CANCELLED/DEFERRED stay
+   Lead-only.
+7. The LAST line of your answer MUST be exactly one of:
 VERDICT: APPROVED
 VERDICT: REJECTED — <one line of reasons>"
 fi
