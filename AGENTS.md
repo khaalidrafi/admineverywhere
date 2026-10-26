@@ -291,7 +291,7 @@ python3 scripts/chat_feature_check.py --selftest # 12 controls: every leg proved
 # grades a branch against main, not an artifact against its twin
 python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
 python3 scripts/review_preflight_check.py --since 20261025  # one day's queue only
-python3 scripts/review_preflight_check.py --selftest # 14 controls on real fixture repos: every leg proved able to fail
+python3 scripts/review_preflight_check.py --selftest # 16 controls on real fixture repos: every leg proved able to fail
 
 # the SEGREGATION-LAW pending slot as ONE command, read-only against the Lead-owned
 # merger. The whole delivery loop hangs on one line of agent-team/TEAM-CONTROL.org,
@@ -381,21 +381,32 @@ python3 scripts/chat_when_check.py --selftest # 11 controls: every leg proved ab
 # the orphan drawer lines main had already fixed, and the duty brief grades "TEAM-CHAT
 # entries legal format" against that tree. This harness asks the same question of the
 # whole queue BEFORE a lane is paid: the register's pending branch is live, unmerged and
-# at the parked sha (slot-live); main moved inside a region the branch also edited
-# (stale-base); orphan drawer lines are attributed AUTHORED (the branch's own fold —
-# rework) or INHERITED (main's stale state — rebase, precedent
+# at the parked sha (slot-live); that same branch is not already SWALLOWED by a landing
+# record on main (landed-echo — a squash landing keeps the branch's commits out of main's
+# ancestry on purpose, so "unmerged" cannot see the 10-dp write-cross: run 40231536995
+# re-registered 1946@93e0f45 seconds after the Lead landed that very sha and a review
+# lane was dispatched over a CLOSED branch. The leg reads the repo's own convention — a
+# commit whose SUBJECT opens with the landing verb and names the branch as its object —
+# and orders the record against the branch tip, because a tip NEWER than the record is a
+# post-landing re-delivery and stays queued, not flagged); main moved inside a region the
+# branch also edited (stale-base); orphan drawer lines are attributed AUTHORED (the
+# branch's own fold — rework) or INHERITED (main's stale state — rebase, precedent
 # 950f71e); no harness-leak file in the tree and no Lead-owned file in the branch's delta
 # (the standing reject classes); and `git merge-tree` against main is conflict-free,
 # because a conflict turns an APPROVED verdict into a manual Lead union-merge (the 0607
 # class). Measured on 2026-10-24 21:3xZ over the OBJECTIVE's 11 queued branches: 7 carry
 # INHERITED chat-structure reds (2/2/4/4/4/4/6 orphans), 2 of those also conflict at merge
 # — including the one pinned in #+PENDING-REVIEW — and 4 based after the repair are
-# REVIEW-READY. Read-only over git; it issues no verdict, writes nothing, and reads the
-# Lead-owned register as data. Not `*_diff.py`: that glob IS the landing gate's twin
+# REVIEW-READY. Measured 2026-10-25 21:4xZ over the landed tree: the current slot
+# (0320@edc827cc) carries NO landing record — genuinely queued — while two live refs are
+# swallowed by one (0056, 1946), which the harness prints as retained evidence refs and
+# never as queue work, because the Lead keeps those refs up BY RULING. Read-only over
+# git; it issues no verdict, writes nothing, and reads the Lead-owned register as data.
+# Not `*_diff.py`: that glob IS the landing gate's twin
 # roster, and this grades a branch against main, not an artifact against its twin
 python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
 python3 scripts/review_preflight_check.py --since 20261024   # one day's queue only
-python3 scripts/review_preflight_check.py --selftest  # 14 controls on real fixture repos: every leg able to fail
+python3 scripts/review_preflight_check.py --selftest  # 16 controls on real fixture repos: every leg able to fail
 # THE REVIEW LANE ITSELF as a check, read-only against the Lead-owned chain: the
 # verdict a branch lives or dies by is ONE token, spelled in three places nothing
 # compared — the duty reviewer's BRIEF (which must instruct it as the last line of
