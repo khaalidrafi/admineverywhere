@@ -142,7 +142,16 @@ RUN set -e \
 #     send fires — the CI clock lands at the exact send moment. Exit 42
 #     = the batch lane is unavailable -> direct CLI lane (unchanged).
 ARG AGENT_ORG_PIN=bbe8ca2d4567eaf455ab58f557b9eed3ac375742
+# libasound2 RESTORED (Lead 10-fo, evidence run 40334271125 job 121613206484:
+# the relocate verify `emacs --batch` died exit 127 "libasound.so.2: cannot
+# open shared object file" — dpkg -x resolves NO dependencies, so emacs-nox's
+# ALSA lib must exist in the SYSTEM loader path before the verify; the same
+# recipe passed at 12:59Z (40326803759) and failed from 13:51Z (snapshot
+# drift pulled the lib from the layer). apt keeps the rev drifting with the
+# pool; the emacs debs above stay byte-pinned per the Owner's design.
 RUN mkdir -p /opt/emacs30 /opt/deb \
+ && apt-get update -qq \
+ && apt-get install -y -qq --no-install-recommends libasound2 \
  && curl -fsSL -o /opt/deb/emacs-common.deb \
       "http://deb.debian.org/debian/pool/main/e/emacs/emacs-common_30.1+1-6~bpo12+1_all.deb" \
  && curl -fsSL -o /opt/deb/emacs-bin-common.deb \
