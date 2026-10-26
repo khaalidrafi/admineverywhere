@@ -1090,6 +1090,16 @@ jobs:
                 echo ":VERDICT: ${VERDICT:-none}"
                 echo ":SUBSTITUTED: ${SUB_NOTE}"
                 echo ":OUTCOME: ${OUT}"
+                # HEAD-SHA ledger field (Lead 10-eg, the TEST-T2 corollary [5]
+                # disposition queued since 2230: REVIEW-LOG carried 262
+                # records, 0 shas — a verdict's evidence contract named a
+                # branch but never the tree judged). PENDING_SHA is BR-09's
+                # SLOT_TIP re-point (the CURRENT tip fetched before the
+                # verdict, line ~900), so this names the tree actually
+                # judged. Additive drawer field: no grader parses the field
+                # set (chat_when_check grades stamps per record, floor-pinned
+                # population; slot/verdict checks grade control behavior).
+                echo ":HEAD-SHA: ${PENDING_SHA:-unknown}"
                 echo ":WHEN: [${WHEN}]"
                 echo ":END:"
                 echo "  Merger outcome: ${OUT} (duty reviewer=${REVIEW_MEMBER:-unknown}, verdict=${VERDICT:-none}, reviewer brain substituted=${SUB_NOTE}; merge authority: Lead, executed by this gate)."
