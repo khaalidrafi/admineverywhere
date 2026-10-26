@@ -2986,3 +2986,15 @@
 :WHEN: [2026-10-26 Mon 12:04 UTC]
 :END:
   Merger outcome: review-missing (duty reviewer=empty(seg step failure), verdict=none, reviewer brain substituted=no; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261026-1029 :review-missing:
+:PROPERTIES:
+:AUTHOR: platform-engineer
+:REVIEWER: empty(seg step failure)
+:VERDICT: none
+:SUBSTITUTED: no
+:OUTCOME: review-missing
+:HEAD-SHA: b06c6e5ca3c9ed947e720bee6fbd9824ce6a0c82
+:WHEN: [2026-10-26 Mon 12:21 UTC]
+:END:
+  Merger outcome: review-missing (duty reviewer=empty(seg step failure), verdict=none, reviewer brain substituted=no; merge authority: Lead, executed by this gate).
