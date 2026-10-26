@@ -19,6 +19,28 @@ TOP=$(grep -E '^\*+ (TODO|ONGOING|PENDING|WAIT)' "$BOARD" | head -8 | sed 's/^\*
 BRANCH="ai/turn-$(date -u +%Y%m%d-%H%M)"
 git checkout -b "$BRANCH"
 echo "TURN_BRANCH=$BRANCH" >> "$GITHUB_ENV"
+# TIME LAW (Owner 2026-10-26 10:42Z #hq): the clock-in is AUTOMATED at
+# the exact prompt-send moment. The HOST flips the item the WORK ORDER
+# will assign to ONGOING and stamps the open clock BEFORE the agent body
+# runs; members never clock. Best-effort while TEST-CHAIN mode parks the
+# feature work order: the marker is the first open item, oldest-first,
+# and the dispatch note names it so a mismatch is visible at review.
+# Canonical script: khaalidrafi/agent-team.el agent-team/tools/
+# clock_in.py at a pinned sha (no-dup law); a failed fetch/match skips
+# the clock, never the segment.
+WORK_ITEM=$(grep -E '^\*+ (TODO|ONGOING|PENDING|WAIT|PROGRESS)' "$BOARD" | head -1 | sed 's/^[*]* //' || true)
+if [ -n "${WORK_ITEM:-}" ]; then
+  curl -fsSL -H "Authorization: Bearer ${CLOCK_TOKEN:-}" \
+    "https://raw.githubusercontent.com/khaalidrafi/agent-team.el/5bf6618b82ce22dc8e2c96b00b0dede23d044237/agent-team/tools/clock_in.py" \
+    -o .clock_in.py \
+  && python3 .clock_in.py "$BOARD" "$WORK_ITEM" >> "$SUMMARY" 2>&1 \
+  && git add "$BOARD" \
+  && git commit -q -m "board: TIME LAW automated clock-in at dispatch (Owner 2026-10-26 10:42Z)" \
+  || echo "clock-in: skipped (fetch/match/commit failed) — segment continues" >> "$SUMMARY"
+  rm -f .clock_in.py
+else
+  echo "clock-in: no open board item — skipped" >> "$SUMMARY"
+fi
 # ----------------------------------------------------------------
 # SEGREGATION LAW v2 — DUTY ROLES (Owner 18:14Z "Separate author,
 # reviewer and merger roles" + 18:55Z refinement: "author, reviewer,
@@ -132,6 +154,10 @@ Handles: @platform-engineer @lead @owner @all.
 mailbox/ is a frozen archive — NEVER write there.
 TOP BOARD ITEMS (oldest-first):
 ${TOP}
+TIME LAW CLOCK-IN (Owner 2026-10-26 10:42Z): automation clocked an item
+in for you at dispatch — ${WORK_ITEM:-none}. NEVER edit :LOGBOOK: clock
+entries yourself; the automation owns them (manual clocking exists only
+for web/cloud lanes, not this CI).
 WORK ORDER — TEST-CHAIN MODE (Owner order 2026-10-22 09:22Z: the
 team is validating its own machinery; the feature work order at
 the bottom is PARKED until the Lead restores it — do NOT start

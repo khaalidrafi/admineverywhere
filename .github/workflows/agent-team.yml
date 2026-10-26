@@ -724,6 +724,7 @@ jobs:
         timeout-minutes: 45   # raised 30->45 (Lead, night-2 cycle 9-f, run 40024810045 evidence): review (~15-20 min) + author segment (~25-30 min) cannot both fit 30 — the step timed out at 30 min with nothing delivered. The turn_segment.sh already-merged skip frees the budget when the review is moot; 45 covers the real-review + real-author worst case. A hung harness still fails THIS step, not the rotation.
         env:
           SEG_SEAT: ${{ steps.control.outputs.seat }}
+          CLOCK_TOKEN: ${{ github.token }}
         run: bash .github/scripts/turn_segment.sh
       # SESSION FILES (Owner order 2026-10-21 18:27Z "how will you handle
       # agents' session files? ... We need the session files to resume with
