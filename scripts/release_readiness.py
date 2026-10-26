@@ -229,7 +229,7 @@ CONTROL_PIN_ASSERTED = "len(CONTROLS) != EXPECTED_CONTROLS"
 # fourth in AGENTS.md; rbac_live_check adds FR-R007-LIVE; chain_merge_check
 # adds one claim per mirror (1843 union); lane_budget_check per mirror too
 # (2156 union; block kept line-count-neutral so the DEVGUIDE cites hold).
-EXPECTED_CONTROL_CLAIMS = 20
+EXPECTED_CONTROL_CLAIMS = 22
 
 # "299 pytest" and "pytest 299" both spell a claim; the number may sit on either
 # side of the word, so both orientations are read.
