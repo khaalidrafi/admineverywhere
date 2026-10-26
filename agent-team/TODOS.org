@@ -789,7 +789,6 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
   wired to the shipped POST /api/orders/{id}/flag/ and POST
   /api/orders/bulk_flag/, with audit entries rendered in the record sub-view
   sharing the R-001 history UI (GET /api/audit/?object_type=&object_id=).
-:END:
 - Note taken on [2026-10-21 Wed 02:05] :: Segment opened by platform-engineer
   (WORK ORDER item 5 — items 1-4 carry :DELIVERED: evidence). Scope from
   ROADLOG R-003: drop-in action registry mirroring the widget contract
