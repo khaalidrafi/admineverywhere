@@ -203,8 +203,14 @@ EXPECTED_ACCEPTED_REPAIRS = 1
 REWRITTEN_BASELINES = (
     (("software-engineer", "lead", "report", "2026-10-24 22:05"),
      "SECOND UNION-REPAIR RULING (chat-law restructure, union with 0015)"),
+    (("software-engineer", "lead", "report", "2026-10-26 15:45"),
+     "THIRD UNION-REPAIR RULING (chat cross-entry body fold, union 54d0d0c)"),
+    (("software-engineer", "lead", "correction", "2026-10-26 15:52"),
+     "THIRD UNION-REPAIR RULING (chat cross-entry body fold, union 54d0d0c)"),
+    (("platform-engineer", "lead", "report", "2026-10-26 16:21"),
+     "THIRD UNION-REPAIR RULING (chat cross-entry body fold, union 54d0d0c)"),
 )
-EXPECTED_REWRITTEN_BASELINES = 1
+EXPECTED_REWRITTEN_BASELINES = 4
 
 # ------------------------------------------------------------- file shapes
 HEADLINE_RE = re.compile(
