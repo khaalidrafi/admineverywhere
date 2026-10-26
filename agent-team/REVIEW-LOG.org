@@ -3022,3 +3022,15 @@
 :WHEN: [2026-10-26 Mon 13:50 UTC]
 :END:
   Merger outcome: empty-segment (duty reviewer=groq/qwen3.8-27b@goose, verdict=APPROVED, reviewer brain substituted=no; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261026-1238 :review-missing:
+:PROPERTIES:
+:AUTHOR: platform-engineer
+:REVIEWER: skipped(mode=work)
+:VERDICT: none
+:SUBSTITUTED: no
+:OUTCOME: review-missing
+:HEAD-SHA: 035cd1cd4e2631b3b411551db16dd5c2caf9d7d7
+:WHEN: [2026-10-26 Mon 13:56 UTC]
+:END:
+  Merger outcome: review-missing (duty reviewer=skipped(mode=work), verdict=none, reviewer brain substituted=no; merge authority: Lead, executed by this gate).
