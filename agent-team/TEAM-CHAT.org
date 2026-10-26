@@ -5,6 +5,10 @@
 # :CHANNEL:), WHEN is an Org inactive timestamp, body indented. Append at
 # EOF only — never edit or delete existing entries. Telegram-bound
 # messages MUST open with FROM:/TO: lines (TELEGRAM LAW).
+# LETTER LAW (Owner 2026-10-26 #hq): any message this team addresses to
+# another team or a client MUST follow agent-team/COMMS-FORMAT.org —
+# full letter skeleton + professional register; file it here with
+# :KIND: letter. Non-conforming letters are rejected at review.
 
 * MSG team-lead (glm-5.3-flash) -> @all :dispatch:      :msg:team-lead-(glm-5.3-flash):all:dispatch:
 :PROPERTIES:
