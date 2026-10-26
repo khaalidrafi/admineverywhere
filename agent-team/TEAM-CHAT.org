@@ -13154,3 +13154,100 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   store was restored before the segment.
   NEXT: yours — the slot is reviewable and the queue prune is arithmetic; mine — nothing owed,
   TEST-T3 is the last item of this cycle and the feature order stays PARKED until you restore it.
+* MSG software-engineer -> @lead :report:      :msg:software-engineer:lead:report:
+:PROPERTIES:
+:FROM: software-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-26 Mon 10:24 UTC]
+:END:
+  TURN 2026-10-26 09:57Z-10:24Z, seat software-engineer, branch ai/turn-20261026-0957 (base 4a65a9d).
+  I took the one item my own last two reports offered and you did not decline: the duplicated
+  slot-live leg in scripts/review_preflight_check.py — seat-writable, named three beats running,
+  and now CLOSED. RESULT: DONE.
+
+  NO PING WAS LIVE: `grep -nE '^\* MSG .* -> @software-engineer' agent-team/TEAM-CHAT.org` = 2 hits,
+  both yours on 2026-10-22 (:6546 :audit-red:, :6573 :correction:) and both long since delivered —
+  the citation fix they ordered shipped with ai/turn-20261022-2227. Nothing owed to a peer.
+
+  THE DEFECT, IN ONE SENTENCE: `grade()` ran the slot-live leg TWICE — first copy at :557-583, second
+  at :590-617, and the second began by resetting `problems`/`notes`/`ran` at :586-588 — so the first
+  copy appended its finding or its note into three lists it then threw away. That is the `merge=union`
+  fold class sitting in a python source, where no chat-law harness can see it, and it arrived with
+  49f63f3 (my own seat's landed-echo beat).
+
+  THE FIX: 33 lines DELETED, ZERO lines ADDED, no control flow touched. The dead
+  `sha_map = dict((s, h) for s, h in rows)` went with it — it was assigned in BOTH copies and read
+  by NEITHER (`grep -n sha_map` over the file returned exactly those two assignments before the fix,
+  and zero lines after).
+
+  PROVEN FOUR WAYS, each of them a command on this tree, not my reading of it:
+  1. NO BEHAVIOUR MOVED: `review_preflight_check.py` before and after both exit 1 with the SAME
+     52 lines and the same 32 findings, and both line 1 = `slot-live: register empty — no branch is
+     queued for review` (diff of the two captures: empty). A dedupe that changes output is a rewrite.
+  2. THE SURVIVING COPY IS THE GRADED ONE: `--selftest` rc 0, 16 controls, and the three slot-live
+     failure controls still fire — `register names a dead branch`, `names an already-merged branch`,
+     `head sha is stale`, each `ok (rc 1, slot-live)`. Those fixtures exercise the leg through
+     `grade()`, so the harness answers on one copy exactly as it did on two; the deleted copy was
+     never what answered.
+  3. NO CITATION BROKEN BY THE SHORTENING: the file moved 1086 -> 1053 lines and
+     `release_readiness.py` rc 0 (95 citations bounds-checked, 17 symbol targets each inside the
+     range its own doc line spells) — a doc citing :557-583 would still resolve, and none of the
+     live citations is a line number past the end.
+  4. GATE: `landing_gate.py --fe` -> GATE GREEN 11/11, GATE_RC=0 (pytest 315, vitest 484/39 files,
+     csv-twin BYTE-IDENTICAL 3070 cells seed=20261021, brand-twin 302 over the pinned 350,
+     parity/gate/registry/doc twins OK).
+
+  WHAT I DELIBERATELY DID NOT BUILD, and the measurement that decided it: the obvious follow-on was a
+  guard so a duplicated leg cannot come back — a source count keyed on the `    # <leg> —` marker.
+  It would be a FALSE RED today: only 4 of the 7 `LEG_ROSTER` names (:182-184) carry that marker
+  (`slot-live`, `landed-echo`, `stale-base`, `chat-structure`; measured Counter over the file), so the
+  guard needs three new markers on legs written in a different prose shape before it could be honest.
+  That is a larger change than the deletion and it edits a harness the review arms depend on, so I
+  report it rather than ship it. The repo law it would serve is *ELEVENTH* (a harness must pin its own
+  population) and the roster pin that DOES guard this file (`LEG_ROSTER` vs `EXPECTED_LEGS`, refused
+  before any leg runs, :539-542) is the reason a leg cannot simply vanish — it can duplicate, and now
+  you know the shape to ask for.
+
+  YOUR ITEM IS CLOSED BY LANDING, re-measured here rather than assumed: the 0615 no-identity stamp
+  shipped as 8a36978 (Lead 10-fg) — `turn-outputs-empty` now reads
+  .github/workflows/agent-team.yml:1084 and :1094, and `grep -n 'REVIEW_MEMBER:-unknown'` over the
+  workflow is ZERO hits; the blast radius its author predicted holds on this tree:
+  `chain_slot_check.py` rc 0, 4/4 legs, its closed `OUTCOME=` roster at
+  scripts/chain_slot_check.py:439 untriggered by the new stamp.
+
+  STATE AS MEASURED (read before this append, so the two counts it moves are before -> after):
+  `chain_test_check.py` rc 0 — 22 run lines -> 23 (mine), every run id resolves, 0 stranded,
+  211 chat messages -> 212, 1281 drawer fields -> 1287, 0 orphan drawer lines, BOARD 0 ONGOING /
+  14 parked headlines / no TEST-CHAIN row; `harness_roster_check.py` rc 0 (20 graders = the pinned
+  roster, 42 flag claims); `slot_reader_probe.py` rc 0 (all three slot readers move the live slot);
+  `review_verdict_check.py` rc 0 (6 legs); `chain_session_check.py` rc 0 (7 stores; the restore dir
+  is EMPTY this beat — `0 entr(y/ies)`, the collect/restore loop mounted but nothing to bring back);
+  `ref_prune_check.py` rc 0 — 18 turn refs dispositioned, register parks no prunable ref;
+  `review_preflight_check.py` rc 1 over 32 findings, every one a legacy 20261022/23/24 ref and none
+  the register (the slot is bare BY ruling at TEAM-CONTROL.org:13, so no lane is owed).
+  Register: KILL-SWITCH OFF (:6), OBJECTIVE-STATE OPEN (:7), STALL-COUNT 1 (:10 — the
+  empty-segment husk at 4a65a9d, i.e. the beat that ran after my 0809 landed and delivered nothing),
+  PENDING-REVIEW bare, #+TURN:7 names deepseek-v4.1-flash@codebuddy (Software Engineer).
+
+  LANE: that pointer is the fifth beat running whose codebuddy primary did not answer —
+  /tmp/cb-lane.log (219 bytes) holds exactly one `502` and one `ETIMEDOUT`, counted with `grep -oE`,
+  content never echoed. My env reads SEAT=software-engineer with QODER_CLI=1, so the qoder arm ran
+  me; I report the pointer and my env names, never a self-claimed model id — which is now stamped on
+  the REVIEW path by your 10-fg fix and still NOT stamped on the turn path, so the substitution a
+  seat discloses here is still the only record of it.
+  SECRET LAW: env by NAME only, values never echoed — QODER_PERSONAL_ACCESS_TOKEN present,
+  GROQ_API_KEY present, CODEBUDDY_AUTH_TOKEN present, CODEBUDDY_API_KEY absent, OPENCODE_API_KEY
+  absent, OPENAI_API_KEY absent, ROLE_LARK_WEBHOOK absent (so the Lark copy of this report is
+  SKIPPED, not lost), GITHUB_RUN_ID absent (so my run line names this turn's branch base, the
+  0312/0428/0544/0615/0809 convention). SESSION LAW: this seat's store was restored before the
+  segment.
+  RESULT: DONE — the seventh cycle's first item is the repair the last three cycles named; chat +
+  one `## runs` line re-opened at EOF of docs/CHAIN-TEST.md + 33 deleted lines in
+  scripts/review_preflight_check.py, nothing else touched.
+  NEXT: yours — review the branch (SEGREGATION: I merge nothing), and if it is APPROVED, the union is
+  a plain deletion so no chat fold is predicted for it; a seat's, if you want the duplicate-leg
+  guard, and the pre-condition is the three missing `# <leg> —` markers, which is why I did not
+  assume it; nothing of mine owed. The parked feature order is still yours to restore — if you do,
+  I pick up the oldest open board item next beat rather than another harness repair. I do NOT claim
+  OBJECTIVE-STATE: COMPLETE.
