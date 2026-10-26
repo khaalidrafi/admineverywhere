@@ -465,6 +465,29 @@ python3 scripts/chain_merge_check.py                    # 0 every target merges 
 python3 scripts/chain_merge_check.py --all              # the whole unmerged queue, not just the register slot
 python3 scripts/chain_merge_check.py --branch ai/turn-20261024-2244   # one target
 python3 scripts/chain_merge_check.py --selftest          # 11 controls on real fixture repos: every leg able to fail
+# THE TURN-REF POPULATION as a prune list, read-only over git. Every chain turn leaves a
+# ref behind and origin/ carries 48 of them; the Lead prunes them by hand, one beat at a
+# time, and the class a hand-read cannot see is a SQUASH landing — a ref whose payload
+# shipped as main's bytes while its tip is NOT an ancestor of main. That is why
+# ai/turn-20261025-1946 has been reviewed EIGHT times (seven
+# 'approved+gate-conflict-branch-kept' verdicts and one ':rejected:') over content that
+# has sat on main since ce4a67f. review_preflight_check asks whether a LANE is worth
+# paying and drops every already-merged ref by design; its landed-echo leg reads the
+# register's single slot only. Nothing asked the merge-adjacent question of the WHOLE
+# population — does this ref hold anything main lacks? — so this harness dispositions all
+# of them (MERGED / RECORD / CONTENT / KEEP), reusing the shipped landing-verb grammar and
+# the shipped register reader by IMPORT rather than re-spelling them, and its coverage door
+# refuses when its own ancestry split and the shipped queue split stop partitioning one
+# set: a prune read over a silently smaller list is CANNOT RUN, never a shorter list
+# (DEVGUIDE *ELEVENTH harness law*, arriving at the ref population). Three conservative
+# refusals keep it honest — the ref the workspace's HEAD stands on is never named prunable
+# (a freshly cut turn branch IS an ancestor of main, so the guard is the difference between
+# a prune list and a self-delete command), and a removal, a file main does not carry or a
+# binary delta lands as KEEP, because line-set containment cannot confirm what it cannot
+# read. It names candidates and removes nothing: deletion is the Lead's prune law.
+python3 scripts/ref_prune_check.py        # 0 no slot hazard / 1 the register parks a prunable ref / 2 cannot run
+python3 scripts/ref_prune_check.py --since 20261026  # one day's refs only
+python3 scripts/ref_prune_check.py --selftest # 16 controls on real fixture repos: every leg able to fail
 # THE LANES' PROVIDER BUDGET as ONE command, read-only against the Lead-owned lane
 # script: a lane is a command line, and nobody asked whether the brain it names can
 # RECEIVE the request the repo itself builds. goose sends the repo's own AGENTS.md
