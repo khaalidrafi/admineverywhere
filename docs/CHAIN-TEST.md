@@ -166,3 +166,32 @@ LOG-COVERAGE leg, ai/turn-20261024-1956, was written to refuse). This block re-o
 for the fifth cycle; nothing above was edited or removed, and the run id is this turn's branch
 base (GITHUB_RUN_ID is unset inside the seat container — re-measured by earlier cycles).
 f0cfcd0@ai/turn-20261025-0830 | platform-engineer | qwen3.8-flash@qoder | 2026-10-25 | TEST-T2 — improvement: the chat FOLD is a MERGED-TREE-ONLY property, so every grader that reads the branch tree is structurally blind to it — measured on ai/turn-20261024-1956 (rejected 08:38Z today): merge base 0 orphans / branch tip 0 orphans / `git merge-tree --write-tree` output 2 orphan drawer lines at :9066-:9067 with 160 `* MSG` headlines where 161 are owed, and merge-tree rc 0 (conflict-free). The one harness that can see it (chain_test_check's CHAT-STRUCTURE leg) is not in the merge gate at all (MERGE_ROSTER = env, pytest, check, migrations; gate.sh ROSTER-IDENTICAL 3/3), and the two queued preflights read the branch tree or the history, never the merged blob. Repair = scan the merge-tree blob with the shipped `scan_orphan_drawers`; NOT applied here (TEST-T2 is chat + log only; the file belongs to ai/turn-20261024-2110/-2244, and a fifth merge leg would move gate.sh, MERGE_COMMANDS, gate_roster_diff and both doc mirrors together — Lead-owned)
+d5edb71@ai/turn-20261026-0004 | platform-engineer | qwen3.8-flash@qoder | 2026-10-26 | TEST-T3 — board + chat state verified with file:line evidence and this cycle's log closed in the SAME open `## runs` block (no section re-opened, nothing above edited); the verification leg found the standing blocker: agent-team/TEAM-CONTROL.org:13 parks ai/turn-20261025-1946, whose payload is already on main byte-for-byte via the squash landing ce4a67f, so five APPROVED verdicts have each ended `approved+gate-conflict-branch-kept`
+
+## Summary (TEST-CHAIN, 3 turns — fifth cycle, 2026-10-25 07:50Z → 2026-10-26 00:52Z)
+
+1. Turns: T1 check-in landed (ai/turn-20261025-0750 -> edb441d, 10-dw), T2 improvement landed
+   (ai/turn-20261025-0830 -> a794dc2, 10-dx), T3 state verification + log close is this branch
+   (ai/turn-20261026-0004, base d5edb71) — all three authored, all three gated on
+   `python3 scripts/landing_gate.py --fe` before delivery, none merged by its own seat
+   (SEGREGATION LAW).
+2. Machinery measured this turn, read-only: the chat is intact and format-clean (193
+   `* MSG` headlines, 1168 drawer fields, 0 orphan drawer lines, 460 legal `:WHEN:` stamps
+   over TEAM-CHAT.org + REVIEW-LOG.org — `chain_test_check.py` rc 0, `chat_when_check.py`
+   rc 0), the board was never touched (0 ONGOING, 14 parked items still headlines, the one
+   PENDING row at agent-team/TODOS.org:3852 is mcode-lane-activation, whose remaining half is
+   Lead/Owner-owned, and FR-R007-LIVE at :3454 is now DONE — 1041's entry cited it as the
+   open one, superseded by a landing), and the register sits at
+   `#+STALL-COUNT: 1` / `#+KILL-SWITCH: OFF` with `#+TURN:` agreeing with the seat running.
+3. One defect still open for the Lead, and it is what idles the chain: the review slot parks
+   a branch that is already LANDED. ai/turn-20261025-1946's payload blobs are byte-equal on
+   main (docs/slot-dialect-fix.patch, scripts/review_verdict_check.py) via squash landing
+   ce4a67f (ancestor of origin/ai/main), and its only remaining non-chat delta
+   (scripts/chain_patch_check.py) is the branch's STALE roster — main is at
+   `EXPECTED_PATCHES = 2`, the branch at 4 — so merging it would regress the harness, which is
+   why six REVIEW-LOG entries end `approved+gate-conflict-branch-kept`. The landed-echo root
+   cause is that slot-live's ancestry test cannot see a squash; `review_preflight_check.py
+   --since 20261025` (the harness 10-dy landed with the merged-fold leg) grades the whole
+   queue in one command and finds 11/11 branches conflict-bound today, with only 1140 / 1843
+   / 2156 holding files absent from main. Fixing the slot is Lead-owned machinery; the
+   measurement is a command any seat can re-run.
