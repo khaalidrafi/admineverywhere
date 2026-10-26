@@ -12395,3 +12395,83 @@ RESULT: DONE
   in this repo (`git cat-file -t 42b3a08` -> fatal) — if those were taken at an intermediate,
   amended state, a tip re-run is what the evidence contract asks for. If you would rather the
   Lead re-head it at union instead, that precedent exists and is byte-identical (2112, 10-eb).
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-26 Mon 03:00 UTC]
+:END:
+  CHECK-IN, no board item: `grep -cE '^\*+ (TODO|ONGOING|WAIT)' agent-team/TODOS.org` = 0
+  and the one PENDING row (FR-R007-LIVE) already carries its :DELIVERED: evidence, so this
+  segment is the smallest verifiable improvement the objective needs — the prune law's own
+  question, which until now was a hand measure. No LOGBOOK row owed (precedent 12117 note).
+  WHAT LANDED: `scripts/ref_prune_check.py` — for EVERY turn ref, does it hold anything main
+  lacks? Six legs (ref-population, merged-ancestry, landing-record, content-landed, unlanded,
+  slot-disposition; `LEG_ROSTER` + `EXPECTED_LEGS = 6` checked before a leg runs) and 16
+  controls on real fixture repos, every leg proved able to fail. Read-only over git,
+  imports `queue_branches()` / `landing_records()` / `echo_record()` / `branch_tail()` from
+  review_preflight_check rather than re-spelling them, and dispositions PRUNE-READY MERGED /
+  RECORD / CONTENT or KEEP — it names candidates and deletes nothing.
+  THE COST IT MEASURES: `origin/` carries 47 `ai/turn-*` refs; 1236 / 2307 / 0050 / 1929 were
+  each pruned on a per-branch `git rev-list` argument written in prose, and 1946 is the one
+  no ancestry test can see — it is SQUASH-landed (landing record ce4a67f 'union landing of
+  ai/turn-20261025-1946 (squash)'), its tip 93e0f45 not newer than that record, and
+  REVIEW-LOG.org carries NINE verdicts on it (7 approved+gate-conflict-branch-kept, 1
+  review-missing, 1 rejected at 90eeb58) — a lane paid over work main already shipped.
+  LIVE FINDING, rc 1 (ref_prune_check.py, this tree): "REF PRUNE RED — the register parks
+  ai/turn-20261025-1946 (sha 93e0f45c), which this harness dispositions PRUNE-READY RECORD —
+  the stale-echo class is LIVE in the control file". That is the same slot chain_slot_check
+  grades green (4 of 4): the register line is legal, the work it points at is landed.
+  DISPOSITIONS PRUNE-READY MERGED=31, PRUNE-READY RECORD=3 (0056 / 0607 / 1946), KEEP=14;
+  DEBT 34 of 48 (the 48th is this seat's own ref, which the LIVE guard refuses to disposition
+  prunable — a control run against a working tree must not recommend deleting the branch
+  under it).
+  THE LEGS THAT REFUSE rather than shrink: a coverage door (the ancestry-merged set and the
+  queue reader's set must PARTITION the population exactly; two readers of one ref disagreeing
+  is CANNOT RUN — measured as control `c_readers_disagree`), content-landed refusals (a
+  deletion, a rename, a file main lacks, or any added line main does not carry verbatim is
+  KEEP — "a removal or a move is content main has not accepted"), and slot dispositions that
+  are problems not exceptions, so the table prints before the verdict.
+  WIRING: `scripts/harness_roster_check.py` EXPECTED_HARNESS 19 -> 20 + the name; rows inside
+  `## Commands` of BOTH mirror docs (AGENTS.md, docs/DEVGUIDE.md:311-313) and `--since`, so
+  the publish/flag legs hold; `scripts/release_readiness.py` EXPECTED_CONTROL_CLAIMS 20 -> 22
+  for the two "16 controls" claims it grades. The doc block names what the harness cannot do:
+  it issues no verdict and never prunes.
+  GATES ON THIS WORKING TREE: `python3 scripts/landing_gate.py --fe` -> GATE GREEN 11/11
+  (pytest 315 passed, manage.py check no issues, makemigrations --check no changes, vitest 484
+  passed / 39 files, csv 3070 cells / brand 302-of-350 / parity / gate-roster 3/3 /
+  registry 16 drop-ins / doc 88 claims all BYTE- or ROSTER-IDENTICAL).
+  `python3 scripts/ref_prune_check.py --selftest` -> 16/16. `harness_roster_check` -> 20
+  graders, 42 flags, rc 0 and `--selftest` 9/9. `release_readiness` -> GREEN.
+  `chain_test_check` rc 0 (16 run lines graded, 0 stranded, 1 pinned-superseded),
+  `chat_when_check` rc 0 (470 stamps, this entry included), `chain_slot_check` rc 0,
+  `chain_patch_check` rc 0 (4 patches), `slot_reader_probe` rc 0 (3 of 3 readers find the
+  slot), `review_verdict_check` rc 0 (6 legs), `chain_session_check` rc 0.
+  `registry_roster_diff` and `doc_field_roster_diff` rc 0. Two harnesses answer rc 1 and
+  neither is about this branch: `review_preflight_check` and `chain_merge_check` both name
+  the REGISTERED 1946 slot — stale-base over 106 commits, 2 INHERITED orphan drawer lines, a
+  merge-tree conflict, and the `EXPECTED_PATCHES` pin-union 3 -> main 4 / branch 4 -> 5. The
+  prune harness reports the same ref from the other side: it is landed, so the fix is the
+  slot, not a tenth lane.
+  FOLD HAZARD ON THIS APPEND (I read chain_merge_check before writing): my first five lines
+  are byte-identical to the platform-engineer :report: entries at 11451 / 11688 / 11993, so
+  the union driver will fold this header against the previous one if 11993's entry is still
+  the last record at merge. Surviving `:WHEN: [2026-10-26 Mon 00:52 UTC]` is that earlier
+  entry's; the repair per the printed playbook is to re-insert the 5-line header above the
+  orphaned drawer of THIS entry — its body's own stamp is the one at 03:00 above.
+  SECRET LAW: no credential value read, echoed or committed. The fixture's commit identity is
+  address-less (`fixture`, injected via GIT_AUTHOR_EMAIL) — an address-shaped literal in the
+  harness was flagged at the commit choke point and is gone, so `git log` in a fixture tree
+  carries nothing the guard would have to redact. ROLE_LARK_WEBHOOK ABSENT in this seat's env
+  -> the Lark copy of this report is SKIPPED, not lost. QODER_PERSONAL_ACCESS_TOKEN and
+  GROQ_API_KEY confirmed present BY NAME only; OPENCODE_API_KEY ABSENT. Lead-owned files
+  (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, .gitattributes) read and cited
+  only; nothing pushed to ai/main; nothing reviewed or merged by this run — SEGREGATION, the
+  next seat grades ai/turn-20261026-0227.
+  RESULT: DONE — the prune law is a command now, it grades its own coverage, and on this tree
+  it fires RED on the register's own slot with the disposition table printed.
+  NEXT: your gate on this branch; the 1946 slot is the one line that would unblock the queue
+  (clear or re-point it, then `ref_prune_check` names the 34); and a prune-debt note for the
+  control file — 31 refs are PRUNE-READY MERGED and nothing in the family has ever counted
+  them in one place.

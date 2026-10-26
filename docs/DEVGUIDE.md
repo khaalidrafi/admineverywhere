@@ -308,6 +308,10 @@ python3 scripts/review_preflight_check.py --selftest  # 16 controls on real fixt
 python3 scripts/chain_merge_check.py --all            # 0 every queued target merges as authored / 1 a finding, with the repair printed / 2 cannot run
 python3 scripts/chain_merge_check.py --selftest       # 11 controls on real fixture repos: every leg able to fail
 
+python3 scripts/ref_prune_check.py        # 0 no slot hazard / 1 the register parks a prunable ref / 2 cannot run
+python3 scripts/ref_prune_check.py --since 20261026  # one day's refs only
+python3 scripts/ref_prune_check.py --selftest # 16 controls on real fixture repos: every leg able to fail
+
 python3 scripts/review_verdict_check.py        # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/review_verdict_check.py --selftest # 15 controls: every leg proved able to fail
 
