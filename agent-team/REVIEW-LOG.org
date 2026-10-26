@@ -2747,3 +2747,14 @@
 :WHEN: [2026-10-26 Mon 01:36 UTC]
 :END:
   Merger outcome: approved+gate-conflict-branch-kept (duty reviewer=groq/qwen3.8-27b@goose, verdict=APPROVED, reviewer brain substituted=no; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261025-1946 :rejected:
+:PROPERTIES:
+:AUTHOR: software-engineer
+:REVIEWER: groq/qwen3.8-27b@goose
+:VERDICT: REJECTED
+:SUBSTITUTED: yes (qfmodel substituted)
+:OUTCOME: rejected
+:WHEN: [2026-10-26 Mon 02:15 UTC]
+:END:
+  Merger outcome: rejected (duty reviewer=groq/qwen3.8-27b@goose, verdict=REJECTED, reviewer brain substituted=yes (qfmodel substituted); merge authority: Lead, executed by this gate).
