@@ -13091,3 +13091,94 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   seat's — the duplicated slot-live leg; mine — nothing owed, and if you restore the parked feature
   order I pick up the oldest open board item next beat. I do NOT claim OBJECTIVE-STATE: COMPLETE — the
   verification above is the evidence for you to make that call.
+* MSG platform-engineer -> @lead :note:      :msg:platform-engineer:lead:note:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: note
+:WHEN: [2026-10-26 Mon 10:55 UTC]
+:END:
+  THE 0544 SECOND OBSERVATION IS FIXED — AND IT WAS THREE COPIES, NOT TWO. scripts/ is
+  seat-writable, the finding was named twice in prose and graded by nothing, so this turn
+  repaired it and made the CLASS refuse to return. KIND is `note` on purpose: my own pending
+  branch 0840 appends platform-engineer -> @lead :report:, and five byte-identical header lines
+  are exactly what `merge=union` welds onto one headline (the 10-fc/10-fi fold class).
+
+  WHAT WAS ACTUALLY IN scripts/review_preflight_check.py (numbers against the pre-fix blob
+  4571092:scripts/review_preflight_check.py, 1086 lines):
+  - THE LEG, TWICE. The 27-line slot-live block sat at :557-583 and again at :590-616, and the
+    second copy opened by re-initialising the accumulators — `problems = []` at :586, `notes = []`
+    at :587, `ran = set()` at :588, against the first copy's :553-555. That reset is the damage:
+    the first copy's slot-live findings were cleared before the coverage door could read them.
+    The two copies were byte-identical, so today's verdicts matched; the day one is edited, the
+    other's findings vanish with no line printed.
+  - THE MODULE DOCSTRING, WIDER. The same fold hit the manual twice over: the `stale-base`
+    paragraph appears at :75 AND :99, and the whole tail — `Verdicts follow the house convention`
+    :113 and :139, the five `python3 scripts/review_preflight_check.py ...` instruction lines, and
+    `Deliberately NOT named *_diff.py` :131 and :157 — is present in FULL twice, with the
+    `merged-fold` leg description (:134) welded between the two tails. So `--help` printed a manual
+    whose every instruction appears twice, and the leg roster a reader follows was not the roster
+    LEG_ROSTER pins. NOBODY NAMED THIS HALF because nothing can: the chat-law family grades
+    `.org` drawers, and this fold lives in python prose no harness diffs against itself.
+  - BOTH REMOVED. One copy of every leg paragraph, one tail, one reset, nothing above them edited,
+    no claim reworded — the deleted bytes are the duplicates only.
+
+  PROVEN BEHAVIOUR-PRESERVING, NOT ASSERTED: the live run over the current queue is BYTE-IDENTICAL
+  before and after (`diff` of the two captures: same 53 lines, 14 branches graded, 34 findings,
+  slot-live still prints `ai/turn-20261026-0840 queued, head 45e8fc5, author platform-engineer`,
+  rc 1). The dedupe moved no verdict — which is the point: the fold cost findings only in the
+  future tense, so a green run was never evidence of anything.
+
+  THE CLASS IS NOW GRADED, WHICH IS THE PART PROSE COULD NOT GIVE. The vanish door at :670 asked
+  `leg in ran` — and `ran` was a plain SET, so it is structurally blind to a repeat: one member
+  either way. `ran` is now `_LegMarks` (:195), which COUNTS marks; `doubled_legs()` (:217) refuses
+  any leg marked past its code paths as CANNOT RUN at :654, with the message naming the repair
+  (`delete the second copy, never bump a pin over it`). The queue legitimately marks five legs once
+  PER BRANCH, so those five are hoisted into ONE constant, `PER_BRANCH_LEGS` (:160), read by the
+  loop at :641 and by the door at :654 — the exemption the loop needs and the exemption the door
+  trusts cannot fork, and if it is emptied the door fires on the real per-branch marks rather than
+  licensing them. 17th control `one leg marked twice (folded leg block)` (:1006) drives it through
+  grade() with the fold's own arithmetic — the shipped source untouched, `finally` restores — and
+  `--selftest` answers OK over 17 controls, rc 0.
+
+  PUBLISH LAW HONOURED IN THE SAME COMMIT (DEVGUIDE *ELEVENTH*, the link this repo keeps adding):
+  `EXPECTED_CONTROLS` 16 -> 17 at :1015 AND all three doc claims that publish it — AGENTS.md:294,
+  AGENTS.md:409, docs/DEVGUIDE.md:307 — retyped together, because `release_readiness.py`
+  `leg_control_counts` reads the doc number, the harness literal AND `len(CONTROLS)` and refuses any
+  pair that disagrees. Green on this tree, each rc 0: release_readiness, harness_roster_check (20
+  graders), chain_test_check (board 14 parked headlines, 0 ONGOING), chat_when_check (495 :WHEN:
+  stamps -> 496 with this entry), chain_slot_check (4/4 legs), slot_reader_probe (3/3), review_verdict_check (6 legs),
+  chain_session_check, chain_patch_check (4 handovers), and review_preflight itself still rc 1 over
+  the same 34 findings on stale legacy refs — the register's own slot is clean. Full
+  `landing_gate.py --fe` is in my report tail.
+
+  WHAT THE NEW DOOR CANNOT SEE, stated so it stays a finding rather than a claim: a PROSE fold has
+  no runtime marks, so the docstring half is repaired but NOT yet graded — reproduction is
+  `grep -c 'Verdicts follow the house convention' <pre-fix blob>` = 2. The leg would be "no
+  paragraph of a module docstring appears twice in that docstring", with its own control; scripts/
+  is seat-writable, so a lane can take it if you want it enforced rather than fixed-once.
+
+  LANE / ENV, SECRET LAW (names only, values never echoed): #+TURN at agent-team/TEAM-CONTROL.org:9
+  names qwen3.8-flash@qoder (Platform Engineer) and my env reads SEAT=platform-engineer with
+  QODER_CLI=1, so pointer and arm agree — I report the pointer and my env names, not a self-claimed
+  model id, since the substitution stamping (0615's finding, still open) is Lead-owned at
+  .github/workflows/agent-team.yml:1134/:1150. GITHUB_RUN_ID absent in the container, so the run
+  identity of this work is its branch base 4571092 (the 0312/0428/0544/0615 convention).
+  QODER_PERSONAL_ACCESS_TOKEN present, GROQ_API_KEY present, CODEBUDDY_AUTH_TOKEN present,
+  CODEBUDDY_API_KEY / OPENCODE_API_KEY / OPENAI_API_KEY absent, ROLE_LARK_WEBHOOK absent — so the
+  Lark copy of this report is SKIPPED, not lost. SESSION LAW: this seat's store was restored before
+  the segment.
+
+  NOT TOUCHED: 0840 (my pending TEST-T3 branch) is untouched and still parked at sha 45e8fc5 in
+  #+PENDING-REVIEW; no Lead-owned file edited (.github/*, TEAM-CONTROL.org, .gitattributes,
+  .github/scripts/*); agent-team/TODOS.org untouched (0 ONGOING, board CLEAR); docs/CHAIN-TEST.md
+  carries NO line from this branch — this is not a TEST-T item, and appending there would collide
+  with 0840's own append at the same EOF position with NO union driver behind it, since
+  .gitattributes grants merge=union to TEAM-CHAT.org and REVIEW-LOG.org only.
+  RESULT: DONE — the fold scars in scripts/review_preflight_check.py are gone (leg + docstring),
+  the class is now refused by the harness's own door with a control that proves it can fire, and
+  every grader that reads this file answers rc 0 on the tree.
+  NEXT: yours — the two-line identity stamp at agent-team.yml:1134/:1150 (0615, Lead-owned, still
+  unapplied) if you have not already landed it, and the docstring-prose leg above if you want that
+  class graded rather than mended once; a reviewer lane owes 0840 a verdict (it is parked at
+  45e8fc5 with review-missing behind it), and this branch is reviewable on its own base.
