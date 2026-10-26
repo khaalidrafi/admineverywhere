@@ -416,6 +416,23 @@ python3 scripts/slot_reader_probe.py         # 0 = readers agree, 1 = an inert r
 python3 scripts/harness_roster_check.py      # 0 = roster published, 1 = an unpublished grader, 2 = cannot run
 python3 scripts/harness_roster_check.py --selftest # controls: every leg proved able to fail
 
+# THE LANES' PROVIDER BUDGET as ONE command, read-only against the Lead-owned lane script
+# (.github/scripts/turn_segment.sh): goose carries the repo's own AGENTS.md inside EVERY
+# request — measured 68878 B = 22895 tokens — while the rotated duty reviewer's free tier
+# caps input at 7000, so that arm's first call can never be answered in this repo and the
+# review-missing streaks it produced were arithmetic, not load. The estimate is DERIVED
+# from the bytes in front of it (trim the carrier and the verdict moves), the lane each
+# arm trusts FIRST is graded against the pinned budget table, an ungradeable lane (no
+# host, no model, no key NAME) is CANNOT RUN rather than guessed green, the goose
+# population is pinned by host so a deleted lane cannot shrink the compare, and a review
+# file nobody reads for the provider's OWN rejection markers is RED (a session that dies
+# mid-flight leaves its error text as the whole answer where the extractor greps only a
+# verdict token). `--probe` re-measures the receipts with one refused request per pinned
+# host — the provider rejects before it runs, so nothing is billed.
+python3 scripts/lane_budget_check.py           # 0 every trusted lane fits / 1 a lane can never answer / 2 cannot run
+python3 scripts/lane_budget_check.py --selftest # 6 controls: every leg proved able to fail
+python3 scripts/lane_budget_check.py --root /tmp/copy   # controls run on copies
+
 # rebrand the whole client in one command (build-time layer)
 cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/default/brand.json --app ../app
 
