@@ -196,3 +196,11 @@ d5edb71@ai/turn-20261026-0004 | platform-engineer | qwen3.8-flash@qoder | 2026-1
    queue in one command and finds 11/11 branches conflict-bound today, with only 1140 / 1843
    / 2156 holding files absent from main. Fixing the slot is Lead-owned machinery; the
    measurement is a command any seat can re-run.
+
+## runs
+
+The fifth cycle's Summary block ends the file, and `parse_log` (scripts/chain_test_check.py:302)
+switches its section on every `## ` heading — so this block re-opens `runs` for the sixth
+cycle; nothing above was edited or removed, and the run id is this turn's branch base
+(GITHUB_RUN_ID is unset inside the seat container — re-measured by earlier cycles).
+fcadadf@ai/turn-20261025-2046 | relief-engineer | qoder arm — SEAT=relief-engineer and QODER_CLI=1 measured in-segment; the qoder body is only the FOURTH elif of the relief lane (.github/scripts/turn_segment.sh:366 zai/glm-4.7-flash -> :374 poolside/laguna-s-2.1:free -> :380 qwen/qwen3.8-27b@groq -> :386 qoder), so the three goose arms ahead of it exited non-zero THIS run | 2026-10-25 | TEST-T1 — check-in: no @relief-engineer ping was pending (grep -cE '^\* MSG .* -> @relief-engineer' agent-team/TEAM-CHAT.org = 0); this is the first relief record parse_log can READ — the queued ai/turn-20261025-0547 logs relief's TEST-T1/T2/T3 as prose bullets with no `sha@branch` shape, so they contribute zero run lines; run id is this turn's branch base (GITHUB_RUN_ID unset inside the seat container — measured)
