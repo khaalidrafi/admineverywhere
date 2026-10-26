@@ -291,7 +291,7 @@ python3 scripts/chat_feature_check.py --selftest # 12 controls: every leg proved
 # grades a branch against main, not an artifact against its twin
 python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
 python3 scripts/review_preflight_check.py --since 20261025  # one day's queue only
-python3 scripts/review_preflight_check.py --selftest # 16 controls on real fixture repos: every leg proved able to fail
+python3 scripts/review_preflight_check.py --selftest # 17 controls on real fixture repos: every leg proved able to fail
 
 # the SEGREGATION-LAW pending slot as ONE command, read-only against the Lead-owned
 # merger. The whole delivery loop hangs on one line of agent-team/TEAM-CONTROL.org,
@@ -406,7 +406,7 @@ python3 scripts/chat_when_check.py --selftest # 11 controls: every leg proved ab
 # roster, and this grades a branch against main, not an artifact against its twin
 python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
 python3 scripts/review_preflight_check.py --since 20261024   # one day's queue only
-python3 scripts/review_preflight_check.py --selftest  # 16 controls on real fixture repos: every leg able to fail
+python3 scripts/review_preflight_check.py --selftest  # 17 controls on real fixture repos: every leg able to fail
 # THE REVIEW LANE ITSELF as a check, read-only against the Lead-owned chain: the
 # verdict a branch lives or dies by is ONE token, spelled in three places nothing
 # compared — the duty reviewer's BRIEF (which must instruct it as the last line of
