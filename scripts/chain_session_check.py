@@ -170,6 +170,7 @@ WORKSPACE_WRITE_RE = re.compile(r'(?:"\$PWD"?|/workspace)/(?P<name>\.[\w.-]+)')
 SCRATCH_MKDIR_RE = re.compile(r'mkdir\s+-p\s+"?\$PWD/?(?P<name>\.[\w.-]+)"?')
 ADD_ALL_RE = re.compile(r'^\s*git\s+add\s+-A\b', re.M)
 EXPECTED_SCRATCH = (
+    ".review-preflight.txt",
     ".review-upload",
     ".sessions-prev.zip",
     ".sessions-restore",
@@ -1058,7 +1059,12 @@ def control_no_git_repo(root):
 # (name, mutation, expected rc, expected text, build the green baseline first?)
 CONTROLS = (
     ("green baseline is green", control_no_change, 0, "SESSION-LOOP CHECK OK", True),
-    ("shipped tree is red", control_no_change, 1, "RESTORE", False),
+    ("shipped tree needs no baseline builder - the session repair is in the "
+     "carrier (10-ds applied it; the builder's three gap-fixers no-op on the "
+     "shipped tree), so a re-opened gap must fail HERE even though the builder "
+     "still greens the copies - the rc-1 RESTORE defect shape stays covered by "
+     "the restore-copy-dropped control",
+     control_no_change, 0, "SESSION-LOOP CHECK OK", False),
     ("second carrier heredoc", control_second_carrier, 1, "TWO carriers", True),
     ("heredoc back inline in the workflow", control_inline_carrier, 0,
      "SESSION-LOOP CHECK OK", True),
