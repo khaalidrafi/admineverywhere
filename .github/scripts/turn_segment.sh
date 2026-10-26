@@ -132,13 +132,13 @@ If the author is the SAME member as you, your verdict is REJECTED (reason: revie
 Do this READ-ONLY, in order:
 1. git fetch origin ${PENDING_BRANCH} ; git log --oneline origin/ai/main..origin/${PENDING_BRANCH}
 2. git diff origin/ai/main...origin/${PENDING_BRANCH} — read EVERY hunk.
-3. FAST gate subset ONLY (Lead 2026-10-24 04:45Z, runs 40054713038/40058532383 evidence: reviewers died at max-turns running the FULL gate in-container — vitest alone is 469 tests; `python` does not exist here, use python3): python3 -m pytest plugin/tests -p no:cacheprovider -q ; python3 demo-backend/manage.py check ; python3 demo-backend/manage.py makemigrations --check — report each rc. Do NOT run vitest/npx/tsc: FE execution is graded by the CI test job on the merge and re-run by the Lead's finalize gate — your duty is the DIFF + LAW review. If a check cannot start, report rc CANNOT and move on — NEVER loop on environment repair (the rig is preinstalled and preflighted).
+3. FAST gate subset ONLY (Lead 2026-10-24 04:45Z, runs 40054713038/40058532383 evidence: reviewers died at max-turns running the FULL gate in-container — vitest alone is 469 tests; 'python' does not exist here, use python3): python3 -m pytest plugin/tests -p no:cacheprovider -q ; python3 demo-backend/manage.py check ; python3 demo-backend/manage.py makemigrations --check — report each rc. Do NOT run vitest/npx/tsc: FE execution is graded by the CI test job on the merge and re-run by the Lead's finalize gate — your duty is the DIFF + LAW review. If a check cannot start, report rc CANNOT and move on — NEVER loop on environment repair (the rig is preinstalled and preflighted).
 4. Law check: no secrets in the diff (SECRET LAW); no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes) — that list is EXHAUSTIVE: agent-team/TEAM-CHAT.org, agent-team/TODOS.org and docs/CHAIN-TEST.md are lawful seat delivery surfaces (append-only evidence files — grade entry legality, never reject a diff for touching them); the board flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries legal format.
 5. Do NOT modify or commit anything — your verdict text is your whole deliverable.
 6. REVIEW CLOCK LAW (Owner 2026-10-26 10:55Z): your review time is
    clocked SEPARATELY on a nested TODO — 'review: <parent title>' one
    level under the work item, its own :EFFORT: (in :PROPERTIES:),
-   citing "branch: ${PENDING_BRANCH}" in its body (the automation
+   citing branch ${PENDING_BRANCH} in its body (the automation
    matched that citation to clock you in at dispatch). When everything
    is clear YOU set DONE — on the review TODO first, then on the parent
    (the author never grades their own work); CANCELLED/DEFERRED stay
