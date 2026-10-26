@@ -1107,7 +1107,7 @@ jobs:
             # EMPTY write clears only an EMPTY slot (no-op) or a slot still
             # holding the branch THIS RUN resolved (legit post-merge clear)
             # — it must never blank a slot a Lead re-queued under this run.
-            CURSLOT="$(grep -E '^\#+PENDING-REVIEW:' "$CTL" | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
+            CURSLOT="$(grep -E '^#\+PENDING-REVIEW:' "$CTL" | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
             SLOTISOURS=0
             case "$CURSLOT" in "branch=${PENDING_BRANCH:-} |"*) SLOTISOURS=1 ;; esac
             if [ -n "$NEWPENDING" ] || [ -z "$CURSLOT" ] || { [ -n "${PENDING_BRANCH:-}" ] && [ "$SLOTISOURS" = "1" ]; }; then

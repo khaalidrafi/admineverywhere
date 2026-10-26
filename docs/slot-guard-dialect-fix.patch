@@ -1,20 +1,28 @@
-SLOT-GUARD DIALECT FIX — proposal patch for the agent-team chain's own writeback.
+SLOT-GUARD DIALECT FIX — HANDOVER RECORD, THE LAW ALREADY LANDED (relabelled
+2026-10-26 by the Lead at beat 10-eb; carried as a PROPOSAL by 1140's reviewed
+landing).
 Lead-owned files: a seat may ONLY read and cite them, never edit them (chain law
 11), so this file is the handover and the fix travels as hunks.
 
 TARGET: .github/workflows/agent-team.yml  (the "SEGREGATION bookkeeping" step,
         the NON-CLOBBER SLOT GUARD's read of the register — one line, the CURSLOT
-        grep at :1096; the guard's `sed -i` WRITE at :1100 is deliberately NOT
-        touched, see WHY ONLY THE GREP below)
-STATUS: PROPOSAL — NOT APPLIED. The target is Lead-owned.
-APPLY:  git apply --check docs/slot-guard-dialect-fix.patch
-        git apply       docs/slot-guard-dialect-fix.patch
-ROT-PROOF: python3 scripts/chain_patch_check.py grades THAT this patch still
-        applies to the file it names — and this patch is the tree's own PROPOSAL
-        for the defect `slot_reader_probe.py` reports RED on every run until the
-        guard is fixed, so the repair can be verified by the same command:
-        `python3 scripts/slot_reader_probe.py` answers rc 0 only once the hunk is
-        applied (measured on a copy: rc 1 -> rc 0, 2/3 -> 3/3 readers matching).
+        grep; the guard's `sed -i` WRITE is deliberately NOT touched, see WHY
+        ONLY THE GREP below)
+STATUS: RETIRED — the read proposed below is IN the merger now: the Lead applied
+        this hunk verbatim at 10-eb (git apply rc 0 on the then-current tree,
+        one line changed) after the named grader measured 3/3 on a trial, so do
+        not act on these hunks: they are the audit trail, not a work item.
+        `git apply` would now fail on them for a reason that is NOT a defect —
+        the CURSLOT line they rewrite is already the fixed one.
+GRADED BY: scripts/slot_reader_probe.py
+        The law this patch proposed is "the shipped guard read can see the
+        shipped register line" — exactly what the probe executes: merger-reread,
+        guard-curslot and guard-sed each run the SHIPPED command against the
+        SHIPPED control line in this interpreter, and rc 0 ("SLOT READERS OK —
+        3/3") is the landed state, measured on the tree that carries the applied
+        hunk. chain_patch_check grades THIS label: a patch may claim RETIRED only
+        while the harness it names is on disk and exits 0, and a retired patch
+        that still tells a reader to apply it is RED.
 
 WHAT IS BROKEN — measured on this tree, not replayed from a note:
 

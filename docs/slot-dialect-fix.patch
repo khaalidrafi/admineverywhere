@@ -5,9 +5,17 @@ Lead-owned files: a seat may ONLY read and cite them, never edit them (chain law
 TARGET: .github/workflows/agent-team.yml  (the non-clobber guard's CURSLOT read,
         :1091 in the tree this patch was cut against; the harness that names the
         reader locates it by the `CURSLOT=` assignment, never by line number)
-STATUS: PROPOSAL — NOT APPLIED. The workflow is Lead-owned.
-APPLY:  git apply --check docs/slot-dialect-fix.patch
-        git apply       docs/slot-dialect-fix.patch
+STATUS: RETIRED — SUPERSEDED AND LANDED (relabelled 2026-10-26 by the Lead at
+        beat 10-eb). The one-character repair this hunk proposes — escape
+        placement in the non-clobber guard's CURSLOT read — landed on main as the
+        expanded recut's hunk (docs/slot-guard-dialect-fix.patch), applied by the
+        Lead at 10-eb; the two hunks are alternate spellings of one fix and only
+        one can apply, so this record is the audit trail, not a work item.
+        `git apply` failing on it is NOT a defect.
+GRADED BY: scripts/slot_reader_probe.py
+        Same law, same grader as the recut: the shipped guard commands run
+        against the shipped register line — rc 0, "SLOT READERS OK — 3/3",
+        measured on the tree that carries the landed fix.
 ROT-PROOF: python3 scripts/chain_patch_check.py grades THAT this patch still
         applies to the file it names (POPULATION now counts FOUR handovers — this
         roster entry and `EXPECTED_PATCHES = 4` moved in the same commit, per the

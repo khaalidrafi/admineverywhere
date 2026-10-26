@@ -350,9 +350,45 @@ def control_target_deleted(root):
                 return
 
 
+
+def _relabel_as_proposal(root, name):
+    """Fixture setup for controls whose class needs a live PROPOSAL: the shipped
+    tree carries ZERO since the dialect fix landed (10-eb) — every handover is
+    RETIRED — so the copy restores the label the class is about. The mutation
+    edits a copy only: a seat never edits the shipped carrier, and the harness
+    reads it through `--root`."""
+    text = read(_patch_path(root, name))
+    if "STATUS: RETIRED" not in text:
+        raise AssertionError("the copy's patch carries no RETIRED label to relabel "
+                             "— retarget the control, never delete it")
+    _write(root, name, text.replace("STATUS: RETIRED", "STATUS: PROPOSAL", 1))
+
+
+def _revert_guard_read(root, patch_name):
+    """Fixture setup: restore the pre-landing read the recut hunk anchors on —
+    the inverse of the one line the Lead applied at 10-eb — so the carrier-side
+    mutations below start from the state the hunk was cut against."""
+    text = read(_patch_path(root, patch_name))
+    for path in targets_of(text):
+        full = os.path.join(root, path)
+        if not os.path.isfile(full):
+            continue
+        lines = read(full).splitlines()
+        for number, line in enumerate(lines):
+            if "CURSLOT=\"$(grep -E" in line and "PENDING-REVIEW:" in line:
+                lines[number] = line.replace("^#\\+", "^\\#+" )
+                _write(root, path, "\n".join(lines) + "\n")
+                return
+    raise AssertionError("no guard read line to revert")
+
 def control_context_moved(root):
-    """APPLY: the carrier reworded the line the hunk anchors on."""
-    name = "docs/slot-dialect-fix.patch"
+    """APPLY: the carrier reworded the line the hunk anchors on. The copy
+    restores the pre-landing label and read first (10-eb landed the fix, and the
+    shipped tree carries no PROPOSAL to grade) — then rewords the read exactly
+    the way the landing reworded it, so the hunk's context no longer matches."""
+    name = "docs/slot-guard-dialect-fix.patch"
+    _relabel_as_proposal(root, name)
+    _revert_guard_read(root, name)
     text = read(_patch_path(root, name))
     for path in targets_of(text):
         full = os.path.join(root, path)
@@ -367,9 +403,15 @@ def control_context_moved(root):
     raise AssertionError("no guard read line to reword")
 
 
+
 def control_extracted(root):
-    """APPLY + MOVED: the patched block was lifted into another carrier."""
-    name = "docs/slot-dialect-fix.patch"
+    """APPLY + MOVED: the patched block was lifted into another carrier. The
+    copy restores the pre-landing label and read first (10-eb landed the fix),
+    then lifts the guard-read line the hunk removes into a script the workflow
+    does not read."""
+    name = "docs/slot-guard-dialect-fix.patch"
+    _relabel_as_proposal(root, name)
+    _revert_guard_read(root, name)
     text = read(_patch_path(root, name))
     removals = [m for m in REMOVAL_RE.findall(text) if "CURSLOT" in m]
     if not removals:
@@ -389,18 +431,26 @@ def control_extracted(root):
     raise AssertionError("patch target missing from the copy")
 
 
+
 def control_no_apply_line(root):
-    """CLASSIFY: a proposal that lost its instruction."""
-    name = "docs/slot-dialect-fix.patch"
-    text = read(_patch_path(root, name))
-    _write(root, name, re.sub(r"^APPLY:.*$", "", text, count=1, flags=re.M))
+    """CLASSIFY: a proposal that lost its instruction. The copy relabels the
+    retired recut first (10-eb: the shipped tree carries no PROPOSAL) — and the
+    landed relabel already removed the APPLY line, so the copy exhibits the
+    class: a PROPOSAL with no APPLY instruction is a dead handover."""
+    name = "docs/slot-guard-dialect-fix.patch"
+    _relabel_as_proposal(root, name)
+
 
 
 def control_bad_status(root):
-    """CLASSIFY: a status nobody wrote a rule for."""
-    name = "docs/slot-dialect-fix.patch"
+    """CLASSIFY: a status nobody wrote a rule for. The copy relabels the retired
+    recut first (10-eb: the shipped tree carries no PROPOSAL), then corrupts the
+    value into one CLASSIFY has no rule for."""
+    name = "docs/slot-guard-dialect-fix.patch"
+    _relabel_as_proposal(root, name)
     text = read(_patch_path(root, name))
     _write(root, name, text.replace("STATUS: PROPOSAL", "STATUS: WAITING", 1))
+
 
 
 def control_extra_patch(root):
@@ -452,25 +502,24 @@ def control_no_hunks(root):
 
 
 def control_guard_already_landed(root):
-    """APPLY: the Lead landed THIS proposal, so it must stop claiming PROPOSAL.
-
-    The counterfactual the shipped tree cannot show: the dialect patch is the only
-    handover whose hunk mutates the NON-CLOBBER SLOT GUARD's own read, so the day
-    the Lead applies it, `git apply --check` must start refusing — a patch that
-    still says APPLY after its fix landed is the dead instruction that cost this
-    repo two review cycles (the header's own note). The mutation edits the
-    WORKFLOW in a copy only: a seat never edits the shipped carrier, and the
-    harness reads it through `--root`."""
-    rel = ".github/workflows/agent-team.yml"
-    broken = "grep -E '^\\#+PENDING-REVIEW:'"
-    fixed = "grep -E '^#\\+PENDING-REVIEW:'"
-    body = read(os.path.join(root, rel))
-    if broken not in body:
-        raise AssertionError("the shipped workflow no longer carries the guard read "
-                             "this control mutates (%s) — the counterfactual is "
-                             "unreachable, so retarget the control, never delete it"
-                             % broken)
-    _write(root, rel, body.replace(broken, fixed, 1))
+    """LABEL: the Lead landed THIS proposal and relabelled it RETIRED; the
+    counterfactual is the relabel being skipped — a copy that still claims
+    PROPOSAL after its fix landed must refuse, because a patch that still says
+    APPLY after the carrier already carries the fix is the dead instruction that
+    cost this repo two review cycles (the header's own note). Retargeted at
+    10-eb when the hunk actually landed: the pre-landing shape of this control
+    (mutate the workflow's broken read to the fixed one) is unreachable on a
+    tree that carries the fix — the counterfactual moved from the WORKFLOW side
+    to the LABEL side, which is where the same refusal now lives. The mutation
+    edits a copy only: a seat never edits the shipped carrier, and the harness
+    reads it through `--root`."""
+    name = "docs/slot-guard-dialect-fix.patch"
+    body = read(os.path.join(root, name))
+    if "STATUS: RETIRED" not in body:
+        raise AssertionError("the shipped patch no longer claims RETIRED — the "
+                             "counterfactual is unreachable, so retarget the "
+                             "control, never delete it")
+    _write(root, name, body.replace("STATUS: RETIRED", "STATUS: PROPOSAL", 1))
 
 
 CONTROLS = (
@@ -486,7 +535,7 @@ CONTROLS = (
     ("retired still says APPLY", control_retired_apply_line, 1, "still tells the reader"),
     ("retired grader answers red", control_grader_red, 1, "exits 1"),
     ("patch has no parsable hunk", control_no_hunks, 2, "no parsable"),
-    ("guard proposal landed, hunk now stale", control_guard_already_landed, 1,
+    ("landed patch still claims PROPOSAL", control_guard_already_landed, 1,
      "slot-guard-dialect-fix"),
 )
 
