@@ -126,6 +126,52 @@ GUARD_BLOCK = ('  if grep -qE \'Context length exceeded|Rate limit exceeded|too 
                'file is a dead session, not a review"\n'
                '  fi\n' % REVIEW_FILE)
 
+# 10-ed APPLY (Lead): the handover hunks are IN the shipped carrier now, so the
+# controls that proved the founding defect able to fail anchor on the REPAIR ITSELF
+# — the applied QA-arm sub-blocks, spelled once and reverted on copies. The shipped
+# tree answers 0; a copy with the repair reverted must answer red, or the check has
+# stopped measuring what it exists to measure.
+QODER_PRIMARY = (
+    '      if timeout 900 env HOME=/usr/local/lib/qoder-home \\\n'
+    '           qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \\\n'
+    '           --permission-mode bypassPermissions --max-turns 60 \\\n'
+    '           > /workspace/.turn-review.txt 2>&1; then\n'
+    '        echo "REVIEW: qoder run OK (review lane: deepseek-v4.1-flash@qoder — lane-budget demotion 2026-10-25)"\n'
+    '      else\n'
+    '        echo "REVIEW: qoder lane failed — falling back to groq/qwen3.8-27b@goose"\n'
+    '        env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \\\n'
+    '           OPENAI_API_KEY="$GROQ_API_KEY" \\\n'
+    '           OPENAI_HOST="https://api.groq.com" \\\n'
+    '           OPENAI_BASE_PATH="/openai/v1/chat/completions" \\\n'
+    '           timeout 900 goose run -t "$REVIEW_BRIEF" \\\n'
+    '           > /workspace/.turn-review.txt 2>&1 || true\n'
+    '      fi\n')
+GROQ_PRIMARY = (
+    '      if env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \\\n'
+    '           OPENAI_API_KEY="$GROQ_API_KEY" \\\n'
+    '           OPENAI_HOST="https://api.groq.com" \\\n'
+    '           OPENAI_BASE_PATH="/openai/v1/chat/completions" \\\n'
+    '           timeout 900 goose run -t "$REVIEW_BRIEF" \\\n'
+    '           > /workspace/.turn-review.txt 2>&1; then\n'
+    '        echo "REVIEW: goose run OK (review lane: groq/qwen3.8-27b@goose — Owner rotation 2026-10-25)"\n'
+    '      else\n'
+    '        echo "REVIEW: groq lane failed — falling back to qoder deepseek (demoted primary)"\n'
+    '        timeout 900 env HOME=/usr/local/lib/qoder-home \\\n'
+    '          qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \\\n'
+    '          --permission-mode bypassPermissions --max-turns 60 \\\n'
+    '          > /workspace/.turn-review.txt 2>&1 || true\n'
+    '      fi\n')
+GUARD_APPLIED = (
+    '      # A provider rejection is NOT a missing verdict. The extractor greps this\n'
+    '      # file for a VERDICT token; when the session died on the provider\'s own\n'
+    '      # limit there is no verdict to find, and the branch is parked for a beat\n'
+    '      # that was never spent. Read the markers the provider prints and say so.\n'
+    '      if grep -qE \'Context length exceeded|Rate limit exceeded|too large '
+    'for model\' /workspace/.turn-review.txt 2>/dev/null; then\n'
+    '        echo "REVIEW: provider rejected the review lane — the verdict file is a '
+    'dead session, not a review"\n')
+ARM_CLOSE = '      fi ;;\n'
+
 # The goose population this harness claims to understand, measured on the
 # shipped lane script: 12 lanes — 5 groq, 4 zai, 3 openrouter.
 EXPECTED_GOOSE_LANES = 12
@@ -406,17 +452,18 @@ def guarded_copy(root, guard=True, carrier_trimmed=True):
 
 # ------------------------------------------------------------------- controls
 CONTROLS = [
-    ("shipped tree: a trusted-first groq lane AND no rejection read — red",
-     lambda root: None, 1),
-    ("guard alone leaves the budget leg red, so the two promises are graded "
-     "apart and never by one shared condition",
-     lambda root: guarded_copy(root, carrier_trimmed=False), 1),
-    ("guard added AND the carrier trimmed: both promises hold, so the whole "
-     "harness must answer 0",
+    ("the repair reverted on a copy — groq trusted-first again, guard gone: "
+     "the founding defect must still answer red",
+     lambda root: _revert_repair(root), 1),
+    ("groq restored trusted-first on a guarded copy — the budget leg grades "
+     "apart from the rejection leg, never by one shared condition",
+     lambda root: _restore_groq_primary(root), 1),
+    ("the carrier trimmed on the guarded copy — the estimate moves with the "
+     "bytes and the whole harness answers 0",
      lambda root: guarded_copy(root), 0),
-    ("the same copy with the guard line deleted again — the rejection leg "
-     "proved able to fail",
-     lambda root: guarded_copy(root, guard=False), 1),
+    ("the guard taken back out of the shipped arm — the rejection leg proved "
+     "able to fail",
+     lambda root: _drop_guard(root), 1),
     ("a deleted goose lane shrinks the population under its pin — CANNOT RUN, "
      "never a quieter green",
      lambda root: _drop_lane(root), 2),
@@ -443,6 +490,42 @@ def _drop_lane(root):
 def _strip_host(root):
     _edit_segment(root, lambda text: text.replace(
         'OPENAI_HOST="https://api.groq.com"', 'OPENAI_HOST="$LANE_HOST"', 1))
+
+
+def _revert_repair(root):
+    """The 10-ed inverse: restore groq trusted-first AND take the guard out —
+    the exact pre-APPLY state the founding measurement was taken in."""
+    def transform(text):
+        for probe in (QODER_PRIMARY,):
+            if probe not in text:
+                raise AssertionError("the applied QA-arm repair moved — retarget "
+                                     "the fixture, never delete the control")
+        return text.replace(QODER_PRIMARY + GUARD_APPLIED + ARM_CLOSE,
+                            GROQ_PRIMARY.replace('      fi\n', '      fi ;;\n'), 1)
+    _edit_segment(root, transform)
+
+
+def _restore_groq_primary(root):
+    """Half-inverse: groq back trusted-first, the guard kept — the budget leg
+    must grade apart from the rejection leg, never through one shared condition."""
+    def transform(text):
+        if QODER_PRIMARY not in text:
+            raise AssertionError("the applied QA-arm repair moved — retarget "
+                                 "the fixture, never delete the control")
+        return text.replace(QODER_PRIMARY, GROQ_PRIMARY, 1)
+    _edit_segment(root, transform)
+
+
+def _drop_guard(root):
+    """The rejection half of the repair taken back out of the shipped arm."""
+    def transform(text):
+        needle = QODER_PRIMARY + GUARD_APPLIED + ARM_CLOSE
+        if needle not in text:
+            raise AssertionError("the applied QA-arm guard moved — retarget "
+                                 "the fixture, never delete the control")
+        return text.replace(needle,
+                            QODER_PRIMARY.replace('      fi\n', '      fi ;;\n'), 1)
+    _edit_segment(root, transform)
 
 
 def selftest(base):

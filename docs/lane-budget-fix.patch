@@ -4,13 +4,19 @@ Lead-owned files: a seat may ONLY read and cite them, never edit them (chain law
 
 TARGET: .github/scripts/turn_segment.sh   (the duty-reviewer dispatch, the
         quality-assurance-engineer arm)
-STATUS: PROPOSAL — NOT APPLIED. The target is Lead-owned.
-APPLY:  git apply --check docs/lane-budget-fix.patch
-        git apply       docs/lane-budget-fix.patch
-ROT-PROOF: python3 scripts/chain_patch_check.py grades THAT this patch still
-        applies to the carrier the chain runs, and
-        python3 scripts/lane_budget_check.py grades WHY: its `green` control is
-        this exact pair of repairs applied to a copy, and the copy answers 0.
+STATUS: RETIRED — APPLIED AND LANDED (relabelled 2026-10-26 by the Lead at the
+        10-ed APPLY decision, the 10-ds/10-eb GRADE-law precedent). The hunks
+        below are IN the merger's carrier now, re-based to the live dialect at
+        the 2156 union (the fallback goose line carries `goose run -t`, the
+        dialect the session-loop fix shipped). Do not act on them: they are the
+        audit trail, not a work item. `git apply` would fail on them for a
+        reason that is NOT a defect.
+GRADED BY: scripts/lane_budget_check.py
+        Its three legs are what "the lane repair landed" means now: the shipped
+        tree answers 0 (the lane the review arm trusts first fits its provider,
+        and the provider's own rejection markers are grepped out of the review
+        file before its verdict is trusted), and its selftest keeps the founding
+        defect able to fail — the repair reverted on a copy must answer red.
 WHAT IS BROKEN — measured in the lane, not reasoned from the prose:
 
   The duty reviewer was rotated (Owner order 2026-10-25, QA-3 hire) to

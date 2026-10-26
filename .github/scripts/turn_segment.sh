@@ -287,28 +287,47 @@ fi
 if [ -n "$PENDING_BRANCH" ]; then
   # DUTY-REVIEWER lanes (Owner 18:55Z: the review duty belongs to a
   # capable member ROLE, not to whoever happens to hold the turn):
-  #   default  -> QA ENGINEER lane: PRIMARY qwen3.8-27b@goose via
-  #               groq (Owner rotation 2026-10-25, QA-3 hire; same
-  #               PROVEN recipe as the author relief arm), FALLBACK
-  #               deepseek-v4.1-flash@qoder (demoted 2026-10-25 after
-  #               17 consecutive zero-artifact review-missing probes)
+  #   default  -> QA ENGINEER lane: PRIMARY deepseek-v4.1-flash@qoder
+  #               (APPLIED 2026-10-26 from the 2156 handover: groq's free
+  #               tier cannot carry this repo's AGENTS.md — 22895 tokens
+  #               vs 7000 ITPM, MEASURED; scripts/lane_budget_check.py
+  #               grades the lane each arm trusts first), FALLBACK
+  #               qwen/qwen3.8-27b@goose via groq (Owner rotation
+  #               2026-10-25, QA-3 hire) until its budget is measured on
+  #               a paid tier
   #   QA authored -> VISITING SENIOR lane (glm-5.3@codebuddy)
   # The turn seat NEVER reviews its own or anyone's work here.
   case "$REVIEWER_SEAT" in
     quality-assurance-engineer)
-      if env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
+      # LANE BUDGET (scripts/lane_budget_check.py, measured 2026-10-25 in the
+      # lane that died): goose carries the repo's own AGENTS.md in EVERY
+      # request — 68878 B = 22895 tokens (req_01m5the92kehhahwngsv266z53), and
+      # 22892 in the live workspace lane (req_01m5thd10ream8chgszete560c) —
+      # against groq's free-tier input budget of 7000. A goose-on-groq reviewer
+      # therefore CANNOT answer its first call in this repo, never; putting it
+      # first turned the duty review into review-missing. qoder answers (the
+      # turn seat runs on it), so qoder takes the primary slot and groq@goose
+      # becomes the fallback until its budget is measured on a paid tier.
+      if timeout 900 env HOME=/usr/local/lib/qoder-home \
+           qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \
+           --permission-mode bypassPermissions --max-turns 60 \
+           > /workspace/.turn-review.txt 2>&1; then
+        echo "REVIEW: qoder run OK (review lane: deepseek-v4.1-flash@qoder — lane-budget demotion 2026-10-25)"
+      else
+        echo "REVIEW: qoder lane failed — falling back to groq/qwen3.8-27b@goose"
+        env GOOSE_PROVIDER=openai GOOSE_MODEL=qwen/qwen3.8-27b \
            OPENAI_API_KEY="$GROQ_API_KEY" \
            OPENAI_HOST="https://api.groq.com" \
            OPENAI_BASE_PATH="/openai/v1/chat/completions" \
            timeout 900 goose run -t "$REVIEW_BRIEF" \
-           > /workspace/.turn-review.txt 2>&1; then
-        echo "REVIEW: goose run OK (review lane: groq/qwen3.8-27b@goose — Owner rotation 2026-10-25)"
-      else
-        echo "REVIEW: groq lane failed — falling back to qoder deepseek (demoted primary)"
-        timeout 900 env HOME=/usr/local/lib/qoder-home \
-          qoder -p "$REVIEW_BRIEF" --output-format json --model deepseek-v4.1-flash \
-          --permission-mode bypassPermissions --max-turns 60 \
-          > /workspace/.turn-review.txt 2>&1 || true
+           > /workspace/.turn-review.txt 2>&1 || true
+      fi
+      # A provider rejection is NOT a missing verdict. The extractor greps this
+      # file for a VERDICT token; when the session died on the provider's own
+      # limit there is no verdict to find, and the branch is parked for a beat
+      # that was never spent. Read the markers the provider prints and say so.
+      if grep -qE 'Context length exceeded|Rate limit exceeded|too large for model' /workspace/.turn-review.txt 2>/dev/null; then
+        echo "REVIEW: provider rejected the review lane — the verdict file is a dead session, not a review"
       fi ;;
     visiting-engineer)
       timeout 900 env CODEBUDDY_AUTH_TOKEN="$CODEBUDDY_AUTH_TOKEN" CODEBUDDY_IS_SANDBOX=1 \
