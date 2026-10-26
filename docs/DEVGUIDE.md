@@ -305,6 +305,8 @@ python3 scripts/rbac_live_check.py --selftest # 11 controls: every leg proved ab
 python3 scripts/review_preflight_check.py            # 0 queue reviewable / 1 a branch is not / 2 cannot run
 python3 scripts/review_preflight_check.py --since 20261024   # one day's queue only
 python3 scripts/review_preflight_check.py --selftest  # 14 controls on real fixture repos: every leg able to fail
+python3 scripts/chain_merge_check.py --all            # 0 every queued target merges as authored / 1 a finding, with the repair printed / 2 cannot run
+python3 scripts/chain_merge_check.py --selftest       # 11 controls on real fixture repos: every leg able to fail
 
 python3 scripts/review_verdict_check.py        # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/review_verdict_check.py --selftest # 15 controls: every leg proved able to fail
