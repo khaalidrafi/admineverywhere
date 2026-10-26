@@ -96,41 +96,6 @@ LEGS (pinned roster, one per claim a queued branch must satisfy):
                    The record this leg reads is the repo's own landing
                    convention: a commit whose SUBJECT opens with the landing
                    verb and names the branch as its object.
-  stale-base       main has moved since the branch's merge base AND the branch
-                   touched a file main also changed since then — the region
-                   where an inherited repair reads as an author defect, and
-                   where a merge conflict is expected.
-  chat-structure   orphan drawer lines, ATTRIBUTED: (branch > base) is the
-                   author's own fold, (branch == base > 0) is main's stale
-                   state that the reviewer will see but the author never
-                   wrote. The repair for the second is a rebase, not a rework.
-  tree-hygiene     no harness-leak file in the tree, no Lead-owned file in the
-                   branch's own delta.
-  merge-preview    `git merge-tree` main+branch is conflict-free; a conflict
-                   means an APPROVED verdict still will not land without a
-                   manual union-merge.
-
-Verdicts follow the house convention (docs/DEVGUIDE.md *EIGHTH* + *ELEVENTH*
-harness laws): 0 = every queued branch is review-ready, 1 = a branch is not
-(each line names the class, and says INHERITED or AUTHORED so the disposition
-is obvious: rebase versus rework), 2 = CANNOT RUN (the harness no longer
-understands its input — never a false red for a tree it has not measured).
-
-This grades BRANCH STATE only. It never issues a verdict: author, reviewer and
-merger stay separate roles (Owner 2026-10-22 18:14Z), so the output is evidence
-for the Lead's register/disposition and for each author's rebase decision — it
-writes nothing, touches nothing, and reads Lead-owned files the way seats are
-allowed to: as data.
-
-  python3 scripts/review_preflight_check.py              # grade this repo's queue
-  python3 scripts/review_preflight_check.py --main <ref> # grade against another ref
-  python3 scripts/review_preflight_check.py --branch ai/turn-20261024-0633   # one branch
-  python3 scripts/review_preflight_check.py --since 20261024   # that day's queue only
-  python3 scripts/review_preflight_check.py --selftest   # controls: every leg able to fail
-
-Deliberately NOT named `*_diff.py`: that glob IS the landing gate's twin roster
-(scripts/landing_gate.py EXPECTED_TWINS), and this compares a branch against
-main, not one artifact against its twin.
   merged-fold      when that merge IS conflict-free, its chat blob is scanned:
                    orphan drawer lines or a missing `* MSG` headline that NEITHER
                    side authored are the union driver folding two appends onto one
@@ -141,6 +106,12 @@ harness laws): 0 = every queued branch is review-ready, 1 = a branch is not
 (each line names the class, and says INHERITED or AUTHORED so the disposition
 is obvious: rebase versus rework), 2 = CANNOT RUN (the harness no longer
 understands its input — never a false red for a tree it has not measured).
+TWO coverage doors refuse before any verdict is printed, because a harness that
+quietly grades less is the one class of red a green cannot show: a roster leg
+that NEVER ran, and a leg marked PAST its code paths — the second is the
+union-fold class this file itself carried (slot-live written twice by 49f63f3,
+the duplicate re-initialising the accumulators so the first copy's findings were
+eaten), and a set cannot see a repeat, so the marks are counted.
 
 This grades BRANCH STATE only. It never issues a verdict: author, reviewer and
 merger stay separate roles (Owner 2026-10-22 18:14Z), so the output is evidence
@@ -183,6 +154,12 @@ LEG_ROSTER = ("slot-live", "landed-echo", "stale-base", "chat-structure",
               "tree-hygiene", "merge-preview", "merged-fold")
 EXPECTED_LEGS = 7
 
+# The legs the per-branch loop runs ONCE PER queued branch, hoisted out of that
+# loop so the loop and the double-mark door below read ONE roster — otherwise the
+# door would invent its own list of who is allowed to repeat.
+PER_BRANCH_LEGS = ("stale-base", "chat-structure", "tree-hygiene",
+                   "merge-preview", "merged-fold")
+
 PENDING_RE = re.compile(r"^\#\+PENDING-REVIEW:[ \t]*(.*)$", re.M)
 # [ \t]* not \s*: \s eats the newline under re.M, so a BARE register line made
 # group(1) swallow the next control line (measured: group(1) == the #+TURN:
@@ -213,6 +190,40 @@ class CannotRun(Exception):
 
 class LegRed(Exception):
     pass
+
+
+class _LegMarks:
+    """Which legs ran, counted — not just which ran.
+
+    The coverage door below reads a set, and a set cannot see a repeat. That is
+    how this harness carried the union-fold class in its own source: 49f63f3 left
+    the whole slot-live block written TWICE, and the second copy re-initialised
+    the three accumulators before running it, so the first copy's findings were
+    eaten before the door ever saw them. Both copies add the SAME member, so the
+    set read identically either way — the fold was invisible to every leg of the
+    harness whose job is to grade leg coverage.
+    """
+
+    def __init__(self):
+        self.counts = {}
+
+    def add(self, leg):
+        self.counts[leg] = self.counts.get(leg, 0) + 1
+
+    def __contains__(self, leg):
+        return leg in self.counts
+
+
+def doubled_legs(counts, branch_runs):
+    """Legs marked past their code paths. `branch_runs` is the queue size, not a
+    pin: the per-branch roster legitimately marks once per queued branch, so a
+    second branch is never mistaken for a second copy of a block."""
+    out = []
+    for leg, n in sorted(counts.items()):
+        owed = branch_runs if leg in PER_BRANCH_LEGS else 1
+        if n > owed:
+            out.append("%s (%d mark(s), %d code path(s) owed)" % (leg, n, owed))
+    return out
 
 
 def _ctc():
@@ -550,10 +561,9 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
                             "or not present in this repo)" % only)
 
     slot = pending_slot(repo, main_sha)
-    records = landing_records(repo, main_sha)
     problems = []
     notes = []
-    ran = set()
+    ran = _LegMarks()
 
     # slot-live — the register is the single slot the chain spends a lane on
     if slot is None:
@@ -561,6 +571,7 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
         notes.append("slot-live: register empty — no branch is queued for review")
     else:
         ran.add("slot-live")
+        sha_map = dict((s, h) for s, h in rows)
         by_short = slot["branch"].replace("refs/heads/", "")
         full = by_short if by_short.startswith("origin/") else "origin/" + by_short
         live = resolve(repo, full) or resolve(repo, by_short)
@@ -581,6 +592,8 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
         else:
             notes.append("slot-live: %s queued, head %s, author %s"
                          % (slot["branch"], (live or "?")[:7], slot["author"] or "?"))
+
+    records = landing_records(repo, main_sha)
 
     # landed-echo — the class ancestry tests are blind to by design: a SQUASH
     # landing ships the branch's content onto main and deliberately keeps its
@@ -625,8 +638,7 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
     for short, sha in rows:
         findings, bnotes, stale, orphans = grade_branch(
             ctc, repo, main, main_sha, short, sha)
-        for leg in ("stale-base", "chat-structure", "tree-hygiene", "merge-preview",
-                    "merged-fold"):
+        for leg in PER_BRANCH_LEGS:
             ran.add(leg)
         for tag, text in findings:
             problems.append("%s [%s] %s" % (short.split("/")[-1], tag, text))
@@ -639,6 +651,16 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
         raise CannotRun("leg(s) %s never ran over %d queued branch(es) — the "
                         "harness is not grading what its roster claims"
                         % (", ".join(missing), len(rows)))
+    doubled = doubled_legs(ran.counts, len(rows))
+    if doubled:
+        raise CannotRun("leg(s) marked past their code paths over %d queued "
+                        "branch(es): %s — a leg block written twice re-initialises "
+                        "the accumulators and silently eats the first copy's "
+                        "findings. That is the union-fold class inside this "
+                        "harness's own source (measured on slot-live, where the set "
+                        "read above could not see a repeat): delete the second "
+                        "copy, never bump a pin over it"
+                        % (len(rows), "; ".join(doubled)))
     return len(rows), problems, notes
 
 
@@ -945,6 +967,28 @@ def c_roster_drift():
     raise AssertionError("roster drift was not refused")
 
 
+def c_duplicated_leg():
+    """The fold this harness carried in its own source (slot-live written twice,
+    49f63f3): ONE leg marked from two copies of its block. The block is gone, so
+    the control re-creates the SHAPE by letting slot-live mark twice in one pass —
+    the doubled-leg door must refuse it, because the set-shaped coverage read saw
+    one member either way and never noticed the repeat."""
+    base = fixture()
+    write(base, CONTROL_REL, "#+TITLE: fixture control\n#+PENDING-REVIEW: \n")
+    commit(base, "control: clear the slot")
+    old_add = _LegMarks.add
+    def add_twice(self, leg):
+        old_add(self, leg)
+        if leg == "slot-live":
+            old_add(self, leg)
+    _LegMarks.add = add_twice
+    try:
+        grade(base, main="main")
+    finally:
+        _LegMarks.add = old_add
+    raise AssertionError("a leg marked twice was not refused")
+
+
 CONTROLS = [
     ("green queue", c_no_change, 0, "REVIEW PREFLIGHT OK", ()),
     ("branch authored an orphan drawer", c_authored_orphan, 1, "AUTHORED", ("chat-structure",)),
@@ -959,6 +1003,8 @@ CONTROLS = [
     ("register head sha is stale", c_slot_sha_stale, 1, "slot-live", ()),
     ("register re-parks a squash-landed branch", c_landed_echo, 1, "stale echo",
      ("landed-echo",)),
+    ("one leg marked twice (folded leg block)", c_duplicated_leg, 2,
+     "marked past their code paths", ()),
     ("rework shipped on top of the landing record", c_landed_rework, 0,
      "post-landing rework", ()),
     ("register empty", c_slot_empty, 0, "register empty", ()),
@@ -966,7 +1012,7 @@ CONTROLS = [
     ("main ref unresolvable", c_missing_main_ref, 2, "CANNOT RUN", ()),
     ("leg roster drift", c_roster_drift, 2, "CANNOT RUN", ()),
 ]
-EXPECTED_CONTROLS = 16
+EXPECTED_CONTROLS = 17
 
 
 def selftest():
