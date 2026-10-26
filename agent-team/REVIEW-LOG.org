@@ -2890,3 +2890,15 @@
 :WHEN: [2026-10-26 Mon 07:35 UTC]
 :END:
   Merger outcome: empty-segment (duty reviewer=groq/qwen3.8-27b@goose, verdict=APPROVED, reviewer brain substituted=no; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261026-0809 :approved+gate-conflict-branch-kept:
+:PROPERTIES:
+:AUTHOR: software-engineer
+:REVIEWER: groq/qwen3.8-27b@goose
+:VERDICT: APPROVED
+:SUBSTITUTED: yes (qfmodel substituted)
+:OUTCOME: approved+gate-conflict-branch-kept
+:HEAD-SHA: 6aa14a7b4b2a88de96d71b910d3c2697f97db97c
+:WHEN: [2026-10-26 Mon 08:54 UTC]
+:END:
+  Merger outcome: approved+gate-conflict-branch-kept (duty reviewer=groq/qwen3.8-27b@goose, verdict=APPROVED, reviewer brain substituted=yes (qfmodel substituted); merge authority: Lead, executed by this gate).
