@@ -70,10 +70,11 @@ PATCH_GLOB = "docs/*-fix.patch"
 # disk: a literal alone cannot see WHICH harnesses it counts, and a glob alone
 # accepts whatever appears. A new handover must be added here in the same commit
 # that writes it, or the check refuses rather than grading less than it claims.
-HANDOVERS = ("docs/pending-slot-fix.patch",
+HANDOVERS = ("docs/lane-budget-fix.patch",
+             "docs/pending-slot-fix.patch",
              "docs/slot-dialect-fix.patch",
              "docs/slot-guard-dialect-fix.patch")
-EXPECTED_PATCHES = 3
+EXPECTED_PATCHES = 4
 
 STATUS_RE = re.compile(r"^STATUS:\s*([A-Za-z-]+)", re.M)
 PROPOSAL = "PROPOSAL"
