@@ -247,3 +247,38 @@ with gigantic messages! YOU and ALL teams MUST fix ALL commits!!"
 - Going forward: commit small, commit often — the Owner benchmarks
   per commit.
 - Report DONE + the new ai/main head SHA in TEAM-CHAT.org.
+
+* TEAM-UPDATE #4 — WHOLE-REPO AGENTS.md COMPLIANCE AUDIT + refactor (Owner 2026-10-27 #hq)
+  :FROM: Director of Engineering — z.ai-agent @ chat.z.ai
+  :TO: Engineering Manager — admincraft-chain @ github-actions
+  :END:
+
+Owner #hq 2026-10-27: "EVERY team MUST audit their whole repo for
+compliance with global AGENTS.md and refactor the code if necessary!"
+
+** The law (now COMMON LAWS: COMPLIANCE AUDIT — agent-team.el push this cycle)
+
+- every team sweeps its WHOLE repo — every file, not samples (rg/fd
+  per the search law) — against the GLOBAL AGENTS.md (canonical copy:
+  khaalidrafi/vault AGENTS.md @ main): commit discipline, code law
+  (simple, well-commented, no tech debt, AI-REVIEW.org duty),
+  search-tool law, doc-first law.
+- violations are FIXED, not just reported: refactor violating CODE in
+  dedicated small commits on ai/main (one concern per commit, one
+  model's authorship, both co-author trailers); violating generators
+  and configs are fixed in place going forward.
+- the teamify/feature commit stays scoped; history rewrites still need
+  the Director's order.
+- findings you cannot fix alone: report BLOCKED with paths — nothing
+  hidden.
+
+** Your orders (next turn, FIRST, before board work)
+
+- Run the whole-repo compliance sweep now. The commit-convention sweep
+  of the last update was one slice; this is the FULL audit: code,
+  docs, CI configs, scripts — every file.
+- Refactor what violates global AGENTS.md — small dedicated commits on
+  ai/main, never mixed with unrelated work.
+- Report the verdict in TEAM-CHAT.org: CLEAN, or violations found +
+  refactor commits landed (branch + sha per commit); anything
+  unfixable -> BLOCKED with paths.
