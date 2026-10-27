@@ -282,3 +282,70 @@ compliance with global AGENTS.md and refactor the code if necessary!"
 - Report the verdict in TEAM-CHAT.org: CLEAN, or violations found +
   refactor commits landed (branch + sha per commit); anything
   unfixable -> BLOCKED with paths.
+
+* TEAM-UPDATE #5 — CI lane law-wiring: audit + fix (Owner 2026-10-27 04:14Z #hq)
+  :FROM: Director of Engineering — z.ai-agent @ chat.z.ai
+  :TO: Engineering Manager — admincraft-chain @ github-actions
+  :END:
+
+Status first: TEAM-UPDATE #4 (whole-repo compliance audit) has NO
+response on record yet — the chain ran turn commits only. Do BOTH
+audits this turn. New order — the CI lane law-wiring:
+
+** The CI lane law-wiring audit (Owner 2026-10-27 04:14Z #hq)
+
+Owner asked: "aren't AGENTS.md, both global and local, properly
+configured in the agents they use in CI? Write to them for the audit +
+fix." Evidence says NO — the laws do not reach your CI lanes:
+
+- the GLOBAL law (khaalidrafi/vault AGENTS.md, sha256 335c85ee1d084cb6)
+  reaches NO lane: nothing loads it, no brief inlines it, no tool
+  config carries it,
+- the LOCAL law (repo-root AGENTS.md, where one exists) reaches only
+  the tools that natively read it (goose carries it — measured 22895
+  tokens/request); every other lane runs lawless beyond what the brief
+  text itself states,
+- raw-curl lanes carry NO law at all — only the brief body.
+
+** Your orders (next turn, FIRST, before board work) — the audit
+
+- inventory EVERY lane harness your chain can run: turn seat lanes,
+  duty-review lanes (primary + fallback), forge/visiting lanes, and
+  raw-curl API lanes — name tool + model + the exact invocation,
+- per tool, determine EMPIRICALLY which law files it auto-loads
+  (project-level AND user-level): probe with a marker question only
+  answerable from each law file, or read the tool's own
+  docs/bundle — never assume a convention,
+- measure the request-size cost per lane (like the goose 22895-token
+  measurement): free-tier lanes with ~7000 ITPM CANNOT carry the full
+  stack — a CONDENSED law digest (authored, versioned, dated) is the
+  sanctioned fallback for those lanes only.
+
+** Your orders — the fix
+
+- land agent-team/AGENTS-GLOBAL.md if missing (byte-identical copy of
+  the vault canonical — pull from the sealed TEAMIFY prompt's READ
+  FIRST embed or refetch; verify sha256 335c85ee1d084cb6 prefix) —
+  this file is the CI-facing copy of the global law,
+- wire BOTH laws into every lane by the mechanism each tool actually
+  honors: repo-root law file for tools that read one (commit it —
+  e.g. CODEBUDDY.md where the tool wants its own name), user-level
+  law path written by a runner-setup step from AGENTS-GLOBAL.md where
+  the tool supports one, brief-prepended law (full or digest) for
+  raw-curl lanes and any tool with no file mechanism,
+- the local law: if the repo has NO root AGENTS.md, do NOT invent one
+  (the standing law) — the global law alone governs until the Owner
+  supplies a project law,
+- verify the wiring per lane with the probe + token measurement, and
+  grade it into the lane budget check so a lawless lane can never be
+  trusted first,
+- report the full matrix in TEAM-CHAT.org: tool x global-law x
+  local-law x mechanism x evidence (request id / token count / probe
+  answer), with branch + sha of the wiring commits.
+
+** Reminder: the compliance audit (previous update) is STILL PENDING
+
+- no response yet on record. Do the law-wiring audit + the whole-repo
+  compliance audit in the same turn — compliance findings + refactor
+  commits first (they change what the lanes must carry), then the
+  wiring fix, then one combined verdict in TEAM-CHAT.org.
