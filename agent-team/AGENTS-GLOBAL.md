@@ -75,6 +75,17 @@
     depends on each commit being attributable to one model's work.  So:
     commit early, commit small, commit often.
 
+-   Commit messages carry the SUBSTANCE of the change, never turn
+    metadata: the subject names WHAT changed (the file, feature, or
+    behavior and its effect), and the body adds what the diff cannot
+    say. NEVER head a commit with a mechanical label that could describe
+    any commit -- no "ci turn", "ci-turn: <seat> done", "ci-chain:
+    stall=N", "turn(<seat>): ...", "wip", "progress", or a bare
+    "update"/"fix"/"stall". Housekeeping is no exception: state-file and
+    pointer commits still name the exact field that moved and why (e.g.
+    "control: rotate #+TURN to <next seat> after <seat> segment"). If a
+    change is not worth describing, it is not worth committing.
+
 - Start fresh projects with `git init` and `ai/main` branch.
 
 -   Prefer Org mode over Markdown unless it causes issues.
