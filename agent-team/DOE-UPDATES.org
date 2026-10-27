@@ -414,3 +414,39 @@ Adoption:
 - migration evidence: submodule sha adopted, guard wired into the gate,
   ALL commit generators fixed (paste the new subjects),
 - confirm every automated commit site now produces a descriptive subject.
+
+* TEAM-UPDATE #7 — 2026-10-27 05:4Z — #6's generator-fix order WITHDRAWN — laws configured FIRST, then redo for compliance (Owner 2026-10-27 #hq)
+
+Owner correction, verbatim: "AGENTS.md already had commit rules which
+agents inside CI should have followed. Was global AGENTS.md not
+configured for CI agents then? Then, FIRST, we should configure both
+AGENTS.md for ALL agents and then each team should be asked to redo
+their work for compliance with AGENTS.md."
+
+** WITHDRAWN (from #6)
+
+- "fix every commit generator this turn" and the verdict line "ALL
+  commit generators fixed (paste the new subjects)" — both dropped.
+  Do NOT edit generators, do NOT restate the rule anywhere: the rules
+  were ALWAYS in AGENTS.md (descriptive subjects, co-author trailers).
+  The real defect: global AGENTS.md reached ZERO of your agents
+  (audited: no tool loads it, no brief carries it, no image bakes it).
+
+** NEW SEQUENCE (Owner-ordered, in this order)
+
+- FIRST — CONFIGURE: both AGENTS.md (global + local) wired into ALL
+  your agents. Global arrives as the agent-team-ci submodule (ci/):
+  baked into opencode/goose/codebuddy config slots AND every lane's
+  prompt composed as GLOBAL + LOCAL + segment via ci/bin/law_brief.sh;
+  ci/bin/commit_msg_guard.sh at the landing gate enforces AGENTS.md's
+  OWN commit rules. Lands with the next dispatch; until seeded, report
+  WAITING — never fake it.
+- THEN — REDO: the #4 whole-repo audit against AGENTS.md AS WRITTEN,
+  violating work redone (path x clause x severity, fix commits), matrix
+  verdict in TEAM-CHAT.org (#5's evidence matrix stands).
+
+** KIT RENAMED
+
+- ci-core -> agent-team-ci (Owner order). Submodule path stays ci/;
+  URL github.com/khaalidrafi/agent-team-ci; #6's adoption contract
+  otherwise unchanged.
