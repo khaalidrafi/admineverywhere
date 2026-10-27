@@ -35,8 +35,12 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   - [ ] no command palette (⌘K opens the AI chat instead — nav kept flat for future palette)
   - [ ] auth token kept in localStorage on web mode
 * TODO P3 — build & release
-  - [ ] build-demo.yml dispatched from GH runners — first real run; expect
-    iterations (tauri CLI env, NDK pin, guix-install on systemd-less runner)
+  - [ ] build-all.yml is the live pipeline (test-gate + web/windows/linux/
+    android/nix/guix + tag-triggered release) — first real tag run is the
+    review point (tauri CLI env, NDK pin, guix-install on systemd-less
+    runner). build-demo.yml is parked as `.github/workflows/build-demo.yml.disabled`
+    and its legs were reused for build-all, so its old "first real run"
+    caveat is CLOSED there, not here.
   - [ ] nix: wrapGAppsHook3 attr name vs nixpkgs-unstable drift; cargoLock
     may demand a vendorHash on first run (manual says it shouldn't)
   - [ ] guix: webkitgtk API must be 4.1 (soup3) for Tauri 2; guix-install.sh
@@ -46,6 +50,77 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
     it in sync when editing Cargo.toml
   - [ ] icons are generated placeholders; replace before client release
   - [ ] keyring crate on Linux needs Secret Service; headless CI caveat
+* TODO P2b — the brand-color gap found by the 2026-10-27 compliance audit
+  - [ ] AGENTS.md states "components carry zero hard-coded colors", and it is
+    true for IDENTITY colors (every brand value reaches a component through
+    the `@theme inline` map in app/src/app.css: `--color-primary/accent/bg/
+    surface/text` -> `--brand-*`). It is NOT true for STATUS colors: 16
+    palette classes (15 `*-red-*` + 1 `bg-emerald-500`) sit in
+    app/src/components/RecordForm.svelte, DataTable.svelte, ErrorBanner.svelte,
+    app/src/pages/Login.svelte, Branding.svelte, Modules.svelte.
+    Why they survived: brand.json's closed schema (plugin/src/admincraft/
+    branding.py `ALLOWED_COLOR_KEYS`) carries five identity keys and no
+    danger/success slot, so a rebrand cannot move an error red — and the
+    shades are used as a translucency ramp (bg at /5..10%, border at /30..40,
+    text at 100..400), so collapsing them onto one token is a VISUAL change
+    that must be judged in a browser, not by a green suite.
+    Decide before fixing: (a) add `danger`/`success` to the brand schema —
+    touches server validator, `brandToCss`/`render_css` twins and their pinned
+    matrix counts; or (b) keep status hues fixed and define them once in
+    app/src/app.css as `--color-danger`/`--color-success`, which makes the
+    sentence above true by construction ("components carry zero hard-coded
+    colors" = no color literal outside the theme block).
+* TODO P4 — FR R-002..R-008 surface (landed 2026-10-21..26, never queued here)
+  Every entry below is AI-written, wire-tested and green — which is exactly
+  why a human should read it: the suites grade the shape the code already
+  claims, not whether the claim was the right one.
+  - [ ] R-002 independent enums — app/src/lib/statusTransitions.ts is keyed by
+    MODEL ID, never by field name; drf-spectacular hoists a choices field into
+    a component named from the PROPERTY name (drf_spectacular/hooks.py), so two
+    unrelated `status` fields collapse into one `StatusEnum`. Judge the
+    ENUM_NAME_OVERRIDES list and the blank/null `oneOf` union read-through in
+    the normalizer. Contract: docs/independent-enums.md.
+  - [ ] R-004 kanban — app/src/lib/kanban.ts declares `kanbanAxes`; there is no
+    "first enum field" fallback, and `axisProblem()` refuses an axis that
+    contradicts the lifecycle machine. Judge the one-key PATCH body (a whole-row
+    PUT would silently rewrite other fields) and the keyboard/screen-reader
+    "Move to" select that mirrors the drag set. Tests: kanban.test.ts,
+    kanbanMount.test.ts.
+  - [ ] R-005 CSV export — TWO writers that must stay byte-identical:
+    app/src/lib/csv.ts and demo-backend/shop/csv_export.py. Judge FLOAT_PARITY
+    (a Python float rendered with ECMAScript's String() form via
+    js_number_text), `drf_datetime_text()` (aware -> project TZ, `+00:00` -> `Z`,
+    offset read from django.utils.timezone, never hard-coded) and the formula
+    guard keyed on NUMERIC SHAPE because DRF sends decimals as strings.
+    Re-runnable: scripts/csv_twin_diff.py + scripts/parity_table_diff.py.
+    Contract: docs/csv-export.md.
+  - [ ] R-006 page registration — app/src/lib/pages/index.ts validates each
+    drop-in `meta` and refuses a bad one into `refusedPages` (rendered on the
+    Modules page) instead of dropping it silently. Judge fewest-capture matching
+    (a static `/legacy` beating a sibling `/:id`) and the fact that captured
+    segments arrive as PROPS (a renamed pattern param renames a prop).
+    Tests: navMount.test.ts, authGateMount.test.ts. Contract:
+    docs/page-registration.md.
+  - [ ] R-007 RBAC — app/src/lib/rbac.ts `roleAllows()` is a UX gate ONLY; the
+    server re-validates everything. The hazard worth a human eye is the silent
+    degradation: a failed/absent `GET …/me/` leaves `claims = null` and then
+    NOTHING is filtered anywhere. Judge the demo rig's two non-superuser Group
+    users (a superuser short-circuits the gate, so a rig of superusers can prove
+    acceptance only by bypass). Tests: rbac.test.ts, rbacNavMount.test.ts;
+    live: scripts/rbac_live_check.py. Contract: docs/rbac.md.
+  - [ ] R-008 widget data feeds — app/src/lib/widgets/feed.ts resolves
+    `meta.data.endpoint` through `schema.byId` and the model's discovered
+    `listPath`, never by concatenating onto `apiUrl`; `pollInterval` is
+    floor-clamped to 5s and the `$effect` cleanup must kill the timer. Judge
+    that an unresolvable source renders its named reason with no chart and no
+    guessed URL. Tests: widgetFeed.test.ts, feedGridMount.test.ts (mounts the
+    real grid, not an import). Contract: docs/widget-data.md.
+  - [ ] the harness family — 21 graders under scripts/ that judge THIS repo's
+    claims (twins, rosters, slots, merges). They are AI-written too, and a
+    harness that cannot fail is worse than none: every one of them is required
+    to carry `--selftest` controls whose count is a pinned literal. Start with
+    scripts/harness_roster_check.py (it pins the population) and
+    scripts/landing_gate.py (`EXPECTED_TWINS`, `MERGE_ROSTER`).
 
 * DEBUGGING WAR STORY (read before touching Svelte reactivity)
   Two dev-mode traps cost hours here; both look like "the app froze at first
