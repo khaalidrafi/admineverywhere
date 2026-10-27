@@ -349,3 +349,68 @@ fix." Evidence says NO — the laws do not reach your CI lanes:
   compliance audit in the same turn — compliance findings + refactor
   commits first (they change what the lanes must carry), then the
   wiring fix, then one combined verdict in TEAM-CHAT.org.
+
+* TEAM-UPDATE #6 — 2026-10-27 05:0Z — Commit-substance law NOW + ci-core submodule migration (Owner 2026-10-27 #hq). Pending audits still stand — one combined turn.
+
+TWO ORDERS. The pending combined order (whole-repo compliance audit +
+lane law-wiring audit, one matrix verdict) STILL STANDS — fold everything
+into one turn. Priority: ORDER A now, then ORDER B, then the audits.
+
+** ORDER A — COMMIT-SUBSTANCE LAW (effective IMMEDIATELY)
+
+Owner 2026-10-27 #hq: "Commit msgs should be written by agents on what
+changes have been made to the code and not 'ci turn', 'stall' etc."
+
+- every commit SUBJECT names WHAT changed (file/feature/behavior +
+  effect), >= 3 words; the BODY carries what the diff cannot say,
+- BANNED as subjects: "ci turn", "ci-turn: <seat> done", "ci-chain:
+  stall=N", "turn(<seat>): ...", "wip", "progress", bare "update" /
+  "fix" / "stall" — nothing that could head any commit,
+- housekeeping is no exception: state/pointer commits name the field
+  that moved and why (e.g. "control: set STALL-COUNT to 1 after BLOCKED
+  segment"),
+- YOUR agents write their OWN commit messages describing their change —
+  put this in your lane briefs; do not let a generator stamp labels,
+- FIX EVERY automated git-commit site in your workflows THIS TURN,
+- canonical global law updated: sha256 de1cd6086aeaf7a7 (was
+  335c85ee1d084cb6). admincraft: agent-team/AGENTS-GLOBAL.md already
+  re-synced by the Lead (commit 8e9a20f) — pull ai/main before work.
+
+** ORDER B — CI KIT = ci-core SUBMODULE (adopt when the kit is visible)
+
+Owner 2026-10-27 #hq: "turn your CI stuffs into a submodule which every
+repo uses ... Configure ALL agents in Docker to read both global and
+local AGENTS.md. Store global AGENTS.md in your CI submodule."
+
+khaalidrafi/ci-core (public) IS the kit: AGENTS.md (canonical global
+law), bin/law_brief.sh (composes GLOBAL LAW + LOCAL LAW + segment brief
+for EVERY lane — raw-curl lanes prepend the same output; loud MISSING
+markers, never silent lawless runs; CI_LAW_DIGEST env = committed
+condensed digest only, for budget lanes), bin/commit_msg_guard.sh
+(rejects mechanical subjects — wire into your merge gate),
+docker/harness/ (canonical agent image: build from YOUR repo root,
+bakes ci/AGENTS.md into opencode/goose/codebuddy global slots; extend
+with FROM, never fork — port repo-specific needs upstream),
+templates/INTEGRATION.md (the adoption contract).
+
+Adoption:
+- git submodule add https://github.com/khaalidrafi/ci-core.git ci
+- add "submodules: recursive" to EVERY actions/checkout in your workflows,
+- compose EVERY lane's brief through ci/bin/law_brief.sh (no exceptions,
+  including raw-curl lanes),
+- run ci/bin/commit_msg_guard.sh <base>..HEAD in your landing gate; a
+  mechanical subject undoes the merge like a red build,
+- point your harness build at ci/docker/harness/Dockerfile (diff your
+  local Dockerfile first; keep project layers as FROM-extends),
+- if the kit is not yet visible when you start, do ORDER A + the audits
+  first and report ORDER B as WAITING — never fake it.
+
+** Verdict (TEAM-CHAT.org, next turn)
+
+- the lane x global-law x local-law x mechanism matrix with probe/token
+  evidence (TEAM-UPDATE #5, unchanged),
+- per-category violation counts for the whole-repo compliance audit
+  (path x law clause x severity, each with fix commit or BLOCKED),
+- migration evidence: submodule sha adopted, guard wired into the gate,
+  ALL commit generators fixed (paste the new subjects),
+- confirm every automated commit site now produces a descriptive subject.
