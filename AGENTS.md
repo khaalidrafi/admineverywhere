@@ -516,10 +516,16 @@ python3 scripts/ref_prune_check.py --selftest # 16 controls on real fixture repo
 # a deleted lane cannot shrink the compare, and refuses a review file that nothing reads
 # for the provider's OWN rejection markers — because a session that dies mid-flight
 # leaves its error text as the whole answer and the extractor only greps for a verdict
-# token. `--probe` re-measures the receipts with one refused request per pinned host
+# token. The two arms are anchored at the review phase's own HEADING, not at the
+# first `case "$SEAT" in` in the file: the agent-org batch law added an earlier one
+# ~130 lines before the review arm, and a first-occurrence split then graded a region
+# with no review dispatch in it — a false RED over a rejection guard that was shipped
+# and landed (and that red reached `chain_patch_check.py` through the RETIRED-patch
+# grade). An arm region yielding no lane at all is CANNOT RUN, never a comparison over
+# nothing. `--probe` re-measures the receipts with one refused request per pinned host
 # (nothing is billed: the provider rejects before it runs).
 python3 scripts/lane_budget_check.py           # 0 every trusted lane fits / 1 a lane can never answer / 2 cannot run
-python3 scripts/lane_budget_check.py --selftest # 6 controls: every leg proved able to fail
+python3 scripts/lane_budget_check.py --selftest # 9 controls: every leg proved able to fail
 python3 scripts/lane_budget_check.py --root /tmp/copy   # controls run on copies
 
 # THE HARNESS IMAGE RECIPE, PREVIEWED BEFORE A BUILD IS PAID. The image IS the turn

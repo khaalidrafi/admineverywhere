@@ -69,6 +69,13 @@ Verdicts follow house law: 0 = every trusted lane fits and every rejection is
 read; 1 = RED, a lane that can never answer or a rejection nothing greps;
 2 = CANNOT RUN, the harness no longer understands the lane script.
 
+Both arm legs grade the REVIEW dispatch and the author segment as SEPARATE
+regions, anchored at the review phase's own heading rather than at the first
+`case "$SEAT" in` in the file — that literal stopped being unique when the
+agent-org batch law added an earlier one, and the blind split fired a false RED
+over a guard that was shipped and landed. An arm region that yields no lane at
+all is CANNOT RUN, never a comparison over nothing.
+
   python3 scripts/lane_budget_check.py             # grade this tree
   python3 scripts/lane_budget_check.py --root DIR  # grade a copy (controls)
   python3 scripts/lane_budget_check.py --probe     # re-measure the receipts:
@@ -76,7 +83,7 @@ read; 1 = RED, a lane that can never answer or a rejection nothing greps;
                                                    # host; the request is refused
                                                    # before it runs, so nothing
                                                    # is billed
-  python3 scripts/lane_budget_check.py --selftest  # 6 controls: every leg
+  python3 scripts/lane_budget_check.py --selftest  # 9 controls: every leg
                                                    # proved able to fail
 """
 
@@ -92,8 +99,17 @@ SEGMENT_REL = ".github/scripts/turn_segment.sh"
 CARRIER_REL = "AGENTS.md"
 REVIEW_FILE = ".turn-review.txt"
 
-# The lane script's two halves: the REVIEW dispatch runs before the author
-# segment's `case "$SEAT" in`, so that line is the seam between the arms.
+# The lane script's two halves. The REVIEW dispatch ENDS where the author
+# segment's `case "$SEAT" in` begins, so that literal names the seam — but it is
+# NOT unique: `seg_via_batch()` (agent-org send law) opens its own
+# `case "$SEAT" in` ~130 lines BEFORE the review arm, so a first-occurrence split
+# handed the rejection leg a region that contains no review arm at all and the
+# landed guard read as absent (measured on ai/main: rc 1 while
+# turn_segment.sh:471 greps every marker, and the false red propagating into
+# chain_patch_check through the RETIRED-patch grade). The arms are therefore
+# anchored at the review phase's own heading, and the seam is the first
+# `case "$SEAT" in` AFTER it.
+REVIEW_ARM_MARK = "# REVIEW PHASE (SEGREGATION LAW v2"
 ARM_SEAM = 'case "$SEAT" in'
 
 # Calibration, from the receipts above: the request size of a goose session
@@ -181,7 +197,7 @@ EXPECTED_LANES_BY_HOST = {"https://api.groq.com": 5,
 
 LEG_ROSTER = ("lanes-parsed", "primary-fits", "rejection-guarded")
 EXPECTED_LEGS = 3
-EXPECTED_CONTROLS = 6
+EXPECTED_CONTROLS = 9
 
 # A real invocation carries its flags; the RESULT lines (`echo "TURN_RESULT=goose
 # run OK ...`) name the same CLI and would otherwise be parsed as lanes.
@@ -329,15 +345,23 @@ def leg_lanes_parsed(all_lanes):
                ", ".join("%s x%d" % (h, n) for h, n in sorted(counts.items())))
 
 
-def leg_primary_fits(review_text, turn_text, text, root):
+def leg_primary_fits(review_text, review_offset, turn_text, turn_offset,
+                     text, root):
     review_estimate = estimate_tokens(root, brief_len(text, REVIEW_BRIEF_MARK))
     turn_estimate = estimate_tokens(root, brief_len(text, TURN_BRIEF_MARK))
     problems, notes = [], []
-    turn_offset = len(text.split(ARM_SEAM, 1)[0].splitlines())
     for arm_label, section, offset, estimate in (
-            ("REVIEW", review_text, 0, review_estimate),
+            ("REVIEW", review_text, review_offset, review_estimate),
             ("TURN", turn_text, turn_offset, turn_estimate)):
-        for name, arm_lanes in sorted(arms(section, offset).items()):
+        section_arms = arms(section, offset)
+        if not section_arms:
+            raise CannotRun("the %s arm read ZERO lanes out of %s — an empty "
+                            "region satisfies every budget comparison without "
+                            "measuring one, so the anchor moved, not the lanes "
+                            "(DEVGUIDE *ELEVENTH law*: coverage a leg does not "
+                            "have is never a quieter green)"
+                            % (arm_label, SEGMENT_REL))
+        for name, arm_lanes in sorted(section_arms.items()):
             for position, lane in enumerate(arm_lanes):
                 trusted_first = position == 0
                 where = "%s/%s %s lane %s@%s (line %d)" % (
@@ -372,9 +396,13 @@ def leg_primary_fits(review_text, turn_text, text, root):
                        budget["input_tokens"], budget["receipt"], CARRIER_REL))
     if problems:
         raise Red("; ".join(problems) + (" || " + " | ".join(notes) if notes else ""))
-    return "review ~%d token(s), turn ~%d over %d pinned budget(s); %s" % (
-        review_estimate, turn_estimate, len(PROVIDER_BUDGETS),
-        " | ".join(notes) if notes else "every trusted-first lane graded and fitting")
+    return "review ~%d token(s) over %d line(s), turn ~%d token(s) over %d " \
+           "line(s) against %d pinned budget(s); %s" % (
+               review_estimate, len(review_text.splitlines()),
+               turn_estimate, len(turn_text.splitlines()),
+               len(PROVIDER_BUDGETS),
+               " | ".join(notes) if notes else
+               "every trusted-first lane graded and fitting")
 
 
 def leg_rejection_guarded(review_text):
@@ -397,16 +425,35 @@ def leg_rejection_guarded(review_text):
         REVIEW_FILE, len(hits), " | ".join(hits))
 
 
+def arm_sections(text):
+    """(review_text, review_offset, turn_text, turn_offset), anchored by ROLE.
+
+    A section's offset is the number of lines before it, so the lane line
+    numbers a finding prints are the ones a Lead reads in the shipped file.
+    """
+    start = text.find(REVIEW_ARM_MARK)
+    if start < 0:
+        raise CannotRun("%s no longer carries `%s` — the review arm cannot be "
+                        "located, and grading whatever lies before some other "
+                        "`case \"$SEAT\" in` is not grading the review arm"
+                        % (SEGMENT_REL, REVIEW_ARM_MARK))
+    seam = text.find(ARM_SEAM, start)
+    if seam < 0:
+        raise CannotRun("no `%s` follows the review arm in %s — the review arm "
+                        "and the turn arms cannot be told apart"
+                        % (ARM_SEAM, SEGMENT_REL))
+    return (text[start:seam], text[:start].count("\n"),
+            text[seam:], text[:seam].count("\n"))
+
+
 def grade(root):
     text = read(root, SEGMENT_REL)
-    if ARM_SEAM not in text:
-        raise CannotRun("%s no longer carries `%s` — the review arm and the turn "
-                        "arms cannot be told apart" % (SEGMENT_REL, ARM_SEAM))
-    review_text, turn_text = text.split(ARM_SEAM, 1)
+    review_text, review_offset, turn_text, turn_offset = arm_sections(text)
     all_lanes = lanes(text)
     return {
         "lanes-parsed": leg_lanes_parsed(all_lanes),
-        "primary-fits": leg_primary_fits(review_text, turn_text, text, root),
+        "primary-fits": leg_primary_fits(review_text, review_offset, turn_text,
+                                         turn_offset, text, root),
         "rejection-guarded": leg_rejection_guarded(review_text),
     }
 
@@ -451,6 +498,13 @@ def guarded_copy(root, guard=True, carrier_trimmed=True):
 
 
 # ------------------------------------------------------------------- controls
+# The shape that shipped this harness blind: `seg_via_batch()` opens a
+# `case "$SEAT" in` ~130 lines BEFORE the review arm, so a first-occurrence seam
+# reads a region containing no review dispatch at all. It carries no lane, so it
+# moves nothing but the split point.
+DECOY_SEAM_BLOCK = ('# decoy: an earlier `case "$SEAT" in` (the seg_via_batch shape)\n'
+                    'case "$SEAT" in\n  decoy-seat)\n    : ;;\nesac\n')
+
 CONTROLS = [
     ("the repair reverted on a copy — groq trusted-first again, guard gone: "
      "the founding defect must still answer red",
@@ -470,7 +524,35 @@ CONTROLS = [
     ("a lane stripped of its OPENAI_HOST has no provider, so no budget — "
      "refused rather than guessed",
      lambda root: _strip_host(root), 2),
+    ("a decoy `case \"$SEAT\" in` ahead of the review arm — the seam is anchored "
+     "by role, so the guard is still read and the harness answers 0",
+     lambda root: _add_decoy_seam(root), 0),
+    ("the guard taken out WHILE that decoy sits ahead of the arm — the rejection "
+     "leg fails on the anchored region, never on the first `case` it sees",
+     lambda root: _decoy_without_guard(root), 1),
+    ("the review arm's own heading gone — the arm cannot be located, so CANNOT "
+     "RUN, never a green over an unanchored region",
+     lambda root: _move_review_arm(root), 2),
 ]
+
+
+def _add_decoy_seam(root):
+    def transform(text):
+        head, sep, rest = text.partition("\n")
+        return head + sep + DECOY_SEAM_BLOCK + rest
+    _edit_segment(root, transform)
+
+
+def _decoy_without_guard(root):
+    _add_decoy_seam(root)
+    _drop_guard(root)
+
+
+def _move_review_arm(root):
+    """The anchor itself gone: a rename of the review phase heading must be a
+    refusal, not a silent re-point at whatever `case` comes first."""
+    _edit_segment(root, lambda text: text.replace(REVIEW_ARM_MARK,
+                                                  "# REVIEW PHASE REWORDED", 1))
 
 
 def _edit_segment(root, transform):

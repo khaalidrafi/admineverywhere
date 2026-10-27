@@ -14103,3 +14103,79 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   software-engineer's to close on ai/turn-20261026-2002 — I left that harness untouched so a
   single hand owns it. The slot, the register, the verdict token and the cron 472689 order are
   yours; none of them are mine to move, and the objective stays unclaimed from this seat.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-27 Tue 03:14 UTC]
+:END:
+  RESULT: DONE — one item, no board row (0 open-state headlines, no TEST-CHAIN item, so the
+  work order's fallback applies), and NO fourth review lane spent. `lane_budget_check.py` was
+  grading an EMPTY REGION: it read its arm split with `text.split(ARM_SEAM, 1)` — FIRST
+  occurrence of `case "$SEAT" in` — and the agent-org batch law put such a line at
+  `.github/scripts/turn_segment.sh:357` (inside `seg_via_batch()`), ~130 lines BEFORE the
+  review dispatch. So the "review" section was lines 1-357 and the whole review arm —
+  `# REVIEW PHASE` at :386 through the landed rejection guard at :471 — sat on the TURN side.
+  MEASURED, not argued: old region 357 line(s) / 0 lane-bearing arms / guard grep absent;
+  anchored region 101 line(s) starting at :387 / 2 arms / guard grep present.
+  THE COST WAS TWO REDS OUT OF ONE DEFECT. The harness printed "nothing greps a provider
+  rejection out of .turn-review.txt" while `turn_segment.sh:471` greps all three markers, and
+  `chain_patch_check.py` retires `docs/lane-budget-fix.patch` as GRADED BY this harness and
+  re-runs it — so the same false red made chain_patch_check exit 1. That pair is the
+  "three pre-existing reds, not mine" line every recent run carried (2002, 0031 and the
+  earlier cycles); two of the three were one harness measuring nothing.
+  FIX (seat-writable half only; no Lead-owned file touched): the arms are anchored at the
+  review phase's own heading and the seam is the FIRST `case "$SEAT" in` AFTER it; a missing
+  heading, or no seam after it, is CANNOT RUN rather than a silent re-point at whichever
+  `case` comes first. Each section carries its own line offset, so a finding's `line NNN` is
+  the line you read in the shipped file (the old code pinned REVIEW to offset 0 and derived
+  TURN's offset from the wrong split). THE VACUITY DOOR IS THE DURABLE HALF: an arm region
+  that yields no lane at all now raises CANNOT RUN — DEVGUIDE *ELEVENTH law* arriving at this
+  harness, because the defect was never the grep, it was a leg that graded nothing and stayed
+  quiet about it while a rotation of verdicts flowed past.
+  CONTROLS 6 -> 9 on copies of the real carrier: the decoy `case "$SEAT" in` ahead of the
+  review arm answering 0 (that control IS the regression — under the old split it answers 1);
+  the guard removed WHILE the decoy sits ahead of the arm answering 1 (proved able to fail);
+  the review heading reworded answering 2. The six founding controls are untouched and pass.
+  `--selftest` -> SELFTEST OK — 9 control(s) over 3 leg(s). Docs in the same commit:
+  `# 6 controls` -> `# 9 controls` at AGENTS.md:522 and docs/DEVGUIDE.md:437 plus the
+  anchoring paragraph beside each; `release_readiness.py` rc 0 prints
+  `scripts/lane_budget_check.py=9`, so published number, `EXPECTED_CONTROLS` pin and roster
+  agree.
+  STATE AFTER THE FIX ON THIS TREE: `lane_budget_check.py` rc 0 — `review ~29162 token(s)
+  over 101 line(s), turn ~30810 token(s) over 424 line(s)`; the trusted-first review lane is
+  the qoder call (reported not graded, no pinned budget for that CLI) and the groq goose is
+  named as the FALLBACK it actually is. `chain_patch_check.py` rc 0 — PATCH HANDOVER OK over
+  4 patches. GATE: `landing_gate.py --fe` GATE GREEN 11/11 GATE_RC=0 (pytest 315, manage.py
+  check 0 issues, no migration drift, vitest 484/39 files, csv-twin BYTE-IDENTICAL 3070 cells
+  seed=20261021, brand-twin 302 over the pinned 350, parity/gate/registry/doc twins
+  roster-exact); harness_roster / chat_feature / chain_slot / slot_reader_probe (3/3) /
+  chat_when (535 stamps) / chain_test / ref_prune (36 refs) / chain_session / harness_image
+  each rc 0.
+  QUEUE, read-only and WITHOUT moving a verdict: `review_preflight_check.py --since 20261027`
+  rc 0 — 4 queued branches (0031 / 0109 / 0138 / 0208) all REVIEW-READY, 0 orphans, 228 of
+  228 headlines owed. `chain_merge_check.py --branch ai/turn-20261027-0031` rc 0 — merge-tree
+  CLEAN, conflicts none, MERGES AS AUTHORED (1 entry moved, 0 welded). The slot
+  `#+PENDING-REVIEW` (TEAM-CONTROL.org:13) parks 0031 @ e32eb72 which ALREADY carries three
+  APPROVED verdicts (REVIEW-LOG.org:3182 / :3194 / :3206, reviewer groq/qwen3.8-27b@goose,
+  SUBSTITUTED=yes) with outcome `approved+gate-conflict-branch-kept`. That branch is waiting
+  for the union-merge, not for a fifth reader — and note the shape you will meet: its delta
+  appends one line to `docs/CHAIN-TEST.md` at EOF and so does mine, so the merge gate will
+  stop on the doc/text tail (the keep-main+take-additive class of the 37th landing), while
+  TEAM-CHAT itself folds nothing — my report opens on a different seat token than 0031's
+  `software-engineer -> @lead :report:` entry, so the five-line prefix the union driver
+  dedups is never shared.
+  ONE RED LEFT, LEAD-OWNED: `review_verdict_check.py` rc 1 — the quality-assurance lane is
+  called without the reviewer brief. Measured in a throwaway worktree at base e765b75 and
+  `diff`-ed BYTE-IDENTICAL to this tree, so it is inherited, not authored here, and the files
+  it reads (`.github/workflows/agent-team.yml`, `.github/scripts/turn_segment.sh`) are outside
+  my delta and outside seat write rights.
+  SECRET LAW: env by NAME only, values nowhere — QODER_PERSONAL_ACCESS_TOKEN / GROQ_API_KEY /
+  CODEBUDDY_AUTH_TOKEN present, OPENCODE_API_KEY / OPENAI_API_KEY / GITHUB_RUN_ID /
+  ROLE_LARK_WEBHOOK absent, so the Lark copy of this report is SKIPPED, not lost, and the run
+  id names this turn's branch base e765b75. SESSION LAW measured: `/sessions-restore` is
+  `total 8`, zero entries — this segment started cold and says so. NO PING OWED:
+  `grep -nE '^\* MSG .* -> @platform-engineer' agent-team/TEAM-CHAT.org` still ends at :12357
+  (software-engineer :request:), closed by my :12404 report. Nothing here is merged by me and
+  the objective stays unclaimed from this seat — that grading is yours.

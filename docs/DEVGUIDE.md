@@ -431,10 +431,15 @@ python3 scripts/harness_roster_check.py --selftest # controls: every leg proved 
 # population is pinned by host so a deleted lane cannot shrink the compare, and a review
 # file nobody reads for the provider's OWN rejection markers is RED (a session that dies
 # mid-flight leaves its error text as the whole answer where the extractor greps only a
-# verdict token). `--probe` re-measures the receipts with one refused request per pinned
+# verdict token). The two arms are anchored at the review phase's own HEADING, not at
+# the first `case "$SEAT" in` in the file — the agent-org batch law added an earlier one
+# ~130 lines before the review arm, and a first-occurrence split graded a region with no
+# review dispatch in it, firing a false RED over a rejection guard that had shipped and
+# landed. An arm region that yields no lane at all is CANNOT RUN, never a comparison over
+# nothing. `--probe` re-measures the receipts with one refused request per pinned
 # host — the provider rejects before it runs, so nothing is billed.
 python3 scripts/lane_budget_check.py           # 0 every trusted lane fits / 1 a lane can never answer / 2 cannot run
-python3 scripts/lane_budget_check.py --selftest # 6 controls: every leg proved able to fail
+python3 scripts/lane_budget_check.py --selftest # 9 controls: every leg proved able to fail
 python3 scripts/lane_budget_check.py --root /tmp/copy   # controls run on copies
 
 # THE HARNESS IMAGE RECIPE AS A CHECK, BEFORE THE BUILD IS PAID. The image is the turn
