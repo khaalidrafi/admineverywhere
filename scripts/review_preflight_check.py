@@ -588,7 +588,6 @@ def grade(repo, main=MAIN_REF, only=None, since=None):
         notes.append("slot-live: register empty — no branch is queued for review")
     else:
         ran.add("slot-live")
-        sha_map = dict((s, h) for s, h in rows)
         by_short = slot["branch"].replace("refs/heads/", "")
         full = by_short if by_short.startswith("origin/") else "origin/" + by_short
         live = resolve(repo, full) or resolve(repo, by_short)
