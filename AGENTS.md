@@ -476,8 +476,8 @@ python3 scripts/harness_roster_check.py --selftest # controls: every leg proved 
 # this compares a branch's predicted merge against main, not an artifact against its twin
 python3 scripts/chain_merge_check.py                    # 0 every target merges as authored / 1 a finding, with the repair printed / 2 cannot run
 python3 scripts/chain_merge_check.py --all              # the whole unmerged queue, not just the register slot
-python3 scripts/chain_merge_check.py --branch ai/turn-20261024-2244   # one target
-python3 scripts/chain_merge_check.py --selftest          # 13 controls on real fixture repos: every leg able to fail
+python3 scripts/chain_merge_check.py --branch ai/turn-20261024-2244   # one target (ref name or commit sha)
+python3 scripts/chain_merge_check.py --selftest          # 16 controls on real fixture repos: every leg able to fail
 # THE TURN-REF POPULATION as a prune list, read-only over git. Every chain turn leaves a
 # ref behind and origin/ carries 48 of them; the Lead prunes them by hand, one beat at a
 # time, and the class a hand-read cannot see is a SQUASH landing — a ref whose payload
