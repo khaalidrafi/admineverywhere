@@ -119,3 +119,47 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   them after the first full platform->relief->software->QA cycle lands;
   (3) probe job now scans the GoModel gateway /v1/models for
   minimax/deepseek ids and live-probes the first MiniMax variant.
+
+* TODO P1 — the FR surfaces landed 2026-10-23..27 (never queued for review)
+  The last queue entry above is dated 2026-10-22 13:35Z; five FR features and
+  the whole chain-harness family landed after it. Each item names the file a
+  human should read and the test that already grades it, so review is
+  "does the test ask the right question", not "does it pass".
+  - [ ] app/src/lib/rbac.ts:44 roleAllows — claims-driven hiding. REVIEW the
+    degrade-to-no-filtering rule (claims = null filters NOTHING) and that
+    hiding is UX only, never security. Graded by app/src/lib/rbac.test.ts +
+    the mounted nav in rbacNavMount.test.ts.
+  - [ ] app/src/lib/kanban.ts:58 kanbanAxes — the board groups by a DECLARED
+    axis only. REVIEW axisProblem()/refusal paths (no "field named status"
+    guess) and the one-key PATCH body. Graded by kanbanMount.test.ts.
+  - [ ] app/src/lib/csv.ts:110 csvBlobParts — BOM applied exactly once and the
+    twin contract with demo-backend/shop/csv_export.py. REVIEW the byte format,
+    then run python3 scripts/csv_twin_diff.py and scripts/parity_table_diff.py.
+  - [ ] app/src/lib/pages/index.ts:182/:213 — refusals surface, setPages hands
+    the router its table. REVIEW that nothing page-specific stays in
+    router/shell/sidebar. Graded by navMount.test.ts + authGateMount.test.ts.
+  - [ ] app/src/lib/widgets/feed.ts:52/:88/:257/:281 — the FR-R008 feed
+    contract (schema-resolved endpoint, poll floor 5s, effect cleanup).
+    REVIEW that an unresolvable source renders a reason, never a guessed URL.
+    Graded by feedGridMount.test.ts (mounts the real grid off the glob).
+* TODO P2 — the harness family itself (review the graders, not just the code)
+  24 .py files under scripts/, 21 of them graders pinned by
+  scripts/harness_roster_check.py. Their risk class is a green that grades
+  nothing, so a reviewer's cheap pass is: run the harness, then run it with
+  --selftest and confirm EVERY leg is shown able to fail.
+  - [ ] scripts/landing_gate.py:73/:74/:92 — EXPECTED_PYTEST=315,
+    EXPECTED_VITEST=484/39 files, MERGE_ROSTER. REVIEW that a vanished leg or
+    a vanished test is CANNOT RUN, never a smaller green.
+  - [ ] scripts/chain_merge_check.py:140 LEG_ROSTER — the body-ownership leg is
+    the only pre-merge read of the chat union-fold class. REVIEW it against
+    union 54d0d0c (replay: --main 187eefb --branch 0f50d95).
+  - [ ] Type escapes in product code, measured 10 (the deliberate exception to
+    "well-typed, easy to review"): app/src/lib/openapi.ts x3 (raw OpenAPI node
+    shapes), app/src/pages/Branding.svelte x2, app/src/pages/ModelPage.svelte
+    x5. REVIEW each is a boundary cast, not a missing domain type — and the
+    rest of app/src needs none (0 outside these three files + tests).
+  - [ ] Two graders are RED on main today and NOT findings about this repo's
+    code: scripts/review_verdict_check.py (lane-coverage reads an inline brief
+    the carrier now writes to a file) and scripts/chain_patch_check.py (a
+    RETIRED patch whose grader lane_budget_check.py itself exits 1). Both are
+    recorded in the chain's chat; the fixes touch Lead-owned carriers.
