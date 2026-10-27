@@ -14103,3 +14103,128 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   software-engineer's to close on ai/turn-20261026-2002 — I left that harness untouched so a
   single hand owns it. The slot, the register, the verdict token and the cron 472689 order are
   yours; none of them are mine to move, and the objective stays unclaimed from this seat.
+* MSG platform-engineer -> @lead :report:      :msg:platform-engineer:lead:report:
+:PROPERTIES:
+:FROM: platform-engineer
+:TO: lead
+:KIND: report
+:WHEN: [2026-10-27 Tue 04:47 UTC]
+:END:
+  RESULT: DONE — DOE TEAM-UPDATE #5 (Owner 2026-10-27 04:14Z #hq, "aren't
+  AGENTS.md, both global and local, properly configured in the agents they use
+  in CI? Write to them for the audit + fix") delivered on ai/turn-20261027-0437,
+  base c8e4dc2: the per-lane law-wiring AUDIT plus the seat-writable half of the
+  WIRING. One item per turn, so the still-pending compliance audit (#4) is NOT
+  folded in here — it needs product-code reads this segment does not have budget
+  for, and it is the EM's to dispatch across seats; see NEXT.
+  METHOD, because the order forbids assuming a convention: every claim was read
+  out of the tool's own installed body or its shipped docs, then probed. The
+  probe costs NOTHING and is re-runnable by any seat —
+  `env -u QODER_PERSONAL_ACCESS_TOKEN HOME=/usr/local/lib/qoder-home qoder -d -p
+  "ping" --no-session-persistence` refuses at auth (rc 1, "Not logged in", zero
+  provider requests) while start-up memory discovery still writes its debug log,
+  and that log is the measurement.
+  THE MATRIX (full table, reproduction commands and the Lead-owned remainder are
+  in NEW `docs/lane-law-wiring.md`, which is the durable carrier):
+  - qoder (turn seat lane + the deepseek review arm + the ACP batch arms): local
+    law YES already, global law NO before this commit. Bundle proof
+    `discoverMemoryPaths()` — project search walks up to the git root and stops
+    there, user-level file is `$HOME/.qoder/AGENTS.md`, and `@`-imports inside a
+    project AGENTS.md are ungated (only OUT-of-project imports need approval:
+    "external @import(s) blocked in AGENTS.md").
+  - codebuddy (visiting senior lane): loads project memory as
+    `CODEBUDDY.md` **or** `AGENTS.md`, user-level `~/.codebuddy/CODEBUDDY.md`,
+    rules dirs, and `@`-imports — regex read from the bundle
+    `(?<!\S)@([^\s@\n]+)`, `MAX_IMPORT_DEPTH` 5 (`ImportUtils.extractImports` in
+    the memory loader, so it binds to whichever name is the project memory).
+  - goose (all three arms): whole project `AGENTS.md`, NO import mechanism —
+    one `AGENTS.md` literal in the 209 MB binary and no import machinery; its
+    instruction-ish env names are `GOOSE_SYSTEM_PROMPT_FILE_PATH` /
+    `GOOSE_ADDITIONAL_CONFIG_FILES` (config, not law). Global law CANNOT reach it
+    by a file, only by the brief, which is Lead-owned.
+  - raw-curl duty-review lane (`agent-review.yml:194-206`): NO law at all —
+    `payload = {"messages": [{"role": "system", "content": sysmsg}, …]}` is one
+    inline string; confirmed lawless exactly as the Owner's evidence said.
+  - raw-curl liveness probes (`agent-team.yml:130-150`): OUT OF DOMAIN by design
+    — a `max_tokens: 16` "alive" probe measures transport; wiring law into it
+    would change what it measures.
+  - mcode arm: bundle says its memory set is
+    `["AGENTS.md","AGENTS.MD","CLAUDE.md","CLAUDE.MD"]`, but the arm never
+    completes a request and the Owner CANCELLED the row 2026-10-26 04:57Z
+    ("mcode isn't part of the project"), so no probe and no wiring is owed.
+  THE FIX, ONE LINE, seat-side: `AGENTS.md` gained a closing section "## CI-facing
+  global law (imported)" carrying `@agent-team/AGENTS-GLOBAL.md`. It reaches the
+  three import-honoring lanes in a single edit and deliberately does nothing for
+  goose or the curl lane, because neither can read it.
+  PROVEN BY THE BEFORE/AFTER PAIR, not asserted: the same probe log answered
+  `Successfully read and processed imports: /workspace/AGENTS.md (Length: 84738)`
+  with NO `Found global memory file` line beforehand, and afterwards
+  `(Length: 93373)` PLUS `deduplication: keeping
+  /workspace/agent-team/AGENTS-GLOBAL.md` — the +8635 characters are the global
+  file's 8347 bytes plus the surrounding section, i.e. the import is loaded, not
+  merely parsed without error.
+  TWO OF THE OWNER'S THREE EVIDENCE ITEMS ARE NOT DEFECTS, measured against the
+  tool's own rule, so I did NOT "fix" them: (1) "no CODEBUDDY.md" — codebuddy's
+  documented rule is "if a `CODEBUDDY.md` file exists in the project, project-level
+  memory will use CODEBUDDY.md, otherwise it will use AGENTS.md", so committing a
+  CODEBUDDY.md here would REPLACE the repo law rather than add to it, and the
+  standing law separately forbids inventing a repo-root law file; (2) the global
+  copy was never missing — `agent-team/AGENTS-GLOBAL.md` is committed and
+  byte-correct (`sha256sum` prefix `335c85ee1d084cb6`, exactly the vault prefix the
+  order names), it fed no tool because NOTHING referenced it: the audit's real
+  finding is a wiring gap, not a file gap; (3) "qoder mechanism unverified" is now
+  verified twice from its own log.
+  WHAT I DELIBERATELY DID NOT DO, each for a named reason: (a) no Lead-owned file
+  edited (SEAT BOUNDARIES — `.github/scripts/turn_segment.sh`,
+  `.github/workflows/agent-review.yml` read and cited only); (b) no
+  `docs/*-fix.patch` added, though the order's handover mechanism is a patch —
+  `chain_patch_check.py` pins `EXPECTED_PATCHES = 4` by name AND count, so a
+  fifth handover patch is a roster bump the Lead should rule on, not a seat
+  side-effect; the four Lead-owned wiring commands are written out in
+  `docs/lane-law-wiring.md` §"Remaining wiring, by owner" so landing them is a
+  paste, not a derivation; (c) no new `*_check` harness for the law matrix — a
+  grader whose inputs live in Lead-owned files would be a roster bump plus a
+  doc-row bump in the same segment, and it is worth more as the leg the order
+  actually asks for inside `lane_budget_check.py`, which is already RED today on
+  its own provider-rejection leg (see below) and therefore cannot carry a new
+  trusted-leg claim honestly until that red is closed.
+  THE COST SIDE, since the order asks for a per-lane request-size read: the local
+  law is 85,184 bytes on main, 85,531 with my +347-byte section, and the resolved
+  memory the CLI reports grows 84,738 → 93,373 characters (+8,635 = the global
+  copy's 8,347 bytes plus the prose around the import). The goose lane carries the
+  local law and NOT the global one (no import mechanism), so its request is
+  unmoved by this commit — at the repo's own recorded ratio (68,878 bytes = 22,895
+  tokens) the 85,184-byte law alone is ~28.3k tokens, and the groq free tier is
+  pinned at 7000 ITPM, which is exactly why the 10-line digest, never the 8.3 kB
+  file, is the sanctioned carrier for goose-on-groq
+  (`scripts/lane_budget_check.py` owns that arithmetic).
+  GATES: `landing_gate.py --fe` GATE GREEN 11/11, GATE_RC=0 (pytest 315,
+  manage.py check 0 issues, no migration drift, vitest 484 / 39 files, csv-twin
+  BYTE-IDENTICAL 3070 cells seed=20261021, brand-twin 302 over the pinned 350,
+  parity/gate/registry/doc twins roster-exact) — and the release_readiness doc
+  legs matter here because this delta edits `AGENTS.md` itself: carriers, every
+  `file:line` citation inside its bounds, the symbol beside each citation and the
+  suite/control rosters the docs publish all re-measured on this tree (rc values
+  recorded in `docs/CHAIN-TEST.md`). PRE-EXISTING REDS MEASURED, NOT MINE and
+  byte-identical to the same runs on the branch base: `lane_budget_check.py` rc 1
+  (nothing greps a provider rejection out of `.turn-review.txt` before its verdict
+  is trusted — its own printed FIX is Lead-owned) and `chain_patch_check.py` rc 1
+  (docs/lane-budget-fix.patch RETIRED as graded-by that same rc-1 harness).
+  STATE: `#+STALL-COUNT: 2` (`TEAM-CONTROL.org:10`) — the last two segments died
+  in the lane (`codebuddy+qoder-ds+zai+laguna+mcode lanes all failed`), which is
+  why this turn stayed inside one deliverable and used zero-spend probes only;
+  `#+PENDING-REVIEW` (:14) parks ai/turn-20261027-0031 (software-engineer,
+  e32eb72) and my delta touches none of the files that branch's review depends on,
+  so the slot is undisturbed. A board row was appended under OPEN ITEMS with
+  `:DELIVERED:` evidence — DONE stays your gate.
+  NEXT: yours on the four Lead-owned wiring items (goose brief + `sysmsg` prepend
+  of the 10-line "Global agent law — DISTRIBUTED" digest, the law-coverage leg in
+  `lane_budget_check.py`, optional `$HOME/.qoder/AGENTS.md` for lanes that run
+  outside a trusted folder); the compliance audit (#4) still needs an owner and
+  is NOT closed by this report.
+  ENV BY NAME, no value anywhere: QODER_PERSONAL_ACCESS_TOKEN, GROQ_API_KEY,
+  CODEBUDDY_AUTH_TOKEN present; OPENCODE_API_KEY, OPENAI_API_KEY, GITHUB_RUN_ID,
+  ROLE_LARK_WEBHOOK absent — so the Lark copy of this report is SKIPPED, not lost,
+  and the run line names this turn's branch base c8e4dc2. `/sessions-restore` is
+  mounted and EMPTY, so this segment started cold and says so. I lay no verdict on
+  my own branch (SEGREGATION) and claim no OBJECTIVE-STATE: COMPLETE.

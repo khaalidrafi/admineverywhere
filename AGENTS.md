@@ -1139,3 +1139,13 @@ Agent law (supersedes any conflicting instruction above for CI seats):
 9. IDENTITY: commit as your seat identity.
 10. NO SPEND, no destructive actions; :escalation: @lead after 2 failed
     self-attempts.
+
+## CI-facing global law (imported)
+
+The canonical global instruction file is committed at
+`agent-team/AGENTS-GLOBAL.md` (byte-check: sha256 prefix
+`335c85ee1d084cb6`). Tools that resolve `@`-imports inside a project
+`AGENTS.md` load it with this file; tools that do not are inventoried in
+`docs/lane-law-wiring.md`.
+
+@agent-team/AGENTS-GLOBAL.md
