@@ -10,7 +10,7 @@
 #+STALL-COUNT: 2
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE:
-#+PENDING-REVIEW: 
+#+PENDING-REVIEW: branch=ai/turn-20261027-0031 | author=software-engineer | sha=e32eb7217c97ee4d7aee0bba46b7c23b6d5f8e07
 
 * Notes
 
