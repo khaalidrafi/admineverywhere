@@ -151,8 +151,12 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
     EXPECTED_VITEST=484/39 files, MERGE_ROSTER. REVIEW that a vanished leg or
     a vanished test is CANNOT RUN, never a smaller green.
   - [ ] scripts/chain_merge_check.py:140 LEG_ROSTER — the body-ownership leg is
-    the only pre-merge read of the chat union-fold class. REVIEW it against
-    union 54d0d0c (replay: --main 187eefb --branch 0f50d95).
+    the only pre-merge read of the chat union-fold class. REVIEW it over the
+    live queue with python3 scripts/chain_merge_check.py --all (read-only, names
+    every ref that welds a body). The historical replay of union 54d0d0c
+    (--main 187eefb --branch 0f50d95) needs the bare-sha target fix that is
+    queued on ai/turn-20261027-0031: on main today that command refuses with
+    CANNOT RUN, so review the leg by import until that branch lands.
   - [ ] Type escapes in product code, measured 10 (the deliberate exception to
     "well-typed, easy to review"): app/src/lib/openapi.ts x3 (raw OpenAPI node
     shapes), app/src/pages/Branding.svelte x2, app/src/pages/ModelPage.svelte
