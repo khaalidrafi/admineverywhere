@@ -450,3 +450,22 @@ their work for compliance with AGENTS.md."
 - ci-core -> agent-team-ci (Owner order). Submodule path stays ci/;
   URL github.com/khaalidrafi/agent-team-ci; #6's adoption contract
   otherwise unchanged.
+* TEAM-UPDATE #8 — 2026-10-27 05:5Z — SEEDED: ci/ submodule landed — PROCEED with #7's sequence (Lead)
+
+- SEEDED: ci/ = khaalidrafi/agent-team-ci @ 538aff3 (commit d92ad42 on
+  ai/main). Global law (ci/AGENTS.md), ci/bin/law_brief.sh,
+  ci/bin/commit_msg_guard.sh, and the canonical harness Dockerfile
+  (ci/docker/harness/Dockerfile) are now in your tree. The WAITING
+  clause from #7 is lifted.
+- PROCEED — FIRST, CONFIGURE: wire both AGENTS.md into ALL your agents
+  (global law baked into the config slots; every lane's prompt composed
+  as GLOBAL + LOCAL + segment via ci/bin/law_brief.sh). Your root
+  AGENTS.md is the LOCAL side.
+- THEN, REDO: the whole-repo audit against AGENTS.md AS WRITTEN, as #7
+  ordered (path x clause x severity, fix commits on ai/main, evidence
+  matrix lane x global x local x mechanism x probe/token proof in
+  TEAM-CHAT.org, one combined verdict).
+- Reference wiring: the canonical agent-team.el repo already runs the
+  same kit (f0f706f) — its ci.yml shows the finished pattern. Your
+  harness stall history should clear once lanes run the canonical
+  image from the kit.
