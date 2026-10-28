@@ -3,7 +3,7 @@
 `pip install -e ../plugin` is the documented boot (AGENTS.md *Commands*), and the
 CI arms run it with the failure swallowed. Where the image carries no setuptools
 that line is a silent no-op, so every check that touches the rig dies with
-``ModuleNotFoundError: No module named 'admincraft'`` while wearing the tree's
+``ModuleNotFoundError: No module named 'admineverywhere'`` while wearing the tree's
 exit code. Measured in this workspace on 2026-10-24, on the delivered tree:
 
   * ``python3 -m pytest plugin/tests`` -> INTERNALERROR, exit 2 — which a seat
@@ -20,7 +20,7 @@ so the fix lands here: the plugin's source tree is a sibling of this rig and
 nothing about running the rig needs an install.
 
 The priority rule is the second half of the contract. ``core.devpaths`` puts
-``plugin/src`` FIRST on sys.path, so an unrelated ``admincraft`` from
+``plugin/src`` FIRST on sys.path, so an unrelated ``admineverywhere`` from
 site-packages can never be what the rig and this suite are actually exercising.
 Every test below simulates a no-install lane with a meta-path blocker, which
 makes them answer the same way whether or not the plugin happens to be installed.
@@ -36,7 +36,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEMO_ROOT = ROOT / "demo-backend"
 PLUGIN_SRC = ROOT / "plugin" / "src"
 
-# Installed in a child interpreter before anything imports the plugin: `admincraft`
+# Installed in a child interpreter before anything imports the plugin: `admineverywhere`
 # stays unresolvable until the rig's own bootstrap puts the source tree on sys.path.
 # Resolving through a real editable install is the same tree, so without this the
 # test would pass in an installed lane and could not see the bug at all.
@@ -48,12 +48,12 @@ SRC = {src!r}
 
 class HideInstalled:
     def find_spec(self, name, path=None, target=None):
-        if name != "admincraft":
+        if name != "admineverywhere":
             return None
         resolved = {{str(Path(p).resolve()) for p in sys.path if p}}
         if SRC in resolved:
             return None
-        raise ImportError("simulated lane: admincraft is not installed")
+        raise ImportError("simulated lane: admineverywhere is not installed")
 
 sys.path = [p for p in sys.path if Path(p or ".").resolve() != Path(SRC)]
 sys.meta_path.insert(0, HideInstalled())
@@ -81,16 +81,16 @@ import sys
 from pathlib import Path
 sys.path.insert(0, {demo!r})
 try:
-    import admincraft
+    import admineverywhere
     print("IMPORTED-WITHOUT-BOOTSTRAP")
     raise SystemExit(3)
 except ImportError:
     pass
-from core.devpaths import ensure_admincraft_on_path, PLUGIN_SRC
-label = ensure_admincraft_on_path()
-import admincraft
+from core.devpaths import ensure_admineverywhere_on_path, PLUGIN_SRC
+label = ensure_admineverywhere_on_path()
+import admineverywhere
 print("label=%s" % label)
-print("file=%s" % Path(admincraft.__file__).resolve())
+print("file=%s" % Path(admineverywhere.__file__).resolve())
 """.format(demo=str(DEMO_ROOT)))
         assert proc.returncode == 0, out_and_err(proc)
         assert "IMPORTED-WITHOUT-BOOTSTRAP" not in proc.stdout
@@ -103,9 +103,9 @@ print("file=%s" % Path(admincraft.__file__).resolve())
         proc = child("""
 import sys
 sys.path.insert(0, {demo!r})
-from core.devpaths import ensure_admincraft_on_path, PLUGIN_SRC
+from core.devpaths import ensure_admineverywhere_on_path, PLUGIN_SRC
 sys.path.insert(0, str(PLUGIN_SRC))
-print("label=%s" % ensure_admincraft_on_path())
+print("label=%s" % ensure_admineverywhere_on_path())
 print("count=%d" % [str(p) for p in sys.path].count(str(PLUGIN_SRC)))
 """.format(demo=str(DEMO_ROOT)))
         assert proc.returncode == 0, out_and_err(proc)
@@ -135,11 +135,11 @@ class TestRigLauncherBootsWithoutAnInstall:
         proc = child("""
 import os, runpy, sys
 sys.path.insert(0, {demo!r})
-from core.devpaths import ensure_admincraft_on_path
-ensure_admincraft_on_path()
-import admincraft
+from core.devpaths import ensure_admineverywhere_on_path
+ensure_admineverywhere_on_path()
+import admineverywhere
 from pathlib import Path
-assert str(Path(admincraft.__file__).resolve()).startswith({src!r}), admincraft.__file__
+assert str(Path(admineverywhere.__file__).resolve()).startswith({src!r}), admineverywhere.__file__
 os.environ["DJANGO_SETTINGS_MODULE"] = "core.settings"
 os.environ["DEMO_DEV"] = "1"
 os.chdir({demo!r})

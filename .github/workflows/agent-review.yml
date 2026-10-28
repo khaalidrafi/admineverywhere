@@ -206,7 +206,7 @@ jobs:
               -X POST "https://api.groq.com/openai/v1/chat/completions" \
               -H "Authorization: Bearer $GROQ_API_KEY" \
               -H "Content-Type: application/json" \
-              -H "User-Agent: admincraft-duty-reviewer/1.0" \
+              -H "User-Agent: admineverywhere-duty-reviewer/1.0" \
               --data @groq-payload.json 2>groq-curlerr.txt || echo "CURLERR"
           }
           CODE=$(send_groq)

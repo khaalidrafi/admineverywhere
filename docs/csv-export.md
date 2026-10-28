@@ -205,7 +205,7 @@ regression in the rendering rule goes red on one side and names itself.
   It needs no venv: layer 2 runs on `demo-backend/.venv/bin/python` when that
   exists and can import the rig's deps, otherwise on the interpreter running the
   script, chosen by an import PROBE (`django, rest_framework, drf_spectacular,
-  admincraft`) — never by assumption, and the verdict prints
+  admineverywhere`) — never by assumption, and the verdict prints
   `layer 2 interpreter: …` so a pass always says which python proved it. `--python
   <exe>` forces one interpreter exclusively: if a seat names it, its failure is
   the answer rather than a licence to fall back and report a pass from another

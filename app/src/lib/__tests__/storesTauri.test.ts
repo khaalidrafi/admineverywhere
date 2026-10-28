@@ -90,7 +90,7 @@ describe("saveAiSettings — the key crosses the keyring boundary", () => {
     expect(localStorage.getItem("dad.ai.model")).toBe("llama-3.1");
     expect(invoke).toHaveBeenCalledTimes(1);
     expect(invoke).toHaveBeenCalledWith("save_secret", {
-      service: "admincraft",
+      service: "admineverywhere",
       key: "ai.apiKey",
       value: "sk-sentinel-9x",
     });
@@ -119,7 +119,7 @@ describe("saveAiSettings — the key crosses the keyring boundary", () => {
     expect(get(ai).apiKey).toBe("");
     expect(invoke).not.toHaveBeenCalledWith("save_secret", expect.anything());
     expect(invoke).toHaveBeenCalledWith("delete_secret", {
-      service: "admincraft",
+      service: "admineverywhere",
       key: "ai.apiKey",
     });
 
@@ -165,7 +165,7 @@ describe("saveAiSettings — the key crosses the keyring boundary", () => {
       apiKey: "sk-from-keychain",
       model: "mixtral",
     });
-    expect(invoke).toHaveBeenCalledWith("load_secret", { service: "admincraft", key: "ai.apiKey" });
+    expect(invoke).toHaveBeenCalledWith("load_secret", { service: "admineverywhere", key: "ai.apiKey" });
 
     // a machine with no keychain at all must still boot the chat panel
     invoke.mockRejectedValue(new Error("keychain unavailable"));
@@ -248,7 +248,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
       )
       .mockResolvedValueOnce(
         reply(200, {
-          brand: { appName: "Servercraft", colors: { primary: "#123456" }, logo: "/admincraft/branding/asset/logo.png" },
+          brand: { appName: "Servercraft", colors: { primary: "#123456" }, logo: "/admineverywhere/branding/asset/logo.png" },
           rev: 3,
         }),
       );
@@ -259,7 +259,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
     expect(urlsSeen()).toEqual([
       "config.json",
       "brand.json",
-      "http://api.test/admincraft/branding/",
+      "http://api.test/admineverywhere/branding/",
     ]);
     const a = get(app);
     expect(a.booted).toBe(true);
@@ -267,7 +267,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
     // the server identity replaced the bundled one, and its relative asset
     // was resolved against apiUrl rather than left as a bare path
     expect(a.brand.appName).toBe("Servercraft");
-    expect(a.brand.logo).toBe("http://api.test/admincraft/branding/asset/logo.png");
+    expect(a.brand.logo).toBe("http://api.test/admineverywhere/branding/asset/logo.png");
     expect(document.title).toBe("Servercraft");
   });
 
@@ -283,7 +283,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
 
     const a = get(app);
     expect(a.booted).toBe(true);
-    expect(a.brand.appName).toBe("Admincraft"); // the shipped neutral default
+    expect(a.brand.appName).toBe("Admineverywhere"); // the shipped neutral default
     expect(get(toasts)).toEqual([]);
     expect(a.backendDown).toBe(false); // banner belongs to the schema flow, not boot
     // exactly one probe of the documented plugin path — a 404 is never chased
@@ -291,7 +291,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
     expect(urlsSeen()).toEqual([
       "config.json",
       "brand.json",
-      "http://plain.test/admincraft/branding/",
+      "http://plain.test/admineverywhere/branding/",
     ]);
   });
 
@@ -315,7 +315,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
 
     const a = get(app);
     expect(a.booted).toBe(true);
-    expect(a.brand.appName).toBe("Admincraft");
+    expect(a.brand.appName).toBe("Admineverywhere");
     expect(a.config).toBeNull();
     expect(get(toasts)).toEqual([]);
   });
@@ -332,7 +332,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
 
     await initApp();
 
-    expect(urlsSeen()[2]).toBe("http://second.test/admincraft/branding/");
+    expect(urlsSeen()[2]).toBe("http://second.test/admineverywhere/branding/");
     expect(get(app).brand.appName).toBe("Second");
   });
 });

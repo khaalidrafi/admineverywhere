@@ -1,4 +1,4 @@
-# admincraft agent harness — CI turn container with agent bodies
+# admineverywhere agent harness — CI turn container with agent bodies
 # PREINSTALLED (Owner order 2026-10-20 #hq: agents go into the image,
 # not into CI). Secrets are NEVER baked: keys are env-injected per run
 # from repo secrets.

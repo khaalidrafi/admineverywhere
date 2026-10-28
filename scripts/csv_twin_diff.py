@@ -63,7 +63,7 @@ VENV_PY = RIG / ".venv" / "bin" / "python"
 # writer's own imports. Probing exactly this is what lets a non-venv interpreter
 # be USED rather than assumed — an interpreter that passes this probe but still
 # fails the real run exits 2 with the probe's stderr, never a false verdict.
-RIG_DEPS = ("django", "rest_framework", "drf_spectacular", "admincraft")
+RIG_DEPS = ("django", "rest_framework", "drf_spectacular", "admineverywhere")
 
 # Fixed strings chosen to force every guard/quoting branch at once.
 SENTINELS = [

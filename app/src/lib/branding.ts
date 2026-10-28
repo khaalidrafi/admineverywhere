@@ -3,7 +3,7 @@
  * The static half ships in the bundle (public/brand.css + brand.json,
  * written by `manage.py build_admin`) so first paint is branded with no
  * FOUC. This module is the dynamic half: whenever a brand object arrives
- * — boot fetch from a backend running the admincraft plugin, or a save
+ * — boot fetch from a backend running the admineverywhere plugin, or a save
  * from the in-app editor — we inject the same `--brand-*` CSS variables
  * through a dedicated <style> element and the whole UI re-themes
  * instantly, no reload.
@@ -40,7 +40,7 @@ export function brandToCss(brand: Brand): string {
   // "||" not "??": an empty string is not nullish but IS invalid CSS
   const radius = brand.radius || DEFAULTS.radius;
   const importName = encodeURIComponent(font).replace(/%20/g, "+");
-  return `/* runtime brand — injected by admincraft */
+  return `/* runtime brand — injected by admineverywhere */
 @import url('https://fonts.googleapis.com/css2?family=${importName}:wght@400;500;600;700&display=swap');
 
 :root {

@@ -1,9 +1,9 @@
-# admincraft (pip plugin)
+# admineverywhere (pip plugin)
 
 Branding engine + schema tooling + runtime branding API for
-[admincraft](../README.md), the admin app builder for Django REST
+[admineverywhere](../README.md), the admin app builder for Django REST
 Framework backends. Install into your Django project:
-`pip install admincraft`.
+`pip install admineverywhere`.
 
 ## Commands
 
@@ -23,23 +23,23 @@ Wire two things and the thin client can rebrand itself live, no rebuild:
 
 ```python
 # settings.py
-INSTALLED_APPS = [..., "admincraft"]
-ADMINCRAFT_BRAND_DIR = BASE_DIR / "admincraft_brand"   # runtime store (gitignored)
+INSTALLED_APPS = [..., "admineverywhere"]
+ADMINEVERYWHERE_BRAND_DIR = BASE_DIR / "admineverywhere_brand"   # runtime store (gitignored)
 
 # urls.py
-path("admincraft/", include("admincraft.urls"))
+path("admineverywhere/", include("admineverywhere.urls"))
 ```
 
 Endpoints:
 
-- `GET /admincraft/branding/` — public. Current brand + `rev`, or 404
+- `GET /admineverywhere/branding/` — public. Current brand + `rev`, or 404
   when none configured (client keeps its bundled static brand).
-- `PUT /admincraft/branding/` — staff token required. Body = the
+- `PUT /admineverywhere/branding/` — staff token required. Body = the
   `brand.json` closed schema; `logo`/`favicon` may be
   `data:image/(png|jpeg|svg+xml);base64,...` uploads (magic-byte
   checked, 1 MB cap). Replaces the brand; every client that boots (or
   polls) picks it up and re-themes instantly.
-- `GET /admincraft/branding/asset/<relative-path>` — serves the stored
+- `GET /admineverywhere/branding/asset/<relative-path>` — serves the stored
   logo/favicon. The path is the one `brand.json` carries, directory
   included (`assets/logo.svg`, exactly what `app/brands/*/brand.json`
   ships), so the URL the client is handed always addresses the file that
@@ -54,10 +54,10 @@ get a 501 on PUT (edit files + `build_admin` instead).
 
 ## Modules
 
-- `admincraft.branding` — the branding engine (validated `brand.json` →
+- `admineverywhere.branding` — the branding engine (validated `brand.json` →
   CSS variables + asset copy), pure functions.
-- `admincraft.brandstore` — the runtime brand store (read/validate/
+- `admineverywhere.brandstore` — the runtime brand store (read/validate/
   persist + data-URL decoding), file-backed.
-- `admincraft.views` / `admincraft.urls` — the HTTP layer above.
+- `admineverywhere.views` / `admineverywhere.urls` — the HTTP layer above.
 
 Tests live in `tests/` — run them from a checkout per the root README.

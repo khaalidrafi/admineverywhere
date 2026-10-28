@@ -12,7 +12,7 @@ db.sqlite3
 .DS_Store
 .vite/
 coverage/
-admincraft_brand/
+admineverywhere_brand/
 
 # Chain harness scratch: .github/scripts/turn_segment.sh writes these into the
 # workspace every run and its host-side commit is a bare `git add -A`, so an
