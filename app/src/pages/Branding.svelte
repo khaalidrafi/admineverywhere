@@ -12,7 +12,7 @@
    * name, tagline, five theme colors, radius, font, logo + favicon. Saving
    * applies the new identity live (CSS variables, titles, favicon) without a
    * reload. Launcher/dock icons keep the build-time identity — the
-   * admineverywhere-craft skill handles that half when cutting a release.
+   * admineverywhere-build skill handles that half when cutting a release.
    *
    * Asset handling on save (logo, same for favicon):
    *   - newly uploaded file        → sent as a data URL (server checks magic bytes)
