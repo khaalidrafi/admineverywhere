@@ -24,7 +24,7 @@ Measured on the live queue (2026-10-25, against origin/ai/main @ 8514175):
 
 WHY IT HAPPENS — THE MECHANISM, NOT THE MYSTERY
 -----------------------------------------------
-`.gitattributes:1` declares `agent-team/TEAM-CHAT.org merge=union` (and `:2` for
+`.gitattributes:1` declares `agent-team/CHAT.org merge=union` (and `:2` for
 REVIEW-LOG.org) so concurrent EOF appends merge instead of stopping the chain. The
 union driver's rule is "keep every added line from both sides, but a line that is
 IDENTICAL on both sides is written ONCE". And the FORMAT LAW makes the first five
@@ -135,7 +135,7 @@ from collections import Counter
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAIN_REF = "origin/ai/main"
 BRANCH_PREFIX = "ai/turn-"
-CHAT_REL = "agent-team/TEAM-CHAT.org"
+CHAT_REL = "agent-team/CHAT.org"
 
 LEG_ROSTER = ("preview-runs", "chat-fidelity", "body-ownership", "conflict-paths", "pin-union")
 EXPECTED_LEGS = 5
@@ -723,7 +723,7 @@ CONTROL_TMPL = ("#+TITLE: fixture control (Lead-owned in the real repo)\n"
 GATE_PY = "# fixture pin carrier (stands in for scripts/release_readiness.py)\n" \
           "EXPECTED_X = %d\nEXPECTED_Y = %d\n"
 TURN_BRANCH = "ai/turn-20991231-0000"
-ATTR_UNION = "agent-team/TEAM-CHAT.org merge=union\n"
+ATTR_UNION = "agent-team/CHAT.org merge=union\n"
 
 
 def sh(repo, *args):
@@ -758,7 +758,7 @@ def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
                             "body": "the entry both sides descend from"})
     write(repo, ".gitattributes", ATTR_UNION if union else "")
     write(repo, CHAT_REL, base_chat)
-    write(repo, "agent-team/TEAM-CONTROL.org",
+    write(repo, "agent-team/CONTROL.org",
           CONTROL_TMPL % (("branch=%s | author=software-engineer | sha=0" % TURN_BRANCH)
                           if register else ""))
     write(repo, "scripts/fake_gate.py", GATE_PY % (5, 3))
