@@ -8,11 +8,11 @@
 <script lang="ts">
   /** In-app brand editor — "brand the app from inside the app".
    *
-   * Edits the brand the backend plugin serves (GET/PUT /admincraft/branding/):
+   * Edits the brand the backend plugin serves (GET/PUT /admineverywhere/branding/):
    * name, tagline, five theme colors, radius, font, logo + favicon. Saving
    * applies the new identity live (CSS variables, titles, favicon) without a
    * reload. Launcher/dock icons keep the build-time identity — the
-   * admincraft-craft skill handles that half when cutting a release.
+   * admineverywhere-craft skill handles that half when cutting a release.
    *
    * Asset handling on save (logo, same for favicon):
    *   - newly uploaded file        → sent as a data URL (server checks magic bytes)
@@ -38,8 +38,8 @@
   const orig: Brand = structuredClone(get(app).brand);
 
   // Twin of brandstore.FALLBACK_ASSET_URL's path (the plugin mounts its
-  // branding endpoints under "admincraft/" — see plugin/src/admincraft/urls.py).
-  const ASSET_PATH_PREFIX = "/admincraft/branding/asset/";
+  // branding endpoints under "admineverywhere/" — see plugin/src/admineverywhere/urls.py).
+  const ASSET_PATH_PREFIX = "/admineverywhere/branding/asset/";
 
   // Draft starts from the live brand with color defaults filled in, so
   // every color input has a concrete value to bind to.
@@ -141,7 +141,7 @@
   });
 
   const previewLogo = $derived(logoUpload ?? draft.logo ?? "");
-  const logoIsImage = $derived(previewLogo.startsWith("data:") || previewLogo.includes("/admincraft/branding/asset/") || !!previewLogo);
+  const logoIsImage = $derived(previewLogo.startsWith("data:") || previewLogo.includes("/admineverywhere/branding/asset/") || !!previewLogo);
 </script>
 
 <div class="mx-auto max-w-2xl">
