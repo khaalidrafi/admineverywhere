@@ -20,7 +20,7 @@ the panel actually POSTs. A check that cannot fail is not a check (DEVGUIDE
 four claims against the tree (plus the one-builder refusal that closes the
 fifth), the way the other harnesses grade their pairs:
 
-  GOVERNANCE  agent-team/TEAM.md carries no "MEMBER IDS" section (the
+  GOVERNANCE  agent-team/CHARTER.md carries no "MEMBER IDS" section (the
               governance reversal the send-back was about), still carries its
               DISPATCH PREAMBLE RULE and FENCE FORMAT headings, and every
               fenced-language hit is the prohibition that NAMES it. mainline's
@@ -76,7 +76,7 @@ import tempfile
 # These are the PROMISE, not the disk: they are what the item said, and the
 # tree is measured against them. A harness that derives its expectations from
 # the tree it grades proves nothing.
-GOVERNANCE_REL = "agent-team/TEAM.md"
+GOVERNANCE_REL = "agent-team/CHARTER.md"
 PANEL_REL = "app/src/ai/ChatPanel.svelte"
 CHAT_REL = "app/src/lib/chat.ts"
 CHAT_TEST_REL = "app/src/lib/__tests__/chat.test.ts"

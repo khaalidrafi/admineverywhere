@@ -2,7 +2,7 @@
 """Re-runnable check of the SEGREGATION-LAW pending slot (Owner order 2026-10-22 18:14Z).
 
 WHY this exists (measured, not assumed). Under the segregation law the whole
-delivery loop hangs on ONE line of agent-team/TEAM-CONTROL.org, `#+PENDING-REVIEW`:
+delivery loop hangs on ONE line of agent-team/CONTROL.org, `#+PENDING-REVIEW`:
 the turn seat authors a branch, the merger parks it in that slot, the next run's
 duty reviewer reads the slot and the gate lands it on an APPROVED verdict behind
 a green landing gate. Four separate times today that single slot was the reason
@@ -98,7 +98,7 @@ import tempfile
 # The PROMISE, not the disk. A harness that derives its expectations from the
 # tree it grades proves nothing.
 WORKFLOW_REL = ".github/workflows/agent-team.yml"
-CTL_REL = "agent-team/TEAM-CONTROL.org"
+CTL_REL = "agent-team/CONTROL.org"
 
 MERGE_STEP = "Merger — resolve the pending branch"
 SEGREGATE_STEP = "SEGREGATION bookkeeping"
