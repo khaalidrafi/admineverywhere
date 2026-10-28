@@ -105,7 +105,7 @@ Key facts:
 npx tauri icon brand/assets/icon-1024.png
 
 # no logo yet? generate a neutral 2x2 grid mark in the brand's colors:
-python skills/admineverywhere-craft/scripts/derive_brand.py --root . --out brand
+python skills/admineverywhere-build/scripts/derive_brand.py --root . --out brand
 ```
 
 Source requirements: square PNG, >= 512px (1024 recommended),

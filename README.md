@@ -47,7 +47,7 @@ cd ../demo-backend && .venv/bin/python manage.py build_admin --brand ../app/bran
 #    the real origin (https only; localhost/wildcards are rejected).
 
 # 4. Or let the agent skills do all of it (guided OR fully automatic):
-python ../skills/admineverywhere-craft/scripts/derive_brand.py --root <your-repo> --out <your-repo>/brand
+python ../skills/admineverywhere-build/scripts/derive_brand.py --root <your-repo> --out <your-repo>/brand
 ```
 
 Screenshot flow worth demoing: login → dashboard widgets (record counts,
@@ -64,7 +64,7 @@ Save — whole app, new identity, one second, no rebuild.
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat, in-app brand editor (58 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | `default/` (the neutral shipped identity) + two examples: `freshorama` (dark SaaS) + `minimal-light` (light) |
-| `skills/` | agent skills: `admineverywhere-onboard` (wire an existing repo onto admineverywhere) + `admineverywhere-craft` (guided or source-derived branding; ask/auto modes) |
+| `skills/` | agent skills: `admineverywhere-onboard` (wire an existing repo onto admineverywhere) + `admineverywhere-build` (guided or source-derived branding; ask/auto modes) |
 | `frontend-dist/` | stub for the Nix flake input — the repo ships no prebuilt web assets |
 | `docs/` | E2E screenshots |
 | `.github/workflows/` | `build-all.yml` — live CI: test gate + six build legs + tag-triggered releases (`build-demo.yml.disabled` — the old parked demo-CI) |
