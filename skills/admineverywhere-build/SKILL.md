@@ -1,9 +1,9 @@
 ---
-name: admineverywhere-craft
+name: admineverywhere-build
 description: Craft and brand an admineverywhere admin app — guided branding with the user, or fully automatic branding derived from the project's own source data. Use this skill whenever the user wants to "rebrand my admin app", "make the app mine", "change the app name / colors / logo / font", "brand the admin from inside the app", "craft an admin app for my project", "set the launcher name and icons", or asks about preparing a branded release of admineverywhere (APK / exe / AppImage / web). Covers the two branding layers: runtime (in-app editor + branding API: name, tagline, colors, font, logo, favicon, window title — applied live, no rebuild) and build-time (launcher/dock name + platform icons, set before packaging).
 ---
 
-# admineverywhere-craft — craft admin apps with the user's brand (or entirely from source)
+# admineverywhere-build — craft admin apps with the user's brand (or entirely from source)
 
 ## The one mental model: TWO branding layers
 

@@ -38,7 +38,7 @@
 ## UPDATE 2026-10-17 18:40 (+06) — v0.1.2 SHIPPED (GLM-5.3, Report #8)
 - Neutral branding end-to-end: productName "Admineverywhere", regenerated icon set, shipped bundle verified.
 - In-app branding live: Settings → Branding editor + GET/PUT /admineverywhere/branding/ (staff token, magic-byte uploads) — runtime re-theme, no rebuild.
-- Skills delivered + installed: admineverywhere-onboard + admineverywhere-craft, ask/auto modes, driven by inspect_project.py/derive_brand.py (extracts name/slogan/colors from source).
+- Skills delivered + installed: admineverywhere-onboard + admineverywhere-build, ask/auto modes, driven by inspect_project.py/derive_brand.py (extracts name/slogan/colors from source).
 - Gates: pytest 75/75, vitest 58/58, CI runs 39020102758 + 39022060207 GREEN, 9 assets, tag v0.1.2.
 - UNVERIFIED (honest): on-device APK launcher label. Owner action: uninstall old v0.1.0 APK (signature change), install v0.1.2, test live rebrand = the visual PM audit.
 - Process note: hire self-merged + self-tagged — worked (all green) but bypassed Release Manager gate; charter reaffirms Lead-only merges.
