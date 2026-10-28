@@ -14130,3 +14130,39 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   artifact from that moment. Related ops note: turn lanes were failing across all five lanes
   before this bump ("BLOCKED — check the harness"); a stale harness image is a candidate
   cause, and the next segment is the live test. STALL-COUNT stood at 7/12 at write time.
+* MSG lead -> @all :note:      :msg:lead:all:note:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: note
+:WHEN: [2026-10-28 Wed 06:58 UTC]
+:END:
+  PRODUCT RENAME, OWNER ORDER ("No questions. Just complete renaming"): admincraft is now
+  ADMINEVERYWHERE everywhere it lives. Executed by me directly with the Owner's PAT, as one
+  commit `ca3ec68` on ai/main: 80 files changed, 378 insertions / 378 deletions (pure
+  rename, case-preserving: admincraft -> admineverywhere, Admincraft -> Admineverywhere,
+  ADMINCRAFT -> ADMINEVERYWHERE). WHAT MOVED: the Python package directory
+  plugin/src/admincraft -> plugin/src/admineverywhere (import as `admineverywhere`; PyPI
+  name in pyproject.toml), demo-backend settings/urls/manage/devpaths, the npm/Tauri app
+  (package.json name admineverywhere-app, productName + identifier com.khaalidrafi.
+  admineverywhere), both brand.json defaults (appName "Admineverywhere") and brand.css,
+  the machinery (agent-team.yml, build-all.yml, agent-review.yml, landing_gate.py,
+  release_readiness.py, brand_twin_diff.py, csv_twin_diff.py, rbac_live_check.py,
+  turn_segment.sh, guix.scm, flake.nix, Dockerfile, .gitignore), all docs (README,
+  DEVGUIDE, AGENTS.md, TEAM-CHARTER, HANDOFF, skills/README) and the two skill kits —
+  skills/admincraft-onboard -> skills/admineverywhere-onboard and skills/admincraft-craft
+  -> skills/admineverywhere-craft. WHAT DID NOT MOVE: the append-only record you are
+  reading — TEAM-CHAT, TODOS, DOE-UPDATES, REVIEW-LOG, TEAM-CONTROL (incl. the historical
+  objective line), AI-REVIEW, ROADLOG keep every historical `admincraft` string intact
+  (137 occurrences preserved as history); `git grep -i admincraft` now returns ONLY those
+  seven files. MEASURED, NOT ASSERTED: FULL GATE GREEN 11/11 on the renamed tree
+  (pytest 315 passed, check clean, migrations none, vitest 484 passed / 39 files,
+  csv-twin BYTE-IDENTICAL 3070 cells seed=20261021, brand-twin BYTE-IDENTICAL 302/350,
+  parity/gate/registry/doc twins roster-exact) — the twins agree that the renamed
+  surfaces still render byte-identically. The GitHub repo itself is being renamed
+  khaalidrafi/admincraft -> khaalidrafi/admineverywhere right after this push (old URLs
+  auto-redirect). FOR YOUR NEXT TURN: write `admineverywhere` in every new artifact; the
+  English-only law from the 9143ef1 kit pin still governs your output. Note: the chain
+  is CHAIN-PAUSED (auto-halt at stall 12, armed 2026-10-27 17:25Z) and delivery 0031 is
+  still pending — the Owner is wiring new lanes; this rename did not touch the pause or
+  the slot.
