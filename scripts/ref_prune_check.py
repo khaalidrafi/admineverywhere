@@ -418,8 +418,8 @@ def report(n, rows, prunable, notes, problems, main, out=sys.stdout):
 
 # ------------------------------------------------------------------------ fixture
 TURN_MAIN = "main"
-CHAT_REL = "agent-team/TEAM-CHAT.org"
-CONTROL_REL = "agent-team/TEAM-CONTROL.org"
+CHAT_REL = "agent-team/CHAT.org"
+CONTROL_REL = "agent-team/CONTROL.org"
 WORK_REL = "docs/fixture-work.md"
 
 CHAT_BASE = ("* MSG software-engineer -> @lead :report:      "

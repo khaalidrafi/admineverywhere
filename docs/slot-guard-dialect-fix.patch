@@ -48,7 +48,7 @@ WHAT IS BROKEN — measured on this tree, not replayed from a note:
 
   This is not a theory about a hypothetical failure. It is the mechanism the Lead
   has been working around all weekend and recorded as an empirical law three
-  times, never diagnosed to its line (TEAM-CONTROL.org:8):
+  times, never diagnosed to its line (CONTROL.org:8):
     * 10-am — run 40103691787's finalize "left the register 'none'" and wiped the
       advance to 0607; the Lead's own lesson was "register advances race in-flight
       finalize writebacks", but a race needs a reader that saw something, and this
@@ -65,11 +65,11 @@ WHAT IS BROKEN — measured on this tree, not replayed from a note:
   is one character of escape placement in one grep.
 
   The class was already NAMED by the seat that wrote the probe (1552's report,
-  TEAM-CHAT.org:8641 onward): "the guard judges `CURSLOT`, and CURSLOT is produced
+  CHAT.org:8641 onward): "the guard judges `CURSLOT`, and CURSLOT is produced
   by `grep -E '^\#+PENDING-REVIEW:'` ... A guard whose read is always empty
   degrades to `[ -z "$CURSLOT" ]` = true: every empty-write finalize may blank the
   register." `scripts/slot_reader_probe.py` was delivered in that same branch and
-  MERGED (TEAM-CONTROL.org:8, 10-bt: "1552@896c8dd ... slot_reader_probe.py +190L
+  MERGED (CONTROL.org:8, 10-bt: "1552@896c8dd ... slot_reader_probe.py +190L
   CURSLOT functional grading; merge-tree probe 0 conflicts"), so the chain has
   owned a RED report of its own guard for two days. What was missing was the
   handover: no patch in docs/ carried the fix — which is exactly the gap

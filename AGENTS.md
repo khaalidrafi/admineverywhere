@@ -251,7 +251,7 @@ python3 scripts/chain_session_check.py        # 0 ok / 1 a claim is false / 2 ca
 python3 scripts/chain_session_check.py --selftest # 19 controls: every leg proved able to fail
 
 # the chat send-back's FIVE specced checks as ONE command — governance
-# (TEAM.md's MEMBER IDS reversal + its two rule headings), the color sweep of
+# (CHARTER.md's MEMBER IDS reversal + its two rule headings), the color sweep of
 # the three files the send-back touched, one panel / one importer / one mount,
 # the LIVE prompt path (the panel really calls buildSchemaPrompt, the
 # legend is still bound in chat.ts, and the wire-level proof that asserts the
@@ -268,7 +268,7 @@ python3 scripts/chat_feature_check.py --selftest # 12 controls: every leg proved
 # the Lead's triage sorted them as 2 checker false-reds, 2 INHERITED folds, 1 lost
 # transcript and 4 real authored defects. The inherited class is the one a seat can see for
 # free: the branch's base predated the chat fold repair, so the branch TREE carried orphan
-# drawer lines main had already fixed, and the duty brief grades "TEAM-CHAT entries legal
+# drawer lines main had already fixed, and the duty brief grades "CHAT.org entries legal
 # format" against that tree. This harness asks the same question of the WHOLE queue before a
 # lane is paid: the register's pending branch is live, unmerged and at the parked sha
 # (slot-live); main moved inside a region the branch also edited (stale-base); orphan drawer
@@ -294,7 +294,7 @@ python3 scripts/review_preflight_check.py --since 20261025  # one day's queue on
 python3 scripts/review_preflight_check.py --selftest # 18 controls on real fixture repos: every leg proved able to fail
 
 # the SEGREGATION-LAW pending slot as ONE command, read-only against the Lead-owned
-# merger. The whole delivery loop hangs on one line of agent-team/TEAM-CONTROL.org,
+# merger. The whole delivery loop hangs on one line of agent-team/CONTROL.org,
 # and four separate times it was the reason nothing could land: an EMPTY slot could
 # never bootstrap (the park keyed on approved, which needs a pending to exist), the
 # merger compared a SEAT KEY against member ids, a timed-out segment step handed it an
@@ -363,7 +363,7 @@ python3 scripts/slot_reader_probe.py          # 0 all readers agree / 1 an inert
 python3 scripts/chain_patch_check.py        # 0 ok / 1 a claim is false / 2 cannot run
 python3 scripts/chain_patch_check.py --selftest # every leg proved able to fail
 # every `:WHEN:` timestamp the chain writes, as ONE command — over BOTH files that carry
-# the drawer (TEAM-CHAT.org and REVIEW-LOG.org): each `:PROPERTIES:` record owns EXACTLY
+# the drawer (CHAT.org and REVIEW-LOG.org): each `:PROPERTIES:` record owns EXACTLY
 # ONE column-0 stamp, the stamp is the FORMAT LAW's inactive-timestamp shape
 # `[YYYY-MM-DD Eee HH:MM UTC]`, its date is real, its clock is 00-23/00-59 and its day
 # NAME is the weekday that date falls on. The weekday is read from a pinned English table,
@@ -378,7 +378,7 @@ python3 scripts/chat_when_check.py --selftest # 11 controls: every leg proved ab
 # the Lead's triage sorted them as 2 checker false-reds, 2 INHERITED folds, 1 lost
 # transcript and 4 real authored defects. The inherited class is the one a seat can see
 # for free: the branch's base predated the chat fold repair, so the branch TREE carried
-# the orphan drawer lines main had already fixed, and the duty brief grades "TEAM-CHAT
+# the orphan drawer lines main had already fixed, and the duty brief grades "CHAT.org
 # entries legal format" against that tree. This harness asks the same question of the
 # whole queue BEFORE a lane is paid: the register's pending branch is live, unmerged and
 # at the parked sha (slot-live); that same branch is not already SWALLOWED by a landing
@@ -442,7 +442,7 @@ python3 scripts/harness_roster_check.py --selftest # controls: every leg proved 
 
 # THE MERGE ITSELF, PREVIEWED BEFORE IT IS SPENT. review_preflight asks whether a LANE is
 # worth paying; nothing asked what the MERGER produces once the verdict is APPROVED — and the
-# answer is not "what was authored". `.gitattributes:1` declares `agent-team/TEAM-CHAT.org
+# answer is not "what was authored". `.gitattributes:1` declares `agent-team/CHAT.org
 # merge=union` so concurrent EOF appends merge instead of stopping the chain, and the union
 # driver writes a line ONCE when both sides add it identically, while the FORMAT LAW makes the
 # first five lines of a same-seat report byte-identical (`* MSG <seat> -> @lead :report:`,
@@ -1042,10 +1042,10 @@ accounting -> self-dispatch while the objective is open).
 
 Agent law (supersedes any conflicting instruction above for CI seats):
 
-1. SINGLE CHAT: `agent-team/TEAM-CHAT.org` — append-only, FORMAT LAW
+1. SINGLE CHAT: `agent-team/CHAT.org` — append-only, FORMAT LAW
    headline grammar (headline carries FROM; `:PROPERTIES:` drawer;
    Org inactive timestamps). Direct @pings, never mailbox relay.
-2. CONTROL: `agent-team/TEAM-CONTROL.org` is LEAD-OWNED — seats read and
+2. CONTROL: `agent-team/CONTROL.org` is LEAD-OWNED — seats read and
    cite, never edit. Same for `.github/workflows/*`, `.github/scripts/*`,
    `.gitattributes`.
 3. BOARD: `agent-team/TODOS.org` is the source of truth for
@@ -1115,13 +1115,13 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    header included).
 8. SEAT (Owner law 17:47Z): bodies are chosen BY FIT and preinstalled
    in `docker/harness/` (Docker law). Rotation pointer lives in
-   TEAM-CONTROL.org `#+TURN`.
+   CONTROL.org `#+TURN`.
 
 ## Global agent law — DISTRIBUTED (Owner order 2026-10-21 03:53Z #hq:
 ## "don't forget to give global instructions' AGENTS.md to the team").
 ## Canonical source: khaalidrafi/agent-team.el AGENTS.md.
 
-1. FORMAT LAW: TEAM-CHAT.org messages are Org headlines carrying FROM,
+1. FORMAT LAW: CHAT.org messages are Org headlines carrying FROM,
    routing in tags, fields in a :PROPERTIES: drawer; append at EOF only.
 2. TELEGRAM LAW: TG-bound messages open with FROM:/TO: lines.
 3. SECRET LAW: credentials NEVER travel in chat/files/commits — only as
@@ -1132,7 +1132,7 @@ Agent law (supersedes any conflicting instruction above for CI seats):
    uploaded as sessions-<seat>-* artifacts (30d), restored next turn.
 5. OWNER LOCK: the TG bridge ingests ONLY the Owner's chat.
 6. DOCKER LAW: agents PREINSTALLED in docker/harness; keys env-injected.
-7. SEAT BOUNDARIES: never edit .github/workflows/*, TEAM-CONTROL.org,
+7. SEAT BOUNDARIES: never edit .github/workflows/*, CONTROL.org,
    .gitattributes; never push to ai/main (finalize auto-merges).
 8. BOARD DISCIPLINE: ONGOING at start, evidence in :LOGBOOK:, DONE is
    Lead-only.

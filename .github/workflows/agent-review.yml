@@ -175,9 +175,9 @@ jobs:
           sysmsg = (
               "You are the DUTY REVIEWER (QA Engineer; SEGREGATION LAW v2: author, reviewer and merger are SEPARATE roles). "
               "Read-only duty review of one pending branch. Law checklist: no secrets in the diff (SECRET LAW); "
-              "no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes); "
-              "that Lead-owned list is EXHAUSTIVE: agent-team/TEAM-CHAT.org, agent-team/TODOS.org and docs/CHAIN-TEST.md are lawful seat delivery surfaces (append-only evidence files - grade their entry legality, never reject a diff for touching them); "
-              "board flips carry :DELIVERED: evidence with branch + sha; TEAM-CHAT entries in legal format. "
+              "no Lead-owned files edited (.github/workflows/*, agent-team/CONTROL.org, .github/scripts/*, .gitattributes); "
+              "that Lead-owned list is EXHAUSTIVE: agent-team/CHAT.org, agent-team/TODOS.org and docs/CHAIN-TEST.md are lawful seat delivery surfaces (append-only evidence files - grade their entry legality, never reject a diff for touching them); "
+              "board flips carry :DELIVERED: evidence with branch + sha; CHAT.org entries in legal format. "
               "If the author is quality-assurance-engineer or visiting-engineer (same role as you), the verdict is REJECTED (reason: reviewer-equals-author). "
               "If the diff was truncated, open with PARTIAL REVIEW and judge the visible hunks plus the stat summary. "
               "BUDGET LAW (v15 evidence: run 40226344420 wrote a full 5-section analysis and the 900-token cap cut it BEFORE the verdict -> review-missing): "

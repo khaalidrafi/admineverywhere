@@ -9,7 +9,7 @@ checker false-red main has since fixed, #3 and #4 were INHERITED — the branch'
 base predated the chat fold repair 5147249, so the branch TREE carried the six
 orphan drawer lines main had already fixed — #5 lost its transcript, and #6
 through #8 graded real authored defects. The class this harness can see at zero
-lane cost is #3/#4: the review brief's step 4 grades "TEAM-CHAT entries legal
+lane cost is #3/#4: the review brief's step 4 grades "CHAT.org entries legal
 format" against the branch tree, so a reviewer reads main's stale state as the
 author's defect and rejects, and it did so before anyone knew the cause (the
 Lead diagnosed it by hand and repaired the branch mechanically, rebase
@@ -42,7 +42,7 @@ tree (0339 / 0454 / 0527 / 20261022-2340 — reviewers rejected for
 
 A THIRD state had no reader at all until the platform seat measured it
 (ai/turn-20261025-0830, 2026-10-25 08:47Z): the chat MERGE FOLD. `.gitattributes`
-gives agent-team/TEAM-CHAT.org the `merge=union` driver, so two appends whose
+gives agent-team/CHAT.org the `merge=union` driver, so two appends whose
 leading lines are identical — every entry of one seat to one addressee with one
 kind opens with the SAME five lines — are read as common context and folded into
 one header. Measured on ai/turn-20261024-1956: merge base 0 orphan drawer lines,
@@ -142,14 +142,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 MAIN_REF = "origin/ai/main"
 BRANCH_PREFIX = "ai/turn-"
-CHAT_REL = "agent-team/TEAM-CHAT.org"
-CONTROL_REL = "agent-team/TEAM-CONTROL.org"
+CHAT_REL = "agent-team/CHAT.org"
+CONTROL_REL = "agent-team/CONTROL.org"
 
 # The reviewer's own reject classes, spelled out because the brief does not
 # enumerate them — it only refuses Lead-owned edits and un-legal chat entries.
 LEAK_FILES = (".turn-review.txt", ".turn-inside.sh", ".turn-result.txt")
 LEAD_OWNED_PREFIXES = (".github/workflows/", ".github/scripts/")
-LEAD_OWNED_FILES = ("agent-team/TEAM-CONTROL.org", ".gitattributes")
+LEAD_OWNED_FILES = ("agent-team/CONTROL.org", ".gitattributes")
 
 LEG_ROSTER = ("slot-live", "landed-echo", "stale-base", "chat-structure",
               "tree-hygiene", "merge-preview", "merged-fold")

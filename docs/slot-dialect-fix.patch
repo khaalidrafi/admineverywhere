@@ -30,10 +30,10 @@ WHAT IS BROKEN — measured on f284b3b (current ai/main), not replayed:
   `python3 scripts/slot_reader_probe.py` on this tree answers rc 1,
   "readers matching: 2 of 3", RED naming `guard-curslot`: the exact grep shipped
   at agent-team.yml:1091 cannot find the exact slot line shipped in
-  agent-team/TEAM-CONTROL.org. Reproduced directly against the register file:
+  agent-team/CONTROL.org. Reproduced directly against the register file:
 
-    grep -Ec '^\#+PENDING-REVIEW:' agent-team/TEAM-CONTROL.org   -> 0
-    grep -Ec '^#\+PENDING-REVIEW:' agent-team/TEAM-CONTROL.org   -> 1
+    grep -Ec '^\#+PENDING-REVIEW:' agent-team/CONTROL.org   -> 0
+    grep -Ec '^#\+PENDING-REVIEW:' agent-team/CONTROL.org   -> 1
 
   GNU grep 3.11 (this image, `grep --version`) reads the ERE escape `\#+` as an
   ordinary `#` followed by the one-or-more quantifier — "one-or-more hash

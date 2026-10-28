@@ -107,7 +107,7 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   the turn control step refuses to run while the marker is set (mode=
   paused); the Lead clears the marker to resume. Verify: dispatch a
   segment that delivers a TODO -> run ends decision=paused-todo-review,
-  TEAM-CONTROL.org carries #+CHAIN-PAUSE, next run stops at the stop
+  CONTROL.org carries #+CHAIN-PAUSE, next run stops at the stop
   notice; clear the line -> chain resumes.
 
 - [ ] REVIEW: free-offer hires 2026-10-22 13:35Z — (1) new seats

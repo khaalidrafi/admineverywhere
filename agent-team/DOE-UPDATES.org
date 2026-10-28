@@ -239,14 +239,14 @@ with gigantic messages! YOU and ALL teams MUST fix ALL commits!!"
   enough; TREES MUST STAY BYTE-IDENTICAL (verify: git diff <old> <new>
   prints nothing before you push).
 - Force-push --force-with-lease ONLY when no Actions run is in flight
-  (check Actions first); the chain re-reads TEAM-CONTROL.org, so the
+  (check Actions first); the chain re-reads CONTROL.org, so the
   state machine survives the rewrite.
 - Fix the generators: every git commit step in .github/workflows/*
   gains the two trailers and keeps future subjects short (reference:
   agent-team.el ci.yml commit sites, push 010f27a).
 - Going forward: commit small, commit often — the Owner benchmarks
   per commit.
-- Report DONE + the new ai/main head SHA in TEAM-CHAT.org.
+- Report DONE + the new ai/main head SHA in CHAT.org.
 
 * TEAM-UPDATE #4 — WHOLE-REPO AGENTS.md COMPLIANCE AUDIT + refactor (Owner 2026-10-27 #hq)
   :FROM: Director of Engineering — z.ai-agent @ chat.z.ai
@@ -279,7 +279,7 @@ compliance with global AGENTS.md and refactor the code if necessary!"
   docs, CI configs, scripts — every file.
 - Refactor what violates global AGENTS.md — small dedicated commits on
   ai/main, never mixed with unrelated work.
-- Report the verdict in TEAM-CHAT.org: CLEAN, or violations found +
+- Report the verdict in CHAT.org: CLEAN, or violations found +
   refactor commits landed (branch + sha per commit); anything
   unfixable -> BLOCKED with paths.
 
@@ -339,7 +339,7 @@ fix." Evidence says NO — the laws do not reach your CI lanes:
 - verify the wiring per lane with the probe + token measurement, and
   grade it into the lane budget check so a lawless lane can never be
   trusted first,
-- report the full matrix in TEAM-CHAT.org: tool x global-law x
+- report the full matrix in CHAT.org: tool x global-law x
   local-law x mechanism x evidence (request id / token count / probe
   answer), with branch + sha of the wiring commits.
 
@@ -348,7 +348,7 @@ fix." Evidence says NO — the laws do not reach your CI lanes:
 - no response yet on record. Do the law-wiring audit + the whole-repo
   compliance audit in the same turn — compliance findings + refactor
   commits first (they change what the lanes must carry), then the
-  wiring fix, then one combined verdict in TEAM-CHAT.org.
+  wiring fix, then one combined verdict in CHAT.org.
 
 * TEAM-UPDATE #6 — 2026-10-27 05:0Z — Commit-substance law NOW + ci-core submodule migration (Owner 2026-10-27 #hq). Pending audits still stand — one combined turn.
 
@@ -405,7 +405,7 @@ Adoption:
 - if the kit is not yet visible when you start, do ORDER A + the audits
   first and report ORDER B as WAITING — never fake it.
 
-** Verdict (TEAM-CHAT.org, next turn)
+** Verdict (CHAT.org, next turn)
 
 - the lane x global-law x local-law x mechanism matrix with probe/token
   evidence (TEAM-UPDATE #5, unchanged),
@@ -443,7 +443,7 @@ their work for compliance with AGENTS.md."
   WAITING — never fake it.
 - THEN — REDO: the #4 whole-repo audit against AGENTS.md AS WRITTEN,
   violating work redone (path x clause x severity, fix commits), matrix
-  verdict in TEAM-CHAT.org (#5's evidence matrix stands).
+  verdict in CHAT.org (#5's evidence matrix stands).
 
 ** KIT RENAMED
 
@@ -464,7 +464,7 @@ their work for compliance with AGENTS.md."
 - THEN, REDO: the whole-repo audit against AGENTS.md AS WRITTEN, as #7
   ordered (path x clause x severity, fix commits on ai/main, evidence
   matrix lane x global x local x mechanism x probe/token proof in
-  TEAM-CHAT.org, one combined verdict).
+  CHAT.org, one combined verdict).
 - Reference wiring: the canonical agent-team.el repo already runs the
   same kit (f0f706f) — its ci.yml shows the finished pattern. Your
   harness stall history should clear once lanes run the canonical

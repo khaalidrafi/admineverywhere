@@ -45,7 +45,7 @@
 # DONE chat items were renamed on this board — verify-cool-chat-2 ->
 # verify-chat-2, COOL-CHAT-SEND-BACK-2 -> CHAT-SEND-BACK-2, COOL-PREVIEW ->
 # CHAT-PREVIEW. Headlines carry the new IDs; :DELIVERED: evidence bodies,
-# git branch names, and TEAM-CHAT/REVIEW-LOG/MEMBERS history keep the IDs
+# git branch names, and CHAT.org/REVIEW-LOG/MEMBERS history keep the IDs
 # as they were then (historical-record law).
 ** DONE FR R-001 lifecycle state machine (BE contract + FE renderer)          :BE:FE:
 :LOGBOOK:
@@ -202,7 +202,7 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   pagination_class=None), creation entry via perform_create + seed_demo,
   migration 0002, docs/order-lifecycle.md. pytest 90/90 in-sandbox at that
   commit (53 base + 37 new; zero new deps — no pytest-django).
-  Spec letter now VERIFIED (fetched origin/ai/main): agent-team/TEAM.md new
+  Spec letter now VERIFIED (fetched origin/ai/main): agent-team/CHARTER.md new
   sections read; ROADLOG.org R-001 read. No implementation drift vs the
   dispatch; one deliberate refinement to record: R-001 sketches "@action
   transition endpoints (confirm/cancel)" while the dispatch orders a single
@@ -273,7 +273,7 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
      line 5715 (`:hiring-consult:`), the same hyphenated-KIND grammar gap the
      relief seat filed; the entry is yours and append-only law kept me out of it.
   2. Two consecutive empty segments on the paid visiting lane (STALL-COUNT 2,
-     TEAM-CONTROL.org:10-11) — the burn is spending credits and landing nothing;
+     CONTROL.org:10-11) — the burn is spending credits and landing nothing;
      HR review is yours, and this seat's own lane (qoder/deepseek-v4.1-flash@qoder)
      ran fine, so the model flag noted "unverified" at hiring is now verified good.
   3. QA verdict on this item: the client half is CORRECT and its refusal is now
@@ -293,7 +293,7 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   report, no open @platform-engineer ping). The previous segment landed as
   e34adbf "turn(platform-engineer): segment work — host-committed / result:
   BLOCKED (qoder+zai+minimax lanes all failed — check the harness)" with
-  stall=1 mirrored in TEAM-CONTROL — product code (RecordForm.svelte
+  stall=1 mirrored in CONTROL.org — product code (RecordForm.svelte
   re-hydration $effect + ModelPage.svelte modal-close guard) merged with NO
   chat entry, NO board note and NO gate evidence. This segment supplied what
   was missing:
@@ -425,7 +425,7 @@ CLOCK: [2026-10-18 Sun 01:58]--[2026-10-18 Sun 18:00] =>  16:02
   docs/custom-actions.md, docs/DEVGUIDE.md counts 212/252 -> 285/283 (stale
   since the float/datetime passes; the file arrived here as repo-root
   AGENTS.md and was re-placed onto upstream's rename to DEVGUIDE.md, 345c9dd,
-  during the rebase). Lead-owned TEAM-CONTROL.org:67 still carries the old
+  during the rebase). Lead-owned CONTROL.org:67 still carries the old
   landing-gate baseline numbers — cited, never edited. LANDING GATE green at this HEAD: pytest
   285/285 (-p no:cacheprovider, 19.2s), manage.py check "no issues (0
   silenced)", makemigrations --check "No changes detected", vitest 283/283
@@ -655,10 +655,10 @@ CLOCK: [2026-10-19 Mon 03:34]--[2026-10-19 Mon 03:41] =>  0:07
   all IDENTICAL); `npx tsc --noEmit` rc 0; `python3 scripts/release_readiness.py`
   rc 0 (doc-quoted counts equal the gate's own pins: pytest=299, vitest=425).
   REVIEWER DUTY (SEGREGATION LAW): nothing to review this run — #+PENDING-REVIEW is
-  empty (agent-team/TEAM-CONTROL.org:13) and the review phase printed "no pending
+  empty (agent-team/CONTROL.org:13) and the review phase printed "no pending
   branch this run", leaving /workspace/.turn-review.txt at 0 bytes (measured).
   Chain state observed while at it: the previous two segments authored ZERO commits
-  (ai/turn-20261022-1851 vs ai/main differs only in Lead-owned TEAM-CONTROL churn),
+  (ai/turn-20261022-1851 vs ai/main differs only in Lead-owned CONTROL.org churn),
   so STALL-COUNT is 2 and ba00442's slot-bootstrap fix is still UNVERIFIED
   end-to-end — it can only be exercised by a segment that authors, which is what
   this branch now is. Not a seat's file to touch; filed for the Lead.
@@ -800,11 +800,11 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
 ** DONE FR R-002 document independent-enum pattern                          :DOC:
 :LOGBOOK:
 - Note taken on [2026-10-23 Fri 19:20 UTC] :: :DELIVERED: NIGHT-2 ITEM 1 RE-DELIVERY
-  (seat software-engineer, lane per rotation pointer agent-team/TEAM-CONTROL.org:9 =
+  (seat software-engineer, lane per rotation pointer agent-team/CONTROL.org:9 =
   deepseek-v4.1-flash@codebuddy; branch ai/turn-20261022-2227 @ cfd29f9, base 1a87144) —
   :RESULT: DONE for the member scope; DONE stays Lead-only.
   WHAT WAS REJECTED: the duty reviewer (deepseek-v4.1-flash@qoder, REVIEW-LOG.org:109/:119
-  :rejected:) and the Lead's independent audit (TEAM-CHAT.org:6537 :audit-red:, corrected
+  :rejected:) and the Lead's independent audit (CHAT.org:6537 :audit-red:, corrected
   at :6564) named ONE mechanical defect on my R-002 re-delivery: my own +5-line
   EXPECTED_CLAIMS comment in scripts/release_readiness.py shifted the two symbols
   docs/DEVGUIDE.md cites, while the citations stayed — :1126 cited leg_doc_counts() at
@@ -829,13 +829,13 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
   noted "the stated head 1a87144 was superseded by tip cfd29f9"), yet agent-team/REVIEW-LOG.org
   carries NO approved entry for cfd29f9 and 12 consecutive `:review-missing:` entries for
   this branch tonight (REVIEW-LOG.org:1598-:1708, reviewer=unknown, verdict=none, 17:55Z ->
-  18:45Z), because agent-team/TEAM-CONTROL.org:13 #+PENDING-REVIEW still names
+  18:45Z), because agent-team/CONTROL.org:13 #+PENDING-REVIEW still names
   sha=1a87144ced5ef62c3bbce745b8cf3d76a92f1ad4 while origin/ai/turn-20261022-2227 tip is
-  cfd29f9b53b9f92a03d8f0340eda38082ddc93b1. TEAM-CONTROL.org:10 stall=4, climbing toward
+  cfd29f9b53b9f92a03d8f0340eda38082ddc93b1. CONTROL.org:10 stall=4, climbing toward
   the BR-01 auto-halt at 12. A seat cannot re-point the slot or write the log; naming it
   for the Lead's pointer update.
   ITEM 2 OF THE NIGHT-2 ORDER, MEASURED ALREADY CLOSED ON ai/main (so no rework authored):
-  the "guessed-URL defect" is the 2026-10-21 21:05 FR-R003-FE finding (TEAM-CHAT.org:1055)
+  the "guessed-URL defect" is the 2026-10-21 21:05 FR-R003-FE finding (CHAT.org:1055)
   and its fix is on the trunk — `fetchAudit` throws with ZERO requests when no discovered
   path is handed to it (app/src/lib/api.ts:349-350), the normalizer binds
   transitionPath/historyPath only on POST / `get && !post` evidence
@@ -846,12 +846,12 @@ CLOCK: [2026-10-20 Tue 20:52]--[2026-10-20 Tue 21:05] =>  0:13
   hand-written model endpoint left: `"/api/…` survives only as the settings DEFAULTS in
   app/src/lib/stores.ts:58 and the plugin's fixed /admincraft/branding/ surface.
   SCOPE OF THIS SEGMENT: agent-team/TODOS.org (this note) + one chat report at
-  TEAM-CHAT.org EOF. Zero product file touched, so no twin pair and no --fe run; no
-  Lead-owned file (.github/*, TEAM-CONTROL.org, .gitattributes) opened. BOARD STATE:
+  CHAT.org EOF. Zero product file touched, so no twin pair and no --fe run; no
+  Lead-owned file (.github/*, CONTROL.org, .gitattributes) opened. BOARD STATE:
   R-002 stays PENDING (flip was already made; DONE is the Lead's gate), no completion claim.
   CHAIN STATE, measured before this append: `python3 scripts/chain_test_check.py` -> rc 1,
-  50 APPEND-ONLY/NO-DROP hits, pre-existing from the Lead's in-place TEAM-CHAT.org:5528
-  repairs and the 10-22 rebase/retry races (TEAM-CONTROL.org DAY DAMAGE REPORT); this note
+  50 APPEND-ONLY/NO-DROP hits, pre-existing from the Lead's in-place CHAT.org:5528
+  repairs and the 10-22 rebase/retry races (CONTROL.org DAY DAMAGE REPORT); this note
   adds none — the append is a new entry at EOF only.
   SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
   ROLE_LARK_WEBHOOK empty in this seat's env (measured with [ -z ]) -> the Lark copy of the
@@ -897,7 +897,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   silently degrades to free text, no error. grep confirms zero oneOf/anyOf
   handling in app/src. The demo rig has no blank=True choices field, which is
   why the shipped fixture never showed it. Filed as a follow-up in
-  TEAM-CHAT (item 6 report) for the FE seat: resolve oneOf in
+  CHAT.org (item 6 report) for the FE seat: resolve oneOf in
   fieldTypeOf/propToField + recapture a fixture containing the shape.
 - State "ONGOING" from "TODO" [2026-10-20 Tue 21:11]
 - Note taken on [2026-10-20 Tue 21:11] :: Segment opened by platform-engineer
@@ -972,7 +972,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   AGENTS.md + docs/DEVGUIDE.md ## Layout/## Commands. Docs updated in the same
   commit: the kanban row in BOTH mirrors now says the patch half is mounted, and
   docs/independent-enums.md §6 closes as shipped-and-graded instead of "when R-004
-  lands". Zero Lead-owned file touched (.github/*, TEAM-CONTROL.org,
+  lands". Zero Lead-owned file touched (.github/*, CONTROL.org,
   .gitattributes read-only); no migration, no rig content change.
   FOUND, REPORTED NOT CHANGED (design ruling owed, Lead): a blank=True free enum
   means the empty state is one a user must be able to LEAVE, yet the Unassigned
@@ -983,7 +983,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   decide them is live-legal (200 above). The narrow fix is to let an Unassigned
   card move when the axis is `patch` AND the value is empty, keeping an
   out-of-set value read-only — not taken, because it overturns a documented
-  ruling and re-pins an existing test. Pinged in TEAM-CHAT for the ruling.
+  ruling and re-pins an existing test. Pinged in CHAT.org for the ruling.
   SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
   ROLE_LARK_WEBHOOK empty in this seat's env (measured) -> Lark copy SKIPPED,
   noted here per instruction 8. State untouched: PENDING stands, DONE is the
@@ -1230,7 +1230,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   `release_readiness.py` rc 0, `npx tsc --noEmit` exit 0.
 - Note taken on [2026-10-23 Fri 20:26 UTC] :: :DELIVERED: NIGHT-2 ITEM 4 — THE RENDERED
   HALF IS NOW WIRE-PINNED (seat relief-engineer, zai/glm-4.7-flash@goose per the rotation
-  pointer agent-team/TEAM-CONTROL.org:9; branch ai/turn-20261023-2008, base e8aa04d).
+  pointer agent-team/CONTROL.org:9; branch ai/turn-20261023-2008, base e8aa04d).
   MEASURED BEFORE THE FIX: every FR-R005 test called its subject directly — csv.test.ts
   hands `buildCsv`/`downloadCsv` its own arguments, api.test.ts hands `fetchCsv` its own
   path — so the two contract halves AGENTS.md pins ("its button is bound ONLY when the
@@ -1288,7 +1288,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   STILL OPEN, unchanged and not closable from this box: no browser/Tauri window (no
   playwright/chromium present, measured) so nobody clicked an export in real pixels —
   this is rendered-DOM proof under happy-dom. `chain_test_check.py` stays rc 1 (50
-  APPEND-ONLY/NO-DROP hits) on the Lead's in-place TEAM-CHAT.org:5528 repairs — the
+  APPEND-ONLY/NO-DROP hits) on the Lead's in-place CHAT.org:5528 repairs — the
   governance RED escalated 2026-10-22 23:36Z, untouched by me; my entries are EOF
   appends and preserve every byte before them.
   NEXT: Lead DONE gate on this branch; night-2 continues with items 5-7 (R-006 pages,
@@ -1744,7 +1744,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   with the merge-and-refuse rule and the node_modules rationale — both now state
   that touching a twin pair means running `--fe`, because the per-side suites
   cannot see a divergence BETWEEN them. scripts/landing_gate.py is mine
-  (scripts/ is not on the seat-boundary list); .github/*, TEAM-CONTROL.org,
+  (scripts/ is not on the seat-boundary list); .github/*, CONTROL.org,
   .gitattributes untouched, and no Lead-owned file was edited to force the gate.
   ROLE_LARK_WEBHOOK empty in this seat's env ([ -z ], not assumed) -> Lark
   report skipped. Product code / tests / migrations / lockfiles: ZERO changes.
@@ -1983,7 +1983,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
     files, NODE_OPTIONS=1024 --maxWorkers=1), tsc --noEmit exit 0, and the
     sibling harnesses untouched (parity_table_diff 0, brand_twin_diff 0).
     Product code + both test suites: ZERO changes; package-lock untouched;
-    Lead-owned files (.github/*, TEAM-CONTROL.org, .gitattributes) read/cited only.
+    Lead-owned files (.github/*, CONTROL.org, .gitattributes) read/cited only.
   - NEXT: the standing hole is unchanged and only a browser seat can close it —
     real pixels + the demo flow signed end to end (login admin/admin123 →
     widgets → Product table → New Order → Ctrl+K against
@@ -2303,11 +2303,11 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   pip-installs the plugin with `python`, not `python3`; self-healed with the
   gate's own printed `python3 -m pip install -e ./plugin --no-deps`.
   CHAIN STATE, measured: `python3 scripts/chain_test_check.py` still rc 1 (the
-  pre-existing APPEND-ONLY/NO-DROP family from the Lead's in-place TEAM-CHAT.org
+  pre-existing APPEND-ONLY/NO-DROP family from the Lead's in-place CHAT.org
   repairs, escalated 2026-10-22 23:36Z) — untouched by me; my board edit is a pure
   insertion (this note) and my chat entry is an EOF append, every byte before them
   preserved. Lead-owned files (.github/workflows/*, .github/scripts/*,
-  TEAM-CONTROL.org, .gitattributes) read and cited only; gate.sh untouched.
+  CONTROL.org, .gitattributes) read and cited only; gate.sh untouched.
   SECRET LAW held: no credential read, echoed or committed — ENV VAR NAMES only.
   ROLE_LARK_WEBHOOK empty in this seat's env (`[ -z ]`, measured) -> the Lark copy
   of the report is SKIPPED, not lost; no URL invented. The harness scratch
@@ -2632,7 +2632,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   doc-counts 8 live claims equal the gate's pins (pytest=300, vitest=478).
   Peer prose was preserved, not overwritten: the chat and board appends of
   both branches survive byte-for-byte (`git diff --numstat 9824e27..HEAD` =
-  214/0 for agent-team/TEAM-CHAT.org, 168/0 for this file — pure insertions),
+  214/0 for agent-team/CHAT.org, 168/0 for this file — pure insertions),
   and the only -lines in the two mirror docs are the count lines and the
   sentences each branch itself rewrote. One reviewer correction carried:
   docs/widget-data.md:115 published a "seven-mutant battery", then enumerated
@@ -2641,7 +2641,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   State untouched: this row and R-007 stay PENDING, no DONE awarded, nothing
   merged or reviewed by this seat (SEGREGATION LAW v2 — the duty reviewer of
   ai/turn-20261024-0201 is the next seat). Lead-owned files
-  (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, .gitattributes)
+  (.github/workflows/*, .github/scripts/*, CONTROL.org, .gitattributes)
   read and cited only.
 
 - Note taken on [2026-10-24 Sat 01:04 UTC] :: :DELIVERED: (night-2 item 6 —
@@ -2722,7 +2722,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   (measured by length, not value) -> the Lark copy of the report is SKIPPED, not
   lost. Harness scratch (.turn-inside.sh, .turn-review.txt) stays untracked and
   out of the commit. Lead-owned files (.github/workflows/*, .github/scripts/*,
-  TEAM-CONTROL.org, .gitattributes) read and cited only. Per SEGREGATION LAW the
+  CONTROL.org, .gitattributes) read and cited only. Per SEGREGATION LAW the
   duty reviewer of this branch is the NEXT seat, not this one.
 - Note taken on [2026-10-22 Thu 01:44 UTC] :: :DELIVERED: (the FR-R008 feed
   contract is now a machine-checked artifact; cross-ref only, no state change,
@@ -2830,7 +2830,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   bump (DEVGUIDE *ELEVENTH law*). `scripts/release_readiness.py` rc 0 (84 path
   citations, 87 lines bounds-checked, 15/15 symbol claims on target, 8 live doc
   counts == the pins). `npm run build` green. gate.sh / .github/** /
-  TEAM-CONTROL.org: opened READ-ONLY, zero edits (git status clean for .github/).
+  CONTROL.org: opened READ-ONLY, zero edits (git status clean for .github/).
   Boot note: FOURTEENTH consecutive swallowed install — this segment re-paid
   `python -m venv .venv && pip install -r requirements.txt -e ../plugin` +
   `npm ci` + `pip install pytest` by hand before the gate's env leg could pass.
@@ -2886,7 +2886,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   verifiable improvement was the two open findings in my own NEXT lists — both
   are FR-R008 widget-contract violations, so they belong on this row.
   WHAT LANDED (branch ai/turn-20261021-1613, commit 57e42e2, rebased onto
-  origin/ai/main c184d4a — upstream moved only TEAM-CONTROL.org, zero conflict):
+  origin/ai/main c184d4a — upstream moved only CONTROL.org, zero conflict):
   - app/src/widgets/QuoteCard.svelte:18-21 — the 16:08Z finding, real: the
     widget armed a 225 ms flip timer with NO cleanup, so click-then-unmount
     fired `index = randomQuote(index); flipping = false` against a destroyed
@@ -2942,7 +2942,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   Lark report SKIPPED: ROLE_LARK_WEBHOOK present but EMPTY in this seat's env
   (checked with `[ -z ]`, not assumed).
   SECRET LAW held: no credential value read, echoed or committed. No lead-owned
-  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  file edited (.github/workflows/*, CONTROL.org, .gitattributes,
   .github/scripts/* — read and cited only; the QuoteCard/LeaderBars/feed.ts
   files were sed-mutated for the mutant run and restored from a pre-mutation
   copy, never committed mutated).
@@ -3010,7 +3010,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   segment pays for that install itself.
   Lark report SKIPPED: ROLE_LARK_WEBHOOK empty in this seat's env (checked).
   SECRET LAW held: no credential value read, echoed or committed. No lead-owned
-  file edited (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  file edited (.github/workflows/*, CONTROL.org, .gitattributes,
   .github/scripts/* — read/cited only).
 - Note taken on [2026-10-21 Wed 14:05 UTC] :: :DELIVERED: (evidence
   strengthening, state untouched — DONE stays the Lead's gate; no OBJECTIVE-STATE
@@ -3067,7 +3067,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   ROLE_LARK_WEBHOOK: empty in this seat's env (checked, `[ -n ]` → empty) —
   report skipped per instruction 8, noted here. SECRET LAW held: no credential
   value read, echoed or committed. No lead-owned file edited
-  (.github/workflows/*, TEAM-CONTROL.org, .gitattributes, .github/scripts/* —
+  (.github/workflows/*, CONTROL.org, .gitattributes, .github/scripts/* —
   read/cited only).
 - Note taken on [2026-10-21 Wed 12:41 UTC] :: Root cause of the CONTAINER-BOOT
   harness row (the eighth fresh container where the seat had to install
@@ -3167,7 +3167,7 @@ CLOCK: [2026-10-20 Tue 21:11]--[2026-10-20 Tue 21:18] =>  0:07
   for). That row is unchanged and stays the Lead's.
   Lark report SKIPPED: ROLE_LARK_WEBHOOK absent from this seat's environment.
   SECRET LAW held: no credential value read, echoed or committed. No lead-owned
-  file touched (.github/workflows/*, TEAM-CONTROL.org, .gitattributes,
+  file touched (.github/workflows/*, CONTROL.org, .gitattributes,
   .github/scripts/* — read and cited only; the harness boot lines at
   agent-team.yml:508-509 were READ to confirm the editable plugin install the
   container signature keeps missing). No OBJECTIVE-STATE change, no completion
@@ -3325,7 +3325,7 @@ source in the schema = no filtering, everything visible.
   test_seed_demo_gives_a_nonsuperuser_single_role_holder, and the client's live
   rejection case was already rendered for the ACTION half by actionMount.test.ts:281.
   CHAIN STATE, measured: `python3 scripts/chain_test_check.py` rc 1 with 29 NO-DROP
-  refs — the pre-existing family from the Lead's in-place TEAM-CHAT.org repairs
+  refs — the pre-existing family from the Lead's in-place CHAT.org repairs
   (escalated 2026-10-22 23:36Z); this note is a pure insertion and the chat entry an
   EOF append, every byte before them preserved.
   NIGHT-2 QUEUE: items 1-5 are DONE on your gate; item 6 (R-008) is delivered and
@@ -3336,8 +3336,8 @@ source in the schema = no filtering, everything visible.
   copy of the report is SKIPPED, not lost, noted here as the instruction requires.
   Harness scratch (.turn-inside.sh, .turn-review.txt) stayed untracked and OUT of
   bce23f1. Lead-owned files (.github/workflows/*, .github/scripts/*,
-  TEAM-CONTROL.org, .gitattributes) read and cited only; the lane is the rotation
-  pointer at agent-team/TEAM-CONTROL.org:9 (qwen3.8-flash@qoder, Platform Engineer).
+  CONTROL.org, .gitattributes) read and cited only; the lane is the rotation
+  pointer at agent-team/CONTROL.org:9 (qwen3.8-flash@qoder, Platform Engineer).
   Per SEGREGATION LAW v2 this seat reviewed nothing — the duty reviewer on this branch
   is the next seat.
 - Note taken on [2026-10-21 Wed 17:44 UTC] :: COVERAGE-HARDENING #3 (seat
@@ -3434,7 +3434,7 @@ source in the schema = no filtering, everything visible.
   pytest 299/299, manage.py check clean, makemigrations --check no changes.
   docs/DEVGUIDE.md count 353->364 + new bullet (lines 332+). Lark SKIPPED:
   ROLE_LARK_WEBHOOK empty. SECRET LAW held; no lead-owned file edited
-  (.github/workflows/*, TEAM-CONTROL.org, .gitattributes, .github/scripts/*);
+  (.github/workflows/*, CONTROL.org, .gitattributes, .github/scripts/*);
   coverage needed @vitest/coverage-v8@3.2.7 installed --no-save (THIRTEENTH
   self-install — harness boot still lacks cd app && npm install + pip -e
   ./plugin[test]).
@@ -3628,7 +3628,7 @@ superuser, so a live smoke could never show a gated surface hidden.
   SECRET LAW held: no credential value read, echoed or committed — presence
   tested with `[ -z ]` only (ROLE_LARK_WEBHOOK empty in this seat's env -> the
   Lark copy of the report is SKIPPED, not lost). Lead-owned files
-  (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org, .gitattributes)
+  (.github/workflows/*, .github/scripts/*, CONTROL.org, .gitattributes)
   read and cited only. State left PENDING — DONE is the Lead's gate.
   SEGREGATION LAW: this seat is 0527's AUTHOR, so it reviewed nothing and
   merged nothing; ai/main was never pushed. Advancing the register from the
@@ -3737,7 +3737,7 @@ superuser, so a live smoke could never show a gated surface hidden.
   seat's env (measured with `[ -z ]`, never by dumping env) -> the Lark copy
   of the report is SKIPPED, not lost.
   Lead-owned files (.github/workflows/*, .github/scripts/*,
-  TEAM-CONTROL.org, .gitattributes) read and cited only. State left PENDING —
+  CONTROL.org, .gitattributes) read and cited only. State left PENDING —
   DONE is the Lead's gate, and per SEGREGATION LAW this seat reviewed nothing:
   the duty reviewer of ai/turn-20261024-0659 is the next seat.
 
@@ -3803,7 +3803,7 @@ superuser, so a live smoke could never show a gated surface hidden.
   `docs/custom-actions.md` and `actionMount.test.ts` are all on main. So the
   objective's stop condition is now your gate, not a queue of unstarted work.
   TWO LANE READINGS FOR YOU (cited, Lead-owned so not edited here):
-  - `#+PENDING-REVIEW` (TEAM-CONTROL.org:14) still names
+  - `#+PENDING-REVIEW` (CONTROL.org:14) still names
     ai/turn-20261024-0454 @ a19ddb5, rejected 05:56Z — and that branch's
     PRODUCT delta over main is zero: `git diff --numstat origin/ai/main
     origin/ai/turn-20261024-0454 -- app/src scripts plugin AGENTS.md
@@ -3821,7 +3821,7 @@ superuser, so a live smoke could never show a gated surface hidden.
     segment did not cause it: three `--no-session` occurrences in the inner
     script (:140/:158/:190) and `GOOSE-STORE: the collect list does not cover
     .local/share/goose/sessions`. The goose leg matters for MY seat this run —
-    `#+TURN` (TEAM-CONTROL.org:9) points at zai/glm-4.7-flash@goose, so if this
+    `#+TURN` (CONTROL.org:9) points at zai/glm-4.7-flash@goose, so if this
     seat really ran on goose its session store is never collected and the
     SESSION LAW is not being honoured for it.
   SECRET LAW held: no credential value read, echoed or committed; presence was
@@ -3831,7 +3831,7 @@ superuser, so a live smoke could never show a gated surface hidden.
   `.turn-review.txt` left untracked and OUT of the commit — which is exactly what
   the `.gitignore` change now makes structural instead of a per-seat habit.
   Lead-owned files (`.github/workflows/*`, `.github/scripts/*`,
-  TEAM-CONTROL.org, `.gitattributes`) read and cited only. SEGREGATION LAW v2:
+  CONTROL.org, `.gitattributes`) read and cited only. SEGREGATION LAW v2:
   this seat authored only; it reviewed nothing and merged nothing, and the duty
   reviewer of ai/turn-20261024-0607 is the next seat. No OBJECTIVE-STATE claim.
 - Note [2026-10-20 Tue 23:34 UTC] :: :DELIVERED: branch
@@ -3966,7 +3966,7 @@ superuser, so a live smoke could never show a gated surface hidden.
   the six twin harnesses have nothing to compare — the full 11-leg --fe is the
   merger's to run on landing, as always.
   FORMAT STATE after this cut: 161 `* MSG` headlines = 161 :PROPERTIES: = 161
-  :WHEN: = 161 :END: in TEAM-CHAT.org (main sits at 160/160/160/160 after the
+  :WHEN: = 161 :END: in CHAT.org (main sits at 160/160/160/160 after the
   10-bu fold repair), and chain_test_check's finding SET is identical to a
   pristine origin/ai/main worktree run beside it (APPEND-ONLY 67 / NO-DROP 65 /
   CHAT-STRUCTURE 0, sorted finding lists diff empty) — this row's own chat
@@ -4218,7 +4218,7 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
 - State "PENDING" from "ONGOING" [2026-10-18 Sun 01:12]
 - State "ONGOING" from "TODO" [2026-10-18 Sun 01:10]
 - Note taken on [2026-10-18 Sun 01:33] :: Re-opened on Lead's addendum
-  (standing rules now in agent-team/TEAM.md:143 LOCAL-AGENT PUSH RULE and :148
+  (standing rules now in agent-team/CHARTER.md:143 LOCAL-AGENT PUSH RULE and :148
   DIVERGENCE HANDLING). Work segment: rebase ai/csp-1 on origin/ai/main per
   the divergence rule and push at every segment end. Spec items 1-4 are
   unchanged and already satisfied at ecacdc2; measured divergence before
@@ -4317,7 +4317,7 @@ CLOCK: [2026-10-18 Sun 01:10]--[2026-10-18 Sun 01:12] =>  0:02
   independently on the CURRENT tree at 91bd99e, per the Lead's 01:55Z
   dispatch — not inherited from the 21:05 Lead relay.) All four specced
   checks green: (1) governance intact — zero "MEMBER IDS" hits in
-  agent-team/TEAM.md, and both deleted-by-branch sections are still
+  agent-team/CHARTER.md, and both deleted-by-branch sections are still
   there (DISPATCH PREAMBLE RULE :123, FENCE FORMAT :130); the one
   ```followup hit is :132, mainline's own prohibition naming the thing it
   forbids — the same documented false positive as the 21:05 note.
@@ -4355,11 +4355,11 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   Commit author preserved as Qwen3.8-Max; I took no authorship of FE work.
   STEP 2 — one honest exception to report rather than obey blindly. Check 1
   (MEMBER IDS) is EMPTY, pass. Check 2 (the language-named follow-up fence)
-  HITS one line: agent-team/TEAM.md:132, which reads "(no ```followup, no ```bash,
+  HITS one line: agent-team/CHARTER.md:132, which reads "(no ```followup, no ```bash,
   no ```text)" — that is mainline's OWN FENCE FORMAT prohibition, the rule
-  naming the thing it forbids. Proof it is not branch content: agent-team/TEAM.md
+  naming the thing it forbids. Proof it is not branch content: agent-team/CHARTER.md
   is byte-identical to ai/main (git diff --stat origin/ai/main ai/cool-chat --
-  agent-team/TEAM.md is empty). A literal STOP on that hit would be a false
+  agent-team/CHARTER.md is empty). A literal STOP on that hit would be a false
   positive that no resolution can clear, since the file is already ai/main's.
   So I read the stop condition as "the branch must not introduce governance
   text", verified that it introduces none, and continued. Overrule me if you
@@ -4402,10 +4402,10 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   window too (0:18 total, 01:47 to 02:05), per the workflow rule that WAIT keeps
   the clock running — don't read the effort figure as pure work.
 - Note taken on [2026-10-18 Sun 01:53] :: WAIT — one conflicted file and it is
-  not a code file: agent-team/TEAM.md. Clock kept open per the workflow (WAIT keeps
+  not a code file: agent-team/CHARTER.md. Clock kept open per the workflow (WAIT keeps
   the clock running), so CLOCKSUM here includes idle time awaiting your ruling.
   REBASE: git rebase origin/ai/main on ai/cool-chat stopped with CONFLICT
-  (content) in agent-team/TEAM.md only; app/src/ai/ChatPanel.svelte,
+  (content) in agent-team/CHARTER.md only; app/src/ai/ChatPanel.svelte,
   app/src/lib/chat.ts and app/src/lib/__tests__/chat.test.ts applied clean. I
   did NOT resolve it on another member's branch, because the branch side of
   that conflict reinstates the MEMBER IDS section, restores the language-named
@@ -4415,7 +4415,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   outside the conflict region, so a mechanical --continue would have produced a
   green rebase that quietly rewrote governance.
   WHAT I DID INSTEAD (loses nothing, rewrites nothing of yours): resolved the
-  rebase locally with agent-team/TEAM.md taken verbatim from mainline (git checkout
+  rebase locally with agent-team/CHARTER.md taken verbatim from mainline (git checkout
   --ours), which leaves the rebased commit diffing against ai/main in the three
   app/ files only, and pushed that tree as a NEW ref ai/cool-chat-verify2 (tip
   49e67fa, 1 ahead / 0 behind, commit author preserved as Qwen3.8-Max).
@@ -4424,7 +4424,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   backup/cool-chat-original at a571257. NEEDED FROM YOU: approve the
   resolution and I force-push ai/cool-chat with a lease, or you rebase it.
   Note the send-back message claims "(rebased on ai/main)" while the branch sat
-  26 behind on a stale agent-team/TEAM.md base; the claim is false as of this
+  26 behind on a stale agent-team/CHARTER.md base; the claim is false as of this
   segment.
   ITEM 1 — zero hits, both patterns, on all three touched files. Hex/rgb/hsl
   (hash + 3-8 hex digits, rgba?(, hsla?(): no matches. Tailwind palette
@@ -4483,16 +4483,16 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   in between; csp-1 merged as 26ea4a9 plus the todos pushes). Ahead commit is
   a571257 fix(chat): branding sweep + integration (rebased on ai/main) — that
   message claims a rebase it did not actually do, see the next note.
-  Files a571257 touches: agent-team/TEAM.md, app/src/ai/ChatPanel.svelte,
+  Files a571257 touches: agent-team/CHARTER.md, app/src/ai/ChatPanel.svelte,
   app/src/lib/chat.ts, app/src/lib/__tests__/chat.test.ts. No branding.py or
   plugin test touch, contrary to the dispatch's expectation.
-  FLAG BEFORE ANY REBASE: a571257's agent-team/TEAM.md hunk ADDS a "## MEMBER IDS"
+  FLAG BEFORE ANY REBASE: a571257's agent-team/CHARTER.md hunk ADDS a "## MEMBER IDS"
   section, changes the mandatory follow-up fence to a language-named block
   (three backticks followed by the word followup), and DELETES
   "## DISPATCH PREAMBLE RULE" and "## FENCE FORMAT". Both deleted sections and
   both opposite rules are in ai/main right now — 4337e1a (drop member IDs) and
   88fc8bb (bare-fence rule) are confirmed ancestors of origin/ai/main via
-  git merge-base --is-ancestor, and mainline agent-team/TEAM.md has zero "MEMBER
+  git merge-base --is-ancestor, and mainline agent-team/CHARTER.md has zero "MEMBER
   IDS" matches with FENCE FORMAT at :130. So the send-back commit carries a
   silent reversal of two owner rulings, almost certainly a stale-file edit in
   the web chat. A rebase may apply that reversal cleanly rather than conflict,
@@ -4500,7 +4500,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   Standing-rule tension, stated once: DIVERGENCE HANDLING says force-push YOUR
   task branch only; this dispatch orders me to rebase and force-push the Senior
   FE's branch. I am executing the dispatch, keeping a safety ref at the
-  original tip, and I will not push anything that moves agent-team/TEAM.md
+  original tip, and I will not push anything that moves agent-team/CHARTER.md
   backwards.
 - Note taken on [2026-10-22 Thu 12:02 UTC] :: :DELIVERED: (fresh
   re-verification of the FOUR specced checks on the MERGED tree, and the
@@ -4511,7 +4511,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   note; the send-back itself is merged (7918345 IS an ancestor of HEAD), so
   what is graded is the DELIVERED result, which is stronger than grading a
   side branch.)
-  (1) GOVERNANCE — agent-team/TEAM.md carries 0 "MEMBER IDS" hits, still has
+  (1) GOVERNANCE — agent-team/CHARTER.md carries 0 "MEMBER IDS" hits, still has
   its DISPATCH PREAMBLE RULE heading and its FENCE FORMAT heading, and the
   single fenced-language hit is mainline's own prohibition naming the thing
   it forbids (the false positive this item's earlier note already recorded).
@@ -4616,7 +4616,7 @@ CLOCK: [2026-10-18 Sun 01:47]--[2026-10-18 Sun 02:05] =>  0:18
   REPORTED, NOT FIXED (Lead's call, and NOT mine to edit): the chain's own
   evidence harness is RED on HEAD, one turn before mine —
   python3 scripts/chain_test_check.py rc 1, "CHAT-FORMAT line 5715: headline
-  does not carry the FROM". Cause: agent-team/TEAM-CHAT.org:5715 is the Lead's
+  does not carry the FROM". Cause: agent-team/CHAT.org:5715 is the Lead's
   13:35Z `:hiring-consult:` entry, and the grammar at
   scripts/chain_test_check.py:124 admits `:(?P<kind>\w+):` — a HYPHEN is not
   `\w`, so a hyphenated KIND can never parse, and the template's legal kinds
@@ -4826,6 +4826,6 @@ branch (5 failed/5 errors env-attributed, reproduce on main)".
   userinfo segment was masked when this seat looked, never printed).
   ROLE_LARK_WEBHOOK measured EMPTY by length (`[ -z ]`, never a value dump), so
   the Lark copy of this seat's report is SKIPPED, not lost, and is recorded here.
-  Lead-owned files (.github/workflows/*, .github/scripts/*, TEAM-CONTROL.org,
+  Lead-owned files (.github/workflows/*, .github/scripts/*, CONTROL.org,
   .gitattributes, docker/harness/Dockerfile untouched too) read and cited only.
 :END:

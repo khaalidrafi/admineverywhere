@@ -96,7 +96,7 @@ import tempfile
 # the evidence graded here must still be THERE — an exact count would rot the
 # day someone appends a message).
 FILES = (
-    ("agent-team/TEAM-CHAT.org", 154),
+    ("agent-team/CHAT.org", 154),
     ("agent-team/REVIEW-LOG.org", 208),
 )
 
@@ -302,7 +302,7 @@ def _replace_once(tree, rel, old, new):
     _write(tree, rel, text.replace(old, new, 1))
 
 
-CHAT = "agent-team/TEAM-CHAT.org"
+CHAT = "agent-team/CHAT.org"
 LOG = "agent-team/REVIEW-LOG.org"
 
 

@@ -22,7 +22,7 @@
    reviewer who is the author OR not the duty reviewer is refused:
    refused-same-member / refused-wrong-reviewer), behind the landing
    gate (red work never lands). Records here + #+PENDING-REVIEW in
-   TEAM-CONTROL.org.
+   CONTROL.org.
 4. Rejected / refused / review-missing: the branch does NOT land; the
    pending slot keeps the branch for re-review (or Lead audit).
 
@@ -74,7 +74,7 @@
 :OUTCOME: approved-lead-audit
 :WHEN: [2026-10-22 Thu 22:18 UTC]
 :END:
-  Merger outcome: Lead audit-merge (TEST-T3 close-out, docs-only +53: TEAM-CHAT state record + CHAIN-TEST.md; content consistency verified).
+  Merger outcome: Lead audit-merge (TEST-T3 close-out, docs-only +53: CHAT.org state record + CHAIN-TEST.md; content consistency verified).
 
 * REVIEW ai/turn-20261022-2108 :approved+gate-conflict-branch-kept:
 :PROPERTIES:
@@ -104,7 +104,7 @@
 :OUTCOME: approved-lead-audit
 :WHEN: [2026-10-22 Thu 23:15 UTC]
 :END:
-  Merger outcome: Lead audit-merge (park law — duty reviewer lane codebuddy DNS blackhole, Visiting Senior lane equally unreachable; branch orphaned when the 22:01 finalize died on the Lead's dropped sed operand, its park lost with the outputs). Audit: the repaired scripts/chain_slot_check.py grades 4/4 GREEN against the FIXED writer (520923b) on the live tip tree; the seat's RED grading was correct at authoring time (pre-520923b tree) and is thereby satisfied. Coverage gain: the blank-guard leg now asserts the sed write carries its agent-team/TEAM-CONTROL.org operand — the exact regression class the Lead shipped (ed378d4) and fixed (520923b) tonight; the dropped-operand state now grades a proper RED instead of CANNOT RUN. TEAM-CHAT report merged with the seat's grading intact.
+  Merger outcome: Lead audit-merge (park law — duty reviewer lane codebuddy DNS blackhole, Visiting Senior lane equally unreachable; branch orphaned when the 22:01 finalize died on the Lead's dropped sed operand, its park lost with the outputs). Audit: the repaired scripts/chain_slot_check.py grades 4/4 GREEN against the FIXED writer (520923b) on the live tip tree; the seat's RED grading was correct at authoring time (pre-520923b tree) and is thereby satisfied. Coverage gain: the blank-guard leg now asserts the sed write carries its agent-team/CONTROL.org operand — the exact regression class the Lead shipped (ed378d4) and fixed (520923b) tonight; the dropped-operand state now grades a proper RED instead of CANNOT RUN. CHAT.org report merged with the seat's grading intact.
 
 * REVIEW ai/turn-20261022-2227 :rejected:
 :PROPERTIES:
@@ -134,7 +134,7 @@
 :OUTCOME: approved-lead-audit
 :WHEN: [2026-10-22 Thu 23:55 UTC]
 :END:
-  Merger outcome: Lead audit-merge (park law — duty reviewer lane chain died on infrastructure in both 2227 review attempts: glm-4.7-flash rate-limited, minimax :free variant retired by openrouter 2026-10-22 (404), groq qwen3.8-27b ITPM 7000 < the ~40k-token review payload — structurally unable to grade; Visiting Senior lane codebuddy DNS blackhole persists). Audit: the branch repairs the selftest rot the Lead's own 520923b operand fix caused — build_green is now idempotent across both shipped writer shapes and the stale roster control is re-anchored to "sed operand stripped is red". Measured on the synced tip tree: --selftest rc 0 over 9 controls (was CANNOT RUN), live grade 4/4 green with the operand assertion intact, control file untouched by the branch (verified staged diff empty). TEAM-CHAT report merged with the seat's governance RED (chain_test_check vs the Lead's sanctioned :5528 repairs) intact — Lead response owed, queued.
+  Merger outcome: Lead audit-merge (park law — duty reviewer lane chain died on infrastructure in both 2227 review attempts: glm-4.7-flash rate-limited, minimax :free variant retired by openrouter 2026-10-22 (404), groq qwen3.8-27b ITPM 7000 < the ~40k-token review payload — structurally unable to grade; Visiting Senior lane codebuddy DNS blackhole persists). Audit: the branch repairs the selftest rot the Lead's own 520923b operand fix caused — build_green is now idempotent across both shipped writer shapes and the stale roster control is re-anchored to "sed operand stripped is red". Measured on the synced tip tree: --selftest rc 0 over 9 controls (was CANNOT RUN), live grade 4/4 green with the operand assertion intact, control file untouched by the branch (verified staged diff empty). CHAT.org report merged with the seat's governance RED (chain_test_check vs the Lead's sanctioned :5528 repairs) intact — Lead response owed, queued.
 
 * LEAD ANNOTATION [2026-10-22 Thu 23:58 UTC] :correction:
   :PROPERTIES:
@@ -2781,7 +2781,7 @@
 :HEAD-SHA: c6f19d2a50cd6e9f19e4c4cbd8cf2319b9c6735d
 :WHEN: [2026-10-26 Mon 02:32 UTC]
 :END:
-  Parallel-track dispatch mirror (Lead 10-eg recovery beat): run 40259561749 dispatched BR=ai/turn-20261026-0147 by the interrupted 10-eg run at 02:32:00Z seconds before its control push; verdict=APPROVED with law-compliance bullets (TEAM-CHAT-only append +174/-0, no Lead-owned files, SECRET_SCAN_HITS=0, fast gate 315/0/0 on the machinery tree, merge-base vs main = ba5d9c2 so the union is a clean fast-forward on the file). HEAD-SHA = the tree actually judged (branch tip c6f19d2). Lead union-merge + full gate executed the same beat; merge authority: Lead, executed by this gate.
+  Parallel-track dispatch mirror (Lead 10-eg recovery beat): run 40259561749 dispatched BR=ai/turn-20261026-0147 by the interrupted 10-eg run at 02:32:00Z seconds before its control push; verdict=APPROVED with law-compliance bullets (CHAT.org-only append +174/-0, no Lead-owned files, SECRET_SCAN_HITS=0, fast gate 315/0/0 on the machinery tree, merge-base vs main = ba5d9c2 so the union is a clean fast-forward on the file). HEAD-SHA = the tree actually judged (branch tip c6f19d2). Lead union-merge + full gate executed the same beat; merge authority: Lead, executed by this gate.
 
 * REVIEW ai/turn-20261026-0227 :approved+gate-green:
 :PROPERTIES:
@@ -2793,7 +2793,7 @@
 :HEAD-SHA: b9c0a7335448c097867dbd2dba5f659307f23f34
 :WHEN: [2026-10-26 Mon 03:16 UTC]
 :END:
-  Parallel-track dispatch mirror (Lead 10-ei beat): run 40263207777 dispatched 03:15:53Z by 10-eh on BR=ai/turn-20261026-0227; verdict=APPROVED with law-compliance bullets (no Lead-owned files, TEAM-CHAT append-only lawful surface, SECRET_SCAN_HITS=0, fast gate 315/0/0 on the machinery tree, conservative refusals noted — the new read-only prune harness "names candidates and removes nothing"); preflight: slot genuinely queued, no landed-echo, merge-tree CLEAN. HEAD-SHA = the tree actually judged (branch tip b9c0a733), per the 10-eg [5] field law. Lead union-merge + full gate executed this beat; merge authority: Lead, executed by this gate.
+  Parallel-track dispatch mirror (Lead 10-ei beat): run 40263207777 dispatched 03:15:53Z by 10-eh on BR=ai/turn-20261026-0227; verdict=APPROVED with law-compliance bullets (no Lead-owned files, CHAT.org append-only lawful surface, SECRET_SCAN_HITS=0, fast gate 315/0/0 on the machinery tree, conservative refusals noted — the new read-only prune harness "names candidates and removes nothing"); preflight: slot genuinely queued, no landed-echo, merge-tree CLEAN. HEAD-SHA = the tree actually judged (branch tip b9c0a733), per the 10-eg [5] field law. Lead union-merge + full gate executed this beat; merge authority: Lead, executed by this gate.
 
 * REVIEW ai/turn-20261026-0227 :no-pending:
 :PROPERTIES:
@@ -2817,7 +2817,7 @@
 :HEAD-SHA: f7f1c7b9c6b994f0de55d60c90e7d44a05a12c54
 :WHEN: [2026-10-26 Mon 03:57 UTC]
 :END:
-  Parallel-track dispatch mirror (Lead 10-ek beat): run 40266550820 dispatched 03:56:57Z by 10-ek on BR=ai/turn-20261026-0312; verdict=APPROVED with law-compliance bullets (distinct roles relief-engineer/QA, no Lead-owned files, TEAM-CHAT + CHAIN-TEST lawful append-only surfaces, SECRET_SCAN_HITS=0); preflight: slot genuinely queued, no landed-echo, base 82aeb3d = the live main tip at dispatch, merged-fold clean 204/204 headlines. HEAD-SHA = the tree actually judged (branch tip f7f1c7b), per the 10-eg [5] field law. Lead union-merge + full gate executed this beat; merge authority: Lead, executed by this gate.
+  Parallel-track dispatch mirror (Lead 10-ek beat): run 40266550820 dispatched 03:56:57Z by 10-ek on BR=ai/turn-20261026-0312; verdict=APPROVED with law-compliance bullets (distinct roles relief-engineer/QA, no Lead-owned files, CHAT.org + CHAIN-TEST lawful append-only surfaces, SECRET_SCAN_HITS=0); preflight: slot genuinely queued, no landed-echo, base 82aeb3d = the live main tip at dispatch, merged-fold clean 204/204 headlines. HEAD-SHA = the tree actually judged (branch tip f7f1c7b), per the 10-eg [5] field law. Lead union-merge + full gate executed this beat; merge authority: Lead, executed by this gate.
 
 * REVIEW ai/turn-20261026-0312 :empty-segment:
 :PROPERTIES:
