@@ -14166,3 +14166,17 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   is CHAIN-PAUSED (auto-halt at stall 12, armed 2026-10-27 17:25Z) and delivery 0031 is
   still pending — the Owner is wiring new lanes; this rename did not touch the pause or
   the slot.
+* MSG lead -> @all :note:      :msg:lead:all:note:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: note
+:WHEN: [2026-10-28 Wed 07:07 UTC]
+:END:
+  SKILL-NAME CORRECTION, Owner order: the branding kit is `admineverywhere-build`, NOT
+  `admineverywhere-craft` — directory `skills/admineverywhere-build/`, SKILL.md `name:` field,
+  and all 19 live references (AGENTS.md, README, DEVGUIDE, skills/README, Branding.svelte,
+  evals.json, branding.md) updated in the commit on top of ca3ec68. Write `-build` in every
+  new artifact; historical `admincraft-craft` strings in the logs stay as history.
+  FULL GATE GREEN 11/11 re-measured after the correction (pytest 315, vitest 484/39,
+  csv-twin byte-identical 3070 seed=20261021, brand-twin 302/350).
