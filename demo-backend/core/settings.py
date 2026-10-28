@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_spectacular",
     "corsheaders",
-    "admincraft",  # the plugin under test (pip install -e ../plugin)
+    "admineverywhere",  # the plugin under test (pip install -e ../plugin)
     "shop",
 ]
 
@@ -67,10 +67,10 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Runtime brand store for the in-app branding editor (see
-# admincraft.brandstore): one dir with brand.json + logo/favicon. The
+# admineverywhere.brandstore): one dir with brand.json + logo/favicon. The
 # editor creates it on first save; until then the client shows its
 # bundled static brand. Runtime state — never commit it.
-ADMINCRAFT_BRAND_DIR = BASE_DIR / "admincraft_brand"
+ADMINEVERYWHERE_BRAND_DIR = BASE_DIR / "admineverywhere_brand"
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"

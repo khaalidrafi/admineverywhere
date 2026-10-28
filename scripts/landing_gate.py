@@ -13,7 +13,7 @@ seat's work being red, both measured on real turns of this repo:
 
   * The boot install (``pip install -e plugin --no-deps -q 2>/dev/null || true``,
     mirrored in agent-team.yml) hides its own failure, so leg 1 dies with
-    INTERNALERROR ``No module named 'admincraft'`` — pytest exit code 2 — and
+    INTERNALERROR ``No module named 'admineverywhere'`` — pytest exit code 2 — and
     reads as a red tree. Leg 0 below probes the imports first; when the plain
     probe fails it retries with this checkout's ``plugin/src`` on PYTHONPATH (an
     image without setuptools cannot build the editable install the boot script
@@ -148,7 +148,7 @@ def require(probe, why, proc):
 
 
 def leg_env(py, log):
-    probe = ("import django, rest_framework, drf_spectacular, admincraft;"
+    probe = ("import django, rest_framework, drf_spectacular, admineverywhere;"
              " print(django.get_version())")
     proc = launch([py, "-c", probe], ROOT)
     if proc.returncode != 0:

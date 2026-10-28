@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""inspect_project.py — map a repo's admin-relevant facts onto admincraft.
+"""inspect_project.py — map a repo's admin-relevant facts onto admineverywhere.
 
 One scan, one JSON manifest on stdout. Pure stdlib. The agent (or a
 human) feeds this to decisions: what to name the app, which logo to
