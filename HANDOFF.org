@@ -13,7 +13,7 @@
 - P1 RecordForm omit-vs-null; DataTable keyed-each; tauri.conf dev CSP
 - P1 build_admin: tauri.conf patching (productName/title from appName, jailed)
 - Fix: demo-backend/shop/urls.py restored (deleted by 381bed3 rename refactor)
-- Docs: TEAM-CHARTER.org, AGENTS.md MVP-spec section, AI-REVIEW.org appended (381bed3 review item, unticked)
+- Docs: CHARTER.org, AGENTS.md MVP-spec section, AI-REVIEW.org appended (381bed3 review item, unticked)
 
 ## TESTS — ALL VERIFIED ON-MACHINE (BRE)
 - vitest 51/51 (7 files), ×3 identical runs under 1GB heap cap

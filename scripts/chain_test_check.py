@@ -6,7 +6,7 @@ machinery test on 2026-10-22 09:22Z (TEST-T1 check-in, TEST-T2 one
 harness improvement, TEST-T3 board/chat verification). Each turn left a
 PROSE record: a chat entry and a line in docs/CHAIN-TEST.md. Prose is not
 re-runnable. The Lead's next move is to flip #+OBJECTIVE-STATE in
-agent-team/TEAM-CONTROL.org and restore the parked feature order, and the
+agent-team/CONTROL.org and restore the parked feature order, and the
 evidence that move rests on was, until now, readable only by trusting a
 seat's own summary — the exact shape this repo's harness laws keep
 forbidding (EIGHTH: a GATE that lives as prose is a check nobody can
@@ -105,10 +105,10 @@ LOG_MARKERS = {
 }
 
 MAIN_REF = "ai/main"
-CHAT_REL = "agent-team/TEAM-CHAT.org"
+CHAT_REL = "agent-team/CHAT.org"
 LOG_REL = "docs/CHAIN-TEST.md"
 BOARD_REL = "agent-team/TODOS.org"
-CONTROL_REL = "agent-team/TEAM-CONTROL.org"
+CONTROL_REL = "agent-team/CONTROL.org"
 
 # The parked feature order the Lead restores after the test. Every fragment
 # must still be a headline on the board: an order cannot be restored over a
@@ -182,7 +182,7 @@ ACCEPTED_REPAIRS = (
      ":WHEN: [2026-10-22 Thu 11:24 UTC]",
      (":WHEN: 2026-10-22 Wed 11:24 UTC",
       ":WHEN: [2026-10-22 Wed 11:24 UTC]"),
-     "agent-team/TEAM-CHAT.org:6391 — the defect is reported there and left in place "
+     "agent-team/CHAT.org:6391 — the defect is reported there and left in place "
      "because 'only the Lead can correct the entry'; 2026-10-22 is a Thursday, so the "
      "correction is the day name (the brackets came with the same repair pass)"),
 )
@@ -496,7 +496,7 @@ def scan_orphan_drawers(text):
     bodies. Measured on ai/main: the merge 3b121ee of ai/turn-20261024-0809
     took the branch's 81 appended lines and dropped 5 of them — the
     headline, `:PROPERTIES:`, `:FROM:`, `:TO:`, `:KIND:` — which is why
-    agent-team/TEAM-CHAT.org:7731 opens with a bare `:WHEN:`. The same
+    agent-team/CHAT.org:7731 opens with a bare `:WHEN:`. The same
     fold hit 4598a81 at :6407. CHAT-FORMAT cannot see either one (the orphan
     parses as the previous entry's body), and APPEND-ONLY / NO-DROP do fire
     on those merges but report only "not a prefix" — never WHICH message
@@ -650,7 +650,7 @@ def main(argv):
         problems.append("POPULATION chat: %d message(s), floor is %d — the evidence this "
                         "harness grades is no longer there" % (len(messages), CHAT_MESSAGE_FLOOR))
     if not messages:
-        raise CannotRun("agent-team/TEAM-CHAT.org holds no `* MSG` entry — there is no chat "
+        raise CannotRun("agent-team/CHAT.org holds no `* MSG` entry — there is no chat "
                         "to grade (a rename or a wipe is not a failure of the objective)")
 
     orphans, owned_fields = scan_orphan_drawers(chat_text)
@@ -766,7 +766,7 @@ def main(argv):
     # flagged the same sha twice and the Lead's triage counted 31 refs that way.
     base = objective_base(root, control_text)
     if base is None:
-        raise CannotRun("agent-team/TEAM-CONTROL.org never carried the TEST-CHAIN objective "
+        raise CannotRun("agent-team/CONTROL.org never carried the TEST-CHAIN objective "
                         "(`#+OBJECTIVE: TEST-CHAIN`) — this harness grades THAT objective")
     cur_records = entry_records(chat_text)
     history = git(root, "log", "--format=%H", "--", CHAT_REL).split()
@@ -1044,7 +1044,7 @@ def objective_base(root, control_text):
     """The commit that switched the chain to the TEST-CHAIN objective.
 
     Derived from the tree (not pinned to a sha): the first commit whose
-    TEAM-CONTROL.org carries `#+OBJECTIVE: TEST-CHAIN`. A hard-coded sha
+    CONTROL.org carries `#+OBJECTIVE: TEST-CHAIN`. A hard-coded sha
     would rot on the first rebase; the objective's own words cannot.
     """
     marker = "#+OBJECTIVE: TEST-CHAIN"
@@ -1223,7 +1223,7 @@ def control_unparseable_when(root):
 def control_folded_entry(root):
     """The MERGE FOLD itself: delete one entry's headline plus its drawer
     header, leaving the `:WHEN:` / `:END:` tail welded onto the previous
-    entry — the exact shape merge 3b121ee left at TEAM-CHAT.org:7731 (and
+    entry — the exact shape merge 3b121ee left at CHAT.org:7731 (and
     4598a81 at :6407). CHAT-FORMAT stays silent over it (the orphan parses
     as body), so this control is the leg's ONLY proof it can see the fold.
 
