@@ -329,7 +329,7 @@ jobs:
           echo "" >> "$SUMMARY"
           cat "$SUMMARY" || true
 
-  # ONE TURN OF WORK. Reads agent-team/TEAM-CONTROL.org:
+  # ONE TURN OF WORK. Reads agent-team/CONTROL.org:
   #   #+KILL-SWITCH: ON           -> stop everything, exit green.
   #   #+OBJECTIVE-STATE: COMPLETE -> objective closed, exit green.
   #   #+OBJECTIVE: empty          -> no work defined; gate stays green, skip.
@@ -380,13 +380,13 @@ jobs:
       - name: Read control file (kill switch / objective / turn)
         id: control
         run: |
-          CTL=agent-team/TEAM-CONTROL.org
+          CTL=agent-team/CONTROL.org
           KILL=$(grep -oP '^\#\+KILL-SWITCH:\s*\K\w+' "$CTL" | head -1 || true)
           OBJSTATE=$(grep -oP '^\#\+OBJECTIVE-STATE:\s*\K\w+' "$CTL" | head -1 || true)
           OBJECTIVE=$(grep -oP '^\#\+OBJECTIVE:\s*\K.*' "$CTL" | head -1 || true)
           TURN=$(grep -oP '^\#\+TURN:\s*\K.*' "$CTL" | head -1 | xargs)
           echo "kill=${KILL:-OFF} objstate=${OBJSTATE:-OPEN} turn='${TURN}'"
-          # Pre-segment ai/main tip: the Discord chat mirror diffs TEAM-CHAT.org
+          # Pre-segment ai/main tip: the Discord chat mirror diffs CHAT.org
           # from here to post-merge HEAD to extract THIS segment's GLM chats.
           echo "base_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           if [ "${KILL:-OFF}" = "ON" ]; then
@@ -452,8 +452,8 @@ jobs:
           case "$MODE" in
             killed)       MSG="TEAM STOPPED BY KILL SWITCH — no turns run until #+KILL-SWITCH: OFF" ;;
             complete)     MSG="OBJECTIVE COMPLETE — team standing down (set #+OBJECTIVE-STATE: OPEN with a new objective to restart)" ;;
-            paused)       MSG="CHAIN PAUSED — a TODO was delivered and the pause law is ON; the Lead reviews, then clears #+CHAIN-PAUSE in agent-team/TEAM-CONTROL.org to resume" ;;
-            no-objective) MSG="NO OBJECTIVE SET — write one line into #+OBJECTIVE in agent-team/TEAM-CONTROL.org; rotation idle until then" ;;
+            paused)       MSG="CHAIN PAUSED — a TODO was delivered and the pause law is ON; the Lead reviews, then clears #+CHAIN-PAUSE in agent-team/CONTROL.org to resume" ;;
+            no-objective) MSG="NO OBJECTIVE SET — write one line into #+OBJECTIVE in agent-team/CONTROL.org; rotation idle until then" ;;
           esac
           echo "$MSG" >> "$SUMMARY"
 
@@ -608,7 +608,7 @@ jobs:
 
       # Owner channel — INBOUND leg (Owner order 2026-10-21 #hq: "You and
       # any team member should contact me through this [Telegram bot]. And,
-      # my reply should get recorded in TEAM-CHAT.org"; 17:47Z addendum:
+      # my reply should get recorded in CHAT.org"; 17:47Z addendum:
       # "Keep bridge bot restricted to my chat ID — else anyone can
       # impersonate me"). Only messages from the Owner's chat (secret
       # TELEGRAM_OWNER_ID, else TELEGRAM_CHAT_ID) are recorded VERBATIM
@@ -631,7 +631,7 @@ jobs:
           git config user.email "agent-team-ci@users.noreply.github.com"
           git remote set-url --push origin \
             "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
-          CHAT=agent-team/TEAM-CHAT.org
+          CHAT=agent-team/CHAT.org
           UPD=$(curl -sS --max-time 20 \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?allowed_updates=%5B%22message%22%5D&limit=20") || UPD=""
           echo "$UPD" | jq -e '.ok == true' >/dev/null 2>&1 || { echo "telegram: API error or empty — skip"; exit 0; }
@@ -669,7 +669,7 @@ jobs:
             echo ":CHANNEL: telegram"
             echo ":END:"
             echo "  [Telegram bridge — Owner's message, recorded verbatim per Owner"
-            echo "   order 2026-10-21 #hq: \"my reply should get recorded in TEAM-CHAT.org\"]"
+            echo "   order 2026-10-21 #hq: \"my reply should get recorded in CHAT.org\"]"
             echo "$UPD" | jq -r '.result[] | select(.message.chat.type=="private") | select(.message.text) |
                      "  >> " + (.message.text | gsub("\n"; "\n  >> "))'
           } >> "$CHAT"
@@ -816,7 +816,7 @@ jobs:
             || { git rebase --abort 2>/dev/null || true; echo "::warning::branch rebase skipped"; }
           git push origin "${TURN_BRANCH:-ai/turn-orphan}" || echo "::notice::no work branch to push"
           echo "branch=${TURN_BRANCH:-}" >> "$GITHUB_OUTPUT"
-          CTL=agent-team/TEAM-CONTROL.org
+          CTL=agent-team/CONTROL.org
           # REAL rotation (Owner 2026-10-22: member IDs are
           # PROVIDER/MODEL@PLATFORM; DUTY-ROLE LAW 18:55Z: QA is the
           # dedicated REVIEWER — OUT of the author rotation. Authors
@@ -829,7 +829,7 @@ jobs:
             software-engineer)          NEXT="qwen3.8-flash@qoder (Platform Engineer)" ;;
             quality-assurance-engineer) NEXT="qwen3.8-flash@qoder (Platform Engineer)" ;;
             visiting-engineer)          NEXT="deepseek-v4.1-flash@codebuddy (Software Engineer)" ;;  # visiting rejoins rotation; free burn continues
-            *)                          NEXT="unknown (Lead: fix #+TURN in agent-team/TEAM-CONTROL.org)" ;;
+            *)                          NEXT="unknown (Lead: fix #+TURN in agent-team/CONTROL.org)" ;;
           esac
           git checkout -f ai/main
           # Race-proof the control commit: the Lead's pushes or another
@@ -867,7 +867,7 @@ jobs:
   #      main; branch deleted ONLY after a verified landing). The seat's
   #      OWN author branch is never merged by its own run — it becomes
   #      the next #+PENDING-REVIEW. Team chat and board notes propagate
-  #      with the branch merge (TEAM-CHAT.org is union-merged via
+  #      with the branch merge (CHAT.org is union-merged via
   #      .gitattributes). Red work never lands (merge undone, branch
   #      stays). Review records: agent-team/REVIEW-LOG.org.
   #   2. Jev judgment (health-gated): weighs the stall state for the
@@ -918,16 +918,16 @@ jobs:
           # hung qoder review call — the empty turn outputs made this gate
           # believe "no-pending" and the control write WIPED the queued
           # branch ai/turn-20261022-1904 unreviewed). The merger re-reads
-          # the slot straight from TEAM-CONTROL.org before believing an
+          # the slot straight from CONTROL.org before believing an
           # empty turn parse; an unreviewed re-read slot then resolves to
           # review-missing and is RETAINED, never dropped.
           if [ -z "$PENDING_BRANCH" ]; then
-            SLOT="$(grep -E '^#\+PENDING-REVIEW:' agent-team/TEAM-CONTROL.org | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
+            SLOT="$(grep -E '^#\+PENDING-REVIEW:' agent-team/CONTROL.org | head -1 | sed 's/^#+PENDING-REVIEW:[[:space:]]*//' | xargs || true)"
             if [ -n "$SLOT" ]; then
               PENDING_BRANCH=$(printf '%s' "$SLOT" | sed -n 's/.*branch=\([^|]*\).*/\1/p' | xargs)
               PENDING_AUTHOR=$(printf '%s' "$SLOT" | sed -n 's/.*author=\([^|]*\).*/\1/p' | xargs)
               PENDING_SHA=$(printf '%s' "$SLOT" | sed -n 's/.*sha=\([0-9a-f]*\).*/\1/p' | xargs)
-              echo "MERGER: turn outputs empty — slot re-read from TEAM-CONTROL.org: branch=${PENDING_BRANCH:-none}"
+              echo "MERGER: turn outputs empty — slot re-read from CONTROL.org: branch=${PENDING_BRANCH:-none}"
             fi
           fi
           # Expected duty reviewer by law, given who authored. AUTHOR-ID
@@ -1019,7 +1019,7 @@ jobs:
               sleep 15
               continue
             fi
-            # FOLD-GUARD (Lead 10-ci, run 40178324559 evidence): TEAM-CHAT.org is
+            # FOLD-GUARD (Lead 10-ci, run 40178324559 evidence): CHAT.org is
             # union-merged (.gitattributes), and the union driver can silently eat
             # a stale-base append's entry header (1956 landed as 1e249f1 with 5
             # header lines gone -> CHAT-STRUCTURE red on main). chain_test_check's
@@ -1072,7 +1072,7 @@ jobs:
           git config user.email "agent-team-ci@users.noreply.github.com"
           git remote set-url --push origin \
             "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
-          CTL=agent-team/TEAM-CONTROL.org
+          CTL=agent-team/CONTROL.org
           RLOG=agent-team/REVIEW-LOG.org
           OUTCOME="${{ steps.merge.outputs.outcome }}"
           GATE="${{ steps.gate.outputs.gate }}"
@@ -1355,7 +1355,7 @@ jobs:
 
       - name: Stall accounting + dispatch the next run (self-chain)
         run: |
-          CTL=agent-team/TEAM-CONTROL.org
+          CTL=agent-team/CONTROL.org
           RESULT="${{ needs.turn.outputs.seg_result }}"
           OUTCOME="${{ steps.merge.outputs.outcome }}"
           GATE="${{ steps.gate.outputs.gate }}"
@@ -1515,10 +1515,10 @@ jobs:
           [ -n "$SEG" ] || { echo "telegram mirror: turn skipped — silent (dedupe law)"; exit 0; }
           CHAT="${TELEGRAM_OWNER_ID:-${TELEGRAM_CHAT_ID:-${TG_LEARNED_CHAT}}}"
           [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$CHAT" ] || { echo "telegram mirror: silent (no token or chat id yet)"; exit 0; }
-          CTL=agent-team/TEAM-CONTROL.org
+          CTL=agent-team/CONTROL.org
           # GLM CHAT MIRROR (Owner 2026-10-21 #hq: "I can't see team chat
           # on Telegram — it keeps sending FROM: team-lead msgs"): the
-          # segment's NEW TEAM-CHAT.org entries go to the Owner too, each
+          # segment's NEW CHAT.org entries go to the Owner too, each
           # block under its REAL :FROM: seat — verdicts alone made the
           # feed look like a team-lead monologue. Char-safe chunking under
           # TG's 4096 cap; deduped via #+LAST-CHAT (a re-run diffs the
@@ -1530,7 +1530,7 @@ jobs:
             # || true: grep exits 1 on an EMPTY diff (segment appended no
             # chat lines) and pipefail killed this step silently under
             # set -e (run 39761029125 T3 finalize, step 7 evidence).
-            ADDED=$(git diff "$BASE" HEAD -- agent-team/TEAM-CHAT.org 2>/dev/null \
+            ADDED=$(git diff "$BASE" HEAD -- agent-team/CHAT.org 2>/dev/null \
               | grep '^+' | grep -v '^+++' | sed 's/^+//' || true)
           fi
           CH=""
@@ -1634,7 +1634,7 @@ jobs:
       # Their GLM chats go to their respective Discord channels." This
       # project's channel webhook rides as secret DISCORD_WEBHOOK_TEAM_ADMINEVERYWHERE (the
       # Owner creates it in one click in the channel settings). Mirrors
-      # (1) the chain verdict and (2) every TEAM-CHAT.org message this
+      # (1) the chain verdict and (2) every CHAT.org message this
       # segment appended — the GLM chats — diffed base_sha..post-merge
       # HEAD. SILENT until the webhook secret exists. FROM/TO law applies
       # to every mirrored block.
@@ -1663,7 +1663,7 @@ jobs:
           if [ -n "$BASE_SHA" ] && git cat-file -e "$BASE_SHA" 2>/dev/null; then
             # || true: same empty-diff pipefail hazard as the TG mirror
             # (Lead fix 2026-10-22, run 39761029125 evidence).
-            ADDED=$(git diff "$BASE_SHA" HEAD -- agent-team/TEAM-CHAT.org 2>/dev/null \
+            ADDED=$(git diff "$BASE_SHA" HEAD -- agent-team/CHAT.org 2>/dev/null \
               | grep '^+' | grep -v '^+++' | sed 's/^+//' || true)
             if [ -n "$ADDED" ]; then
               post "$(printf '%s\nTO: @team (discord, admineverywhere channel)\n--- GLM chat, this segment ---\n%s' "$FROM" "$ADDED")"

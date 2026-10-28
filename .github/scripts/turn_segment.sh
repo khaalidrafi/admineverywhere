@@ -12,7 +12,7 @@ SEAT="${SEG_SEAT:-}"
 # rendered into the script by the workflow template (mesh/01 turn
 # 1-5: quoted objective text broke bash parsing -> exit 127 before
 # any agent ran).
-OBJECTIVE=$(grep -oP '^\#\+OBJECTIVE:\s*\K.*' agent-team/TEAM-CONTROL.org | head -1 || true)
+OBJECTIVE=$(grep -oP '^\#\+OBJECTIVE:\s*\K.*' agent-team/CONTROL.org | head -1 || true)
 BOARD=agent-team/TODOS.org
 SUMMARY="$GITHUB_STEP_SUMMARY"
 TOP=$(grep -E '^\*+ (TODO|ONGOING|PENDING|WAIT)' "$BOARD" | head -8 | sed 's/^\*\** //' || true)
@@ -65,7 +65,7 @@ fi
 #   verdict, behind the green landing gate, and refuses a reviewer
 #   who is the author or not the duty reviewer.
 # What the previous finalize left pending:
-PENDING_LINE=$(grep -oP '^\#\+PENDING-REVIEW:\s*\K.*' agent-team/TEAM-CONTROL.org | head -1 | xargs || true)
+PENDING_LINE=$(grep -oP '^\#\+PENDING-REVIEW:\s*\K.*' agent-team/CONTROL.org | head -1 | xargs || true)
 PENDING_BRANCH=$(printf '%s' "$PENDING_LINE" | sed -n 's/^branch=\([^ |]*\).*/\1/p')
 PENDING_AUTHOR=$(printf '%s' "$PENDING_LINE" | sed -n 's/.*author=\([^ |]*\).*/\1/p')
 PENDING_SHA=$(printf '%s' "$PENDING_LINE" | sed -n 's/.*sha=\([0-9a-f]\{7,40\}\).*/\1/p')
@@ -124,7 +124,7 @@ Do this READ-ONLY, in order:
 1. git fetch origin ${PENDING_BRANCH} ; git log --oneline origin/ai/main..origin/${PENDING_BRANCH}
 2. git diff origin/ai/main...origin/${PENDING_BRANCH} — read EVERY hunk.
 3. FAST gate subset ONLY (Lead 2026-10-24 04:45Z, runs 40054713038/40058532383 evidence: reviewers died at max-turns running the FULL gate in-container — vitest alone is 469 tests; 'python' does not exist here, use python3): python3 -m pytest plugin/tests -p no:cacheprovider -q ; python3 demo-backend/manage.py check ; python3 demo-backend/manage.py makemigrations --check — report each rc. Do NOT run vitest/npx/tsc: FE execution is graded by the CI test job on the merge and re-run by the Lead's finalize gate — your duty is the DIFF + LAW review. If a check cannot start, report rc CANNOT and move on — NEVER loop on environment repair (the rig is preinstalled and preflighted).
-4. Law check: no secrets in the diff (SECRET LAW); no Lead-owned files edited (.github/workflows/*, agent-team/TEAM-CONTROL.org, .github/scripts/*, .gitattributes) — that list is EXHAUSTIVE: agent-team/TEAM-CHAT.org, agent-team/TODOS.org and docs/CHAIN-TEST.md are lawful seat delivery surfaces (append-only evidence files — grade entry legality, never reject a diff for touching them); the board flip carries :DELIVERED: evidence with branch + sha; TEAM-CHAT entries legal format.
+4. Law check: no secrets in the diff (SECRET LAW); no Lead-owned files edited (.github/workflows/*, agent-team/CONTROL.org, .github/scripts/*, .gitattributes) — that list is EXHAUSTIVE: agent-team/CHAT.org, agent-team/TODOS.org and docs/CHAIN-TEST.md are lawful seat delivery surfaces (append-only evidence files — grade entry legality, never reject a diff for touching them); the board flip carries :DELIVERED: evidence with branch + sha; CHAT.org entries legal format.
 5. Do NOT modify or commit anything — your verdict text is your whole deliverable.
 6. REVIEW CLOCK LAW (Owner 2026-10-26 10:55Z): your review time is
    clocked SEPARATELY on a nested TODO — 'review: <parent title>' one
@@ -139,17 +139,17 @@ VERDICT: APPROVED
 VERDICT: REJECTED — <one line of reasons>"
 fi
 
-BRIEF="You are the on-turn member of the admineverywhere Agent Team, seat ${SEAT}.
-TEAM OBJECTIVE (from agent-team/TEAM-CONTROL.org): ${OBJECTIVE}
+BRIEF="You are the on-turn member of the admincraft Agent Team, seat ${SEAT}.
+TEAM OBJECTIVE (from agent-team/CONTROL.org): ${OBJECTIVE}
 Law: templates/COMMON.org (canonical manual, khaalidrafi/agent-team.el).
 Board: agent-team/TODOS.org. Roster: agent-team/MEMBERS.org.
-Manual: agent-team/TEAM-CONTROL.org + agent-team/TEAM.md. Repo context: README.md, HANDOFF.org, ROADLOG.org, TEAM-CHARTER.org.
+Manual: agent-team/CONTROL.org + agent-team/CHARTER.md. Repo context: README.md, HANDOFF.org, ROADLOG.org, CHARTER.org.
 PEER MESH — ONE CHAT BUFFER (Owner orders 2026-10-20: members talk
 to each other — work, share reports, take each other's help, get
 dispatches; 16:55: team chat is ONE Org file, direct pings, no
 mailbox; 17:55 FORMAT LAW: standard Org format — the headline
 carries the FROM, fields ride Org tags + a :PROPERTIES: drawer):
-agent-team/TEAM-CHAT.org. Append one message AT EOF in this
+agent-team/CHAT.org. Append one message AT EOF in this
 EXACT format:
 * MSG ${SEAT} -> @<to|all> :<kind>:      :msg:${SEAT}:<to-sans-at>:<kind>:
 :PROPERTIES:
@@ -176,7 +176,7 @@ WORK ORDER — TEST-CHAIN MODE (Owner order 2026-10-22 09:22Z: the
 team is validating its own machinery; the feature work order at
 the bottom is PARKED until the Lead restores it — do NOT start
 feature items). Do EXACTLY ONE item per turn, in this order:
-1. TEST-T1 (turn 1): append a check-in to agent-team/TEAM-CHAT.org
+1. TEST-T1 (turn 1): append a check-in to agent-team/CHAT.org
    (${SEAT} -> @lead :report: — one line on which brain/lane ran
    for you, RESULT: DONE) AND add one line to docs/CHAIN-TEST.md
    logging: run id, seat, lane, date. NOTHING else.
@@ -207,7 +207,7 @@ the TODOs' — continuous run; PAUSE-AFTER-TODO OFF tonight):
 6. TODO FR R-008 widget data sources + new charts (FE)
 7. TODO FR R-007 RBAC phased (FE:BE)
 WORK ONE SEGMENT (time-boxed, max 3 self-attempts per MEMBER LAWS):
-1. READ THE TEAM CHAT FIRST (agent-team/TEAM-CHAT.org): scan the
+1. READ THE TEAM CHAT FIRST (agent-team/CHAT.org): scan the
    tail for @${SEAT} pings you have not answered — do the work,
    answer it, or reply BLOCKED with evidence, by appending your
    reply to the chat. Never edit or delete an existing entry;
@@ -219,7 +219,7 @@ WORK ONE SEGMENT (time-boxed, max 3 self-attempts per MEMBER LAWS):
 3. Do the work IN THIS BRANCH. Small, verifiable, committed.
 4. VERIFY before finishing (the landing gate runs the same and
    finalize UNDOES the merge of a red tree — red work never lands).
-5. POST TO THE TEAM CHAT (agent-team/TEAM-CHAT.org, append at
+5. POST TO THE TEAM CHAT (agent-team/CHAT.org, append at
    EOF, one headline per message, direct @pings): dispatch
    downstream work to peers, report upstream results with
    evidence (file:line, commit sha), and send :request: /
@@ -229,7 +229,7 @@ WORK ONE SEGMENT (time-boxed, max 3 self-attempts per MEMBER LAWS):
    changed + evidence (file:line, commit sha). Never mark DONE
    (that is the Lead's gate).
 7. Commit everything on this branch with message 'turn(${SEAT}): ...'.
-8. REPORT: append your report to agent-team/TEAM-CHAT.org as
+8. REPORT: append your report to agent-team/CHAT.org as
    '${SEAT} -> @lead :report:' (RESULT: DONE | PARTIAL | BLOCKED,
    evidence included). Real runs ALSO post it to YOUR role's Lark
    custom-bot webhook in env ROLE_LARK_WEBHOOK
@@ -247,7 +247,7 @@ WORK ONE SEGMENT (time-boxed, max 3 self-attempts per MEMBER LAWS):
     and the CI merger merges it ONLY on that reviewer's APPROVED
     verdict. Your chat posts propagate with the branch merge.
 11. LEAD-OWNED FILES — never edit, only read and cite:
-    .github/workflows/*, agent-team/TEAM-CONTROL.org,
+    .github/workflows/*, agent-team/CONTROL.org,
     .gitattributes, .github/scripts/*. Verify plumbing facts with
     file:line evidence in your mail/report instead. (Editing them
     breaks the chain's git permissions and the rotation pointer.)
@@ -600,12 +600,12 @@ case "$SEAT" in
     ;;
   software-engineer)
     # deepseek-v4.1-flash@codebuddy — free-offer hire
-    # (Owner order 2026-10-22 #admineverywhere). Headless tool use
+    # (Owner order 2026-10-22 #admincraft). Headless tool use
     # must be pre-authorized: -y ALONE still asks on
     # HIGH/CRITICAL tools and headless asks auto-DENY — prose
     # only, exit 0, zero writes (the 2026-10-22 body bug: 3
     # runs, 2 brains, same symptom). Fix per the CLI's own
-    # --help + DE analysis (TEAM-CHAT 3b00d4f):
+    # --help + DE analysis (CHAT.org 3b00d4f):
     # --permission-mode bypassPermissions + CODEBUDDY_IS_SANDBOX=1
     # full pass (sanctioned: the job IS an isolated container).
     # HONEST LANE VERDICT (run 39834624187 evidence): the CLI can
@@ -674,7 +674,7 @@ case "$SEAT" in
     ;;
   quality-assurance-engineer)
     # deepseek-v4.1-flash@qoder — free-offer hire (Owner
-    # order 2026-10-22 #admineverywhere). The qoder model flag is
+    # order 2026-10-22 #admincraft). The qoder model flag is
     # UNVERIFIED — if the CLI rejects it the chain self-heals to
     # the next lane; never blocks the segment.
     CB_LOG=/tmp/cb-lane.log

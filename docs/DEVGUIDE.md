@@ -277,7 +277,7 @@ python3 scripts/chain_session_check.py --selftest # 19 controls: every leg prove
 
 # THE SEGREGATION-LAW PENDING SLOT as one command — graded READ-ONLY against the
 # Lead-owned merger, because the whole delivery loop hangs on ONE line of
-# agent-team/TEAM-CONTROL.org (`#+PENDING-REVIEW`) and four separate times that line
+# agent-team/CONTROL.org (`#+PENDING-REVIEW`) and four separate times that line
 # was the reason nothing could land: an EMPTY slot could never bootstrap (the park
 # keyed on `approved`, which needs a pending branch to already exist), the merger
 # compared a SEAT KEY against member ids so QA reviewed its own branch, a timed-out
@@ -362,7 +362,7 @@ python3 scripts/chain_patch_check.py --selftest # every leg proved able to fail
 # cost: ai/turn-20261024-1632 was REJECTED seven times on 2026-10-24 and the Saturday
 # stamped "Fri" in its four new entries was re-found by hand each round (the reviewer's
 # transcript: `date -d 2026-10-24` -> Sat). Grades BOTH files that carry the drawer —
-# TEAM-CHAT.org and REVIEW-LOG.org — because a harness that reads one and claims two is
+# CHAT.org and REVIEW-LOG.org — because a harness that reads one and claims two is
 # the blind spot this repo keeps paying for. Four legs: COVERAGE (exactly one column-0
 # stamp per `:PROPERTIES:` record — none is an undateable claim, two is the fold shape),
 # SHAPE (the literal grammar, so an ACTIVE `<…>` timestamp or a missing UTC label is

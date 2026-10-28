@@ -5,9 +5,9 @@ scripts/chain_slot_check.py grades the slot laws by TEXT (the guard mentions
 the key, the write carries an operand). This probe grades the one property a
 text read cannot see: does the EXACT grep command shipped in
 .github/workflows/agent-team.yml FIND the EXACT slot line shipped in
-agent-team/TEAM-CONTROL.org, in the interpreter running the check?
+agent-team/CONTROL.org, in the interpreter running the check?
 
-Evidence it was written for (Lead 10-am, TEAM-CONTROL.org:8): run 40103691787's
+Evidence it was written for (Lead 10-am, CONTROL.org:8): run 40103691787's
 finalize (27748d9, 15:01Z) blanked a slot that did not belong to it — the
 exact failure the NON-CLOBBER guard (ed378d4) exists to refuse. The guard
 judges `CURSLOT`, and CURSLOT is produced by `grep -E '^\\#+PENDING-REVIEW:'`.
@@ -34,7 +34,7 @@ import tempfile
 import os
 
 WORKFLOW_REL = ".github/workflows/agent-team.yml"
-CTL_REL = "agent-team/TEAM-CONTROL.org"
+CTL_REL = "agent-team/CONTROL.org"
 
 # The three slot-touching commands, located by their stable variable names,
 # never by line number (docs move; the assignments do not).
