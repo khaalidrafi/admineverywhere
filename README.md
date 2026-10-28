@@ -1,4 +1,4 @@
-# admincraft
+# admineverywhere
 
 A branded, extensible, AI-powered admin app builder for any Django REST
 Framework backend — pip-installable plugin (branding + schema tooling + a
@@ -9,16 +9,16 @@ OpenAI-compatible streaming AI assistant (Ctrl+K) that knows your models.
 under a second, and once your backend runs the plugin you can rebrand from
 *inside the app* (Settings → Branding: name, colors, font, logo — applied
 live, no rebuild). Release builds ship a neutral default identity
-("Admincraft") that every user replaces with their own. Tauri 2 targets
+("Admineverywhere") that every user replaces with their own. Tauri 2 targets
 Android .apk, Windows .exe and Linux .AppImage — prebuilt for every
 release (see
-[Releases](https://github.com/khaalidrafi/admincraft/releases)), or build
+[Releases](https://github.com/khaalidrafi/admineverywhere/releases)), or build
 locally / from source via Nix/Guix. Two agent skills
-([`skills/`](skills/)) can onboard an existing repo onto admincraft and
+([`skills/`](skills/)) can onboard an existing repo onto admineverywhere and
 craft the branding for you — guided, or fully automatic from your
 project's own source.
 
-**Repo:** `khaalidrafi/admincraft` · stack: Django plugin (pip) +
+**Repo:** `khaalidrafi/admineverywhere` · stack: Django plugin (pip) +
 Tauri 2 + Svelte 5 + Tailwind 4 + DRF/drf-spectacular backend.
 
 ## Try it in 3 steps
@@ -47,7 +47,7 @@ cd ../demo-backend && .venv/bin/python manage.py build_admin --brand ../app/bran
 #    the real origin (https only; localhost/wildcards are rejected).
 
 # 4. Or let the agent skills do all of it (guided OR fully automatic):
-python ../skills/admincraft-craft/scripts/derive_brand.py --root <your-repo> --out <your-repo>/brand
+python ../skills/admineverywhere-craft/scripts/derive_brand.py --root <your-repo> --out <your-repo>/brand
 ```
 
 Screenshot flow worth demoing: login → dashboard widgets (record counts,
@@ -60,11 +60,11 @@ Save — whole app, new identity, one second, no rebuild.
 
 | dir | what |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `build_admin` (brand injection + CSP API_HOST substitution), `dump_schema`, branding engine + runtime branding API (114 pytest cases) |
+| `plugin/` | pip package `admineverywhere` — `build_admin` (brand injection + CSP API_HOST substitution), `dump_schema`, branding engine + runtime branding API (114 pytest cases) |
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat, in-app brand editor (58 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | `default/` (the neutral shipped identity) + two examples: `freshorama` (dark SaaS) + `minimal-light` (light) |
-| `skills/` | agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding; ask/auto modes) |
+| `skills/` | agent skills: `admineverywhere-onboard` (wire an existing repo onto admineverywhere) + `admineverywhere-craft` (guided or source-derived branding; ask/auto modes) |
 | `frontend-dist/` | stub for the Nix flake input — the repo ships no prebuilt web assets |
 | `docs/` | E2E screenshots |
 | `.github/workflows/` | `build-all.yml` — live CI: test gate + six build legs + tag-triggered releases (`build-demo.yml.disabled` — the old parked demo-CI) |
@@ -103,17 +103,17 @@ nothing bundled, nothing calls home.
 
 Push a `v*` tag and the same pipeline also cuts a GitHub Release with all
 assets attached. Current set (see
-[v0.1.2](https://github.com/khaalidrafi/admincraft/releases/tag/v0.1.2) —
-the first release carrying the neutral "Admincraft" identity):
+[v0.1.2](https://github.com/khaalidrafi/admineverywhere/releases/tag/v0.1.2) —
+the first release carrying the neutral "Admineverywhere" identity):
 
 | asset | platform | how to use |
 | --- | --- | --- |
-| `admincraft-0.1.2-py3-none-any.whl` (+ sdist) | any Python ≥ 3.10 | `pip install` — the Django plugin |
-| `admincraft_0.1.2_x64-setup.exe` | Windows | run the NSIS installer |
-| `admincraft_0.1.2_amd64.AppImage` | most distros | `chmod +x` and run |
-| `admincraft-0.1.2-android-universal-debug.apk` | Android 7.0+ (64- & 32-bit) | enable *install unknown apps*, then sideload; stable debug-signed. Installing over v0.1.1 works (same key); devices still on the v0.1.0 apk must uninstall once (one-time key change) |
-| `admincraft-0.1.2-web.tar.gz` | any (browser) | serve the contents statically, open, log in |
-| `admincraft-0.1.2-nix.tar.gz` / `-guix.tar.gz` | Nix / Guix | verified store-path builds (absolute `/nix/store` / `/gnu/store` paths) |
+| `admineverywhere-0.1.2-py3-none-any.whl` (+ sdist) | any Python ≥ 3.10 | `pip install` — the Django plugin |
+| `admineverywhere_0.1.2_x64-setup.exe` | Windows | run the NSIS installer |
+| `admineverywhere_0.1.2_amd64.AppImage` | most distros | `chmod +x` and run |
+| `admineverywhere-0.1.2-android-universal-debug.apk` | Android 7.0+ (64- & 32-bit) | enable *install unknown apps*, then sideload; stable debug-signed. Installing over v0.1.1 works (same key); devices still on the v0.1.0 apk must uninstall once (one-time key change) |
+| `admineverywhere-0.1.2-web.tar.gz` | any (browser) | serve the contents statically, open, log in |
+| `admineverywhere-0.1.2-nix.tar.gz` / `-guix.tar.gz` | Nix / Guix | verified store-path builds (absolute `/nix/store` / `/gnu/store` paths) |
 | `SHA256SUMS.txt` | — | checksums for everything above |
 
 ## Nix
@@ -124,8 +124,8 @@ with no manual hashes. The web bundle is injected via the `frontend-dist`
 flake input (the repo ships no prebuilt assets — see `frontend-dist/`):
 
 ```bash
-nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admincraft
-./result/bin/admincraft
+nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admineverywhere
+./result/bin/admineverywhere
 ```
 
 (Build the web bundle first: `cd app && npm ci && npm run build`.)
@@ -144,7 +144,7 @@ the build and compiled offline:
 guix build -f guix.scm
 ```
 
-The binary lands in `$(guix build -f guix.scm)/bin/admincraft`.
+The binary lands in `$(guix build -f guix.scm)/bin/admineverywhere`.
 
 ## Notes
 
@@ -155,6 +155,6 @@ The binary lands in `$(guix build -f guix.scm)/bin/admincraft`.
   `npx tauri icon <1024px png>`); the in-app logo/favicon are runtime-
   brandable without a rebuild.
 - Prebuilt clients ship on the
-  [Releases](https://github.com/khaalidrafi/admincraft/releases) page
+  [Releases](https://github.com/khaalidrafi/admineverywhere/releases) page
   (tag-triggered CI). They carry the neutral identity — nothing bundled,
   nothing calls home; users register their own API and brand.

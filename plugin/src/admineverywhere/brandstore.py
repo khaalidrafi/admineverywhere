@@ -1,10 +1,10 @@
 """Runtime brand store — the server-side source of truth for in-app branding.
 
-Storage: ONE directory (settings.ADMINCRAFT_BRAND_DIR, default
-``<BASE_DIR>/admincraft_brand``) holding ``brand.json`` plus the
+Storage: ONE directory (settings.ADMINEVERYWHERE_BRAND_DIR, default
+``<BASE_DIR>/admineverywhere_brand``) holding ``brand.json`` plus the
 logo/favicon files it references. Host projects wire it via urls.py::
 
-    path("admincraft/", include("admincraft.urls"))
+    path("admineverywhere/", include("admineverywhere.urls"))
 
 and the thin client can then read/patch branding over HTTP (views.py)
 instead of shipping a rebuilt bundle per brand.
@@ -39,7 +39,7 @@ MAX_ASSET_BYTES = 1_000_000
 
 DATA_URL_RE = re.compile(r"^data:(?P<mime>[\w.+-]+/[\w.+-]+);base64,(?P<data>.+)$", re.DOTALL)
 
-FALLBACK_ASSET_URL = "/admincraft/branding/asset/{name}"
+FALLBACK_ASSET_URL = "/admineverywhere/branding/asset/{name}"
 
 
 class BrandValidationError(Exception):
@@ -53,17 +53,17 @@ class BrandValidationError(Exception):
 # ------------------------------------------------------------- paths ----
 
 def brand_dir() -> Path:
-    configured = getattr(settings, "ADMINCRAFT_BRAND_DIR", None)
+    configured = getattr(settings, "ADMINEVERYWHERE_BRAND_DIR", None)
     if configured:
         return Path(configured)
     base = getattr(settings, "BASE_DIR", None)
-    return Path(base or ".") / "admincraft_brand"
+    return Path(base or ".") / "admineverywhere_brand"
 
 
 def _asset_url(name: str) -> str:
     try:
         from django.urls import reverse
-        return reverse("admincraft:brand-asset", args=[name])
+        return reverse("admineverywhere:brand-asset", args=[name])
     except Exception:  # NoReverseMatch, urlconf not loaded, no namespace...
         return FALLBACK_ASSET_URL.format(name=quote(name))
 

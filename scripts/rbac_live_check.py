@@ -226,7 +226,7 @@ def rig_python(root):
     genuinely absent: a preflight that never says no is not a preflight
     (DEVGUIDE *EIGHTH law*)."""
     exe = sys.executable or "python3"
-    probe_src = "import django, rest_framework, drf_spectacular, admincraft"
+    probe_src = "import django, rest_framework, drf_spectacular, admineverywhere"
     probe = subprocess.run([exe, "-c", probe_src], capture_output=True, text=True)
     if probe.returncode != 0:
         plugin_src = repo(root, "plugin", "src")
@@ -261,7 +261,7 @@ def boot_rig(root, workdir):
             "_TMP = Path(%r)\n"
             "DATABASES = {\"default\": {\"ENGINE\": \"django.db.backends.sqlite3\","
             " \"NAME\": _TMP / \"rbac_live.sqlite3\"}}\n"
-            "ADMINCRAFT_BRAND_DIR = str(_TMP / \"brand\")\n"
+            "ADMINEVERYWHERE_BRAND_DIR = str(_TMP / \"brand\")\n"
             % workdir
         )
     env = {

@@ -1,9 +1,9 @@
 name: Agent Team Chain
 
-# admincraft — CI agent-team chain, scaffolded by agent-team.el
+# admineverywhere — CI agent-team chain, scaffolded by agent-team.el
 # (M-x agent-team-setup-project) from templates/agent-team.yml.
 # One canonical architecture, proven on khaalidrafi/agent-team.el and
-# khaalidrafi/admincraft (Owner orders 2026-10-20 -> 2026-10-21).
+# khaalidrafi/admineverywhere (Owner orders 2026-10-20 -> 2026-10-21).
 #
 # Structure per run: test (landing gate) -> probe (seat liveness, never
 # gates) -> turn (TG ingest owner-locked -> session restore -> REVIEW phase
@@ -397,7 +397,7 @@ jobs:
             echo "mode=complete" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # PAUSE LAW (Owner order 2026-10-22 #admincraft: "After completing
+          # PAUSE LAW (Owner order 2026-10-22 #admineverywhere: "After completing
           # a TODO, pause and summarize which role did what"): finalize arms
           # #+CHAIN-PAUSE when a segment delivers a TODO. Turns stay halted
           # until the Lead clears the line after reviewing the roles' work.
@@ -418,7 +418,7 @@ jobs:
           echo "objective=$OBJECTIVE" >> "$GITHUB_OUTPUT"
           # Seat pointer -> seat id. The case grammar is extensible: one
           # line per rotation entry ("model@body ... role" pointer forms).
-          # MEMBER ID FORMAT LAW v2 (Owner 2026-10-22 16:54Z #admincraft:
+          # MEMBER ID FORMAT LAW v2 (Owner 2026-10-22 16:54Z #admineverywhere:
           # "PROVIDER/ should only be included with API models!"):
           # key-served API lanes on goose keep the PROVIDER/ prefix
           # (zai/ groq/ openrouter/ gomodel/ ...); platform-native
@@ -1436,7 +1436,7 @@ jobs:
             git commit -m "ci-chain: AUTO stall-halt armed at stall=${NEW} (BR-01 hard floor)" || true
             git push origin "ai/main" || echo "::warning::stall-halt push failed — next run re-arms"
           fi
-          # PAUSE-AFTER-TODO (Owner order 2026-10-22 #admincraft: "After
+          # PAUSE-AFTER-TODO (Owner order 2026-10-22 #admineverywhere: "After
           # completing a TODO, pause and summarize which role did what"):
           # a segment that DELIVERS a TODO (a :DELIVERED: evidence line
           # landed on the board) halts the chain — no self-dispatch — and
@@ -1547,7 +1547,7 @@ jobs:
                 curl -sS -o /dev/null -w 'telegram chat mirror: HTTP %{http_code}\n' \
                   "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
                   --data-urlencode "chat_id=${CHAT}" \
-                  --data-urlencode "text=$(printf 'FROM: %s\nTO: @owner\n\n[admincraft] team chat — new this segment\n---\n%s' "$SEAT" "$CHUNK")" || true
+                  --data-urlencode "text=$(printf 'FROM: %s\nTO: @owner\n\n[admineverywhere] team chat — new this segment\n---\n%s' "$SEAT" "$CHUNK")" || true
                 CHUNK=""
               done < /tmp/tg-chunks.txt
               rm -f /tmp/tg-chunks.txt
@@ -1577,7 +1577,7 @@ jobs:
           VH=$(printf '%s' "$SEG" | sha256sum | cut -c1-12)
           # TELEGRAM LAW (Owner order 17:55Z): every message to the TG bot
           # MUST contain FROM and TO — they open the text.
-          TXT="$(printf 'FROM: team-lead (glm-5.3-flash, Agent Team @khaalidrafi/admincraft)\nTO: @owner\n\n[admincraft] segment done\nbranch: %s\nseat: %s\nresult: %s\nmerge: %s\ngate: %s\nstall: %s\ndecision: %s' \
+          TXT="$(printf 'FROM: team-lead (glm-5.3-flash, Agent Team @khaalidrafi/admineverywhere)\nTO: @owner\n\n[admineverywhere] segment done\nbranch: %s\nseat: %s\nresult: %s\nmerge: %s\ngate: %s\nstall: %s\ndecision: %s' \
             "${{ needs.turn.outputs.turn_branch }}" \
             "${{ needs.turn.outputs.seat }}" \
             "$SEG" \
@@ -1632,7 +1632,7 @@ jobs:
 
       # Owner order 2026-10-20 19:56Z: "You serve as the lead of both repos.
       # Their GLM chats go to their respective Discord channels." This
-      # project's channel webhook rides as secret DISCORD_WEBHOOK_TEAM_ADMINCRAFT (the
+      # project's channel webhook rides as secret DISCORD_WEBHOOK_TEAM_ADMINEVERYWHERE (the
       # Owner creates it in one click in the channel settings). Mirrors
       # (1) the chain verdict and (2) every TEAM-CHAT.org message this
       # segment appended — the GLM chats — diffed base_sha..post-merge
@@ -1640,12 +1640,12 @@ jobs:
       # to every mirrored block.
       - name: Mirror verdict + new GLM chats to Discord (silent without secret)
         env:
-          DISCORD_WEBHOOK_TEAM: ${{ secrets.DISCORD_WEBHOOK_TEAM_ADMINCRAFT }}
+          DISCORD_WEBHOOK_TEAM: ${{ secrets.DISCORD_WEBHOOK_TEAM_ADMINEVERYWHERE }}
           BASE_SHA: ${{ needs.turn.outputs.base_sha }}
           TURN_BRANCH: ${{ needs.turn.outputs.turn_branch }}
           SEG_RESULT: ${{ needs.turn.outputs.seg_result }}
         run: |
-          [ -n "$DISCORD_WEBHOOK_TEAM" ] || { echo "discord mirror: silent (no DISCORD_WEBHOOK_TEAM_ADMINCRAFT secret yet)"; exit 0; }
+          [ -n "$DISCORD_WEBHOOK_TEAM" ] || { echo "discord mirror: silent (no DISCORD_WEBHOOK_TEAM_ADMINEVERYWHERE secret yet)"; exit 0; }
           post() { # chunk to Discord's 2000-char cap
             local txt="$1"
             while [ -n "$txt" ]; do
@@ -1656,8 +1656,8 @@ jobs:
                 -d "$(python3 -c 'import json,sys; print(json.dumps({"content": sys.stdin.read()}))' <<< "$chunk")" || true
             done
           }
-          FROM="FROM: team-lead (glm-5.3-flash, Agent Team @khaalidrafi/admincraft)"
-          post "$(printf '%s\nTO: @team (discord, admincraft channel)\n\n[admincraft] segment done\nbranch: %s\nresult: %s\ndecision: %s\nstall: %s' \
+          FROM="FROM: team-lead (glm-5.3-flash, Agent Team @khaalidrafi/admineverywhere)"
+          post "$(printf '%s\nTO: @team (discord, admineverywhere channel)\n\n[admineverywhere] segment done\nbranch: %s\nresult: %s\ndecision: %s\nstall: %s' \
             "$FROM" "${TURN_BRANCH:-?}" "${SEG_RESULT:-?}" "${CHAIN_DECISION:-unknown}" "${CHAIN_STALL:-?}")"
           # The GLM chats this segment appended (merge landed them in ai/main):
           if [ -n "$BASE_SHA" ] && git cat-file -e "$BASE_SHA" 2>/dev/null; then
@@ -1666,7 +1666,7 @@ jobs:
             ADDED=$(git diff "$BASE_SHA" HEAD -- agent-team/TEAM-CHAT.org 2>/dev/null \
               | grep '^+' | grep -v '^+++' | sed 's/^+//' || true)
             if [ -n "$ADDED" ]; then
-              post "$(printf '%s\nTO: @team (discord, admincraft channel)\n--- GLM chat, this segment ---\n%s' "$FROM" "$ADDED")"
+              post "$(printf '%s\nTO: @team (discord, admineverywhere channel)\n--- GLM chat, this segment ---\n%s' "$FROM" "$ADDED")"
             else
               echo "discord mirror: no new chat entries this segment"
             fi
