@@ -8,11 +8,11 @@ Usage:
 --build     : additionally run `npm run build` inside the app dir
 --api-host  : deployed API origin substituted for the CSP's API_HOST
               placeholder (validated: https, dotted DNS, no localhost, no
-              wildcards — see admincraft.branding.normalize_api_host)
+              wildcards — see admineverywhere.branding.normalize_api_host)
 """
 from django.core.management.base import BaseCommand, CommandError
 
-from admincraft import branding
+from admineverywhere import branding
 
 
 class Command(BaseCommand):

@@ -27,7 +27,7 @@ CI) carries the same signature, so new builds install over old ones.
 - **Not** a secret worth protecting in a private repo: it is a
   debug-grade key by definition — anyone who could clone the repo could
   already build their own debug APK with their own key under a different
-  package name. If admincraft ever ships Play Store releases, generate a
+  package name. If admineverywhere ever ships Play Store releases, generate a
   real upload key and store it in repo secrets instead.
 
 ### Rotating the key

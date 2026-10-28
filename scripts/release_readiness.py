@@ -177,11 +177,11 @@ CITE_DOCS = ["AGENTS.md", "README.md", "docs/DEVGUIDE.md", "docs/csv-export.md",
 # the Commands block) must state the size the landing gate actually owes. Closed
 # table of those live claims: (doc, anchor that must be unique in that doc, kind).
 DOC_COUNT_CLAIMS = [
-    ("AGENTS.md", "pip package `admincraft`", "pytest"),
+    ("AGENTS.md", "pip package `admineverywhere`", "pytest"),
     ("AGENTS.md", "thin client — Vite 6", "vitest"),
     ("AGENTS.md", "cd app && npm test", "vitest"),
     ("AGENTS.md", "-m pytest ../plugin/tests", "pytest"),
-    ("docs/DEVGUIDE.md", "pip package `admincraft`", "pytest"),
+    ("docs/DEVGUIDE.md", "pip package `admineverywhere`", "pytest"),
     ("docs/DEVGUIDE.md", "thin client — Vite 6", "vitest"),
     ("docs/DEVGUIDE.md", "cd app && npm test", "vitest"),
     ("docs/DEVGUIDE.md", "-m pytest ../plugin/tests", "pytest"),
@@ -297,11 +297,11 @@ def carriers():
         found.append(("cargo" if rel.endswith("Cargo.toml") else rel,
                       "%s:%d" % (rel, n), m.group(1)))
     lock = read("app/src-tauri/Cargo.lock")
-    m = re.search(r'name = "admincraft"\nversion = "([^"]+)"', lock)
+    m = re.search(r'name = "admineverywhere"\nversion = "([^"]+)"', lock)
     if not m:
-        raise LegRed("Cargo.lock: no admincraft entry — `cargo` builds cannot be "
+        raise LegRed("Cargo.lock: no admineverywhere entry — `cargo` builds cannot be "
                      "trusted to match Cargo.toml")
-    found.append(("cargo-lock", "app/src-tauri/Cargo.lock (admincraft entry)",
+    found.append(("cargo-lock", "app/src-tauri/Cargo.lock (admineverywhere entry)",
                   m.group(1)))
     return found
 

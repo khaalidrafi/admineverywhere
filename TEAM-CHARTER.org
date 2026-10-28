@@ -1,4 +1,4 @@
-# TEAM-CHARTER.org — admincraft agent team
+# TEAM-CHARTER.org — admineverywhere agent team
 
 Derived from: Google/MIT "Science of Scaling Agent Systems" (centralized topology for
 sequential work; supervised teams amplify errors ~4x vs ~17x unsupervised), agent

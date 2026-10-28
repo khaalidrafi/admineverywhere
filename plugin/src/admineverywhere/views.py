@@ -1,6 +1,6 @@
 """HTTP layer for the runtime brand store.
 
-Routes (mounted by the host project, e.g. path("admincraft/", include("admincraft.urls"))):
+Routes (mounted by the host project, e.g. path("admineverywhere/", include("admineverywhere.urls"))):
 
   GET  branding/            public → {"brand": ..., "rev": ...} or 404
   PUT  branding/            staff  → replace the brand (body uses the

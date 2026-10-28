@@ -36,25 +36,25 @@ brand.json ──manage.py build_admin──> app/public/brand.css + brand.json 
                 └──patches──>         src-tauri/tauri.conf.json productName/title
                                             (launcher identity for builds)
 
-backend brand dir (ADMINCRAFT_BRAND_DIR)
-   └──GET/PUT /admincraft/branding/  (staff for PUT)
+backend brand dir (ADMINEVERYWHERE_BRAND_DIR)
+   └──GET/PUT /admineverywhere/branding/  (staff for PUT)
           └── client applies live: --brand-* CSS vars, titles, favicon,
               logos, native window title (Tauri setTitle)
 ```
 
 The client boots with the bundled static brand, then (if the API runs
-the admincraft plugin) the server brand replaces it. A plain DRF backend
+the admineverywhere plugin) the server brand replaces it. A plain DRF backend
 without the plugin keeps the bundled brand — degrades silently.
 
 ## Runtime API contract
 
 ```
-GET  <api>/admincraft/branding/
+GET  <api>/admineverywhere/branding/
      → 200 {"brand": {...same schema, logo/favicon as API-relative
-                      /admincraft/branding/asset/<relative-path> URLs...}, "rev": <int>}
+                      /admineverywhere/branding/asset/<relative-path> URLs...}, "rev": <int>}
      → 404 {"detail": "no brand configured — ..."}      # use bundled brand
 
-PUT  <api>/admincraft/branding/      Authorization: Token <staff token>
+PUT  <api>/admineverywhere/branding/      Authorization: Token <staff token>
      body: the brand object; logo/favicon may be
        "data:image/png;base64,..." | "data:image/jpeg;base64,..." |
        "data:image/svg+xml;base64,..." | a relative asset path already on the
@@ -62,7 +62,7 @@ PUT  <api>/admincraft/branding/      Authorization: Token <staff token>
      → 200 same shape as GET     400 {"errors": ["field: problem", ...]}
      401 no/bad token            403 non-staff        501 host has no DRF
 
-GET  <api>/admincraft/branding/asset/<relative-path>
+GET  <api>/admineverywhere/branding/asset/<relative-path>
      → the logo/favicon bytes
      (png/jpeg/svg content-types; the path is exactly what brand.json
       stores — "assets/logo.svg" keeps its directory — and only files
@@ -91,7 +91,7 @@ Key facts:
 - `identifier` (e.g. `com.example.admin`) is the app's permanent identity
   — Android treats a change as a different app (parallel install, no
   data migration). Choose once, keep forever.
-- The admincraft release pipeline signs the universal APK with a stable
+- The admineverywhere release pipeline signs the universal APK with a stable
   committed debug key so successive releases install over each other.
   A locally-built APK (random debug keystore) will NOT install over a
   release APK — "app not installed" on Android is almost always this
@@ -105,13 +105,13 @@ Key facts:
 npx tauri icon brand/assets/icon-1024.png
 
 # no logo yet? generate a neutral 2x2 grid mark in the brand's colors:
-python skills/admincraft-craft/scripts/derive_brand.py --root . --out brand
+python skills/admineverywhere-craft/scripts/derive_brand.py --root . --out brand
 ```
 
 Source requirements: square PNG, >= 512px (1024 recommended),
 transparent background works.
 
-## Release checklist (admincraft repo)
+## Release checklist (admineverywhere repo)
 
 1. Gates green locally: `pytest plugin/tests` (from demo-backend venv),
    `vitest run` in app/.
