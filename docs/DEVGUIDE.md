@@ -138,7 +138,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
 | `app/brands/` | `default/` = the neutral shipped brand ("Admineverywhere", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
-| `skills/` | the two agent skills: `admineverywhere-onboard` (wire an existing repo onto admineverywhere) + `admineverywhere-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
+| `skills/` | the two agent skills: `admineverywhere-onboard` (wire an existing repo onto admineverywhere) + `admineverywhere-build` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
 `app/src-tauri/signing/` | committed stable debug keystore for the android apk — why it exists + rotation notes in its README |
 | `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, float, date, bool, readonly datetime) |
@@ -472,7 +472,7 @@ cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/
 npx tauri icon ../app/brands/default/assets/icon-1024.png
 
 # derive a brand from any repo's own source (no logo needed)
-python skills/admineverywhere-craft/scripts/derive_brand.py --root <repo> --out <repo>/brand
+python skills/admineverywhere-build/scripts/derive_brand.py --root <repo> --out <repo>/brand
 ```
 
 ## Hard-won contracts (don't relearn these)
@@ -1924,7 +1924,7 @@ once (one-time signature change from the stable key).
   stays locked down, network egress does not. (Superseded on `ai/csp-1`: the
   shipped conf now carries the *production* policy — see the csp-1 bullet —
   so the any-origin egress survives only in web/dev mode.)
-- **`skills/` shipped**: `admineverywhere-onboard` + `admineverywhere-craft`
+- **`skills/` shipped**: `admineverywhere-onboard` + `admineverywhere-build`
   (duplicated stdlib engine scripts by design — `inspect_project.py`,
   `derive_brand.py` — ask/auto modes, references, evals). Verified live
   against demo-backend and a scratch client dir.
