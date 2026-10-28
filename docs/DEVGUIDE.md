@@ -1,4 +1,4 @@
-# admincraft dev guide
+# admineverywhere dev guide
 
 (Moved from the repo-root AGENTS.md on 2026-10-21 per Owner order —
 a project-specific AGENTS.md must not be made. Content unchanged.)
@@ -29,12 +29,12 @@ Product constraints — do not relax:
   font, logo). Components carry zero hard-coded colors: Tailwind 4
   `@theme inline` maps `--color-*` utilities onto the runtime `--brand-*`
   variables. **Release builds never carry a product name**: the shipped
-  default brand is neutral (`app/brands/default/` = "Admincraft"), and
+  default brand is neutral (`app/brands/default/` = "Admineverywhere"), and
   every user's identity rides on top — either baked in via `build_admin`
   (launcher + bundled assets) or live via the runtime branding API
   (everything in-app: name, colors, font, logos, titles).
 - Branding has TWO layers, never blur them: **runtime** (in-app editor
-  `#/branding`, `GET/PUT /admincraft/branding/` — applies instantly, no
+  `#/branding`, `GET/PUT /admineverywhere/branding/` — applies instantly, no
   rebuild) vs **build-time** (`tauri.conf.json` productName + platform
   icons — set by `build_admin` / `npx tauri icon` before packaging). The
   Android launcher label is build-time; the desktop window title is
@@ -132,13 +132,13 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admincraft` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (315 pytest, written first) |
+| `plugin/` | pip package `admineverywhere` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (315 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (484 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
-| `app/brands/` | `default/` = the neutral shipped brand ("Admincraft", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
-| `skills/` | the two agent skills: `admincraft-onboard` (wire an existing repo onto admincraft) + `admincraft-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
+| `app/brands/` | `default/` = the neutral shipped brand ("Admineverywhere", generated grid-mark icons) + two examples: `freshorama` (dark SaaS), `minimal-light` |
+| `skills/` | the two agent skills: `admineverywhere-onboard` (wire an existing repo onto admineverywhere) + `admineverywhere-craft` (guided or source-derived branding) — shared stdlib engine scripts, ask/auto modes |
 | `app/src-tauri/` | Rust side, keyring-backed secret storage, generated placeholder icons |
 `app/src-tauri/signing/` | committed stable debug keystore for the android apk — why it exists + rotation notes in its README |
 | `demo-backend/` | DRF + drf-spectacular rig exercising every field type (FK, enum, decimal, float, date, bool, readonly datetime) |
@@ -472,7 +472,7 @@ cd demo-backend && .venv/bin/python manage.py build_admin --brand ../app/brands/
 npx tauri icon ../app/brands/default/assets/icon-1024.png
 
 # derive a brand from any repo's own source (no logo needed)
-python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo>/brand
+python skills/admineverywhere-craft/scripts/derive_brand.py --root <repo> --out <repo>/brand
 ```
 
 ## Hard-won contracts (don't relearn these)
@@ -735,7 +735,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   (64% stmts): the web-localStorage fallback covered three of four paths and the
   keyring commands ran zero tests, on both suites' green word. They are a
   BOUNDARY contract — `src-tauri/src/lib.rs:10` keeps `DEFAULT_SERVICE:
-  "admincraft"` and the commands take `(service, key, value)`; a renamed or
+  "admineverywhere"` and the commands take `(service, key, value)`; a renamed or
   dropped argument lands the key under a different keychain bucket or fails the
   Rust signature, invisibly in web mode. `secrets.test.ts` now pins each
   `invoke()` tuple with `vi.resetModules()` + `vi.doMock("@tauri-apps/api/core")`
@@ -864,7 +864,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   its OWN environment and never builds a rig venv, so the gate could not have
   re-run the very harness its docs cite. Layer 2 now resolves an interpreter by
   PROBE (venv first, then the running one; `import django, rest_framework,
-  drf_spectacular, admincraft`) and prints `layer 2 interpreter: …`, because a
+  drf_spectacular, admineverywhere`) and prints `layer 2 interpreter: …`, because a
   pass must say which environment proved it; `--python <exe>` is honoured
   exclusively — when a seat names an interpreter, that interpreter's failure is
   the answer, not a licence to fall back and report someone else's green.
@@ -883,7 +883,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   halves are exit-code contracts; only the first one was written down.
 - **SIXTH harness law — when the two artifacts are SUPPOSED to differ, normalize
   the difference deliberately and prove the diff bites on the rest.** The brand
-  twins (`plugin/src/admincraft/branding.py:196` `render_css()` ↔
+  twins (`plugin/src/admineverywhere/branding.py:196` `render_css()` ↔
   `app/src/lib/branding.ts:37` `brandToCss()`, AGENTS.md *Runtime branding flow*)
   carry banners that differ on purpose — a generated file says "do not edit by
   hand", a runtime `<style>` says "injected" — so a raw byte compare of the two
@@ -900,7 +900,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
      line and the harness still said `BYTE-IDENTICAL`. Each sentinel now carries
      the verdict the server owes it and the leg checks it row by row. Surprises
      here are real: `"\tTabbed Font\t"` is ACCEPTED (the
-     server matches `SAFE_FONT_RE` against `font.strip()`, `plugin/src/admincraft/branding.py:190`) and
+     server matches `SAFE_FONT_RE` against `font.strip()`, `plugin/src/admineverywhere/branding.py:190`) and
      the client strips the same tabs via `sanitizeFont()` — so a brand that looks
      invalid in the accepted column is not a divergence, and the only way to know
      was to run it. It now sits in `VALID_FONTS`, where the finding actually puts
@@ -988,11 +988,11 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
      (`pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true`,
      `.turn-inside.sh:16`) hides its own failure — a standing escalation
      (19:59Z/20:09Z reports) in a Lead-owned file — so on this box the pytest leg
-     died with INTERNALERROR `No module named 'admincraft'`, and pytest's exit
+     died with INTERNALERROR `No module named 'admineverywhere'`, and pytest's exit
      code for that is **2**: the same number the harnesses use for "cannot run"
      and a seat reads as "my work is red". The gate is fixable seat-side even
      though the runner is not: `scripts/landing_gate.py` probes
-     `import django, rest_framework, drf_spectacular, admincraft` first and, on
+     `import django, rest_framework, drf_spectacular, admineverywhere` first and, on
      failure, exits 2 printing the interpreter, the missing module and the exact
      install command.
   2. **`rc 0` is not the claim.** `manage.py check` answers 0 without proving the
@@ -1086,7 +1086,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   (`.github/workflows/build-all.yml:417-443`). `scripts/release_readiness.py`
   (exit 0 / 1 red / 2 cannot run, per the FIFTH law) now holds the whole story
   re-runnable: five version reads — `plugin/pyproject.toml`, `app/package.json`,
-  `tauri.conf.json`, `Cargo.toml`, and the `admincraft` entry inside `Cargo.lock`
+  `tauri.conf.json`, `Cargo.toml`, and the `admineverywhere` entry inside `Cargo.lock`
   (the pair the nix `cargoLock` and guix vendor builds depend on, so a lock that
   drifted from its manifest is a packaging break, not a typo) — a `vX.Y.Z` tag on
   HEAD or `--expect X.Y.Z`, the release inputs (`debug.keystore`, `flake.nix`,
@@ -1241,7 +1241,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
      exactly the multi-word ones). Coverage for a known past bug vanished and the
      harness called it green, because nothing pinned what the matrix owes.
   2. **A softened schema is invisible on any axis both writers render passively.**
-     Loosening `RADIUS_RE` (`plugin/src/admincraft/branding.py:32`) to take unitless
+     Loosening `RADIUS_RE` (`plugin/src/admineverywhere/branding.py:32`) to take unitless
      values and `12 pt` moved 3 brands from refused to accepted and answered
      `BYTE-IDENTICAL — 303 accepted brands`, rc 0. The font axis looked protected
      only by accident: `brandToCss()` sanitizes an exclamation mark away while
@@ -1781,7 +1781,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   tear down with `unmount(instance)`, or a stale `<main>` reads as a routing bug.
 - Runtime branding flow: the client boots with the bundled static brand
   (`public/brand.{css,json}` — first paint, no FOUC), then `initApp()`
-  tries `GET <api>/admincraft/branding/`; a server brand replaces the
+  tries `GET <api>/admineverywhere/branding/`; a server brand replaces the
   static one, and `applyBrand()` fans it out (store + `document.title` +
   favicon + `injectBrandCss()` writing a `<style id="brand-runtime">`
   with the same `--brand-*` variables + Tauri `setTitle`). `brandToCss()`
@@ -1790,7 +1790,7 @@ python skills/admincraft-craft/scripts/derive_brand.py --root <repo> --out <repo
   The editor page itself is pinned at the wire, not by unit-testing its
   builders: `app/src/lib/__tests__/brandingMount.test.ts` mounts
   `pages/Branding.svelte` and asserts the PUT actually goes to
-  `<apiUrl>/admincraft/branding/` with the staff token and a trimmed body,
+  `<apiUrl>/admineverywhere/branding/` with the staff token and a trimmed body,
   that a 400 `detail.errors` list renders verbatim while the live theme stays
   untouched, that an already-uploaded asset travels as its stored RELATIVE
   path (no re-fetch, no re-encode; `assets/logo.svg` keeps its directory)
@@ -1901,7 +1901,7 @@ once (one-time signature change from the stable key).
 
 ## State as of 2026-10-17 (after the branding-flexibility pass)
 
-- **Neutral default brand landed**: `app/brands/default/` ("Admincraft",
+- **Neutral default brand landed**: `app/brands/default/` ("Admineverywhere",
   neutral grid-mark logo + regenerated full icon set via `npx tauri icon`).
   `tauri.conf.json` productName/window title no longer say "Freshorama
   Admin" — release builds ship generic, users brand on top. freshorama +
@@ -1910,8 +1910,8 @@ once (one-time signature change from the stable key).
   both suites extended test-first): `plugin` gained
   `brandstore.py`/`views.py`/`urls.py` (GET public, PUT staff-token,
   closed schema, magic-byte-checked data-URL uploads ≤ 1 MB, jailed
-  writes, `rev` counter); demo-backend mounts `/admincraft/` and points
-  `ADMINCRAFT_BRAND_DIR` at a gitignored runtime dir. Client: brand store
+  writes, `rev` counter); demo-backend mounts `/admineverywhere/` and points
+  `ADMINEVERYWHERE_BRAND_DIR` at a gitignored runtime dir. Client: brand store
   fetch on boot with silent fallback, `applyBrand()` live re-theme
   (CSS vars + titles + favicon + Tauri window title via the new
   `core:window:allow-set-title` capability), and the `#/branding` editor
@@ -1924,7 +1924,7 @@ once (one-time signature change from the stable key).
   stays locked down, network egress does not. (Superseded on `ai/csp-1`: the
   shipped conf now carries the *production* policy — see the csp-1 bullet —
   so the any-origin egress survives only in web/dev mode.)
-- **`skills/` shipped**: `admincraft-onboard` + `admincraft-craft`
+- **`skills/` shipped**: `admineverywhere-onboard` + `admineverywhere-craft`
   (duplicated stdlib engine scripts by design — `inspect_project.py`,
   `derive_brand.py` — ask/auto modes, references, evals). Verified live
   against demo-backend and a scratch client dir.

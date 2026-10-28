@@ -1,4 +1,4 @@
-#+TITLE: ROSTER.org — admincraft hiring ledger (proven vs armed vs refused)
+#+TITLE: ROSTER.org — admineverywhere hiring ledger (proven vs armed vs refused)
 # Lead-owned. Hiring law (prompt.org TEAMIFY): a body earns a seat only by
 # landing real work behind the landing gate; a probe row is evidence of the
 # RUNTIME, never of quality. Member ID FORMAT LAW (Owner 2026-10-22 13:22Z,

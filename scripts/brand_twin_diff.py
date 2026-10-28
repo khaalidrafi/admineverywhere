@@ -84,10 +84,10 @@ def load_server_writer():
     """render_css/validate_brand — installed package first, source tree
     otherwise, so this runs with a bare `python3` and no venv."""
     try:
-        from admincraft.branding import render_css, validate_brand
+        from admineverywhere.branding import render_css, validate_brand
     except ImportError:
         sys.path.insert(0, str(PLUGIN_SRC))
-        from admincraft.branding import render_css, validate_brand
+        from admineverywhere.branding import render_css, validate_brand
     return render_css, validate_brand
 
 
@@ -259,7 +259,7 @@ def main() -> int:
     try:
         render_css, validate_brand = load_server_writer()
     except Exception as e:
-        print(f"cannot import admincraft.branding from {PLUGIN_SRC}: {e}", file=sys.stderr)
+        print(f"cannot import admineverywhere.branding from {PLUGIN_SRC}: {e}", file=sys.stderr)
         return 2
     if not (PUBLIC_CSS.exists() and PUBLIC_JSON.exists()):
         print("app/public/brand.css or brand.json missing — nothing to hand off", file=sys.stderr)

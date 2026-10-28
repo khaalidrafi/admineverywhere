@@ -83,7 +83,7 @@ describe("localStorage operations", () => {
  *  now: the web fallback covered 3 of 4 paths and the coverage sweep named
  *  the rest. Those lines are the packaged product's whole secret store, and
  *  the invoke() argument names are a BOUNDARY contract with the Rust side —
- *  src-tauri/src/lib.rs:10 keeps `DEFAULT_SERVICE: "admincraft"` and the
+ *  src-tauri/src/lib.rs:10 keeps `DEFAULT_SERVICE: "admineverywhere"` and the
  *  commands take (service, key, value). A renamed or dropped argument fails
  *  silently on the Rust signature or buries the key under a different
  *  keychain bucket, invisible in web mode. Each test re-imports the module
@@ -111,11 +111,11 @@ describe("Tauri keyring branches — the invoke() boundary contract", () => {
     invoke.mockResolvedValue(undefined);
     const { saveSecret, SERVICE } = await fresh();
     await saveSecret("ai.apiKey", "sk-test");
-    expect(SERVICE).toBe("admincraft");
+    expect(SERVICE).toBe("admineverywhere");
     expect(invoke).toHaveBeenCalledTimes(1);
     expect(invoke.mock.calls[0]).toEqual([
       "save_secret",
-      { service: "admincraft", key: "ai.apiKey", value: "sk-test" },
+      { service: "admineverywhere", key: "ai.apiKey", value: "sk-test" },
     ]);
     // the Tauri path never touches localStorage
     expect(localStorage.getItem("dad.secret.ai.apiKey")).toBeNull();
@@ -127,7 +127,7 @@ describe("Tauri keyring branches — the invoke() boundary contract", () => {
     expect(await loadSecret("ai.apiKey")).toBe("sk-from-keychain");
     expect(invoke.mock.calls[0]).toEqual([
       "load_secret",
-      { service: "admincraft", key: "ai.apiKey" },
+      { service: "admineverywhere", key: "ai.apiKey" },
     ]);
 
     // Rust answers NoEntry as Ok(None); a keychain that is unavailable at all
@@ -143,7 +143,7 @@ describe("Tauri keyring branches — the invoke() boundary contract", () => {
     await deleteSecret("ai.apiKey");
     expect(invoke.mock.calls[0]).toEqual([
       "delete_secret",
-      { service: "admincraft", key: "ai.apiKey" },
+      { service: "admineverywhere", key: "ai.apiKey" },
     ]);
 
     invoke.mockRejectedValue(new Error("NoEntry"));

@@ -139,7 +139,7 @@ VERDICT: APPROVED
 VERDICT: REJECTED — <one line of reasons>"
 fi
 
-BRIEF="You are the on-turn member of the admincraft Agent Team, seat ${SEAT}.
+BRIEF="You are the on-turn member of the admineverywhere Agent Team, seat ${SEAT}.
 TEAM OBJECTIVE (from agent-team/TEAM-CONTROL.org): ${OBJECTIVE}
 Law: templates/COMMON.org (canonical manual, khaalidrafi/agent-team.el).
 Board: agent-team/TODOS.org. Roster: agent-team/MEMBERS.org.
@@ -600,7 +600,7 @@ case "$SEAT" in
     ;;
   software-engineer)
     # deepseek-v4.1-flash@codebuddy — free-offer hire
-    # (Owner order 2026-10-22 #admincraft). Headless tool use
+    # (Owner order 2026-10-22 #admineverywhere). Headless tool use
     # must be pre-authorized: -y ALONE still asks on
     # HIGH/CRITICAL tools and headless asks auto-DENY — prose
     # only, exit 0, zero writes (the 2026-10-22 body bug: 3
@@ -674,7 +674,7 @@ case "$SEAT" in
     ;;
   quality-assurance-engineer)
     # deepseek-v4.1-flash@qoder — free-offer hire (Owner
-    # order 2026-10-22 #admincraft). The qoder model flag is
+    # order 2026-10-22 #admineverywhere). The qoder model flag is
     # UNVERIFIED — if the CLI rejects it the chain self-heals to
     # the next lane; never blocks the segment.
     CB_LOG=/tmp/cb-lane.log

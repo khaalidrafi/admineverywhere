@@ -15,7 +15,7 @@ from urllib.request import Request
 
 from django.core.management.base import BaseCommand, CommandError
 
-from admincraft import branding  # for branding.urlopen monkeypatching in tests
+from admineverywhere import branding  # for branding.urlopen monkeypatching in tests
 
 
 class Command(BaseCommand):

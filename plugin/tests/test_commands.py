@@ -7,7 +7,7 @@ from urllib.error import URLError
 import pytest
 from django.core.management import CommandError, call_command
 
-from admincraft import branding
+from admineverywhere import branding
 
 from test_branding import VALID_BRAND, TINY_PNG, TINY_SVG  # noqa: F401
 from test_branding_api import PROD_CSP  # noqa: F401 (CSP tests moved there)

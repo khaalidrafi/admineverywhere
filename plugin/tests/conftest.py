@@ -2,7 +2,7 @@
 
 We configure Django in-memory here (no DB needed — branding is pure I/O),
 plus the runtime-branding API surface: DRF authtoken (auth fixture) and
-ROOT_URLCONF pointing at the real shipped admincraft.urlconf.
+ROOT_URLCONF pointing at the real shipped admineverywhere.urlconf.
 
 FR-R001 merge note: the demo rig (shop + DRF extras) is mounted in the same
 configure() block so test_order_lifecycle.py can exercise the live order API
@@ -57,8 +57,8 @@ def pytest_configure():
     # INSTALLED_APPS below names the plugin, and the documented `pip install -e
     # ../plugin` is impossible on a lane without setuptools: boot it from this
     # checkout instead of dying with INTERNALERROR over a seat's diff.
-    from core.devpaths import ensure_admincraft_on_path
-    ensure_admincraft_on_path()
+    from core.devpaths import ensure_admineverywhere_on_path
+    ensure_admineverywhere_on_path()
     if not settings.configured:
         settings.configure(
             DEBUG=True,
@@ -68,14 +68,14 @@ def pytest_configure():
                 "django.contrib.auth",
                 "rest_framework",
                 "rest_framework.authtoken",
-                "admincraft",
+                "admineverywhere",
                 # FR-R001 demo rig: shop app + DRF schema/docs stack
                 "drf_spectacular",
                 "corsheaders",
                 "shop",
             ],
             DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},
-            ROOT_URLCONF="admincraft.urls",
+            ROOT_URLCONF="admineverywhere.urls",
             USE_TZ=True,
         )
         django.setup()

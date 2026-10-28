@@ -1,4 +1,4 @@
-# wiring.md — host-project wiring details (admincraft-onboard)
+# wiring.md — host-project wiring details (admineverywhere-onboard)
 
 Read this when the basic four-line diff isn't enough: CORS, auth route
 shapes, pagination, static schema serving, troubleshooting.
@@ -8,18 +8,18 @@ shapes, pagination, static schema serving, troubleshooting.
 ```python
 INSTALLED_APPS = [
     # ... existing apps ...
-    "admincraft",                       # branding engine + commands + API
+    "admineverywhere",                       # branding engine + commands + API
 ]
-ADMINCRAFT_BRAND_DIR = BASE_DIR / "admincraft_brand"   # runtime brand store
+ADMINEVERYWHERE_BRAND_DIR = BASE_DIR / "admineverywhere_brand"   # runtime brand store
 ```
 
 Notes:
 
-- `admincraft` needs `django.contrib.contenttypes` + `django.contrib.auth`
+- `admineverywhere` needs `django.contrib.contenttypes` + `django.contrib.auth`
   in INSTALLED_APPS (they usually already are — the token auth needs
   them anyway). The plugin itself has no models and no migrations.
-- `ADMINCRAFT_BRAND_DIR` is optional; default is
-  `<BASE_DIR>/admincraft_brand`. It's runtime state — gitignore it.
+- `ADMINEVERYWHERE_BRAND_DIR` is optional; default is
+  `<BASE_DIR>/admineverywhere_brand`. It's runtime state — gitignore it.
 - DRF settings the thin client expects (defaults are usually right):
   `DEFAULT_AUTHENTICATION_CLASSES` including
   `rest_framework.authentication.TokenAuthentication`, page-number
@@ -35,7 +35,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 urlpatterns = [
     path("api/auth/token/", obtain_auth_token),           # client login
     path("api/schema/", SpectacularAPIView.as_view(permission_classes=[])),  # public!
-    path("admincraft/", include("admincraft.urls")),      # runtime branding
+    path("admineverywhere/", include("admineverywhere.urls")),      # runtime branding
     ...,
 ]
 ```
@@ -77,8 +77,8 @@ and CORS stops mattering.
 | --- | --- |
 | `manage.py build_admin --brand <brand.json> --app <dir> [--build]` | inject brand into the client (CSS vars, assets, productName/window title); `--build` also runs `npm run build` |
 | `manage.py dump_schema` | capture the OpenAPI doc to a file (fixtures/tests) |
-| `GET /admincraft/branding/` | current runtime brand (`404` = none configured → client uses its bundled static brand) |
-| `PUT /admincraft/branding/` (staff token) | replace the runtime brand; body = brand.json schema, logo/favicon may be `data:` URLs |
+| `GET /admineverywhere/branding/` | current runtime brand (`404` = none configured → client uses its bundled static brand) |
+| `PUT /admineverywhere/branding/` (staff token) | replace the runtime brand; body = brand.json schema, logo/favicon may be `data:` URLs |
 
 ## Troubleshooting
 
@@ -95,7 +95,7 @@ and CORS stops mattering.
   fields (hex colors, radius format, unknown keys, oversized logos).
 - **Android APK won't install over an existing one** → different signing
   key (debug keys differ per machine) — uninstall the old app first, or
-  build with a stable committed key like the admincraft repo does.
+  build with a stable committed key like the admineverywhere repo does.
 - **FK dropdowns empty** → the schema must include the related model's
   list route; FKs are detected by name-matching in the schema.
 
@@ -104,6 +104,6 @@ and CORS stops mattering.
 - Don't run the host with `DEBUG=True` + `ALLOWED_HOSTS=["*"]` in any
   real deployment — onboarding should flag existing dev-only values
   loudly rather than silently inheriting them.
-- Don't commit `admincraft_brand/` or `db.sqlite3`.
+- Don't commit `admineverywhere_brand/` or `db.sqlite3`.
 - Don't hardcode the brand into the client source — brand.json is the
   only place identity lives.

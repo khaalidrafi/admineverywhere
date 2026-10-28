@@ -290,15 +290,15 @@ jobs:
           FRONTEND=$(nix store add-path --name frontend-dist app/dist)
           nix build --print-build-logs \
             --override-input frontend-dist "path:$FRONTEND" \
-            .#admincraft
+            .#admineverywhere
       - name: Pack result
         run: |
           storepath=$(realpath result)
-          tar -czf admincraft-nix.tar.gz -C / "$storepath"
+          tar -czf admineverywhere-nix.tar.gz -C / "$storepath"
       - uses: actions/upload-artifact@v4
         with:
           name: nix-out
-          path: admincraft-nix.tar.gz
+          path: admineverywhere-nix.tar.gz
           retention-days: 14
           if-no-files-found: error
 
@@ -376,12 +376,12 @@ jobs:
                   --substitute-urls="https://bordeaux.guix.gnu.org https://ci.guix.gnu.org" \
                   -f guix.scm)
           echo "guix build output: $OUT"
-          sudo tar -czf admincraft-guix.tar.gz -C / "$OUT"
-          sudo chown "$(id -un):$(id -gn)" admincraft-guix.tar.gz
+          sudo tar -czf admineverywhere-guix.tar.gz -C / "$OUT"
+          sudo chown "$(id -un):$(id -gn)" admineverywhere-guix.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: guix-out
-          path: admincraft-guix.tar.gz
+          path: admineverywhere-guix.tar.gz
           retention-days: 14
           if-no-files-found: error
 
@@ -419,19 +419,19 @@ jobs:
           set -euo pipefail
           VERSION=${GITHUB_REF_NAME#v}
           mkdir -p release
-          mv plugin/dist/admincraft-*.whl plugin/dist/admincraft-*.tar.gz release/
-          mv artifacts/nix-out/admincraft-nix.tar.gz "release/admincraft-$VERSION-nix.tar.gz"
-          mv artifacts/guix-out/admincraft-guix.tar.gz "release/admincraft-$VERSION-guix.tar.gz"
-          mv "$(find artifacts/windows-setup -name '*-setup.exe')" "release/admincraft_${VERSION}_x64-setup.exe"
-          mv "$(find artifacts/linux-appimage -name '*.AppImage')" "release/admincraft_${VERSION}_amd64.AppImage"
+          mv plugin/dist/admineverywhere-*.whl plugin/dist/admineverywhere-*.tar.gz release/
+          mv artifacts/nix-out/admineverywhere-nix.tar.gz "release/admineverywhere-$VERSION-nix.tar.gz"
+          mv artifacts/guix-out/admineverywhere-guix.tar.gz "release/admineverywhere-$VERSION-guix.tar.gz"
+          mv "$(find artifacts/windows-setup -name '*-setup.exe')" "release/admineverywhere_${VERSION}_x64-setup.exe"
+          mv "$(find artifacts/linux-appimage -name '*.AppImage')" "release/admineverywhere_${VERSION}_amd64.AppImage"
           # apk: tauri android build --target aarch64 --target armv7 -> one
           # universal apk carrying lib/arm64-v8a + lib/armeabi-v7a,
           # stable-signatured
-          mv "$(find artifacts/android-apk -name '*.apk')" "release/admincraft-$VERSION-android-universal-debug.apk"
+          mv "$(find artifacts/android-apk -name '*.apk')" "release/admineverywhere-$VERSION-android-universal-debug.apk"
           webroot=artifacts/web-dist
           if [ -d "$webroot/dist" ]; then webroot="$webroot/dist"; fi
           test -f "$webroot/index.html"
-          tar -czf "release/admincraft-$VERSION-web.tar.gz" -C "$webroot" .
+          tar -czf "release/admineverywhere-$VERSION-web.tar.gz" -C "$webroot" .
           ( cd release && sha256sum * > SHA256SUMS.txt )
           ls -la release/
       - name: Create the GitHub Release
@@ -440,5 +440,5 @@ jobs:
         run: |
           set -euo pipefail
           gh release create "$GITHUB_REF_NAME" release/* \
-            --title "admincraft $GITHUB_REF_NAME" \
+            --title "admineverywhere $GITHUB_REF_NAME" \
             --generate-notes

@@ -1,10 +1,10 @@
 {
-  "skill_name": "admincraft-craft",
+  "skill_name": "admineverywhere-craft",
   "evals": [
     {
       "id": 1,
       "prompt": "The admin app still says Freshorama Admin everywhere but this is a generic product my customers will brand themselves. Make the shipped default neutral and make sure my users can rebrand from inside the app.",
-      "expected_output": "Recognizes the two layers: sets the neutral default brand (Admincraft) as the bundled static brand via build_admin + regenerates launcher icons with npx tauri icon; confirms productName no longer carries any demo name; documents/demonstrates the in-app Settings → Branding editor and the PUT /admincraft/branding/ contract for live rebrands; explains launcher name is build-time (productName) while everything in-app is runtime.",
+      "expected_output": "Recognizes the two layers: sets the neutral default brand (Admineverywhere) as the bundled static brand via build_admin + regenerates launcher icons with npx tauri icon; confirms productName no longer carries any demo name; documents/demonstrates the in-app Settings → Branding editor and the PUT /admineverywhere/branding/ contract for live rebrands; explains launcher name is build-time (productName) while everything in-app is runtime.",
       "files": []
     },
     {
@@ -16,7 +16,7 @@
     {
       "id": 3,
       "prompt": "I want to rebrand the live admin without rebuilding anything — change the name to 'Ledgerly', tagline 'Quiet tools for careful teams', primary #2563eb, and swap the logo to this file: ~/Downloads/ledgerly-logo.svg",
-      "expected_output": "Routes to the RUNTIME layer: PUT /admincraft/branding/ with a staff token (name/tagline/colors, logo as a data: URL after base64-encoding the file — noting the server's magic-byte/1MB validation), confirms the change applies live (CSS vars, titles, favicon) with no rebuild, and mentions the in-app Branding editor as the UI equivalent. Does NOT touch tauri.conf.json or icons, and explains the launcher name only changes at the next built release.",
+      "expected_output": "Routes to the RUNTIME layer: PUT /admineverywhere/branding/ with a staff token (name/tagline/colors, logo as a data: URL after base64-encoding the file — noting the server's magic-byte/1MB validation), confirms the change applies live (CSS vars, titles, favicon) with no rebuild, and mentions the in-app Branding editor as the UI equivalent. Does NOT touch tauri.conf.json or icons, and explains the launcher name only changes at the next built release.",
       "files": []
     }
   ]

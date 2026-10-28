@@ -33,7 +33,7 @@ export interface AppState {
 }
 
 const DEFAULT_BRAND: Brand = {
-  appName: "Admincraft",
+  appName: "Admineverywhere",
   tagline: "Django-powered admin",
   colors: {},
   radius: "0.75rem",
@@ -78,7 +78,7 @@ export async function initApp(): Promise<void> {
     booted: true,
   }));
   applyBrand(get(app).brand);
-  // Backend branding (when the API runs the admincraft plugin): the
+  // Backend branding (when the API runs the admineverywhere plugin): the
   // server brand wins over the bundled static one — this is the
   // rebrand-from-inside-the-app path. A backend without the plugin
   // (plain DRF) silently keeps the static brand; network failures are

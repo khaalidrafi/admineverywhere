@@ -197,7 +197,7 @@ jobs:
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
           ## demo-linux-appimage / demo-linux-deb
-          `chmod +x *.AppImage && ./admincraft*.AppImage` (or install
+          `chmod +x *.AppImage && ./admineverywhere*.AppImage` (or install
           the .deb), then register **your** DRF API in the login screen.
           Guix and Nix users: see the `guix` and `nix` jobs — native packages,
           not the FHS AppImage.
@@ -284,28 +284,28 @@ jobs:
           FRONTEND=$(nix store add-path --name frontend-dist app/dist)
           nix build --print-build-logs \
             --override-input frontend-dist "path:$FRONTEND" \
-            .#admincraft
+            .#admineverywhere
       - name: Pack result
         run: |
           storepath=$(realpath result)
-          tar -czf admincraft-nix.tar.gz -C / "$storepath"
+          tar -czf admineverywhere-nix.tar.gz -C / "$storepath"
       - uses: actions/upload-artifact@v4
         with:
           name: demo-nix-out-path
-          path: admincraft-nix.tar.gz
+          path: admineverywhere-nix.tar.gz
           retention-days: 14
       - name: Write summary
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
           ## demo-nix-out-path — Nix package verified
-          `nix build .#admincraft` (rustPlatform.buildRustPackage +
+          `nix build .#admineverywhere` (rustPlatform.buildRustPackage +
           cargoLock, per the nixpkgs manual) is green. On any Linux with Nix:
 
-              git clone https://github.com/khaalidrafi/admincraft
-              cd admincraft
+              git clone https://github.com/khaalidrafi/admineverywhere
+              cd admineverywhere
               (cd app && npm ci && npm run build)
-              nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admincraft
-              ./result/bin/admincraft
+              nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admineverywhere
+              ./result/bin/admineverywhere
 
           (CI passes the freshly built web bundle via `nix store add-path`.)
           EOF
@@ -354,12 +354,12 @@ jobs:
           set -e
           OUT=$(sudo /root/.config/guix/current/bin/guix build -f guix.scm)
           echo "guix build output: $OUT"
-          sudo tar -czf admincraft-guix.tar.gz -C / "$OUT"
-          sudo chown "$(id -un):$(id -gn)" admincraft-guix.tar.gz
+          sudo tar -czf admineverywhere-guix.tar.gz -C / "$OUT"
+          sudo chown "$(id -un):$(id -gn)" admineverywhere-guix.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: demo-guix-package
-          path: admincraft-guix.tar.gz
+          path: admineverywhere-guix.tar.gz
           retention-days: 14
       - name: Write summary
         run: |
@@ -368,12 +368,12 @@ jobs:
           `guix build -f guix.scm` (gnu-build-system, vendored Cargo,
           `--release --offline --frozen`) is green. On Guix System:
 
-              git clone https://github.com/khaalidrafi/admincraft
-              cd admincraft
+              git clone https://github.com/khaalidrafi/admineverywhere
+              cd admineverywhere
               (cd app && npm ci && npm run build)
               (cd app/src-tauri && cargo vendor vendor > .cargo/config.toml)
               guix build -f guix.scm
-              $(guix build -f guix.scm)/bin/admincraft
+              $(guix build -f guix.scm)/bin/admineverywhere
 
           (CI vendors the crates and the web bundle before building.)
           EOF

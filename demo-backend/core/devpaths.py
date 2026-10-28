@@ -3,7 +3,7 @@
 The documented boot is `pip install -e ../plugin`, and the CI arms run it with the
 failure swallowed — so on an image without setuptools (measured on the duty-review
 lane, 2026-10-24: `pip install -e /workspace/plugin --no-deps -q 2>/dev/null || true`
-is a no-op there) the rig cannot import `admincraft`, which is in its INSTALLED_APPS.
+is a no-op there) the rig cannot import `admineverywhere`, which is in its INSTALLED_APPS.
 That made three of the four landing-gate legs impossible to run in that lane: pytest
 died with INTERNALERROR (exit 2, indistinguishable from a red tree), `manage.py check`
 returned rc 1, and the two subprocess tests stayed red because they hand their
@@ -11,11 +11,11 @@ children an explicit PYTHONPATH that overwrites the inherited one.
 
 The install is a convenience for a *server* project that pip-installs the plugin; it
 was never a requirement for running this rig, whose whole purpose is to exercise the
-plugin sitting one directory over. So `ensure_admincraft_on_path()` puts
+plugin sitting one directory over. So `ensure_admineverywhere_on_path()` puts
 `plugin/src` FIRST on sys.path and `child_pythonpath()` carries it into subprocesses.
 
 Source-first is deliberate, not incidental: it also refuses an unrelated
-`admincraft` from site-packages the role of "the app under test" in a suite that
+`admineverywhere` from site-packages the role of "the app under test" in a suite that
 exists to grade this tree. A lane with a real editable install resolves the same
 files either way, so nothing changes there.
 """
@@ -28,10 +28,10 @@ PLUGIN_SRC = DEMO_ROOT.parent / "plugin" / "src"
 
 
 def _source_present():
-    return (PLUGIN_SRC / "admincraft" / "__init__.py").is_file()
+    return (PLUGIN_SRC / "admineverywhere" / "__init__.py").is_file()
 
 
-def ensure_admincraft_on_path():
+def ensure_admineverywhere_on_path():
     """Make this checkout's plugin importable. Idempotent.
 
     Returns "inserted" when it had to bridge the lane, "already" when the source

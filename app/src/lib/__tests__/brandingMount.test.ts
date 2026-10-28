@@ -1,7 +1,7 @@
 /** The runtime-branding editor mounted for real — the wire-level proof the
  *  pure-module tests (branding.test.ts) cannot give: the form boots from the
  *  brand the BACKEND served, a save PUTs exactly the bytes the plugin's closed
- *  schema expects to <discovered>/admincraft/branding/, a 400 renders the
+ *  schema expects to <discovered>/admineverywhere/branding/, a 400 renders the
  *  server's own `errors` verbatim, and an already-uploaded asset travels as a
  *  filename instead of being re-encoded. Same law as chatMount.test.ts and
  *  lifecycleMount.test.ts: assert the request the component ACTUALLY makes,
@@ -152,7 +152,7 @@ describe("Branding editor mounted (runtime branding API)", () => {
     await clickSave(root);
 
     const { url, init, body } = putCall();
-    expect(url).toBe("http://api.test/admincraft/branding/");
+    expect(url).toBe("http://api.test/admineverywhere/branding/");
     expect(init.headers.Authorization).toBe("Token staff-token");
     // trimmed before it goes on the wire, and the served color survived the round trip
     expect(body.appName).toBe("Renamed");
@@ -192,7 +192,7 @@ describe("Branding editor mounted (runtime branding API)", () => {
 
   it("an already-uploaded asset travels as its filename — never re-encoded", async () => {
     routePut({ status: 200, body: { brand: SERVED, rev: 3 } });
-    const root = render({ ...SERVED, logo: "http://api.test/admincraft/branding/asset/logo.png" });
+    const root = render({ ...SERVED, logo: "http://api.test/admineverywhere/branding/asset/logo.png" });
     await clickSave(root);
 
     const { body } = putCall();
@@ -208,8 +208,8 @@ describe("Branding editor mounted (runtime branding API)", () => {
     routePut({ status: 200, body: { brand: SERVED, rev: 6 } });
     const root = render({
       ...SERVED,
-      logo: "http://api.test/admincraft/branding/asset/assets/logo.svg",
-      favicon: "/admincraft/branding/asset/assets/icon.png",
+      logo: "http://api.test/admineverywhere/branding/asset/assets/logo.svg",
+      favicon: "/admineverywhere/branding/asset/assets/icon.png",
     });
     await clickSave(root);
 
@@ -222,7 +222,7 @@ describe("Branding editor mounted (runtime branding API)", () => {
   it("a bundled static asset is re-uploaded as a data URL on the first save", async () => {
     routePut({ status: 200, body: { brand: SERVED, rev: 4 } });
     mockFetch.mockImplementation(async (url: string) => {
-      if (String(url).includes("/admincraft/branding/")) return jsonReply(200, { brand: SERVED, rev: 4 });
+      if (String(url).includes("/admineverywhere/branding/")) return jsonReply(200, { brand: SERVED, rev: 4 });
       return {
         ok: true,
         status: 200,

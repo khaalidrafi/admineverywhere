@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """derive_brand.py — turn a project's own source data into a brand kit.
 
-AUTO mode engine for the admincraft skills: reads the repo (directly or
+AUTO mode engine for the admineverywhere skills: reads the repo (directly or
 via an inspect_project.py manifest) and writes a complete brand folder:
 
     <out>/
-      brand.json          — passes admincraft's closed schema exactly
+      brand.json          — passes admineverywhere's closed schema exactly
       assets/logo.svg|png — copied from the project (or generated)
       assets/icon.png     — 512px favicon / fallback
       assets/icon-1024.png— source for `npx tauri icon` (launcher icons)
 
 Decision order (first match wins):
-  name     --name  >  pyproject/setup name  >  README first heading  >  Admincraft
+  name     --name  >  pyproject/setup name  >  README first heading  >  Admineverywhere
   tagline  --tagline >  README first sentence (<= 140 chars)         >  omitted
   logo     --logo (path, repo-relative) >  first detected candidate  >  generated
   colors   --primary/--accent >  hex colors found in an SVG logo     >  palette
@@ -140,7 +140,7 @@ def pick_name(manifest: dict, explicit: str | None) -> str:
     for c in cleaned:
         if c.lower() not in GENERIC_NAMES:
             return c
-    return cleaned[0] if cleaned else "Admincraft"
+    return cleaned[0] if cleaned else "Admineverywhere"
 
 
 def pick_tagline(manifest: dict, explicit: str | None) -> str:

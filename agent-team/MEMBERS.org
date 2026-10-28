@@ -1,4 +1,4 @@
-#+TITLE: MEMBERS — admincraft ranked roster
+#+TITLE: MEMBERS — admineverywhere ranked roster
 # MEMBER ID FORMAT LAW (Owner 2026-10-22 13:22Z, refined 16:54Z):
 # PROVIDER/MODEL@PLATFORM — and PROVIDER/ ONLY for API models (key-
 # served lanes: zai/ groq/ openrouter/ gomodel/ ...). Platform-native
@@ -345,7 +345,7 @@ pair — never a family grouping.
   round to re-run when search infra recovers — flagged in BLOCKED for the EM cycle.
 
 
-#+TITLE: MODEL-RANKING — admincraft (full, dated 2026-10-19)
+#+TITLE: MODEL-RANKING — admineverywhere (full, dated 2026-10-19)
 # Tiers 1-3: chat/cloud/local apps with field evidence. Tier 4 source: live GET /v1/models @ ai.khalidrafi.tech (163 ids) + herd evidence.
 # Law: no unranked model is ever staffed. Bodies: OpenCode (primary), Goose, Pi, Qoder, Z.ai Agent.
 * TIER 1 — WEB CHAT (the day-one crew, first-hand field evidence)
@@ -737,7 +737,7 @@ pair — never a family grouping.
 * Platform Engineer (2nd seat) — DeepSeek-Flash @ qoder.com
   - :last-dispatch: 0
   - duties: second qoder seat — takes the next WORK ORDER item in order
-    (admincraft FE/BE segments), pairs with the qwen3.8-flash seat through
+    (admineverywhere FE/BE segments), pairs with the qwen3.8-flash seat through
     TEAM-CHAT.org, verification-first per docs/DEVGUIDE.md
   - rank: coding lane #2 (HIRED per Owner order 2026-10-21 03:53Z #hq:
     "Qoder also has DeepSeek Flash free. Hire that, too.") — free tier,

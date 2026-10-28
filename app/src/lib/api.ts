@@ -97,14 +97,14 @@ export async function fetchSchema(cfg: AppConfig, token: string | null): Promise
   return normalizeOpenAPI(doc);
 }
 
-/* ---- runtime branding (backends running the admincraft plugin) ---- */
+/* ---- runtime branding (backends running the admineverywhere plugin) ---- */
 
 export interface BrandingResponse {
   brand: Brand;
   rev: number;
 }
 
-/** Resolve an API-relative path (e.g. "/admincraft/branding/asset/logo.png")
+/** Resolve an API-relative path (e.g. "/admineverywhere/branding/asset/logo.png")
  *  against the configured API base. Absolute/data URLs pass through. */
 export function resolveApiUrl(cfg: AppConfig, path: string | undefined): string | undefined {
   if (!path) return undefined;
@@ -112,11 +112,11 @@ export function resolveApiUrl(cfg: AppConfig, path: string | undefined): string 
   return cfg.apiUrl.replace(/\/+$/, "") + path;
 }
 
-/** Public brand read; null = backend has no admincraft branding configured
+/** Public brand read; null = backend has no admineverywhere branding configured
  *  (or is unreachable) — caller keeps the bundled static brand. */
 export async function fetchBranding(cfg: AppConfig): Promise<BrandingResponse | null> {
   try {
-    const resp = await fetch(resolveApiUrl(cfg, "/admincraft/branding/")!, {
+    const resp = await fetch(resolveApiUrl(cfg, "/admineverywhere/branding/")!, {
       headers: { Accept: "application/json" },
     });
     if (!resp.ok) return null;
@@ -131,7 +131,7 @@ export async function fetchBranding(cfg: AppConfig): Promise<BrandingResponse | 
 export async function saveBranding(
   cfg: AppConfig, token: string | null, brand: Brand,
 ): Promise<BrandingResponse> {
-  return request<BrandingResponse>(cfg, token, "/admincraft/branding/", {
+  return request<BrandingResponse>(cfg, token, "/admineverywhere/branding/", {
     method: "PUT",
     body: JSON.stringify(brand),
   });

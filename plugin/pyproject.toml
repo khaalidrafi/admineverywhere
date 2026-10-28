@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "admincraft"
+name = "admineverywhere"
 version = "0.1.2"
 description = "Branded, extensible AI admin dashboard: Django plugin that themes a Tauri/Svelte thin client from one brand.json"
 readme = "README.md"

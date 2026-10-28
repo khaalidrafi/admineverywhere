@@ -5,7 +5,7 @@
  *  keyring Rust commands in src-tauri/src/lib.rs. When running as a plain
  *  web app (vite dev / browser), we degrade to localStorage and say so.
  */
-export const SERVICE = "admincraft";
+export const SERVICE = "admineverywhere";
 
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;

@@ -345,7 +345,7 @@ describe("mounted ChatPanel — provider settings under the Tauri keyring", () =
     await saveThroughForm(host, "sk-tauri-sentinel");
 
     expect(invoke).toHaveBeenCalledWith("save_secret", {
-      service: "admincraft",
+      service: "admineverywhere",
       key: "ai.apiKey",
       value: "sk-tauri-sentinel",
     });
@@ -369,7 +369,7 @@ describe("mounted ChatPanel — provider settings under the Tauri keyring", () =
 
     await vi.waitFor(() =>
       expect(invoke).toHaveBeenCalledWith("delete_secret", {
-        service: "admincraft",
+        service: "admineverywhere",
         key: "ai.apiKey",
       }),
     );

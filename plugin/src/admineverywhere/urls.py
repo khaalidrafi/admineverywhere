@@ -4,14 +4,14 @@ Mount in the host project::
 
     urlpatterns = [
         ...
-        path("admincraft/", include("admincraft.urls")),
+        path("admineverywhere/", include("admineverywhere.urls")),
     ]
 """
 from django.urls import path
 
 from . import views
 
-app_name = "admincraft"
+app_name = "admineverywhere"
 
 urlpatterns = [
     path("branding/", views.branding, name="branding"),

@@ -1,5 +1,5 @@
 {
-  description = "admincraft — branded, schema-driven admin client (Tauri 2) for Django REST Framework APIs";
+  description = "admineverywhere — branded, schema-driven admin client (Tauri 2) for Django REST Framework APIs";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -7,7 +7,7 @@
     # Prebuilt web bundle (vite output). The repo ships only a README here;
     # pass the real bundle at build time:
     #   (cd app && npm ci && npm run build)
-    #   nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admincraft
+    #   nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admineverywhere
     frontend-dist = {
       url = "path:./frontend-dist";
       flake = false;
@@ -40,11 +40,11 @@
 
               then rebuild with:
 
-                  nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admincraft
+                  nix build --override-input frontend-dist "$(nix store add-path app/dist)" .#admineverywhere
             '';
         in rec {
-          admincraft = pkgs.rustPlatform.buildRustPackage {
-            pname = "admincraft";
+          admineverywhere = pkgs.rustPlatform.buildRustPackage {
+            pname = "admineverywhere";
             version = "0.1.0";
 
             # Rust side only — the checkout provides Cargo.toml/lock, src/,
@@ -79,13 +79,13 @@
 
             meta = with pkgs.lib; {
               description = "Branded schema-driven admin client for Django REST Framework APIs";
-              homepage = "https://github.com/khaalidrafi/admincraft";
+              homepage = "https://github.com/khaalidrafi/admineverywhere";
               license = licenses.mit;
-              mainProgram = "admincraft";
+              mainProgram = "admineverywhere";
               platforms = platforms.linux;
             };
           };
-          default = admincraft;
+          default = admineverywhere;
         });
 
       devShells = forAllLinux (pkgs: pkgs.mkShell {

@@ -6,8 +6,8 @@ Contract under test (mirrors views.py / brandstore.py):
                                       logo/favicon may be data URLs)
   GET  /branding/asset/<f>   public → serve brand dir assets
 
-Written FIRST (red), then implemented in admincraft/brandstore.py +
-admincraft/views.py + admincraft/urls.py. Security posture inherits the
+Written FIRST (red), then implemented in admineverywhere/brandstore.py +
+admineverywhere/views.py + admineverywhere/urls.py. Security posture inherits the
 branding.py P0 rules: closed schema, magic-byte asset checks, path jail
 on every read/write, token auth for PUT, staff-only.
 
@@ -25,7 +25,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, override_settings
 from rest_framework.authtoken.models import Token
 
-from admincraft import branding
+from admineverywhere import branding
 
 # 1x1 transparent PNG (valid header, valid file)
 PNG_1PX = base64.b64decode(
@@ -96,7 +96,7 @@ def plain_token(plain_user):
 
 
 def ctx(brand_dir: Path):
-    return override_settings(ADMINCRAFT_BRAND_DIR=brand_dir)
+    return override_settings(ADMINEVERYWHERE_BRAND_DIR=brand_dir)
 
 
 # ----------------------------------------------------------------- GET ----
