@@ -809,7 +809,7 @@ docker run --rm --user 1001:1001 \
   -e REVIEWER_SEAT="${REVIEWER_SEAT}" -e REVIEWER_MEMBER="${REVIEWER_MEMBER}" \
   -e QODER_PERSONAL_ACCESS_TOKEN -e ZAI_API_KEY -e OPENROUTER_API_KEY \
   -e GROQ_API_KEY -e CODEBUDDY_AUTH_TOKEN -e MCODE_AUTH_JSON \
-  -e GH_TOKEN \
+  -e GH_TOKEN -e CURSOR_API_KEY \
   agent-harness:local bash /workspace/.turn-inside.sh \
   > /tmp/.turn-out.txt 2>&1 &
 DOCKER_PID=$!

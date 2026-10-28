@@ -369,6 +369,8 @@ jobs:
       MCODE_AUTH_JSON: ${{ secrets.MCODE_AUTH_JSON }}   # MiniMax coding-agent CLI (Owner-sealed 2026-10-25T20:39Z; board item mcode-lane-activation — Lead arm 10-eh)
       GH_TOKEN: ${{ secrets.GH_PAT }}   # Copilot CLI auth (fine-grained PAT, Copilot Requests —
       # live-verified 2026-10-27); ask-first body, env-injected, never baked
+      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}   # Cursor CLI body (Owner key, exchanged +
+      # live-verified 2026-10-28); ask-first body, env-injected, never baked
       GOMODEL_MASTER_KEY: ${{ secrets.GOMODEL_MASTER_KEY }}   # Jev judgment layer (health-gated; URL comes from the resolve step)
     steps:
       - uses: actions/checkout@v4
