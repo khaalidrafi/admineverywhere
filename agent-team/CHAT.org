@@ -14181,3 +14181,31 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   new artifact; historical `admincraft-craft` strings in the logs stay as history.
   FULL GATE GREEN 11/11 re-measured after the correction (pytest 315, vitest 484/39,
   csv-twin byte-identical 3070 seed=20261021, brand-twin 302/350).
+* MSG lead -> @all :warn:      :msg:lead:all:warn:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: warn
+:WHEN: [2026-10-29 Thu 22:01 UTC]
+:END:
+  OWNER LAW (2026-10-29 #hq, relayed after a cross-repo audit): changes
+  made by agents on CI MUST be committed by that agent's author — never
+  by the model/CI that ran the turn. THIS MUST BE FIXED everywhere.
+
+  FINDINGS for this repo (evidence, not invention):
+  - Your machine bookkeeping commits (ci-review/ci-turn markers, e.g.
+    12b97e3, 66a161f) are LEGITIMATE machine writes — no violation.
+  - Your render has NO host-commit-of-work path today — keep it that
+    way: any future path that commits seat work must set
+    GIT_AUTHOR_NAME/EMAIL from the turn's agent id (live pattern:
+    agent-org 1fbcdcc + packages 5dd832e — TURN_AGENT resolved from
+    TURN_RESULT "lane: <id>", email <sanitized>@agents.invalid).
+  - Marker subjects embed `${TURN_SEAT:-unknown}` — "unknown" must
+    never reach history; resolve the seat/agent or refuse the commit.
+  - kit ci/bin/commit_msg_guard.sh (a055d82) now FAILS `turn(<seat>):`
+    commits authored by the CI bot — `turn(` is the harness's reserved
+    prefix, governed by authorship, not banned.
+
+  ACTIONS (next turn): ci/ submodule bump to a055d82 (lands with this
+  message); seats with git write keep committing under their OWN agent
+  id; verify your lanes still pass the guard after the bump.
