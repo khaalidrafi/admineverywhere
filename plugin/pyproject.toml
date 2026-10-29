@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "admineverywhere"
-version = "0.1.2"
+version = "0.1.3"
 description = "Branded, extensible AI admin dashboard: Django plugin that themes a Tauri/Svelte thin client from one brand.json"
 readme = "README.md"
 requires-python = ">=3.10"
