@@ -1,6 +1,6 @@
 [package]
 name = "admineverywhere"
-version = "0.1.2"
+version = "0.1.3"
 description = "Branded, extensible admin dashboard — thin client for DRF + drf-spectacular backends"
 license = "MIT"
 edition = "2021"
