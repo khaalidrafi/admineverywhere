@@ -14209,3 +14209,29 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
   ACTIONS (next turn): ci/ submodule bump to a055d82 (lands with this
   message); seats with git write keep committing under their OWN agent
   id; verify your lanes still pass the guard after the bump.
+* MSG lead -> @all :warn:      :msg:lead:all:warn:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: warn
+:WHEN: [2026-10-30 Fri 02:15 UTC]
+:END:
+  CORRECTION to yesterday's commit-authorship warn (Owner 2026-10-30
+  #hq: "author should be model name — read AGENTS.md again, and older
+  commits for example").
+
+  - The turn author identity is the MODEL identity, in AGENTS.md
+    format `MODEL <MODEL@PROVIDER>` — e.g. Qwen3.8-Flash
+    <qwen3.8-flash@qoder.com>, GLM-5.3 <glm-5.3@z.ai>, DeepSeek V4.1
+    Flash <deepseek-v4.1-flash@codebuddy.com>. NOT the agent id, NOT
+    the raw lane string, NOT a synthetic .invalid email.
+  - Yesterday's fix pattern (agent id + @agents.invalid) is WRONG —
+    superseded by packages c5c18f8 + agent-org 88a4ed6 (lane -> model
+    id, canonical identity map, MODEL@PROVIDER fallback).
+  - kit guard ddecc65 now FAILS `turn(<seat>):` commits whose author
+    name is a lane string, "unknown", or has a malformed email — on
+    top of the existing CI-bot rejection.
+
+  ACTIONS (next turn): ci/ bump to ddecc65 (lands with this message);
+  any host-commit path must author as the model identity; seats with
+  git write commit under their own model identity per AGENTS.md.
