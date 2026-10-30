@@ -28,6 +28,9 @@ DEMO_RIG_MODULES = {
     "test_csv_export",
     "test_rbac_roles",
     "test_seed_demo",
+    # build_mcp generates from the project's OpenAPI document, so its tests
+    # need core.urls (the /api/ router) + the demo SPECTACULAR policy.
+    "test_build_mcp",
 }
 
 # Demo-rig DRF policy (lives here so the override stays in one place).
