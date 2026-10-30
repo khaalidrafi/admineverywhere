@@ -50,6 +50,33 @@ cd ../demo-backend && .venv/bin/python manage.py build_admin --brand ../app/bran
 python ../skills/admineverywhere-build/scripts/derive_brand.py --root <your-repo> --out <your-repo>/brand
 ```
 
+## Build what you need (choose your targets)
+
+`build_admin --targets` is the build menu — pick exactly what you want:
+`web` (browser bundle), `desktop` (Windows `.exe` / Linux `.AppImage`),
+`android` (universal `.apk`), `mcp` (standalone MCP admin server), and
+`emacs` (Org-powered Emacs package).
+
+```bash
+# Freshorama example: brand the client, then build the web bundle AND the
+# agent tooling from the same OpenAPI schema.
+cd demo-backend
+.venv/bin/python manage.py build_admin --brand ../app/brands/freshorama/brand.json \
+    --app ../app --targets web,mcp,emacs --api-host https://admin.example.com
+
+# MCP: register the generated server with your agent client
+#   command: python3  args: ["./mcp_admin_server.py"]
+#   env:     ADMINEVERYWHERE_API_TOKEN=<token>
+# Emacs: load the generated package, then M-x aw-open / aw-todos / aw-ask
+#   (records as Org headlines, TODO states write back to the API, and the
+#    current Org subtree becomes the AI context — see the file header).
+```
+
+Prebuilt desktop/mobile/web bundles ship on the
+[Releases](https://github.com/khaalidrafi/admineverywhere/releases) page;
+`mcp`/`emacs` artifacts are generated locally because they bake YOUR API
+host and resource roster into the file.
+
 Screenshot flow worth demoing: login → dashboard widgets (record counts,
 14-day activity chart, daily quote) → Product table → New Order (FK
 dropdowns + enum) → **Ctrl+K** → ask "what models do I have?" and watch it
@@ -60,7 +87,7 @@ Save — whole app, new identity, one second, no rebuild.
 
 | dir | what |
 | --- | --- |
-| `plugin/` | pip package `admineverywhere` — `build_admin` (brand injection + CSP API_HOST substitution), `dump_schema`, branding engine + runtime branding API (114 pytest cases) |
+| `plugin/` | pip package `admineverywhere` — `build_admin` (brand injection + CSP API_HOST substitution + `--targets` build menu), `build_mcp` (standalone MCP admin server), `build_emacs` (Org-powered Emacs package), `dump_schema`, branding engine + runtime branding API |
 | `app/` | Tauri 2 + Svelte 5 thin client — schema-driven CRUD, widgets, AI chat, in-app brand editor (58 vitest cases) |
 | `demo-backend/` | realistic DRF backend exercising every field type (FK, enum, decimal, date, bool) |
 | `app/brands/` | `default/` (the neutral shipped identity) + two examples: `freshorama` (dark SaaS) + `minimal-light` (light) |
