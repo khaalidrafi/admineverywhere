@@ -1,11 +1,22 @@
 """build_admin — rebrand the thin-client app from one brand.json.
 
 Usage:
-    python manage.py build_admin --brand brands/fresh.json [--app ./app] [--build]
-                                  [--api-host https://admin.example.com]
+    python manage.py build_admin --brand brands/fresh.json [--app ./app]
+                                  [--targets web,desktop,android,mcp,emacs]
+                                  [--build] [--api-host https://admin.example.com]
 
 --app       : thin-client directory (default: ./app)
---build     : additionally run `npm run build` inside the app dir
+--targets   : what to build, comma-separated.  The user chooses:
+                web     - the browser bundle (npm run build -> app/dist)
+                desktop - Windows .exe / Linux .AppImage (npm run tauri build)
+                android - universal .apk (npm run tauri android build)
+                mcp     - standalone MCP admin server (agents run admin
+                          tasks against the API; see build_mcp)
+                emacs   - Org-powered Emacs admin package (see build_emacs)
+              mcp/emacs need --api-host.  The mcp server lands at
+              ./mcp_admin_server.py, the emacs package at
+              ./admineverywhere-admin.el (cwd).
+--build     : legacy shorthand for --targets web, kept unchanged
 --api-host  : deployed API origin substituted for the CSP's API_HOST
               placeholder (validated: https, dotted DNS, no localhost, no
               wildcards — see admineverywhere.branding.normalize_api_host)
@@ -14,16 +25,38 @@ from django.core.management.base import BaseCommand, CommandError
 
 from admineverywhere import branding
 
+# The build menu. desktop/android shells out to tauri (their release
+# bundles are the .exe/.AppImage/.apk assets); mcp/emacs generate agent
+# and Org tooling from the same OpenAPI schema the thin client uses.
+VALID_TARGETS = ("web", "desktop", "android", "mcp", "emacs")
+
+
+def parse_targets(targets, build):
+    """Resolve --targets/--build into a target list (pure, for tests)."""
+    if targets is not None:
+        picked = [t.strip() for t in targets.split(",") if t.strip()]
+        bad = [t for t in picked if t not in VALID_TARGETS]
+        if bad:
+            raise ValueError(
+                "unknown targets: %s (valid: %s)" % (
+                    ", ".join(bad), ", ".join(VALID_TARGETS)))
+        return picked
+    return ["web"] if build else []
+
 
 class Command(BaseCommand):
     help = ("Inject a brand.json into the thin-client app "
-            "(CSS vars, assets, window title, CSP API_HOST substitution)")
+            "(CSS vars, assets, window title, CSP API_HOST substitution) "
+            "and optionally build any of the release/generator targets")
 
     def add_arguments(self, parser):
         parser.add_argument("--brand", required=True, help="Path to brand.json")
         parser.add_argument("--app", default="app", help="Thin-client app directory (default: ./app)")
+        parser.add_argument("--targets", default=None,
+                            help="Comma-separated build menu: %s "
+                                 "(default: nothing but the rebrand)" % ", ".join(VALID_TARGETS))
         parser.add_argument("--build", action="store_true",
-                            help="Also run `npm run build` inside the app directory")
+                            help="Legacy shorthand for --targets web")
         parser.add_argument("--api-host", default=None,
                             help="Deployed API origin substituted for the CSP's "
                                  "https://API_HOST placeholder (e.g. https://admin.example.com). "
@@ -53,11 +86,40 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f"  csp connect-src -> {summary['csp_api_host']}"))
 
-        if options["build"]:
-            import subprocess
-            self.stdout.write("running npm run build ...")
-            proc = subprocess.run(["npm", "run", "build"], cwd=app_dir)
-            if proc.returncode != 0:
-                raise CommandError("npm run build failed")
+        try:
+            targets = parse_targets(options["targets"], options["build"])
+        except ValueError as exc:
+            raise CommandError(str(exc)) from exc
 
-        self.stdout.write("Next: cd app && npm run tauri build (or: dev)")
+        for target in targets:
+            if target == "web":
+                self._npm(app_dir, ["run", "build"])
+            elif target == "desktop":
+                self._npm(app_dir, ["run", "tauri", "build"])
+            elif target == "android":
+                self._npm(app_dir, ["run", "tauri", "android", "build"])
+            elif target in ("mcp", "emacs"):
+                self._generate(options, target)
+
+        if targets:
+            self.stdout.write(f"Targets built: {', '.join(targets)}")
+
+    def _npm(self, app_dir, args):
+        import subprocess
+        cmd = ["npm", *args]
+        self.stdout.write(f"running {' '.join(cmd)} ...")
+        proc = subprocess.run(cmd, cwd=app_dir)
+        if proc.returncode != 0:
+            raise CommandError(f"{' '.join(cmd)} failed")
+
+    def _generate(self, options, target):
+        """Run build_mcp / build_emacs with the shared --api-host."""
+        from django.core.management import call_command
+        api_host = options.get("api_host")
+        if not api_host:
+            raise CommandError(f"--targets {target} requires --api-host")
+        kw = dict(api_host=api_host, stdout=self.stdout)
+        if target == "mcp":
+            call_command("build_mcp", out="mcp_admin_server.py", **kw)
+        else:
+            call_command("build_emacs", out="admineverywhere-admin.el", **kw)
