@@ -137,3 +137,43 @@ class TestBuildAdminApiHost:
         with pytest.raises(CommandError, match="drift"):
             call_command("build_admin", brand=str(brand_path), app=str(app),
                          api_host="https://admin.example.com", stdout=io.StringIO())
+
+
+class TestBuildAdminTargets:
+    """--targets: the user chooses what to build (web, desktop, android,
+    mcp, emacs).  apk/exe/AppImage are what the desktop/android targets
+    produce; mcp/emacs generate agent/Org tooling from the API schema."""
+
+    def test_parse_targets_mapping_and_validation(self):
+        from admineverywhere.management.commands.build_admin import parse_targets
+        assert parse_targets(None, build=False) == []
+        # legacy --build flag == web target, unchanged behavior
+        assert parse_targets(None, build=True) == ["web"]
+        assert parse_targets("mcp, emacs", build=False) == ["mcp", "emacs"]
+        assert parse_targets("web", build=True) == ["web"]
+        with pytest.raises(ValueError, match="bogus"):
+            parse_targets("web,bogus", build=False)
+
+    def test_targets_mcp_and_emacs_build_both(self, tmp_path, monkeypatch):
+        from admineverywhere.management.commands.build_admin import (
+            VALID_TARGETS,  # noqa: F401 — guards the flag docs against drift
+        )
+        monkeypatch.chdir(tmp_path)   # generated artifacts land in tmp cwd
+        (tmp_path / "brand").mkdir()  # _make_brand expects an existing dir
+        brand_path = _make_brand(tmp_path / "brand")
+        app = _make_app(tmp_path / "app")
+        out = io.StringIO()
+        call_command("build_admin", brand=str(brand_path), app=str(app),
+                     targets="mcp,emacs",
+                     api_host="https://admin.example.com", stdout=out)
+        assert (tmp_path / "mcp_admin_server.py").is_file()
+        assert (tmp_path / "admineverywhere-admin.el").is_file()
+        assert "MCP server written" in out.getvalue()
+        assert "Emacs package written" in out.getvalue()
+
+    def test_targets_invalid_rejected(self, tmp_path):
+        brand_path = _make_brand(tmp_path)
+        app = _make_app(tmp_path)
+        with pytest.raises(CommandError, match="bogus"):
+            call_command("build_admin", brand=str(brand_path), app=str(app),
+                         targets="mcp,bogus", stdout=io.StringIO())
