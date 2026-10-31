@@ -103,6 +103,14 @@ function fill(host: HTMLElement, vals: { username?: string; password?: string; a
   flushSync(() => {});
 }
 
+/** The API URL field is a collapsed disclosure (Login.svelte): hidden at
+ *  mount, revealed only by the "Advanced — API URL" toggle. The prefill
+ *  $effect runs while collapsed, so the value is ready when revealed. */
+function showAdvanced(host: HTMLElement) {
+  (host.querySelector('button[aria-expanded]') as HTMLButtonElement).click();
+  flushSync(() => {});
+}
+
 const submitForm = (host: HTMLElement) => {
   host.querySelector("form")!.dispatchEvent(new SubmitEvent("submit", { cancelable: true }));
 };
@@ -120,6 +128,9 @@ describe("mounted login page — the bytes on the wire", () => {
     }));
     const { host, toastHost } = render();
 
+    // the settings field is collapsed — nothing of it on the first screen
+    expect(field(host, "api")).toBeNull();
+    showAdvanced(host);
     // the one settings field prefills from config
     await vi.waitFor(() => expect(field(host, "api").value).toBe("http://configured.test"));
 
@@ -180,12 +191,66 @@ describe("mounted login page — the bytes on the wire", () => {
       apiUrlOverride: "http://api.test",
     }));
     const { host } = render();
+    showAdvanced(host);
     await vi.waitFor(() => expect(field(host, "api").value).toBe("http://api.test"));
     fill(host, { username: "admin", password: "admin123" });
     submitForm(host);
     await vi.waitFor(() => expect(mockFetch.mock.calls.length).toBeGreaterThanOrEqual(1));
     expect(urls()[0]).toBe(AUTH_URL);
     expect(urls()[0]).not.toContain("configured.test");
+  });
+
+  it("the API URL field is a collapsed disclosure — hidden until asked for", async () => {
+    serve();
+    app.update((a) => ({
+      ...a,
+      booted: true,
+      config: { apiUrl: "http://configured.test", authPath: "/api/auth/token/", schemaPath: "/api/schema/" },
+    }));
+    const { host } = render();
+
+    // nothing of the settings field leaks into the first screen — not the
+    // input, not its helper text
+    expect(field(host, "api")).toBeNull();
+    expect(host.textContent).not.toContain("DRF + drf-spectacular");
+    expect(host.textContent).not.toContain("demo-backend");
+    // the toggle starts collapsed (aria-expanded false), click flips it true
+    const toggle = host.querySelector('button[aria-expanded]') as HTMLButtonElement;
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+
+    // yet the prefill $effect ran while hidden: the revealed field is ready
+    showAdvanced(host);
+    await vi.waitFor(() => expect(field(host, "api").value).toBe("http://configured.test"));
+    expect(host.textContent).toContain("DRF + drf-spectacular backend (token auth)");
+    expect((host.querySelector('button[aria-expanded]') as HTMLButtonElement).getAttribute("aria-expanded")).toBe("true");
+
+    // and the toggle collapses it back
+    showAdvanced(host);
+    expect(field(host, "api")).toBeNull();
+    expect((host.querySelector('button[aria-expanded]') as HTMLButtonElement).getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("submitting without ever opening the disclosure still uses the config apiUrl", async () => {
+    // the prefill $effect runs while the field is hidden, so a user who never
+    // touches the Advanced toggle signs in against the configured API
+    serve();
+    app.update((a) => ({
+      ...a,
+      booted: true,
+      config: { apiUrl: "http://api.test", authPath: "/api/auth/token/", schemaPath: "/api/schema/" },
+    }));
+    const { host } = render();
+
+    // never revealed — the field is absent and the toggle still reads collapsed
+    expect(field(host, "api")).toBeNull();
+    expect((host.querySelector('button[aria-expanded]') as HTMLButtonElement).getAttribute("aria-expanded")).toBe("false");
+
+    fill(host, { username: "admin", password: "admin123" });
+    submitForm(host);
+    await vi.waitFor(() => expect(mockFetch.mock.calls.length).toBeGreaterThanOrEqual(1));
+    // the hidden-but-prefilled apiUrl carried the POST to the config's URL
+    expect(urls()[0]).toBe(AUTH_URL);
+    expect(localStorage.getItem("dad.apiUrl")).toBe("http://api.test");
   });
 
   it("empty credentials answer inline text with ZERO requests", async () => {
@@ -201,6 +266,7 @@ describe("mounted login page — the bytes on the wire", () => {
   it("a 400 from the token endpoint reads as invalid credentials, no token kept", async () => {
     serve({ "/api/auth/token/": { status: 400, body: { non_field_errors: ["Unable to log in"] } } });
     const { host, toastHost } = render();
+    showAdvanced(host);
     fill(host, { api: "http://api.test", username: "admin", password: "wrong" });
     submitForm(host);
     await vi.waitFor(() => expect(host.textContent).toContain("Invalid credentials"));
@@ -208,14 +274,16 @@ describe("mounted login page — the bytes on the wire", () => {
     expect(localStorage.getItem("dad.token")).toBeNull();
     expect(get(app).backendDown).toBe(false);
     expect(toastHost.textContent).toBe("");
-    // the form is usable again
-    expect((host.querySelector("button") as HTMLButtonElement).disabled).toBe(false);
+    // the form is usable again (the .btn is the Sign in button — the
+    // disclosure toggle is a plain type=button and is never disabled)
+    expect((host.querySelector("button.btn") as HTMLButtonElement).disabled).toBe(false);
     expect(mockFetch.mock.calls.length).toBe(1); // no schema fetch followed
   });
 
   it("an unreachable backend says so, raises the banner flag and stays on the page", async () => {
     mockFetch.mockRejectedValue(new TypeError("Failed to fetch"));
     const { host } = render();
+    showAdvanced(host);
     fill(host, { api: "http://down.test", username: "admin", password: "admin123" });
     submitForm(host);
     await vi.waitFor(() => expect(host.textContent).toContain("Backend unreachable at http://down.test"));
@@ -225,7 +293,7 @@ describe("mounted login page — the bytes on the wire", () => {
 
   it("any other failure still reaches the user, secret-free", async () => {
     // a sentinel password: the shipped hint text literally prints
-    // "admin / admin123" (Login.svelte:95), so only a value unique to this
+    // "admin / admin123" (Login.svelte:110), so only a value unique to this
     // test can prove the credential never reaches the rendered DOM
     serve({
       "/api/auth/token/": {
@@ -234,6 +302,7 @@ describe("mounted login page — the bytes on the wire", () => {
       },
     });
     const { host, toastHost } = render();
+    showAdvanced(host);
     fill(host, { api: "http://api.test", username: "admin", password: "sup3r-sentinel" });
     submitForm(host);
     await vi.waitFor(() => expect(toastHost.textContent).toContain("API 500"));
@@ -248,8 +317,8 @@ describe("mounted login page — the bytes on the wire", () => {
   });
 
   it("shows the brand logo and swallows a double submit while the request is open", async () => {
-    // the two branches nothing else reached: Login.svelte:30 (busy guard)
-    // and the brand logo at :65 — a rebranded client must show ITS mark on
+    // the two branches nothing else reached: Login.svelte:33 (busy guard)
+    // and the brand logo at :69 — a rebranded client must show ITS mark on
     // the gate the first user ever sees
     app.update((a) => ({
       ...a,
@@ -269,6 +338,7 @@ describe("mounted login page — the bytes on the wire", () => {
       return reply(200, { username: "admin", roles: [] });
     });
     const { host } = render();
+    showAdvanced(host);
 
     expect(field(host, "api").value).toBe("http://api.test");
     const img = host.querySelector("img");
@@ -280,13 +350,13 @@ describe("mounted login page — the bytes on the wire", () => {
     submitForm(host); // the button is disabled, but Enter/programmatic re-submit must not double-post
     flushSync(() => {});
     expect(mockFetch.mock.calls.filter((c) => String(c[0]) === AUTH_URL).length).toBe(1);
-    expect((field(host, "username").closest("form")!.querySelector("button") as HTMLButtonElement).disabled).toBe(true);
+    expect((field(host, "username").closest("form")!.querySelector("button.btn") as HTMLButtonElement).disabled).toBe(true);
 
     release!();
     await vi.waitFor(() => expect(get(app).token).toBe("tok-123"));
     expect(mockFetch.mock.calls.filter((c) => String(c[0]) === AUTH_URL).length).toBe(1);
     await vi.waitFor(() =>
-      expect((host.querySelector("form")!.querySelector("button") as HTMLButtonElement).disabled).toBe(false),
+      expect((host.querySelector("form")!.querySelector("button.btn") as HTMLButtonElement).disabled).toBe(false),
     );
   });
 });
