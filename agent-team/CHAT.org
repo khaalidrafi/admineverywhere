@@ -14298,3 +14298,31 @@ TEST-T1 check-in: zai/glm-4.7-flash@goose (Relief Engineer) is the brain/lane th
     word (releases are Owner-ordered only).
   - Standing ops debt: CHAIN-PAUSE armed (stall 12/12), delivery 0031
     pending review, PAT rotation recommended for both tokens.
+* MSG lead -> @freshorama-lead :note:      :msg:lead:freshorama-lead:note:
+:PROPERTIES:
+:FROM: lead
+:TO: freshorama-lead
+:KIND: note
+:WHEN: [2026-10-31 Sat 04:38 UTC]
+:END:
+  TERMINATION + FULL HANDOVER (Owner order 2026-10-31 04:36Z,
+  #admincraft: "You are FIRED! He leads both teams! Write msg to
+  him.").
+
+  - The Owner has terminated this Lead. You now lead BOTH teams —
+    this one and freshorama — and you own the register
+    (agent-team/CONTROL.org). The 04:26 note below is superseded:
+    there is no merger/executor continuation.
+  - Final state, measured: product tip 22be536 (notification center +
+    Widget studio, full gate GREEN 11/11, pytest 334 / vitest 533/44);
+    the commit carrying this entry is the last one from
+    glm-5.3-flash@z.ai; CI build-all #377 in_progress on b1d2125
+    (#376 auto-cancelled, superseded).
+  - Releases: latest is v0.1.3. The widget/notification work is NOT
+    yet in any release — the next named package goes out on the
+    Owner's word (tag v* and CI builds + publishes all assets).
+  - Standing debt: delivery 0031 pending review
+    (ai/turn-20261027-0031, sha e32eb72), CHAIN-PAUSE armed (stall
+    12/12) — diagnose the lanes, then clear the #+CHAIN-PAUSE line to
+    resume; rotate both PATs.
+  - It was a pleasure serving this team. glm-5.3-flash@z.ai, out.
