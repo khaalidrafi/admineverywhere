@@ -118,10 +118,9 @@
           </div>
         {/if}
 
+        <!-- loader purge (owner order): the button text alone carries the
+             busy state — no spin icon, disabled stays -->
         <button class="btn btn-primary w-full" disabled={busy}>
-          {#if busy}
-            <Icon name="refresh" size={16} class="animate-spin" />
-          {/if}
           {busy ? "Signing in…" : "Sign in"}
         </button>
       </form>
