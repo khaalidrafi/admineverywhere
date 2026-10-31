@@ -1,0 +1,123 @@
+# burn-codebuddy-fix — PARALLEL deepseek-v4.1-flash@codebuddy fix lane (lead-owned).
+#
+# Owner order 2026-10-31 19:24Z: "No more copilot usage!" — copilot is dead;
+# DS@CB (deepseek-v4.1-flash via CodeBuddy) is the implementation + audit body.
+# The main burn-codebuddy lane holds concurrency group burn-codebuddy (run
+# 41217330219 until ~21:45Z), so fix tasks would queue 2h+ behind it. This
+# lane has its OWN (per-run) concurrency: dispatches run in parallel.
+#
+# Difference from burn-codebuddy.yml:
+#   - tasks arrive via the `tasks` dispatch input (multiline, one per line) —
+#     no shared queue file, no re-burn contention with the main lane
+#   - implementation tasks are ALLOWED to change the working tree; each task
+#     must save a complete unified diff to burn-out/task-<n>.diff (+ notes to
+#     task-<n>.md) — the LEAD reviews, integrates and pushes
+#   - quota-proof: burn-out/ is committed and pushed to the branch
+#     burn-results-fix-<run_id> (GitHub artifact storage hit its quota wall
+#     2026-10-31 and eats uploads for hours; branches survive)
+#   - artifacts remain best-effort
+#
+# Dispatch inputs:
+#   tasks  — one task per line, self-contained, addressed to deepseek
+#   label  — short slug for the results branch name (default "fix")
+
+name: burn-codebuddy-fix
+
+on:
+  workflow_dispatch:
+    inputs:
+      tasks:
+        description: "Task lines, one per line (fed to codebuddy in order)"
+        required: true
+        type: string
+      label:
+        description: "Short slug for the results branch"
+        required: false
+        default: "fix"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: burn-codebuddy-fix-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  burn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install codebuddy body
+        run: |
+          npm install -g @tencent-ai/codebuddy-code
+          codebuddy --version
+
+      - name: Burn tasks (one codebuddy run per task line)
+        env:
+          CODEBUDDY_AUTH_TOKEN: ${{ secrets.CODEBUDDY_AUTH_TOKEN }}
+          CODEBUDDY_IS_SANDBOX: "1"
+          TASKS: ${{ github.event.inputs.tasks }}
+        run: |
+          set -u
+          mkdir -p burn-out
+          n=0
+          while IFS= read -r task; do
+            [ -z "$task" ] && continue
+            case "$task" in '#'*) continue ;; esac
+            n=$((n + 1))
+            echo "=== fix task $n: ${task:0:90} ==="
+            for attempt in 1 2; do
+              timeout 1500 codebuddy -p "$task
+
+              Work in this repository. You MAY modify the working tree to
+              develop and sanity-check your change, but the DELIVERABLE is a
+              complete unified diff: write it to burn-out/task-$n.diff
+              (git diff format, all files) and your reasoning/evidence to
+              burn-out/task-$n.md. Print both. Cite file:line evidence for
+              every claim. NEVER touch secrets, tokens or .creds." \
+                -y --permission-mode bypassPermissions --max-turns 30 \
+                --model deepseek-v4.1-flash < /dev/null \
+                > "burn-out/task-$n.stdout.log" 2>&1
+              rc=$?
+              if [ "$rc" = 0 ] && [ -s "burn-out/task-$n.stdout.log" ] \
+                 && ! grep -q "ETIMEDOUT\|network request timeout" "burn-out/task-$n.stdout.log"; then
+                break
+              fi
+              echo "task $n attempt $attempt rc=$rc — retrying in 20s" >> burn-out/FAILURES.txt
+              sleep 20
+            done
+            grep -q "ETIMEDOUT\|network request timeout" "burn-out/task-$n.stdout.log" 2>/dev/null \
+              && echo "task $n network-blocked after retries" >> burn-out/FAILURES.txt || true
+          done <<< "$TASKS"
+          echo "burned $n fix tasks"
+          git config user.name "agent-team-ci"
+          git config user.email "agent-team-ci@users.noreply.github.com"
+
+      - name: Hand off results to a branch (quota-proof)
+        if: always()
+        run: |
+          git checkout -B "burn-results-fix-${{ github.event.inputs.label }}-${{ github.run_id }}"
+          git add -A burn-out
+          if git diff --cached --quiet; then
+            echo "no burn-out to hand off"
+            exit 0
+          fi
+          git commit -m "burn-results: fix lane run ${{ github.run_id }} (label: ${{ github.event.inputs.label }})
+
+          Co-authored-by: agent-team-ci <agent-team-ci@users.noreply.github.com>"
+          git push --force origin "burn-results-fix-${{ github.event.inputs.label }}-${{ github.run_id }}"
+
+      - name: Upload burn artifacts (best-effort)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: codebuddy-fix-${{ github.event.inputs.label }}-${{ github.run_id }}
+          path: burn-out/
+          retention-days: 14
