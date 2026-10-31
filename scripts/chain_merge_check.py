@@ -116,8 +116,18 @@ PREDICTED MERGE against main, which is not an artifact-and-its-twin identity.
 
     python3 scripts/chain_merge_check.py                     # the registered pending branch
     python3 scripts/chain_merge_check.py --branch ai/turn-20261024-2326
+    python3 scripts/chain_merge_check.py --branch 0f50d95     # a commit, not only a ref name
+    python3 scripts/chain_merge_check.py --main 187eefb --branch 0f50d95   # replay a past merge
     python3 scripts/chain_merge_check.py --all               # every unmerged queued branch
     python3 scripts/chain_merge_check.py --selftest          # controls: every leg able to fail
+
+A named target resolves by ANY name git answers to — a raw sha, a local ref, or a
+bare `ai/turn-<stamp>` under `origin/` — and is REFUSED when main already carries it,
+because previewing a commit main holds grades a no-op merge, not a delivery. The
+replay form is how the 35th landing's fold is re-measured in one command: the two
+parents of union 54d0d0c name the three welded entries (83 -> 70, 20 -> 28, 111 -> 112)
+with their SPLICE/REMOVE blocks, which is the proof this paragraph advertises and which
+`--branch <sha>` used to reject as "does not resolve".
 
 SECRET LAW: reads no credential, echoes no value. Lead-owned files are read and
 cited only; this harness writes nothing outside a fixture dir it creates itself.
@@ -142,6 +152,7 @@ EXPECTED_LEGS = 5
 
 PIN_ASSIGN = re.compile(r"^(EXPECTED_[A-Z0-9_]+)\s*=\s*(\d+)\s*$", re.M)
 TREE_OID = re.compile(r"^[0-9a-f]{40}$")
+SHA_RE = re.compile(r"[0-9a-fA-F]{7,40}$")
 WHEN_FIELD = re.compile(r"^:WHEN:\s*(.*)$")
 
 
@@ -202,6 +213,28 @@ def git(repo, *args):
 def resolve(repo, ref):
     rc, out = git(repo, "rev-parse", "--verify", "%s^{commit}" % ref)
     return out.strip() if rc == 0 else None
+
+
+def resolve_explicit(repo, ref):
+    """An explicit `--branch` target, by ANY name git itself answers to.
+
+    The queued-ref index only holds refs that carry a commit main lacks, so a named
+    target falls through here — and this is where a raw commit died: a sha contains
+    no `/`, so the old read prefixed `origin/` onto it and asked the remote for a
+    branch called `d08bba7`. The proof that needs a PAST merge (replay a landed
+    union against its own parents) therefore could only be run by importing grade();
+    a harness whose documented paragraph proof is import-only is a harness nobody
+    re-runs. Order: a sha-shaped token resolves as a commit; anything else tries the
+    name as given, then under `origin/`, because the queue and the register both
+    print bare `ai/turn-<stamp>` names while a seat container holds only remote refs.
+    """
+    if SHA_RE.match(ref):
+        return resolve(repo, "%s^{commit}" % ref)
+    return resolve(repo, ref) or resolve(repo, "origin/" + ref)
+
+
+def is_ancestor(repo, sha, other_sha):
+    return git(repo, "merge-base", "--is-ancestor", sha, other_sha)[0] == 0
 
 
 def blob(repo, rev, rel):
@@ -390,7 +423,20 @@ def body_ownership(chat_base, chat_main, chat_branch, chat_merged, ctc, conflict
     i_main, u_main = entry_index(chat_main, ctc)
     i_branch, u_branch = entry_index(chat_branch, ctc)
     i_merged, u_merged = entry_index(chat_merged, ctc)
-    unattributable = len(u_base) + len(u_main) + len(u_branch) + len(u_merged)
+    # DISTINCT unattributable entries, not the sum of four side-lists. One collision
+    # that main carries sits in the merge base, in main, in the branch that descends
+    # from that base AND in the merged tree, so the sum reported the same chat defect
+    # four times — measured live: the registered branch 2213 printed
+    # `4 unattributable` for the ONE relief-engineer pair at CHAT.org:10658/:10672
+    # that the 2044 ruling names, sending a reader to hunt four defects that are one.
+    unattributed = []
+    seen_unattributed = set()
+    for item in list(u_base) + list(u_main) + list(u_branch) + list(u_merged):
+        key = (describe_identity(item) if isinstance(item, tuple) and len(item) == 4
+               else str(item))
+        if key not in seen_unattributed:
+            seen_unattributed.add(key)
+            unattributed.append(key)
 
     graded = 0
     welds = []
@@ -468,8 +514,13 @@ def body_ownership(chat_base, chat_main, chat_branch, chat_merged, ctc, conflict
                             % (len(block), " that belongs to %s" % describe_identity(donor)
                                if donor else " that is not this message's"))
     note = ("bodies: %d entry(ies) moved on either side compared against the merged tree, "
-            "%d welded, %d unattributable (no WHEN / malformed headline / identity reused)"
-            % (graded, len(welds), unattributable))
+            "%d welded, %d unattributable — DISTINCT over the 4 chat sides read, since one "
+            "collision inherited from the merge base sits in all of them "
+            "(no WHEN / malformed headline / identity reused)%s"
+            % (graded, len(welds), len(unattributed),
+               (": " + "; ".join(unattributed[:3])
+                + (" (+%d more)" % (len(unattributed) - 3) if len(unattributed) > 3 else ""))
+               if unattributed else ""))
     return findings, note
 
 
@@ -644,10 +695,16 @@ def pick_targets(repo, main, main_sha, branch_args, want_all, rpc):
         ref = want.replace("refs/heads/", "")
         row = index.get(ref) or by_tail.get(ref.split("/")[-1])
         if row is None:
-            live = resolve(repo, ref if "/" in ref else "origin/" + ref)
+            live = resolve_explicit(repo, ref)
             if live is None:
                 raise CannotRun("--branch %s does not resolve in this repo (no such ref, "
-                                "or it carries no commit main lacks)" % want)
+                                "no such commit)" % want)
+            if is_ancestor(repo, live, main_sha):
+                raise CannotRun("--branch %s resolves to %s, which %s already carries — "
+                                "merging it is a no-op, so a clean answer here would be a "
+                                "green about nothing. Name a target main lacks, or point "
+                                "--main at the historical parent to replay a past merge"
+                                % (want, live[:7], main))
             row = (ref, live)
         rows.append(row)
     return rows
@@ -723,6 +780,11 @@ CONTROL_TMPL = ("#+TITLE: fixture control (Lead-owned in the real repo)\n"
 GATE_PY = "# fixture pin carrier (stands in for scripts/release_readiness.py)\n" \
           "EXPECTED_X = %d\nEXPECTED_Y = %d\n"
 TURN_BRANCH = "ai/turn-20991231-0000"
+# Sentinels a control passes in place of a `--branch` value, resolved to the built
+# fixture's REAL objectname by `_capture` — a control must exercise the same argv a
+# seat types, and for these two controls that argv is a commit sha.
+TIP_SHA = "@tip-sha"
+MAIN_TIP_SHA = "@main-tip-sha"
 ATTR_UNION = "agent-team/CHAT.org merge=union\n"
 
 
@@ -742,7 +804,7 @@ def write(repo, rel, text):
 
 def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
                  branch_bumps_pin=False, union=True, branch_deletes=False,
-                 extra_note_conflict=False, register=True):
+                 extra_note_conflict=False, register=True, base_extra=""):
     """A two-sided queue: main and one turn branch, both legal, then whatever the
     control needs. Real `git commit` objects, real `git merge-tree` — the fold is a
     property of the merge machinery, so the control must run the machinery."""
@@ -755,10 +817,11 @@ def repo_fixture(main_entry=None, branch_entry=True, main_bumps_pin=False,
     sh(repo, "config", "commit.gpgsign", "false")
     base_chat = ("#+TITLE: fixture chat\n"
                  + ENTRY % {"seat": "lead", "when": "2026-10-24 Sat 09:00 UTC",
-                            "body": "the entry both sides descend from"})
+                            "body": "the entry both sides descend from"}
+                 + base_extra)
     write(repo, ".gitattributes", ATTR_UNION if union else "")
     write(repo, CHAT_REL, base_chat)
-    write(repo, "agent-team/CONTROL.org",
+    write(repo, "agent-team/TEAM-CONTROL.org",
           CONTROL_TMPL % (("branch=%s | author=software-engineer | sha=0" % TURN_BRANCH)
                           if register else ""))
     write(repo, "scripts/fake_gate.py", GATE_PY % (5, 3))
@@ -900,6 +963,21 @@ def c_queue_empty():
     return repo
 
 
+# ONE routing + ONE `:WHEN:` carried by two records: the shape main actually holds
+# (CHAT.org:10658/:10672, `relief-engineer -> @lead :report:` on 2026-10-25 Sun
+# 05:52 UTC, both bodies empty). Inherited by both sides, so it lands in the merge
+# base, in main, in the branch AND in the merged tree at once.
+SAME_IDENTITY_PAIR = (
+    ENTRY % {"seat": "relief-engineer", "when": "2026-10-25 Sun 05:52 UTC",
+             "body": "first record of this identity"}
+    + ENTRY % {"seat": "relief-engineer", "when": "2026-10-25 Sun 05:52 UTC",
+               "body": "second record, same routing and same WHEN"})
+
+
+def c_collision_in_base():
+    return repo_fixture(base_extra=SAME_IDENTITY_PAIR)
+
+
 CONTROLS = [
     ("branch merges as authored (no competing EOF append)", c_clean,
      dict(branch_args=[TURN_BRANCH]), 0, "CHAIN MERGE PREVIEW OK", ()),
@@ -932,8 +1010,31 @@ CONTROLS = [
      dict(), 2, "CANNOT RUN", ("pending slot is empty",)),
     ("--all over a queue with nothing left to merge", c_queue_empty,
      dict(want_all=True), 2, "CANNOT RUN", ("target list is empty",)),
+    # The named-target hole: a sha carries no `/`, so the old read prefixed `origin/`
+    # onto it and asked the remote for a branch called `d08bba7` — which is why the
+    # replay-a-past-merge proof this harness's own docstring advertises could only be
+    # run by importing grade(). Controls pass a real commit objectname, the way a seat
+    # types it on the command line.
+    ("--branch <sha> names the target by commit", c_clean,
+     dict(branch_args=[TIP_SHA]), 0, "CHAIN MERGE PREVIEW OK", ()),
+    ("--branch <sha> main already carries is refused as a no-op", c_clean,
+     dict(branch_args=[MAIN_TIP_SHA]), 2, "CANNOT RUN",
+     ("already carries", "no-op")),
+    ("one inherited collision counted once, not once per side", c_collision_in_base,
+     dict(branch_args=[TURN_BRANCH]), 0, "1 unattributable",
+     ("DISTINCT over the 4 chat sides", "0 welded")),
 ]
-EXPECTED_CONTROLS = 13
+EXPECTED_CONTROLS = 16
+
+
+def fixture_sha(repo, want):
+    """A control's sha sentinel -> the fixture's real objectname; anything else passes
+    through untouched, so the argv shape matches what a seat types."""
+    if want == TIP_SHA:
+        return git(repo, "rev-parse", TURN_BRANCH)[1].strip()
+    if want == MAIN_TIP_SHA:
+        return git(repo, "rev-parse", "HEAD")[1].strip()
+    return want
 
 
 def _capture(build, kwargs):
@@ -944,9 +1045,12 @@ def _capture(build, kwargs):
         return 2, "CANNOT RUN — %s" % exc
     buf = StringIO()
     main = kwargs.get("main", "main")
+    branch_args = kwargs.get("branch_args")
+    if branch_args:
+        branch_args = [fixture_sha(repo, a) for a in branch_args]
     try:
         n, problems, notes = grade(repo, main=main,
-                                   branch_args=kwargs.get("branch_args"),
+                                   branch_args=branch_args,
                                    want_all=kwargs.get("want_all", False))
         rc = report(n, problems, notes, main, out=buf)
     except CannotRun as exc:
