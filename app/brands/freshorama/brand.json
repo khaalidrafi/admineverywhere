@@ -1,8 +1,10 @@
 {
   "appName": "Freshorama Admin",
   "tagline": "Manage everything, beautifully",
-  "logo": "assets/logo.svg",
+  "logo": "assets/logo.png",
   "favicon": "assets/icon.png",
+  "icon": "assets/icon-1024.png",
+  "loaderVideo": "assets/intro.mp4",
   "colors": {
     "primary": "#006e33",
     "accent": "#22be6f",

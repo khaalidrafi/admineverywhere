@@ -492,6 +492,29 @@ class TestBrandIcon:
         assert cmd == ["npm", "run", "tauri", "icon", "public/icon-brand.png"]
         assert Path(cwd) == Path(app_dir)
 
+    def test_tauri_icon_arg_stays_app_relative_for_a_relative_app_dir(
+            self, tmp_path, monkeypatch):
+        # build_admin --app app (the documented invocation) passes app_dir
+        # RELATIVE while the staged png is an absolute jailed path — the arg
+        # must still be app-relative or `tauri icon` refuses the png
+        from types import SimpleNamespace
+
+        calls: list = []
+        monkeypatch.setattr(
+            "subprocess.run",
+            lambda cmd, cwd=None, **kw: (calls.append((cmd, cwd)),
+                                         SimpleNamespace(returncode=0))[1],
+        )
+        monkeypatch.chdir(tmp_path)
+        app = tmp_path / "app"
+        (app / "public").mkdir(parents=True)
+        icon = app / "public" / "icon-brand.png"
+        icon.write_bytes(TINY_PNG)
+        branding._tauri_icon(Path("app"), icon)
+        cmd, cwd = calls[0]
+        assert cmd == ["npm", "run", "tauri", "icon", "public/icon-brand.png"]
+        assert Path(cwd) == Path("app")
+
     def test_tauri_icon_failure_skips_instead_of_raising(self, tmp_path, app_dir, monkeypatch):
         calls: list = []
         self._fake_run(monkeypatch, calls, returncode=1)
@@ -587,3 +610,127 @@ class TestLoaderVideo:
         (brand_path.parent / "assets" / "intro.mp4").unlink()
         with pytest.raises(FileNotFoundError):
             branding.inject_brand(app_dir, brand_path)
+
+
+# ---------------------------------------------------------------------------
+# QA 5-a D2: the stamped identity must reach the vite index.html. dist/
+# ships that file verbatim — an unstamped build presented the stock
+# "Admineverywhere" tab title (and favicon) until the SPA's JS booted.
+# ---------------------------------------------------------------------------
+
+
+class TestIndexHtmlStamp:
+    STOCK = (
+        '<!doctype html>\n<html lang="en">\n  <head>\n'
+        '    <meta charset="UTF-8" />\n'
+        '    <link rel="stylesheet" href="/brand.css" />\n'
+        '    <link rel="icon" href="/icon.png" />\n'
+        '    <title>Admineverywhere</title>\n  </head>\n'
+        '  <body>\n    <div id="app"></div>\n  </body>\n</html>\n'
+    )
+
+    def test_title_becomes_app_name(self):
+        stamped = branding.stamp_index_html(self.STOCK, dict(VALID_BRAND))
+        assert "<title>Freshorama Admin</title>" in stamped
+        assert "Admineverywhere" not in stamped
+
+    def test_existing_favicon_link_repointed_at_the_brand_asset(self):
+        html = self.STOCK.replace('href="/icon.png"', 'href="/old.png"')
+        stamped = branding.stamp_index_html(html, dict(VALID_BRAND))
+        assert '<link rel="icon" href="/icon.png" />' in stamped
+        assert "/old.png" not in stamped
+
+    def test_favicon_link_injected_when_missing(self):
+        html = self.STOCK.replace('    <link rel="icon" href="/icon.png" />\n', "")
+        stamped = branding.stamp_index_html(html, dict(VALID_BRAND))
+        assert '<link rel="icon" href="/icon.png" />' in stamped
+        assert stamped.index("<title>") < stamped.index('rel="icon"')
+
+    def test_no_favicon_key_leaves_links_alone_title_still_stamped(self):
+        brand = json.loads(json.dumps(VALID_BRAND))
+        del brand["favicon"]
+        stamped = branding.stamp_index_html(self.STOCK, brand)
+        assert "<title>Freshorama Admin</title>" in stamped
+        assert stamped.count("rel=\"icon\"") == self.STOCK.count("rel=\"icon\"")
+
+    def test_idempotent(self):
+        once = branding.stamp_index_html(self.STOCK, dict(VALID_BRAND))
+        assert branding.stamp_index_html(once, dict(VALID_BRAND)) == once
+
+    # ---- injection wiring --------------------------------------------------
+    def test_inject_stamps_the_app_index_html(self, brand_dir, app_dir):
+        (app_dir / "index.html").write_text(self.STOCK)
+        summary = branding.inject_brand(app_dir, brand_dir / "brand.json")
+        assert "index.html" in summary["written"]
+        stamped = (app_dir / "index.html").read_text()
+        assert "<title>Freshorama Admin</title>" in stamped
+        assert '<link rel="icon" href="/icon.png" />' in stamped
+
+    def test_inject_tolerates_missing_index_html(self, brand_dir, app_dir):
+        summary = branding.inject_brand(app_dir, brand_dir / "brand.json")
+        assert "index.html" not in summary["written"]
+
+    def test_symlinked_index_html_refused(self, brand_dir, app_dir, tmp_path):
+        victim = tmp_path / "index.victim.html"
+        victim.write_text(self.STOCK)
+        (app_dir / "index.html").symlink_to(victim)
+        with pytest.raises(ValueError, match="index.html"):
+            branding.inject_brand(app_dir, brand_dir / "brand.json")
+        assert "<title>Admineverywhere</title>" in victim.read_text()
+
+
+# ---------------------------------------------------------------------------
+# QA 5-a D3: the shipped brand.json wires every asset key (logo/favicon/
+# icon/loaderVideo together). The validators already lock each key alone —
+# this pins the full deep-branding shape end to end.
+# ---------------------------------------------------------------------------
+
+
+class TestAllAssetKeysTogether:
+    @staticmethod
+    def _full_brand_dir(tmp_path):
+        brand_dir = tmp_path / "brand"
+        (brand_dir / "assets").mkdir(parents=True)
+        (brand_dir / "assets/logo.png").write_bytes(TINY_PNG)
+        (brand_dir / "assets/icon.png").write_bytes(TINY_PNG)
+        (brand_dir / "assets/icon-1024.png").write_bytes(TINY_PNG)
+        (brand_dir / "assets/intro.mp4").write_bytes(b"0" * 1024)
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand.update({
+            "logo": "assets/logo.png",
+            "favicon": "assets/icon.png",
+            "icon": "assets/icon-1024.png",
+            "loaderVideo": "assets/intro.mp4",
+        })
+        (brand_dir / "brand.json").write_text(json.dumps(brand))
+        return brand_dir / "brand.json"
+
+    def test_every_asset_key_validates_clean(self):
+        brand = json.loads(json.dumps(VALID_BRAND))
+        brand.update({
+            "logo": "assets/logo.png",
+            "favicon": "assets/icon.png",
+            "icon": "assets/icon-1024.png",
+            "loaderVideo": "assets/intro.mp4",
+        })
+        assert branding.validate_brand(brand) == []
+
+    def test_inject_copies_all_and_normalizes(self, tmp_path, app_dir, monkeypatch):
+        from types import SimpleNamespace
+
+        monkeypatch.setattr(
+            "subprocess.run",
+            lambda cmd, cwd=None, **kw: SimpleNamespace(returncode=0),
+        )
+        brand_path = self._full_brand_dir(tmp_path)
+        summary = branding.inject_brand(app_dir, brand_path)
+        pub = app_dir / "public"
+        assert (pub / "logo.png").exists()
+        assert (pub / "icon.png").exists()
+        assert (pub / "intro.mp4").exists()
+        assert "public/icon-brand.png" in summary["copied"]  # icon -> tauri staging
+        on_disk = json.loads((pub / "brand.json").read_text())
+        assert on_disk["logo"] == "logo.png"
+        assert on_disk["favicon"] == "icon.png"
+        assert on_disk["loaderVideo"] == "intro.mp4"
+        assert "icon" not in on_disk  # launcher pixels never ship to the client
