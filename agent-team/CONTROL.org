@@ -6,7 +6,7 @@
 #+KILL-SWITCH: OFF
 #+OBJECTIVE-STATE: OPEN
 #+OBJECTIVE: LEAD 16-fw FRESHORAMA-FIRST LANDING: 549@cb539dc (three fed widgets LiveOrders/TodayRevenue/CompletionGauge + mount tests; login api-url advanced-disclosure ported upstream; real freshorama brand green identity; delivery 0031 union-landed after the new lead's QA re-seat APPROVED it; CHAT.org +2, REVIEW-LOG +1; vitest 549/45, pytest 334, twins byte-identical) LANDED per the new lead's freshorama-first order; CONTEXT: chain had auto-halted at stall 12/12 — duty reviewer skipped(mode=paused) since 2026-10-27 sat on delivery 0031; lanes diagnosed, review re-seated (sonnet@z.ai-agent, APPROVED), CHAIN-PAUSE OFF; NEXT: rotation continues (platform-engineer turn) on the open backlog; releases stay Owner-ordered (v0.1.3 latest); the freshorama-branded v0.1.6 build rides freshorama/website
-#+TURN: qwen3.8-flash@qoder (Platform Engineer)
+#+TURN: zai/glm-4.7-flash@goose (Relief Engineer)
 #+STALL-COUNT: 0
 #+PAUSE-AFTER-TODO: OFF
 #+CHAIN-PAUSE: OFF
