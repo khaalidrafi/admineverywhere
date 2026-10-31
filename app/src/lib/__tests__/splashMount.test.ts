@@ -1,13 +1,17 @@
 /** The splash IS the brand (deep branding, owner order): when the brand
- *  ships a loaderVideo it plays as THE loader — no skeleton bar anywhere in
- *  the splash branch — and without one the pulsing gradient tile stays the
- *  fallback. Mounted through the real App.svelte so the branch structure is
- *  proven in the DOM, not by a code read.
+ *  ships a loaderVideo it plays as THE loader — full-viewport, played ONCE
+ *  through (the splash holds until its 'ended', QA 5-a D1) — and without
+ *  one the pulsing gradient tile stays the fallback. Mounted through the
+ *  real App.svelte so the branch structure is proven in the DOM, not by a
+ *  code read.
  *
  *  Timing note: App's onMount kicks initApp (async) — the splash paints
  *  synchronously with the mount while `booted` is still false, which is
- *  exactly the state under test. fetch is stubbed so the DEV override reads
- *  404 and the boot completes with the bundled identity afterwards.
+ *  exactly the state under test. The splash HOLD timing lives in
+ *  splashHold.test.ts (fake timers); here only the painted structure
+ *  matters, asserted synchronously before any release can happen.
+ *  fetch is stubbed so the DEV override reads 404 and the boot completes
+ *  with the bundled identity afterwards.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { flushSync, mount, unmount } from "svelte";
@@ -55,7 +59,7 @@ function renderSplash(brandOverride: Record<string, unknown>): HTMLElement {
 }
 
 describe("App splash — the intro video is the loader", () => {
-  it("a brand loaderVideo renders the <video> with the accent frame and NO skeleton", () => {
+  it("a brand loaderVideo renders the full-viewport <video> and NO skeleton", () => {
     const host = renderSplash({ loaderVideo: "intro.mp4" });
 
     const video = host.querySelector("video");
@@ -64,17 +68,20 @@ describe("App splash — the intro video is the loader", () => {
     // bare name IS the app-relative URL
     expect(video!.getAttribute("src")).toBe("intro.mp4");
     expect(video!.hasAttribute("autoplay")).toBe(true);
-    expect(video!.hasAttribute("loop")).toBe(true);
+    // NO loop: the intro is a one-shot loader — the splash releases on its
+    // 'ended' event, which a looping clip would never fire
+    expect(video!.hasAttribute("loop")).toBe(false);
     expect(video!.hasAttribute("playsinline")).toBe(true);
-    // the accent ring keeps the old loader's brand color on first paint
-    expect(video!.getAttribute("style")).toContain("var(--brand-accent)");
+    // the intro plays full-viewport (QA 5-a D1: the video IS the loader)
+    expect(video!.className).toContain("object-cover");
+    expect(video!.className).toContain("size-full");
 
     // owner order: the splash carries no other loader — no skeleton bar,
     // no spinning icon, and the gradient tile is replaced, not stacked
     expect(host.querySelector(".skeleton")).toBeNull();
     expect(host.querySelector(".animate-spin")).toBeNull();
     expect(host.querySelector(".animate-pulse")).toBeNull();
-    // the appName still sits under the loader, centered
+    // the appName still rides the intro, overlaid at the bottom
     expect(host.textContent).toContain($appAppName());
   });
 
