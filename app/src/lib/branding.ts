@@ -66,6 +66,16 @@ export function injectBrandCss(brand: Brand): void {
   el.textContent = brandToCss(brand);
 }
 
+/** Resolve a BUNDLED brand asset reference for rendering. Stamped brands
+ *  normalize asset names to the public/ root ("intro.mp4", "logo.svg"), so
+ *  the bare name IS the correct app-relative URL — dev server, dist/ and the
+ *  Tauri asset protocol all serve the SPA root. Hosted (https:/data:) and
+ *  API-resolved paths (server brands go through brandWithResolvedAssets
+ *  first) pass through untouched; empty is "no asset". */
+export function resolveAsset(path?: string): string | undefined {
+  return path || undefined;
+}
+
 /** Apply a brand live — inject CSS vars + update document title if appName changed.
  *  Pure function: takes a Brand, side-effects are DOM only. */
 export function applyBrand(brand: Brand): void {

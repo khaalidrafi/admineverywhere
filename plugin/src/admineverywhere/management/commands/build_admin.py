@@ -13,9 +13,11 @@ Usage:
                 mcp     - standalone MCP admin server (agents run admin
                           tasks against the API; see build_mcp)
                 emacs   - Org-powered Emacs admin package (see build_emacs)
-              mcp/emacs need --api-host.  The mcp server lands at
-              ./mcp_admin_server.py, the emacs package at
-              ./admineverywhere-admin.el (cwd).
+              mcp/emacs need --api-host.  The generated files are named
+              from the brand slug (appName "Freshorama Admin" ->
+              "freshorama-admin"): the mcp server lands at
+              ./<slug>-mcp-server.py, the emacs package at
+              ./<slug>-admin.el (cwd).
 --build     : legacy shorthand for --targets web, kept unchanged
 --api-host  : deployed API origin substituted for the CSP's API_HOST
               placeholder (validated: https, dotted DNS, no localhost, no
@@ -79,9 +81,9 @@ class Command(BaseCommand):
         app_name = branding.load_brand(options["brand"])["appName"]
         self.stdout.write(self.style.SUCCESS(
             f"Branded app as '{app_name}' from {options['brand']} -> {app_dir}"))
-        for group in ("written", "copied", "patched"):
+        for group in ("written", "copied", "patched", "skipped"):
             for f in summary.get(group, []):
-                self.stdout.write(f"  {group[:-1]}: {f}")
+                self.stdout.write(f"  {group}: {f}")
         if summary.get("csp_api_host"):
             self.stdout.write(self.style.SUCCESS(
                 f"  csp connect-src -> {summary['csp_api_host']}"))
@@ -99,7 +101,7 @@ class Command(BaseCommand):
             elif target == "android":
                 self._npm(app_dir, ["run", "tauri", "android", "build"])
             elif target in ("mcp", "emacs"):
-                self._generate(options, target)
+                self._generate(options, target, app_name)
 
         if targets:
             self.stdout.write(f"Targets built: {', '.join(targets)}")
@@ -112,14 +114,20 @@ class Command(BaseCommand):
         if proc.returncode != 0:
             raise CommandError(f"{' '.join(cmd)} failed")
 
-    def _generate(self, options, target):
-        """Run build_mcp / build_emacs with the shared --api-host."""
+    def _generate(self, options, target, app_name):
+        """Run build_mcp / build_emacs with the shared --api-host.
+
+        The output filename carries the brand slug (appName "Freshorama
+        Admin" -> "freshorama-admin-mcp-server.py"), so a host running
+        several branded builds never mixes its generated admin tooling.
+        """
         from django.core.management import call_command
         api_host = options.get("api_host")
         if not api_host:
             raise CommandError(f"--targets {target} requires --api-host")
+        slug = branding.brand_slug(app_name)
         kw = dict(api_host=api_host, stdout=self.stdout)
         if target == "mcp":
-            call_command("build_mcp", out="mcp_admin_server.py", **kw)
+            call_command("build_mcp", out=f"{slug}-mcp-server.py", **kw)
         else:
-            call_command("build_emacs", out="admineverywhere-admin.el", **kw)
+            call_command("build_emacs", out=f"{slug}-admin.el", **kw)
