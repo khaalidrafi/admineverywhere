@@ -4829,3 +4829,22 @@ branch (5 failed/5 errors env-attributed, reproduce on main)".
   Lead-owned files (.github/workflows/*, .github/scripts/*, CONTROL.org,
   .gitattributes, docker/harness/Dockerfile untouched too) read and cited only.
 :END:
+
+** DONE 16-a freshorama-first landing — widgets + login disclosure + real brand + 0031 review (:DELIVERED: unions dcb1dc2 / 121caf2 / cb539dc on ai/main) :FE:CI:
+:PROPERTIES:
+:EFFORT: 2:00
+:END:
+:LOGBOOK:
+CLOCK: [2026-10-31 Sat 04:58]--[2026-10-31 Sat 05:50] => 0:52
+:END:
+- :DELIVERED: three fed widgets (LiveOrders / TodayRevenue / CompletionGauge) + 14 mount tests (ai/widgets-cool e224f8e); login api-url advanced disclosure ported upstream + real freshorama brand (ai/freshorama-parity 620d42a + 2d7627c); delivery 0031 reviewed APPROVED and union-landed (dcb1dc2).
+- Dispatch clocks recorded in CHAT.org (lead cycle 16-a; manual exception — web/cloud seats).
+- Gate pins unioned to 549 vitest / 45 files in the same commits; CI grades the tip.
+*** DONE review: 16-a freshorama-first landing
+:PROPERTIES:
+:EFFORT: 0:25
+:END:
+:LOGBOOK:
+CLOCK: [2026-10-31 Sat 05:10]--[2026-10-31 Sat 05:25] => 0:15
+:END:
+- Reviewer: sonnet@z.ai-agent QA seat — static review of ai/widgets-cool, ai/freshorama-parity and delivery 0031; verdict APPROVED (0031 on record in REVIEW-LOG.org).
