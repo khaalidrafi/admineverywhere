@@ -48,7 +48,7 @@ Product constraints — do not relax:
   concatenated onto `apiUrl`; an unresolvable source renders a friendly
   empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
   the `$effect` cleanup kills the timer. Contract + checklist:
-  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`. The rendered half is graded too: `feedGridMount.test.ts` mounts the Dashboard grid against a live schema taking its widgets off the glob (not by import), so every fed widget must paint, a schema arriving after mount must wake it, and a feed nothing can serve must render its reason with no chart and no guessed URL.
+  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`. The rendered half is graded too: `feedGridMount.test.ts` mounts the Dashboard grid against a live schema taking its widgets off the glob (not by import), so every fed widget must paint, a schema arriving after mount must wake it, and a feed nothing can serve must render its reason with no chart and no guessed URL. User-built instances (Widget studio) ride the SAME engine and grammar — contract: `docs/widget-builder.md`; the notification center is the one store every threshold alert reads.
 - RBAC (FR-R007) is claims-driven and degrades silently: `normalizeOpenAPI`
   binds `schema.mePath` ONLY when the document carries `GET …/me/` and no
   POST (exportPath law again — never a guessed `/api/me/`), the client
@@ -97,7 +97,7 @@ Product constraints — do not relax:
   each registry to have a non-test product importer. The FIELD NAMES it reads are the
   next claim up, graded by `doc_field_roster_diff.py`: the fifth and sixth FE twin legs of
   `landing_gate.py --fe` (see *Commands*); classes and controls: *THIRTEENTH + FOURTEENTH harness law* below.
-- Deliberately out of scope: virtual scrolling, command palette, alerts.
+- Deliberately out of scope: virtual scrolling, command palette. (Notifications and user-built widgets LEFT this list on Owner order 2026-10-31 — see the instances bullet above.)
 
 ## Product spec (from MVP brief)
 
@@ -132,7 +132,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 | path | role |
 | --- | --- |
-| `plugin/` | pip package `admineverywhere` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (315 pytest, written first) |
+| `plugin/` | pip package `admineverywhere` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (334 pytest, written first) |
 | `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (533 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
@@ -163,7 +163,7 @@ cd app && npm install && npm run dev        # http://localhost:5173
 # tests
 cd app && npm test                          # 533 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
-cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 315 pytest
+cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 334 pytest
 
 # mock OpenAI-compatible SSE provider (for chat E2E)
 node scripts/mock_openai.js                 # listens on :11435

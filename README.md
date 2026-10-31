@@ -104,6 +104,11 @@ Save — whole app, new identity, one second, no rebuild.
 - **New dashboard widget** = drop one `.svelte` file in `app/src/widgets/`
   with `<script module>export const meta = { title, size: 'sm'|'lg' }</script>`.
   No registration, no config.
+- **Build your own widgets**: open Widget studio in the sidebar — pick a
+  type, title it, choose a brand accent and a schema-resolved data source,
+  add a threshold alert. Instances are plain JSON (export/import); alerts
+  land in the bell's notification center and, in the packaged app, as OS
+  toasts (contract: `docs/widget-builder.md`).
 - **New backend**: point `app/public/config.json` (or the API URL field on
   the login screen) at any DRF + drf-spectacular server using token auth.
 - **AI provider**: any OpenAI-compatible endpoint (OpenAI, Groq, Ollama, LM
