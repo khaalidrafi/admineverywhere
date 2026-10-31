@@ -1,0 +1,51 @@
+# copilot-wave — assign the Copilot burn issues to Copilot coding agent
+# (lead-owned). Owner order 2026-10-31: burn ALL copilot credits.
+#
+# The local fine-grained PAT cannot write assignees (403 REST+GraphQL,
+# measured 2026-10-31). The repo's GH_PAT secret (Owner-provided) is
+# tried here: if it carries issues:write, the assignment lands and each
+# issue becomes a Copilot agent run (premium-request burn). Results are
+# logged per issue; a 403 here is the definitive signal the Director
+# must assign in the UI or hand a classic PAT.
+
+name: copilot-wave
+
+on:
+  workflow_dispatch:
+    inputs:
+      issues:
+        description: "Space-separated issue numbers to assign to Copilot"
+        default: "3 4 5 6 7 8 9 10"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copilot-wave
+  cancel-in-progress: false
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Assign issues to copilot-swe-agent
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          ISSUES: ${{ github.event.inputs.issues || '3 4 5 6 7 8 9 10' }}
+        run: |
+          set -u
+          ok=0; fail=0
+          for n in $ISSUES; do
+            code=$(curl -s -o /tmp/assign-$n.json -w '%{http_code}' -X POST \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/khaalidrafi/admineverywhere/issues/$n/assignees" \
+              -d '{"assignees":["copilot-swe-agent"]}')
+            who=$(python3 -c "import json;d=json.load(open('/tmp/assign-$n.json'));print(','.join(a['login'] for a in d.get('assignees',[])) or d.get('message','?'))" 2>/dev/null || echo unreadable)
+            echo "issue #$n -> HTTP $code assignees=[$who]"
+            case "$who" in *copilot-swe-agent*) ok=$((ok+1));; *) fail=$((fail+1));; esac
+          done
+          echo "assigned=$ok failed=$fail"
+          [ "$fail" = 0 ] || echo "::warning::some assignments failed — Director must assign in UI or provide a classic PAT"
