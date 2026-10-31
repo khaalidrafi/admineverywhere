@@ -120,7 +120,9 @@ Acceptance criteria the brief pins down beyond the constraints above.
 - **CRUD spec** — `RecordForm` renders text, number, bool, date,
   enum-select and FK-dropdown fields; schema-driven, graceful when the
   schema omits constraints. `DataTable` = pagination + search + delete.
-  Login is token auth against `config.apiUrl` with a settings field.
+  Login is token auth against `config.apiUrl`; the settings field sits
+  behind an "Advanced" disclosure toggle (hidden at start, prefilled from
+  config, `aria-expanded`-driven) — the gate reads as a plain sign-in.
 - **Scope rationale & demo flow** — the out-of-scope line above plus
   multi-provider abstraction, tool calling and history are all *v2*; the
   nav is built so ⌘K drops in later. Definition of done (demo flow):
@@ -133,7 +135,7 @@ Acceptance criteria the brief pins down beyond the constraints above.
 | path | role |
 | --- | --- |
 | `plugin/` | pip package `admineverywhere` — `branding.py`, `brandstore.py` (runtime store), `views.py`/`urls.py` (branding API), `build_admin`, `dump_schema` (334 pytest, written first) |
-| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (533 vitest) |
+| `app/` | thin client — Vite 6 + Svelte 5 + Tailwind 4 + Tauri 2 (535 vitest) |
 | `app/src/pages/` | drop-in pages (FR-R006): Dashboard, Modules, ModelPage, Branding, Login, Activity — one `.svelte` each exporting `meta{title,path,nav,icon,order,standalone,roles?}` from `<script module>`; registry `app/src/lib/pages/index.ts` globs them and injects the router's route table |
 | `app/src/widgets/` | drop-in widgets: StatsCards, ActivityChart (SVG line), QuoteCard (30 curated Qur'an/Sunnah/Aslaf quotes; weakly-sourced ones marked "attributed") + FR-R008 `meta.data`-fed charts: TrendArea, StatusDonut, LeaderBars, HeatStrip, DeltaChip (engine: `app/src/lib/widgets/feed.ts`) |
 | `app/src/actions/` | drop-in custom actions (FR-R003): flag.ts (record), bulk_flag.ts (bulk) — one `.ts` each exporting `meta{label,scope,model?,confirm?,input?,roles?,handler}`; registry `app/src/lib/actions/index.ts` |
@@ -161,7 +163,7 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt -e ../plugin
 cd app && npm install && npm run dev        # http://localhost:5173
 
 # tests
-cd app && npm test                          # 533 vitest
+cd app && npm test                          # 535 vitest
 cd app && npx tsc --noEmit                  # clean — 0 errors is the standing bar
 cd demo-backend && .venv/bin/python -m pytest ../plugin/tests   # 334 pytest
 

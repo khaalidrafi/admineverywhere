@@ -19,6 +19,9 @@
   let apiUrl = $state("");
   let busy = $state(false);
   let error = $state("");
+  // the one settings field is a collapsed disclosure — the gate reads as a
+  // plain sign-in until someone actually needs to point it at another API
+  let showApi = $state(false);
 
   // prefill the one settings field from config/override
   $effect(() => {
@@ -86,15 +89,28 @@
           <input id="password" class="input" type="password" autocomplete="current-password"
                  bind:value={password} placeholder="••••••••" />
         </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium text-text/60" for="api">API URL</label>
-          <input id="api" class="input" type="url" bind:value={apiUrl}
-                 placeholder="https://your-api.example.com" />
-          <div class="mt-1 text-[11px] text-text/40">DRF + drf-spectacular backend (token auth)</div>
-          <div class="mt-2 text-[11px] text-text/40">
-            No API at hand? Run the bundled demo backend — see <code>README → demo-backend/</code> (admin / admin123).
+        <!-- advanced disclosure: the one settings field stays out of the way -->
+        <button
+          type="button"
+          class="flex items-center gap-1 self-start text-xs text-text/50 transition-colors hover:text-text/70"
+          aria-expanded={showApi}
+          aria-controls="advanced-api"
+          onclick={() => (showApi = !showApi)}
+        >
+          <Icon name="left" size={12} class="transition-transform {showApi ? '-rotate-90' : 'rotate-180'}" />
+          Advanced — API URL
+        </button>
+        {#if showApi}
+          <div id="advanced-api">
+            <label class="mb-1 block text-xs font-medium text-text/60" for="api">API URL</label>
+            <input id="api" class="input" type="url" bind:value={apiUrl}
+                   placeholder="https://your-api.example.com" />
+            <div class="mt-1 text-[11px] text-text/40">DRF + drf-spectacular backend (token auth)</div>
+            <div class="mt-2 text-[11px] text-text/40">
+              No API at hand? Run the bundled demo backend — see <code>README → demo-backend/</code> (admin / admin123).
+            </div>
           </div>
-        </div>
+        {/if}
 
         {#if error}
           <div class="rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-2 text-sm text-red-200">
