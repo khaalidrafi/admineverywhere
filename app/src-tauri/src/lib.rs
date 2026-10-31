@@ -37,6 +37,9 @@ fn delete_secret(service: String, key: String) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // OS notifications (desktop toasts + Android POST_NOTIFICATIONS) —
+        // permission is requested from JS at runtime, never assumed.
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             save_secret,
             load_secret,

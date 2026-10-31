@@ -11,6 +11,7 @@
   import { navPages, pageHref, authHref } from "../lib/pages";
   import { roleAllows } from "../lib/rbac";
   import Icon from "./Icon.svelte";
+  import NotificationBell from "./NotificationBell.svelte";
 
   let { onnavigate }: { onnavigate?: () => void } = $props();
 
@@ -101,14 +102,17 @@
   <div class="px-3 py-3">
     <div class="flex items-center justify-between gap-2 px-2 pb-2 text-xs text-text/50">
       <span class="truncate">@{$app.username || "admin"}</span>
-      <button
-        class="btn btn-ghost px-2 py-1 text-xs"
-        onclick={() => { logout(); navigate(authHref()); }}
-        title="Sign out"
-      >
-        <Icon name="logout" size={14} />
-        Sign out
-      </button>
+      <div class="flex items-center gap-1">
+        <NotificationBell />
+        <button
+          class="btn btn-ghost px-2 py-1 text-xs"
+          onclick={() => { logout(); navigate(authHref()); }}
+          title="Sign out"
+        >
+          <Icon name="logout" size={14} />
+          Sign out
+        </button>
+      </div>
     </div>
   </div>
 </aside>
