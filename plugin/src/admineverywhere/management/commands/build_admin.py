@@ -22,6 +22,11 @@ Usage:
 --api-host  : deployed API origin substituted for the CSP's API_HOST
               placeholder (validated: https, dotted DNS, no localhost, no
               wildcards — see admineverywhere.branding.normalize_api_host)
+
+The stamp also rewrites the vite app's index.html identity at build time
+(tab <title> + favicon <link> from the brand) — dist/ ships that file
+verbatim, so an unstamped build presents the stock title until the SPA's
+JS boots (see branding.stamp_index_html).
 """
 from django.core.management.base import BaseCommand, CommandError
 
@@ -48,7 +53,8 @@ def parse_targets(targets, build):
 
 class Command(BaseCommand):
     help = ("Inject a brand.json into the thin-client app "
-            "(CSS vars, assets, window title, CSP API_HOST substitution) "
+            "(CSS vars, assets, index.html title/favicon, window title, "
+            "CSP API_HOST substitution) "
             "and optionally build any of the release/generator targets")
 
     def add_arguments(self, parser):
