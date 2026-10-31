@@ -78,8 +78,25 @@ jobs:
           done < agent-team/BURN-QUEUE.md
           echo "burned $n tasks"
 
+      - name: Hand off results to a branch (quota-proof)
+        if: always()
+        run: |
+          git config user.name "agent-team-ci"
+          git config user.email "agent-team-ci@users.noreply.github.com"
+          git checkout -B "burn-results-${{ github.run_id }}"
+          git add -A burn-out
+          if git diff --cached --quiet; then
+            echo "no burn-out to hand off"
+            exit 0
+          fi
+          git commit -m "burn-results: run ${{ github.run_id }}
+
+          Co-authored-by: agent-team-ci <agent-team-ci@users.noreply.github.com>"
+          git push --force origin "burn-results-${{ github.run_id }}"
+
       - name: Upload burn artifacts
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: codebuddy-burn-${{ github.run_id }}
