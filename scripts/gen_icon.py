@@ -15,7 +15,7 @@ Usage:
 
 Examples:
   python scripts/gen_icon.py '#4f46e5' '#06b6d4' app/brands/default/assets
-  python scripts/gen_icon.py '#7c3aed' '#06b6d4' app/brands/freshorama/assets
+  python scripts/gen_icon.py '#006e33' '#22be6f' app/brands/freshorama/assets
 """
 import argparse
 import math
