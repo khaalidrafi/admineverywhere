@@ -45,7 +45,21 @@ Product constraints — do not relax:
   concatenated onto `apiUrl`; an unresolvable source renders a friendly
   empty with a nameable reason; `pollInterval` is floor-clamped to 5s and
   the `$effect` cleanup kills the timer. Contract + checklist:
-  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`. The rendered half is graded too: `feedGridMount.test.ts` mounts the Dashboard grid against a live schema taking its widgets off the glob (not by import), so every fed widget must paint, a schema arriving after mount must wake it, and a feed nothing can serve must render its reason with no chart and no guessed URL.
+  `docs/widget-data.md` — and those six names are the fourth pinned contract of `doc_field_roster_diff.py`.
+- Widgets are also USER DATA now (Owner order 2026-10-31): the Widget studio
+  (`app/src/pages/WidgetStudio.svelte`, drop-in page contract) composes
+  INSTANCES — a type from the discovered registry, custom title/size, a
+  brand-ROLE accent (the card re-maps `--brand-primary` onto another brand
+  var; no hard-coded colors), an optional FR-R008 `data` override validated
+  by the feed engine's own `validateWidgetData` and rendered through the same
+  schema-resolved feed, and an optional threshold rule (`above`/`below`/
+  `change`) evaluated per tick with crossing dedup. Contract, persistence
+  keys and notify semantics: `docs/widget-builder.md`. The five fed built-ins
+  accept an optional `data` prop (default = their own `meta.data`). The
+  notification center (`app/src/lib/notifications.ts`; Notifications page +
+  sidebar bell) is the ONE store every alert reads — capped at 50, persisted
+  in `dad.notifications.v1`; OS toasts ride tauri-plugin-notification
+  (best-effort, permission asked at runtime, browser mode = in-app only). The rendered half is graded too: `feedGridMount.test.ts` mounts the Dashboard grid against a live schema taking its widgets off the glob (not by import), so every fed widget must paint, a schema arriving after mount must wake it, and a feed nothing can serve must render its reason with no chart and no guessed URL.
 - RBAC (FR-R007) is claims-driven and degrades silently: `normalizeOpenAPI`
   binds `schema.mePath` ONLY when the document carries `GET …/me/` and no
   POST (exportPath law again — never a guessed `/api/me/`), the client
@@ -94,7 +108,7 @@ Product constraints — do not relax:
   each registry to have a non-test product importer. The FIELD NAMES it reads are the
   next claim up, graded by `doc_field_roster_diff.py`: the fifth and sixth FE twin legs of
   `landing_gate.py --fe` (see *Commands*); classes and controls: DEVGUIDE *THIRTEENTH + FOURTEENTH harness law*.
-- Deliberately out of scope: virtual scrolling, command palette, alerts.
+- Deliberately out of scope: virtual scrolling, command palette. (Notifications and user-built widgets LEFT this list on Owner order 2026-10-31 — see the instances bullet above.)
 
 ## Product spec (from MVP brief)
 

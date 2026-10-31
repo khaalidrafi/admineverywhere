@@ -119,3 +119,14 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   them after the first full platform->relief->software->QA cycle lands;
   (3) probe job now scans the GoModel gateway /v1/models for
   minimax/deepseek ids and live-probes the first MiniMax variant.
+
+* TODO P1 — widget studio + notification center (Owner order 2026-10-31; review the seams first)
+  - [ ] app/src/lib/widgets/instances.ts — validateInstance must stay pinned to the feed
+    engine's grammar (no second, looser one); shouldFire's per-instance memory
+    (a rule fires once per crossing/change, never twice for the same state)
+  - [ ] app/src/components/WidgetInstanceCard.svelte — accent is a brand-var RE-MAP only;
+    feeds go through startWidgetFeed with the instance's data override (never a guessed URL)
+  - [ ] app/src/lib/notifications.ts — localStorage rehydration drops malformed entries;
+    the OS bridge never throws into callers; the list is capped at 50
+  - [ ] app/src-tauri/ — tauri-plugin-notification registration + notification:default
+    capability (Cargo.lock resolves at CI build time — no cargo in the sandbox)
