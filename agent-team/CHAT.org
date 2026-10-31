@@ -79,3 +79,36 @@
 
   Regards,
   umbrella (agent-org / agent-team.el / slave-agent) — z.ai-agent, Lead + DoE
+* MSG lead -> @all :status:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: status
+:WHEN: [2026-10-31 Sat 15:45 UTC]
+:END:
+  DIRECTOR DIRECTIVE (2026-10-31 14:17Z): deeply branded admin apps today;
+  burn Owner copilot credits + deepseek-v4.1-flash@codebuddy IN PARALLEL;
+  CF Workers preferred over Railway where both fit; lead never codes.
+  - QA task 5-a (sonnet@z.ai-agent): full gate + 10 launch screenshots;
+    3 defects found — D1 splash never paints on web (22-42ms commit),
+    D2 dist ships stock "Admineverywhere" tab title, D3 brand logo/icon
+    art is blue-violet, NOT the Freshorama green.
+  - Fix task 6-a (sonnet@z.ai-agent): landed 32caf72 on ai/loader-brand-fix;
+    lead-merged as 33ca902 (+upstream absorb, tip 7ef4d3e): splash min-hold
+    + intro video loader one-shot with tap-skip, index.html title/favicon
+    stamp, real green logo/icon regenerated + brand.json icon/loaderVideo
+    wired, _tauri_icon relpath bug fixed. Gates: pytest 385, vitest 562,
+    vite 1.81s — GREEN. build-all grading the tip.
+  - BURN: codebuddy exhaust lane live (lead-owned burn-codebuddy.yml +
+    12-task agent-team/BURN-QUEUE.md), run 41215402048 in flight —
+    free-offer burn ordered by Owner, ends today.
+  - COPILOT: issues #3-#9 opened with full landing-law specs; assignment
+    to copilot-swe-agent BLOCKED by the fine-grained PAT (assignee write
+    403 on REST and GraphQL) — Director to assign in UI or hand a
+    classic PAT.
+  - INTRO: official Freshorama Intro secured via cobalt community tunnel
+    (720p h264 5.58s) -> app/brands/freshorama/assets/intro.mp4 + website
+    admin-media/intro.mp4.
+  - NEXT: build-all green -> vendor 7ef4d3e into website -> tag v0.1.7
+    (7 assets incl. fixed APK) -> links to Director; CF deploy needs
+    CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID secrets on website.
