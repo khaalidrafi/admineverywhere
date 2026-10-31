@@ -166,8 +166,12 @@ class TestBuildAdminTargets:
         call_command("build_admin", brand=str(brand_path), app=str(app),
                      targets="mcp,emacs",
                      api_host="https://admin.example.com", stdout=out)
-        assert (tmp_path / "mcp_admin_server.py").is_file()
-        assert (tmp_path / "admineverywhere-admin.el").is_file()
+        # the generated outputs are named from the BRAND SLUG ("Freshorama
+        # Admin" -> "freshorama-admin"), not the stock admineverywhere names:
+        # <slug>-mcp-server.py / <slug>-admin.el (the doubling is the brand's
+        # own "Admin" meeting the "-admin.el" suffix)
+        assert (tmp_path / "freshorama-admin-mcp-server.py").is_file()
+        assert (tmp_path / "freshorama-admin-admin.el").is_file()
         assert "MCP server written" in out.getvalue()
         assert "Emacs package written" in out.getvalue()
 
