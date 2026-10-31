@@ -295,18 +295,25 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
     ]);
   });
 
-  it("with no config.json at all the boot stays local — zero requests beyond the two bundled files", async () => {
+  it("with no config.json at all the boot stays local — the DEV reads answer 404 and the BUNDLED defaults stand", async () => {
     tauriMode(false);
     mockFetch.mockResolvedValueOnce(reply(404, null)).mockResolvedValueOnce(reply(404, null));
     const { app, initApp } = await freshStores();
 
     await initApp();
 
-    expect(get(app).config).toBeNull();
-    expect(urlsSeen()).toEqual(["config.json", "brand.json"]);
+    // deep branding: the committed brand.gen.ts IS the boot config — the
+    // stock bundle ships an empty origin + documented paths, never a null
+    // config (that null used to be what "the URL doesn't work" felt like)
+    expect(get(app).config).toEqual({
+      apiUrl: "",
+      authPath: "/api/auth/token/",
+      schemaPath: "/api/schema/",
+    });
+    expect(urlsSeen()).toEqual(["config.json", "brand.json"]); // DEV-only reads
   });
 
-  it("a backend that is unreachable at boot still boots: fetch rejects, the static brand stays, nothing throws", async () => {
+  it("a backend that is unreachable at boot still boots: fetch rejects, the bundled brand stays, nothing throws", async () => {
     tauriMode(false);
     mockFetch.mockRejectedValue(new TypeError("Failed to fetch"));
     const { app, initApp, toasts } = await freshStores();
@@ -315,8 +322,12 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
 
     const a = get(app);
     expect(a.booted).toBe(true);
-    expect(a.brand.appName).toBe("Admineverywhere");
-    expect(a.config).toBeNull();
+    expect(a.brand.appName).toBe("Admineverywhere"); // the bundled identity
+    expect(a.config).toEqual({
+      apiUrl: "",
+      authPath: "/api/auth/token/",
+      schemaPath: "/api/schema/",
+    });
     expect(get(toasts)).toEqual([]);
   });
 
@@ -447,5 +458,87 @@ describe("loadSchema — the in-flight guard and the anonymous read", () => {
     expect(String(url)).toBe("http://plain.test/api/schema/");
     expect(JSON.stringify(init)).not.toContain("Authorization");
     expect(get(app).schema?.models.map((m) => m.id)).toEqual(["orders"]);
+  });
+});
+
+describe("initApp — the bundled boot (brand.gen.ts, deep branding)", () => {
+  /** The whole point of the deep-branding package: the SPA boots from the
+   *  build-time INLINED identity, not from runtime public/*.json reads. The
+   *  mock proves the shipped module — not a fetch, not a hardcoded stock
+   *  fallback — is what lands in the store. */
+  const BUNDLED_MOCK = {
+    BUNDLED_BRAND: { appName: "Bundlecraft", tagline: "", colors: {}, radius: "0", font: "Inter" },
+    BUNDLED_CONFIG: { apiUrl: "", authPath: "/api/auth/token/", schemaPath: "/api/schema/" },
+  };
+  const reply = (status: number, data: any) => ({
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => data,
+    text: async () => JSON.stringify(data),
+  });
+
+  afterEach(() => {
+    vi.doUnmock("../brand.gen");
+    vi.unstubAllEnvs();
+  });
+
+  it("boots the inlined brand.gen module with ZERO fetches when DEV is off — the Tauri Android fix", async () => {
+    tauriMode(false);
+    vi.doMock("../brand.gen", () => BUNDLED_MOCK);
+    vi.stubEnv("DEV", false);
+    const { app, initApp } = await freshStores();
+
+    await initApp();
+
+    // not a single network touch: no config.json, no brand.json, and the
+    // empty bundled apiUrl even keeps the branding probe home
+    expect(mockFetch).not.toHaveBeenCalled();
+    const a = get(app);
+    expect(a.booted).toBe(true);
+    expect(a.config).toEqual(BUNDLED_MOCK.BUNDLED_CONFIG);
+    expect(a.brand.appName).toBe("Bundlecraft");
+    expect(document.title).toBe("Bundlecraft");
+  });
+
+  it("DEV only: edited public/config.json + brand.json override the bundled boot (dev DX kept)", async () => {
+    tauriMode(false);
+    vi.doMock("../brand.gen", () => BUNDLED_MOCK);
+    // import.meta.env.DEV stays true under vitest — the branch under test
+    mockFetch
+      .mockResolvedValueOnce(reply(200, { apiUrl: "http://dev.test", authPath: "/a", schemaPath: "/s" }))
+      .mockResolvedValueOnce(reply(200, { appName: "Devcraft", colors: {}, radius: "0", font: "Inter" }))
+      .mockResolvedValueOnce(reply(404, null)); // dev backend runs no plugin
+    const { app, initApp } = await freshStores();
+
+    await initApp();
+
+    const a = get(app);
+    expect(a.config?.apiUrl).toBe("http://dev.test");
+    expect(a.brand.appName).toBe("Devcraft");
+    expect(mockFetch.mock.calls.map((c) => String(c[0]))).toEqual([
+      "config.json",
+      "brand.json",
+      "http://dev.test/admineverywhere/branding/",
+    ]);
+  });
+
+  it("a DEV read that serves SPA-fallback HTML (the Tauri asset quirk) is ignored: the bundled identity stands, never stock", async () => {
+    tauriMode(false);
+    vi.doMock("../brand.gen", () => BUNDLED_MOCK);
+    mockFetch.mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new SyntaxError("Unexpected token '<', \"<!doctype \" is not valid JSON");
+      },
+    }));
+    const { app, initApp, toasts } = await freshStores();
+
+    await expect(initApp()).resolves.toBeUndefined();
+
+    const a = get(app);
+    expect(a.brand.appName).toBe("Bundlecraft");
+    expect(a.config).toEqual(BUNDLED_MOCK.BUNDLED_CONFIG);
+    expect(get(toasts)).toEqual([]);
   });
 });
