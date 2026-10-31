@@ -256,8 +256,9 @@
 
     <div class="mt-6 flex justify-end gap-3">
       <button type="button" class="btn btn-ghost" onclick={onclose}>Cancel</button>
+      <!-- loader purge (owner order): the disabled state carries the busy
+           signal — no spin icon -->
       <button type="submit" class="btn btn-primary" disabled={busy}>
-        {#if busy}<Icon name="refresh" size={16} class="animate-spin" />{/if}
         {record?.id !== undefined ? "Save changes" : `Create ${model.name}`}
       </button>
     </div>

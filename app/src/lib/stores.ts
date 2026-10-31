@@ -15,10 +15,16 @@ import {
   resolveApiUrl,
   saveBranding as apiSaveBranding,
 } from "./api";
+import { BUNDLED_BRAND, BUNDLED_CONFIG } from "./brand.gen";
 import { injectBrandCss } from "./branding";
 import { deleteSecret, loadSecret, saveSecret } from "./secrets";
 import type { RoleClaims } from "./rbac";
 import type { AdminSchema, AppConfig, Brand } from "./types";
+
+// brand.gen.ts (and therefore every branded bundle) types its payload with
+// the shapes defined here — re-export so the generated `import type ...
+// from "./stores"` stays valid without a second source of truth.
+export type { AppConfig, Brand } from "./types";
 
 export interface AppState {
   booted: boolean;
@@ -32,18 +38,26 @@ export interface AppState {
   backendDown: boolean;
 }
 
-const DEFAULT_BRAND: Brand = {
+// The identity the bundle ships with (src/lib/brand.gen.ts — stock default
+// committed, overwritten by `build_admin --brand`). First paint — the splash
+// included — is branded from module init; nothing here fetches to know its
+// own name. The stock DEFAULTS below only cover a hypothetically missing
+// generated module.
+const DEFAULTS: Brand = {
   appName: "Admineverywhere",
   tagline: "Django-powered admin",
   colors: {},
   radius: "0.75rem",
   font: "Inter",
 };
+const BUNDLED: Brand = BUNDLED_BRAND?.appName ? BUNDLED_BRAND : DEFAULTS;
+const BUNDLED_CFG: AppConfig | null =
+  BUNDLED_CONFIG && typeof BUNDLED_CONFIG === "object" ? BUNDLED_CONFIG : null;
 
 export const app = writable<AppState>({
   booted: false,
   config: null,
-  brand: DEFAULT_BRAND,
+  brand: BUNDLED,
   token: typeof localStorage !== "undefined" ? localStorage.getItem("dad.token") ?? "" : "",
   username: typeof localStorage !== "undefined" ? localStorage.getItem("dad.username") ?? "" : "",
   apiUrlOverride:
@@ -69,12 +83,35 @@ async function fetchJson(url: string): Promise<any | null> {
   }
 }
 
-export async function initApp(): Promise<void> {
+/** Dev-only override read: `build_admin --brand` inlines the real values
+ *  into brand.gen.ts, but while developing it is far nicer to edit
+ *  public/config.json + public/brand.json and just refresh. PRODUCTION
+ *  NEVER RUNS THIS: on Tauri the asset protocol answers those paths with
+ *  the SPA-fallback HTML, the JSON parse died, and the app silently booted
+ *  stock (stock splash, empty apiUrl) — the bug that killed runtime fetches. */
+async function devFetchOverrides(): Promise<{ config: AppConfig | null; brand: Brand | null }> {
   const [config, brand] = await Promise.all([fetchJson("config.json"), fetchJson("brand.json")]);
+  const isObject = (v: any) => !!v && typeof v === "object" && !Array.isArray(v);
+  return {
+    config: isObject(config) ? (config as AppConfig) : null,
+    brand: isObject(brand) && (brand as Brand).appName ? (brand as Brand) : null,
+  };
+}
+
+export async function initApp(): Promise<void> {
+  // Boot identity = the build-time inlined brand.gen.ts. a.apiUrlOverride
+  // still wins over the bundled apiUrl at call time (effectiveConfig()).
+  let config = BUNDLED_CFG;
+  let brand: Brand = BUNDLED;
+  if (import.meta.env.DEV) {
+    const dev = await devFetchOverrides();
+    if (dev.config) config = dev.config;
+    if (dev.brand) brand = dev.brand;
+  }
   app.update((a) => ({
     ...a,
-    config: config ?? null,
-    brand: brand?.appName ? brand : a.brand,
+    config,
+    brand,
     booted: true,
   }));
   applyBrand(get(app).brand);
@@ -97,6 +134,7 @@ function brandWithResolvedAssets(cfg: AppConfig, brand: Brand): Brand {
     ...brand,
     logo: resolveApiUrl(cfg, brand.logo),
     favicon: resolveApiUrl(cfg, brand.favicon),
+    loaderVideo: resolveApiUrl(cfg, brand.loaderVideo),
   };
 }
 

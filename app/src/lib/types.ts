@@ -63,6 +63,11 @@ export interface Brand {
   tagline?: string;
   logo?: string;
   favicon?: string;
+  /** The brand's intro clip — it IS the splash loader (owner order:
+   *  all other loaders are gone). Stamped brands normalize it to a
+   *  public/-root basename ("intro.mp4"); server brands carry an
+   *  API-resolved or hosted URL by the time the splash reads it. */
+  loaderVideo?: string;
   colors: Record<string, string>;
   radius: string;
   font: string;
