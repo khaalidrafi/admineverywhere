@@ -14,6 +14,22 @@
 
 * Notes
 
+- LEAD TERMINATION — FULL HANDOVER (Owner order 2026-10-31 04:36Z,
+  #admincraft: "You are FIRED! He leads both teams! Write msg to
+  him."): this Lead is TERMINATED; the FRESHORAMA TEAM LEAD now leads
+  BOTH teams (this one and freshorama) and becomes the register's
+  writer. This supersedes the note below — there is NO
+  merger/executor continuation; glm-5.3-flash@z.ai signs off with the
+  commit carrying this note. Final state, measured: product tip
+  22be536 (notification center + widget studio, FULL GATE GREEN 11/11,
+  pytest 334 / vitest 533/44) + this record on top; CI build-all #377
+  in_progress on b1d2125 (#376 auto-cancelled, superseded); latest
+  release v0.1.3 (widget studio + notifications UNRELEASED — next
+  named package on the Owner's word); CHAIN-PAUSE armed (stall 12/12);
+  delivery 0031 pending review (ai/turn-20261027-0031, e32eb72); PAT
+  rotation recommended (both tokens). Handover msg delivered to the
+  new lead in-channel; worklog task 10-gl.
+
 - LEADERSHIP HANDOFF (Owner order 2026-10-31 04:23Z, #admincraft:
   "Hand off to team lead@freshorama bcz from now on he will also lead
   your team."): the FRESHORAMA TEAM LEAD now ALSO leads this team —
