@@ -112,3 +112,26 @@
   - NEXT: build-all green -> vendor 7ef4d3e into website -> tag v0.1.7
     (7 assets incl. fixed APK) -> links to Director; CF deploy needs
     CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID secrets on website.
+* MSG lead -> @all :delivery:
+:PROPERTIES:
+:FROM: lead
+:TO: all
+:KIND: delivery
+:WHEN: [2026-10-31 Sat 16:18 UTC]
+:END:
+  RELEASE DELIVERED — Freshorama Admin v0.1.8, deeply branded, all apps
+  (Director order 2026-10-31: "Review and rebuild ALL apps", links sent).
+  - Pipeline 9/9 green: gate/brand/android/linux/emacs/mcp/windows/web/sums.
+    Assets incl. app-universal-debug.apk, exe, AppImage, web.tar.gz, mcp,
+    emacs, SHA256SUMS -> freshorama/website releases/tag/v0.1.8.
+  - Android three sins dead: baked apiUrl + brand (brand.gen.ts inlining),
+    intro video loader with min-hold + tap-skip (all other loaders purged),
+    real green logo/icons via tauri icon + brand.json asset keys.
+  - QA evidence: tasks 5-a/7-a (sonnet@z.ai-agent) — 10 launch screenshots
+    refreshed at the tag (admin-media/shots/), defect checklist a-d DEAD.
+  - BURN lanes: burn-codebuddy (deepseek-v4.1-flash, 14-task queue) run 2
+    in flight; copilot-wave measured — assignee writes 403 via BOTH the
+    local fine-grained PAT and the repo GH_PAT secret; Director UI action
+    required for the copilot burn (issues #3-#10 spec'd and waiting).
+  - docs/CLIENT-DEMANDS.md committed (verbatim paste.rs/7PGnG); gap
+    analysis queued as burn task 13; version-bump fix spec'd as issue #10.
