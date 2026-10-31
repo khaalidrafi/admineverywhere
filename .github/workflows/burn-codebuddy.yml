@@ -1,0 +1,76 @@
+# burn-codebuddy — deepseek-v4.1-flash@codebuddy exhaust lane (lead-owned).
+#
+# Owner order 2026-10-31 ("exhaust deepseek-v4.1-flash@codebuddy in what
+# it's good at cuz its free offer ends TODAY"): run the free CodeBuddy body
+# continuously on real, self-contained repo work from agent-team/BURN-QUEUE.md.
+# Outputs are run artifacts; the Lead triages and turns accepted outputs into
+# seat dispatches. Invocation mirrors the proven probe in agent-team.yml
+# (run 2026-10-23 lane): -p mode, bypassPermissions, model deepseek-v4.1-flash.
+
+name: burn-codebuddy
+
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "Max tasks to consume from BURN-QUEUE.md this run"
+        default: "12"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: burn-codebuddy
+  cancel-in-progress: false
+
+jobs:
+  burn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install codebuddy body
+        run: |
+          npm install -g @tencent-ai/codebuddy-code
+          codebuddy --version
+
+      - name: Burn queue (one codebuddy run per task line)
+        env:
+          CODEBUDDY_AUTH_TOKEN: ${{ secrets.CODEBUDDY_AUTH_TOKEN }}
+          CODEBUDDY_IS_SANDBOX: "1"
+          ROUNDS: ${{ github.event.inputs.rounds || '12' }}
+        run: |
+          set -u
+          mkdir -p burn-out
+          n=0
+          while IFS= read -r task; do
+            [ -z "$task" ] && continue
+            case "$task" in '#'*) continue ;; esac
+            n=$((n + 1))
+            [ "$n" -gt "$ROUNDS" ] && break
+            echo "=== burn task $n: ${task:0:80} ==="
+            timeout 1500 codebuddy -p "$task
+
+            Work in this repository (read-only analysis unless the task says
+            otherwise). Write your full work product to burn-out/task-$n.md and
+            also print it. Cite file:line evidence for every claim." \
+              -y --permission-mode bypassPermissions --max-turns 25 \
+              --model deepseek-v4.1-flash \
+              > "burn-out/task-$n.stdout.log" 2>&1 \
+              || echo "task $n rc=$? (continuing burn)" >> burn-out/FAILURES.txt
+          done < agent-team/BURN-QUEUE.md
+          echo "burned $n tasks"
+
+      - name: Upload burn artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codebuddy-burn-${{ github.run_id }}
+          path: burn-out/
+          retention-days: 30
