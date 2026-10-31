@@ -35,9 +35,10 @@ Laws the schema rides on:
   `--brand-primary` onto `var(--brand-accent)` or `var(--brand-text)` on
   the card wrapper. A rebrand recolors custom widgets exactly like
   built-ins; no hard-coded color enters the tree.
-- **One feed engine.** The five fed built-ins (TrendArea, StatusDonut,
-  LeaderBars, HeatStrip, DeltaChip) accept an optional `data` prop; without
-  it they render their own `meta.data`, byte-for-byte as before.
+- **One feed engine.** The eight fed built-ins (TrendArea, StatusDonut,
+  LeaderBars, HeatStrip, DeltaChip, LiveOrders, TodayRevenue, CompletionGauge)
+  accept an optional `data` prop; without it they render their own
+  `meta.data`, byte-for-byte as before.
 
 ## Persistence and portability
 
