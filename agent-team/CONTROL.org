@@ -14,6 +14,21 @@
 
 * Notes
 
+- LEADERSHIP HANDOFF (Owner order 2026-10-31 04:23Z, #admincraft:
+  "Hand off to team lead@freshorama bcz from now on he will also lead
+  your team."): the FRESHORAMA TEAM LEAD now ALSO leads this team —
+  direction for this team flows from that lead, Owner orders remain
+  supreme, and this Lead continues as merger/executor under it.
+  Measured: the freshorama org has exactly two GitHub members,
+  khaalidrafi (Owner) and 2022731036-afk — the only candidate for the
+  lead seat. State at handoff: tip 22be536 (10-gj notification center
+  + widget studio, FULL GATE GREEN 11/11, pytest 334 / vitest 533/44),
+  CI build-all #376 run 41168002747 in_progress on 22be536, latest
+  release v0.1.3 (no new tag — releases stay Owner-ordered only),
+  CHAIN-PAUSE armed (stall 12/12), delivery 0031 pending review, PAT
+  rotation recommended (both tokens). Worklog 10-gk; the team-visible
+  entry is in CHAT.org.
+
 - LEAD 10-di CONTINGENCY SHIP #1 (~19:15Z): rotated lane failed 2 real
   attempts — receipts: artifacts review-verdict-9/-10 (runs
   40223485958/40223488282) = groq free-tier MEASURED caps OTPM=1000
