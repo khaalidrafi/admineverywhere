@@ -4,6 +4,8 @@
 
 <script lang="ts">
   import { widgets, widgetUnits } from "../widgets";
+  import { instances } from "../lib/widgets/instances";
+  import WidgetInstanceCard from "../components/WidgetInstanceCard.svelte";
   import { app } from "../lib/stores";
 </script>
 
@@ -12,7 +14,7 @@
     <h1 class="text-2xl font-semibold">Dashboard</h1>
     <p class="text-sm text-text/50">
       {$app.schema ? `${$app.schema.models.length} models · ` : ""}
-      {widgets.length} widgets · press <kbd class="rounded border border-text/20 bg-text/10 px-1.5 py-0.5 text-[11px]">Ctrl+K</kbd> for AI
+      {widgets.length} widgets{$instances.length ? ` + ${$instances.filter((i) => i.enabled).length} yours` : ""} · press <kbd class="rounded border border-text/20 bg-text/10 px-1.5 py-0.5 text-[11px]">Ctrl+K</kbd> for AI
     </p>
   </div>
 
@@ -27,6 +29,11 @@
           </div>
           <Widget />
         </div>
+      </div>
+    {/each}
+    {#each $instances.filter((i) => i.enabled) as inst (inst.id)}
+      <div class={inst.size === "lg" ? "md:col-span-2 xl:col-span-2" : ""}>
+        <WidgetInstanceCard {inst} />
       </div>
     {/each}
   </div>
