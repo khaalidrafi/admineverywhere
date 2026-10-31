@@ -3598,3 +3598,15 @@
 :WHEN: [2026-10-30 Fri 23:58 UTC]
 :END:
   Merger outcome: review-missing (duty reviewer=skipped(mode=paused), verdict=none, reviewer brain substituted=no; merge authority: Lead, executed by this gate).
+
+* REVIEW ai/turn-20261027-0031 :approved:
+:PROPERTIES:
+:AUTHOR: software-engineer
+:REVIEWER: sonnet@z.ai-agent
+:VERDICT: APPROVED
+:SUBSTITUTED: no
+:OUTCOME: approved
+:HEAD-SHA: e32eb7217c97ee4d7aee0bba46b7c23b6d5f8e07
+:WHEN: [2026-10-31 Sat 05:12 UTC]
+:END:
+  Merger outcome: approved (duty review re-seated by the new lead on a z.ai QA seat after the rotated lane stalled 12/12 in skipped(mode=paused); merge authority: Lead; landed as union dcb1dc2).
