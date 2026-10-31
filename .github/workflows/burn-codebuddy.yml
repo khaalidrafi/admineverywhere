@@ -55,15 +55,26 @@ jobs:
             n=$((n + 1))
             [ "$n" -gt "$ROUNDS" ] && break
             echo "=== burn task $n: ${task:0:80} ==="
-            timeout 1500 codebuddy -p "$task
+            for attempt in 1 2; do
+              timeout 1500 codebuddy -p "$task
 
-            Work in this repository (read-only analysis unless the task says
-            otherwise). Write your full work product to burn-out/task-$n.md and
-            also print it. Cite file:line evidence for every claim." \
-              -y --permission-mode bypassPermissions --max-turns 25 \
-              --model deepseek-v4.1-flash \
-              > "burn-out/task-$n.stdout.log" 2>&1 \
-              || echo "task $n rc=$? (continuing burn)" >> burn-out/FAILURES.txt
+              Work in this repository (read-only analysis unless the task says
+              otherwise). Write your full work product to burn-out/task-$n.md and
+              also print it. Cite file:line evidence for every claim." \
+                -y --permission-mode bypassPermissions --max-turns 25 \
+                --model deepseek-v4.1-flash < /dev/null \
+                > "burn-out/task-$n.stdout.log" 2>&1
+              rc=$?
+              # a real work product or a CLI transcript with content counts
+              if [ "$rc" = 0 ] && [ -s "burn-out/task-$n.stdout.log" ] \
+                 && ! grep -q "ETIMEDOUT\|network request timeout" "burn-out/task-$n.stdout.log"; then
+                break
+              fi
+              echo "task $n attempt $attempt rc=$rc — retrying in 20s" >> burn-out/FAILURES.txt
+              sleep 20
+            done
+            grep -q "ETIMEDOUT\|network request timeout" "burn-out/task-$n.stdout.log" 2>/dev/null \
+              && echo "task $n network-blocked after retries" >> burn-out/FAILURES.txt || true
           done < agent-team/BURN-QUEUE.md
           echo "burned $n tasks"
 
