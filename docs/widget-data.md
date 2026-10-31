@@ -63,8 +63,10 @@ strings — the feed resolves them at runtime against `$app.schema`.
 ## Shipped examples
 
 `TrendArea` (30-day area), `StatusDonut` (enum share), `LeaderBars` (top
-groups), `HeatStrip` (35-day strip), `DeltaChip` (7-day momentum, the one
-built-in that polls) — all auto-resolve, so they follow any DRF schema;
+groups), `HeatStrip` (35-day strip), `DeltaChip` (7-day momentum), `LiveOrders`
+(live count on a 15 s poll), `TodayRevenue` (latest day-bucket over its
+7-day window), `CompletionGauge` (the leading declared choice's fraction as a
+radial gauge) — all auto-resolve, so they follow any DRF schema;
 `ActivityChart` remains the line chart that predates the contract.
 
 ## Proof (mount-level, not module-level)
@@ -76,6 +78,16 @@ page cap keeps that suite green — the same failure shape `chatMount`/
 through their DOM and their requests:
 
 - `widgetMount.test.ts` — `HeatStrip` day cells, `DeltaChip` poll + timer death.
+- `fedTilesMount.test.ts` — the three fed tiles: `LiveOrders` (the server
+  count as one big tile, the engine's 15 s cadence — the first tick at once,
+  nothing early, the second exactly at 15 s, nothing after unmount — and the
+  zero-model refusal: a count feed is served by ANY model, so only an empty
+  schema refuses it), `TodayRevenue` (7 bars off the day keys with the last
+  bucket as the big number, the all-zero baseline, an instance override that
+  names an unknown model) and `CompletionGauge` (arc dasharray = the leading
+  choice's fraction, the top-5 fold into `(other)`, `grouped from N records`,
+  an em-dash on an empty feed). Every request is asserted against the
+  schema-discovered `listPath` with the token header, never a concatenated URL.
 - `chartMount.test.ts` — `StatusDonut` (dash/offset geometry from the group
   fraction, top-5 fold into `(other)`, total in the ring, nameable `empty`
   with ZERO requests, friendly `error`), `LeaderBars` (value-descending sort,

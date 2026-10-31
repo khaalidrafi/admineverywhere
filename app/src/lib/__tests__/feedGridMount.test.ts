@@ -74,11 +74,11 @@ const FEEDABLE: AdminSchema = (() => {
   return { models: [orders], byId: { orders } };
 })();
 
-/** No enum, no date: nothing can feed a bucket, group or delta widget. */
-const UNFEEDABLE: AdminSchema = (() => {
-  const notes = model("notes", "Note", [f("id", "number"), f("body", "string")]);
-  return { models: [notes], byId: { notes } };
-})();
+/** A schema that can feed NOTHING. With a count-fed tile in the registry
+ *  (LiveOrders: "any model" is enough to serve a count) that means literally
+ *  zero models — one bare model would feed the count tile happily, and this
+ *  sweep grades EVERY FED widget's refusal, not a hand-picked subset. */
+const UNFEEDABLE: AdminSchema = { models: [], byId: {} };
 
 /** Rows spread over both delta windows, with every status the enum declares. */
 function feedableRows() {
