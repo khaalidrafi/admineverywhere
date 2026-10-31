@@ -13,11 +13,15 @@
   import { app } from "../lib/stores";
   import { startWidgetFeed, type FeedState } from "../lib/widgets/feed";
 
+  /** The Widget studio overrides meta.data per instance; nothing passed here
+   *  means the module's own declaration, byte-for-byte as before. */
+  let { data = meta.data }: { data?: unknown } = $props();
+
   let state = $state<FeedState>({ status: "loading" });
   $effect(() => {
     const schema = $app.schema;
     if (!schema) return;
-    return startWidgetFeed(meta.data, (s) => (state = s), schema);
+    return startWidgetFeed(data, (s) => (state = s), schema);
   });
 
   const W = 560;
