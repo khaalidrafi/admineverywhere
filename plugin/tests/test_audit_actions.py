@@ -258,13 +258,13 @@ class TestAuditEndpoint:
         assert body["results"][0]["object_id"] == str(order.pk)
         assert body["results"][0]["object_type"] == "order"
 
-    def test_direct_post_actor_is_never_client_supplied(self, auth_api, user):
+    def test_direct_post_actor_is_never_client_supplied(self, auth_api, user, order):
         response = auth_api.post(
             audit_url(),
             {
                 "action": "order.flag",
                 "object_type": "order",
-                "object_id": "1",
+                "object_id": str(order.pk),
                 "actor": "admin",  # hostile payload — must be ignored
                 "summary": "spoofed",
             },
@@ -273,17 +273,100 @@ class TestAuditEndpoint:
         assert response.status_code == 201
         assert response.json()["actor"] == user.username  # request user, always
 
-    def test_direct_post_defaults(self, auth_api):
+    # ------------------------------------------------------------------
+    # FR-R007 phase b — the append surface is allowlisted. Until now a
+    # direct POST accepted ANY action/object pair ("invoice.sent" on
+    # nonexistent invoice #7 sailed through with 201), so any
+    # authenticated caller could plant arbitrary history in the triage
+    # screen — the forged-content half of the audit finding. Direct
+    # appends now accept only the allowlisted actions on real targets;
+    # server-side writers (record_flag, seed_demo) bypass the serializer
+    # and are untouched. Extension point: AuditEntry.CREATE_ALLOWLIST.
+    # ------------------------------------------------------------------
+    def test_direct_post_allowlisted_action_on_a_real_order_is_201(self, auth_api, order):
+        response = auth_api.post(
+            audit_url(),
+            {
+                "action": "order.flag",
+                "object_type": "order",
+                "object_id": str(order.pk),
+                "summary": "spotted by triage",
+            },
+            format="json",
+        )
+        assert response.status_code == 201, response.content
+        body = response.json()
+        assert body["action"] == "order.flag"
+        assert body["object_id"] == str(order.pk)
+        assert body["summary"] == "spotted by triage"
+
+    def test_direct_post_unknown_action_is_400(self, auth_api, order):
         response = auth_api.post(
             audit_url(),
             {"action": "invoice.sent", "object_type": "invoice", "object_id": "7"},
             format="json",
         )
-        assert response.status_code == 201
-        body = response.json()
-        assert body["summary"] == ""
-        assert body["data"] is None
-        assert body["actor"] is None or isinstance(body["actor"], str)
+        assert response.status_code == 400, response.content
+        assert "action" in response.json()
+
+    def test_direct_post_missing_action_is_400(self, auth_api, order):
+        response = auth_api.post(
+            audit_url(),
+            {"object_type": "order", "object_id": str(order.pk)},
+            format="json",
+        )
+        assert response.status_code == 400, response.content
+
+    def test_direct_post_wrong_object_type_is_400(self, auth_api, order):
+        response = auth_api.post(
+            audit_url(),
+            {"action": "order.flag", "object_type": "invoice", "object_id": str(order.pk)},
+            format="json",
+        )
+        assert response.status_code == 400, response.content
+        assert "object_type" in response.json()
+
+    def test_direct_post_unknown_order_is_400(self, auth_api):
+        response = auth_api.post(
+            audit_url(),
+            {"action": "order.flag", "object_type": "order", "object_id": "999999"},
+            format="json",
+        )
+        assert response.status_code == 400, response.content
+        assert "object_id" in response.json()
+
+    def test_direct_post_non_numeric_order_id_is_400(self, auth_api):
+        response = auth_api.post(
+            audit_url(),
+            {"action": "order.flag", "object_type": "order", "object_id": "not-a-pk"},
+            format="json",
+        )
+        assert response.status_code == 400, response.content
+        assert "object_id" in response.json()
+
+    def test_allowlist_is_the_live_extension_point(self, auth_api, order, monkeypatch):
+        """A downstream host extends CREATE_ALLOWLIST and the view follows.
+
+        The validation must read the class attribute at request time —
+        hard-coding the accepted pairs in the serializer would freeze the
+        reference rig's vocabulary into every fork.
+        """
+        from shop.models import AuditEntry
+
+        monkeypatch.setattr(
+            AuditEntry, "CREATE_ALLOWLIST", {"shipment.loaded": "order"}
+        )
+        response = auth_api.post(
+            audit_url(),
+            {
+                "action": "shipment.loaded",
+                "object_type": "order",
+                "object_id": str(order.pk),
+            },
+            format="json",
+        )
+        assert response.status_code == 201, response.content
+        assert response.json()["action"] == "shipment.loaded"
 
     @pytest.mark.parametrize("method", ["put", "patch", "delete"])
     def test_audit_list_rejects_mutations_with_405(self, auth_api, method):
