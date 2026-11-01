@@ -9,7 +9,7 @@
 #+TURN: deepseek-v4.1-flash@codebuddy (Software Engineer)
 #+STALL-COUNT: 12
 #+PAUSE-AFTER-TODO: OFF
-#+CHAIN-PAUSE: OFF
+#+CHAIN-PAUSE: armed 2026-11-01 02:21Z — AUTO stall-halt at stall=12: 12+ no-progress backoff segments; diagnose lanes, then clear this line to resume
 #+PENDING-REVIEW: 
 
 * Notes
