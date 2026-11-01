@@ -58,7 +58,7 @@ jobs:
           npm install -g @tencent-ai/codebuddy-code
           codebuddy --version
 
-      - name: Burn tasks (one codebuddy run per task line)
+      - name: Burn tasks (one codebuddy run per %%%TASK%%%-delimited task)
         env:
           CODEBUDDY_AUTH_TOKEN: ${{ secrets.CODEBUDDY_AUTH_TOKEN }}
           CODEBUDDY_IS_SANDBOX: "1"
@@ -66,12 +66,15 @@ jobs:
         run: |
           set -u
           mkdir -p burn-out
+          # The WHOLE dispatch input is one multi-line brief per task; tasks
+          # are separated by a line containing only %%%TASK%%%. Splitting on
+          # newlines (the old loop) shredded multi-line briefs into garbage
+          # one-line "tasks" — run 41234805041 evidence.
           n=0
           while IFS= read -r task; do
             [ -z "$task" ] && continue
-            case "$task" in '#'*) continue ;; esac
             n=$((n + 1))
-            echo "=== fix task $n: ${task:0:90} ==="
+            echo "=== fix task $n: $(echo "$task" | head -c 90 | tr '\n' ' ') ==="
             for attempt in 1 2; do
               timeout 1500 codebuddy -p "$task
 
@@ -86,15 +89,15 @@ jobs:
                 > "burn-out/task-$n.stdout.log" 2>&1
               rc=$?
               if [ "$rc" = 0 ] && [ -s "burn-out/task-$n.stdout.log" ] \
-                 && ! grep -q "ETIMEDOUT\|network request timeout" "burn-out/task-$n.stdout.log"; then
+                 && ! grep -q "ETIMEDOUT\|network request timeout\|502" "burn-out/task-$n.stdout.log"; then
                 break
               fi
               echo "task $n attempt $attempt rc=$rc — retrying in 20s" >> burn-out/FAILURES.txt
               sleep 20
             done
-            grep -q "ETIMEDOUT\|network request timeout" "burn-out/task-$n.stdout.log" 2>/dev/null \
+            grep -q "ETIMEDOUT\|network request timeout\|502" "burn-out/task-$n.stdout.log" 2>/dev/null \
               && echo "task $n network-blocked after retries" >> burn-out/FAILURES.txt || true
-          done <<< "$TASKS"
+          done <<< "$(printf '%s' "$TASKS" | awk 'BEGIN{RS="%%%TASK%%%"} NF')"
           echo "burned $n fix tasks"
           git config user.name "agent-team-ci"
           git config user.email "agent-team-ci@users.noreply.github.com"
