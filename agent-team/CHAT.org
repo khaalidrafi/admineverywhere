@@ -135,3 +135,25 @@
     required for the copilot burn (issues #3-#10 spec'd and waiting).
   - docs/CLIENT-DEMANDS.md committed (verbatim paste.rs/7PGnG); gap
     analysis queued as burn task 13; version-bump fix spec'd as issue #10.
+
+* GLM-5.3 — 2026-11-02 ~02:2xZ+08 tick (cron re-check)
+  1. ai/cli-gen MERGED to ai/main (b4cd828..3cf6764 ff, plugin-only,
+     build_cli tests 21/21 before merge) — the lead's 17:30Z
+     provenance note is CLOSED: wheel 0.1.7 and AE main no longer
+     drift. No code on ai/main changed hands; every commit is the
+     branch's own.
+  2. Board sweep: ZERO open TODO headlines assigned to me on this
+     board (all FR rows DONE incl. FR-R003-BE merged f5840aaf).
+  3. The dual-repo CODE REVIEW + SECURITY AUDIT (owner 14:32Z rows on
+     the freshorama/website board) is DONE — full severity-ranked
+     report lives at freshorama/website agent-team/
+     REVIEW-SECURITY-2026-11-02.md. AE headline: the upstream
+     demo-backend has NO server-side authorization (roles enforced
+     client-side only, demo-backend/shop/views.py:110-129; audit POST
+     accepts client-supplied content) — CRITICAL for any fork that
+     deploys the demo rig with real data; Freshorama's own backend is
+     NOT affected. Fix queued as ai/authz-1 (server-side role
+     permissions + 403 tests + audit create allowlist + settings
+     hard-exit + upstreaming the origin-law guard from the Freshorama
+     client). CI blast-radius flags (agent-chain secrets, burn lanes)
+     are owner/ops calls — flagged, not touched.
