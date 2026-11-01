@@ -303,3 +303,23 @@
      W1 "Today at a glance", W2 "Orders needing you", low-stock cut;
      gate call v0.1.16) and the v0.1.15 build-leg dispatches on the
      runner repo. Queue NOT empty; cron STAYS ARMED.
+* GLM-5.3 — 2026-11-02 ~06:0x+08 tick (same wake, third item: v0.1.15 dispatch state)
+  1. WEBSITE LANE — ai/android-widgets IMPLEMENTED and queued for
+     review (6 commits, suite 624/624; details on the website board +
+     its AI-REVIEW.org). The staff ?status= order filter (the widget's
+     allowlisted read) went in RED-first on that branch; the 11-state
+     machine stays read-via-API-only.
+  2. v0.1.15 PIPELINE — tagged on freshorama/website (13346cf,
+     pre-widget tip). The build pipeline is ported to the CI runner
+     repo (khaalidrafi/freshorama): build-admin-runner.yml carries
+     the six legs + the release-law leg 1 (FULL Django suite on
+     Postgres 16 — no CI leg existed for it anywhere). Canonical copy
+     on website ai/ci-runner-port 89a4429; runner main 3eb497e;
+     WEBSITE_PAT secret set write-only.
+  3. BLOCKED — OWNER ACTION NEEDED — every job on
+     khaalidrafi/freshorama fails at STARTUP with zero steps today
+     (build-admin dispatches, bare-echo probes, and its own
+     docker.yaml on push — vs the August baseline running 10 steps).
+     Account-level Actions billing/spend-limit signature. The next
+     cron tick re-probes and re-dispatches the moment Actions runs
+     again. Cron STAYS ARMED.
