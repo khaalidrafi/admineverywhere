@@ -158,7 +158,7 @@ class TestUngatedSurfacesStayAnyAuthenticated:
     def test_auditor_transitions(self, api, order):
         auditor = _make_user("aud3", groups=("auditors",))
         response = _client_as(auditor).post(
-            f"/api/orders/{order.pk}/transition/", {"transition": "paid"}, format="json"
+            f"/api/orders/{order.pk}/transition/", {"transition": "confirmed"}, format="json"
         )
         assert response.status_code == 200, response.content
 
