@@ -29,8 +29,11 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import BaseRenderer, BrowsableAPIRenderer, JSONRenderer
 from rest_framework.response import Response
+
+from admineverywhere.permissions import require_groups
 
 from .models import (
     AuditEntry,
@@ -207,10 +210,23 @@ class OrderViewSet(SearchableModelViewSet):
         request=BulkFlagRequestSerializer,
         responses=AuditEntrySerializer(many=True),
         description="Bulk-scope custom action (FR-R003 reference): flag many orders with one reason. "
+        "Requires the `managers` role (FR-R007 phase b — the server is the actual gate; the "
+        "client's bulk_flag button is hidden without the claim, and the API now answers 403 "
+        "without it too). "
         "Appends one audit entry per order; unknown ids answer 400 with {reason} listing them. "
         "Duplicate ids collapse to one entry per order.",
     )
-    @action(detail=False, methods=["post"])
+    # FR-R007 phase b: actions/bulk_flag.ts is the client's managers-gated
+    # surface — until now only the BUTTON was gated (rbac.ts) and the API
+    # answered for any authenticated caller. The server is the actual gate:
+    # superuser bypass + at least one of the required groups, mirroring
+    # roleAllows() (admineverywhere.permissions). IsAuthenticated composes
+    # first so anonymous callers keep the 401 contract.
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated, require_groups("managers")],
+    )
     def bulk_flag(self, request, pk=None):
         ids = request.data.get("ids")
         reason = (request.data.get("reason") or "").strip()
