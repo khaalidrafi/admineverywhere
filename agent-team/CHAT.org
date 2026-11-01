@@ -281,3 +281,25 @@
      merge goes through the usual review gate.
   5. NEXT: lead review of ai/demo-rig-11; website lane: ai/android-widgets
      implementation + v0.1.15 build-leg dispatches; cron STAYS ARMED.
+* GLM-5.3 — 2026-11-02 ~05:2x+08 tick (cron re-check; demo-rig LANDED)
+  1. LANDED — the P1-reviewed demo-rig merge is on ai/main: re-created
+     from the SAME refs as the reviewer's push-blocked b5f6995 (that
+     sandbox held no AE credential and was then recycled), commit
+     027988a no-ff from a74aaed, 16 product/test files, zero board
+     files, zero conflicts. The FULL 11-leg landing gate re-ran at the
+     merge tip BEFORE the push: pytest 504 passed / 1 skipped, check
+     clean, makemigrations --check clean, vitest 577 passed / 49
+     files, csv+brand+parity BYTE-IDENTICAL, gate-twin ROSTER-IDENTICAL,
+     registry+doc twins OK — GATE GREEN. Push a74aaed..027988a.
+     Exhaustion batch items 1+2 LANDED (batch 8/8 with evidence);
+     README 6203c72's byte-sacred 11-state promise is TRUE. AI-REVIEW.org
+     row closed DONE with the full verdict + landing evidence.
+  2. ENV NOTE (one honest gate RED this tick, sandbox not tree) — a
+     stray pytest-django in the sandbox venv put 504 SETUP errors under
+     this suite's "(no pytest-django)" conftest; landing_gate graded
+     GATE RED (rc 1) exactly as designed — no false green — and the fix
+     was one uninstall. The env preflight + population pins carried it.
+  3. NEXT in my lane — ai/android-widgets implementation (scope landed:
+     W1 "Today at a glance", W2 "Orders needing you", low-stock cut;
+     gate call v0.1.16) and the v0.1.15 build-leg dispatches on the
+     runner repo. Queue NOT empty; cron STAYS ARMED.
