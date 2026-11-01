@@ -77,6 +77,50 @@ class AuditEntrySerializer(serializers.ModelSerializer):
     def get_actor(self, obj) -> str | None:
         return obj.actor.username if obj.actor_id else None
 
+    def validate(self, attrs):
+        """FR-R007 phase b — the append surface is allowlisted.
+
+        Direct POST /api/audit/ used to accept any action/object pair, so
+        any authenticated caller could plant arbitrary history in the
+        triage screen (the forged-content half of the 2026-11-02 audit
+        finding). Validation reads AuditEntry.CREATE_ALLOWLIST at request
+        time (the documented extension point) and answers field-level
+        errors — the 400 shape the thin client renders per field
+        (api.ts: "status:400 -> validation errors (field-level display)").
+        Server-side writers bypass this serializer entirely.
+        """
+        allowlist = AuditEntry.CREATE_ALLOWLIST
+        action = attrs.get("action", "")
+        if action not in allowlist:
+            raise serializers.ValidationError(
+                {
+                    "action": [
+                        f"unknown action '{action}' — direct audit appends accept: "
+                        f"{sorted(allowlist)}"
+                    ]
+                }
+            )
+        expected_type = allowlist[action]
+        object_type = attrs.get("object_type", "")
+        if object_type != expected_type:
+            raise serializers.ValidationError(
+                {
+                    "object_type": [
+                        f"action '{action}' audits object_type '{expected_type}', not '{object_type}'"
+                    ]
+                }
+            )
+        object_id = str(attrs.get("object_id", "") or "").strip()
+        if not object_id.isdigit():
+            raise serializers.ValidationError(
+                {"object_id": [f"object_id must be the numeric id of an existing {expected_type}"]}
+            )
+        if expected_type == "order" and not Order.objects.filter(pk=object_id).exists():
+            raise serializers.ValidationError(
+                {"object_id": [f"no order #{object_id} — audit appends must name an existing target"]}
+            )
+        return attrs
+
 
 class OrderHistorySerializer(serializers.ModelSerializer):
     actor = serializers.SerializerMethodField(
