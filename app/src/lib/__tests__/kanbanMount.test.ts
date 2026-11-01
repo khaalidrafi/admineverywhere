@@ -40,7 +40,7 @@ const PENDING_ROW = { id: 7, status: "pending", total: "12.50", customer: 3, cre
 const PAGE = { count: 1, results: [PENDING_ROW] };
 
 /** Route by URL, and record the METHOD + body so the test can name the bytes. */
-function route(page: any = PAGE, transition: { status: number; body: any } = { status: 200, body: { ...PENDING_ROW, status: "paid" } }) {
+function route(page: any = PAGE, transition: { status: number; body: any } = { status: 200, body: { ...PENDING_ROW, status: "confirmed" } }) {
   mockFetch.mockImplementation(async (url: string, init?: any) => {
     const u = String(url);
     if (u.includes("/transition/")) return reply(transition.status, transition.body);
@@ -119,9 +119,16 @@ describe("mounted kanban board — columns, keyboard path, wire", () => {
     const labels = [...host.querySelectorAll("section")].map((s) => s.getAttribute("aria-label"));
     expect(labels).toEqual([
       "pending column, 1 record",
-      "paid column, 0 records",
+      "confirmed column, 0 records",
+      "processing column, 0 records",
+      "ready_to_ship column, 0 records",
       "shipped column, 0 records",
-      "refunded column, 0 records",
+      "in_transit column, 0 records",
+      "delivered column, 0 records",
+      "delivery_failed column, 0 records",
+      "returned column, 0 records",
+      "on_hold column, 0 records",
+      "cancelled column, 0 records",
     ]);
   });
 
@@ -137,30 +144,38 @@ describe("mounted kanban board — columns, keyboard path, wire", () => {
 
     const select = host.querySelector<HTMLSelectElement>("select[aria-label^='Move ']")!;
     const options = [...select.options].map((o) => ({ value: o.value, disabled: o.disabled }));
-    // pending's only legal target is paid — the UI pre-filters, the server stays authority
+    // pending's legal targets are confirmed/on_hold/cancelled — the UI
+    // pre-filters, the server stays authority
     expect(options).toEqual([
       { value: "", disabled: false },
       { value: "pending", disabled: true },
-      { value: "paid", disabled: false },
+      { value: "confirmed", disabled: false },
+      { value: "processing", disabled: true },
+      { value: "ready_to_ship", disabled: true },
       { value: "shipped", disabled: true },
-      { value: "refunded", disabled: true },
+      { value: "in_transit", disabled: true },
+      { value: "delivered", disabled: true },
+      { value: "delivery_failed", disabled: true },
+      { value: "returned", disabled: true },
+      { value: "on_hold", disabled: false },
+      { value: "cancelled", disabled: false },
     ]);
 
     flushSync(() => {
-      select!.value = "paid";
+      select!.value = "confirmed";
       select!.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    await settleTo(toastHost, "7 → paid");
+    await settleTo(toastHost, "7 → confirmed");
 
-    expect(bodies("/transition/")).toEqual(['{"transition":"paid"}']);
+    expect(bodies("/transition/")).toEqual(['{"transition":"confirmed"}']);
     expect(urls().filter((u) => u.includes("/transition/"))).toEqual([
       "http://api.test/api/orders/7/transition/",
     ]);
     // the board re-renders the moved record into its new column
     await vi.waitFor(() => {
       flushSync(() => {});
-      const paid = [...host.querySelectorAll("section")].find((s) => s.getAttribute("aria-label")?.startsWith("paid"));
-      expect(paid?.getAttribute("aria-label")).toBe("paid column, 1 record");
+      const confirmed = [...host.querySelectorAll("section")].find((s) => s.getAttribute("aria-label")?.startsWith("confirmed"));
+      expect(confirmed?.getAttribute("aria-label")).toBe("confirmed column, 1 record");
     });
   });
 
@@ -177,7 +192,7 @@ describe("mounted kanban board — columns, keyboard path, wire", () => {
     const card = host.querySelector("article")!;
     expect(card.getAttribute("draggable")).toBe("true");
     const sections = [...host.querySelectorAll("section")];
-    const paidCol = sections.find((s) => s.getAttribute("aria-label")?.startsWith("paid"))!;
+    const confirmedCol = sections.find((s) => s.getAttribute("aria-label")?.startsWith("confirmed"))!;
     const shippedCol = sections.find((s) => s.getAttribute("aria-label")?.startsWith("shipped"))!;
 
     flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
@@ -193,12 +208,12 @@ describe("mounted kanban board — columns, keyboard path, wire", () => {
 
     // legal target: the drag ends there and the transition fires once
     flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
-    dropOn(paidCol);
+    dropOn(confirmedCol);
     await vi.waitFor(() => {
       flushSync(() => {});
       expect(urls().filter((u) => u.includes("/transition/")).length).toBe(1);
     });
-    expect(bodies("/transition/")).toEqual(['{"transition":"paid"}']);
+    expect(bodies("/transition/")).toEqual(['{"transition":"confirmed"}']);
   });
 
   it("a record with an undeclared status lands in Unassigned, visible and read-only", async () => {
@@ -290,11 +305,11 @@ describe("KanbanBoard mounted alone — its drop guard answers to no one", () =>
     const onmove = vi.fn();
     const { column, card } = renderBoard(onmove);
     flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
-    const legal = column("paid");
+    const legal = column("confirmed");
     legal.dispatchEvent(dragEvent("dragover"));
     flushSync(() => legal.dispatchEvent(dragEvent("drop")));
     expect(onmove).toHaveBeenCalledTimes(1);
-    expect(onmove.mock.calls[0][1]).toBe("paid");
+    expect(onmove.mock.calls[0][1]).toBe("confirmed");
     expect(String(onmove.mock.calls[0][0].id)).toBe("7");
     // drop() calls endDrag, so a second drop on the same column is inert
     flushSync(() => legal.dispatchEvent(dragEvent("drop")));
@@ -306,10 +321,10 @@ describe("KanbanBoard mounted alone — its drop guard answers to no one", () =>
     const { column, card } = renderBoard(onmove);
     flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
     const overLegal = dragEvent("dragover");
-    column("paid").dispatchEvent(overLegal);
+    column("confirmed").dispatchEvent(overLegal);
     expect(overLegal.defaultPrevented).toBe(true);
     const overIllegal = dragEvent("dragover");
-    column("refunded").dispatchEvent(overIllegal);
+    column("returned").dispatchEvent(overIllegal);
     expect(overIllegal.defaultPrevented).toBe(false);
   });
 });

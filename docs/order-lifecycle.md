@@ -233,7 +233,7 @@ documents `transition` as `[post]` and `history` as `[get]`, which is the eviden
   profile (`COMPONENT_SPLIT_REQUEST` since 2026-10-21, measured zero drift on
   all 16 paths), so the four rig modules' schema tests generate a
   fixture-consistent document too.
-- Suites: `pytest 504` / `vitest 575` (49 files) — the counts
+- Suites: `pytest 504` / `vitest 577` (49 files) — the counts
   `scripts/landing_gate.py` pins (`EXPECTED_PYTEST`/`EXPECTED_VITEST`/
   `EXPECTED_VITEST_FILES`), re-measured 2026-11-02 after the 11-state
   machine landing (pytest grew by the explicit 29-legal/39-illegal
