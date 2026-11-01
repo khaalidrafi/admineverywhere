@@ -78,28 +78,31 @@ const transitionUrls = () => urls().filter((u) => u.includes("/transition/"));
 
 describe("mounted lifecycle renderer — the bytes on the wire", () => {
   it("binds the discovered transition URL and sends only the target", async () => {
-    routeOrders(PAGE, { status: 200, body: { ...PENDING_ROW, status: "paid" } });
+    routeOrders(PAGE, { status: 200, body: { ...PENDING_ROW, status: "confirmed" } });
     const { host, toastHost } = render(LIVE);
     await vi.waitFor(() => {
       flushSync(() => {});
-      expect(host.textContent).toContain("paid");
+      expect(host.textContent).toContain("confirmed");
     });
 
-    // pending's ONLY legal target — shipped/refunded must not be offered
+    // pending's legal targets, straight from the registry — the illegal
+    // jumps (shipped, delivered, …) must not be offered at all
     const buttons = [...host.querySelectorAll("button")].map((b) => b.textContent?.trim());
-    expect(buttons.filter((t) => t?.startsWith("→"))).toEqual(["→ paid"]);
+    expect(buttons.filter((t) => t?.startsWith("→"))).toEqual([
+      "→ confirmed", "→ on_hold", "→ cancelled",
+    ]);
 
-    const paid = [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === "→ paid")!;
-    paid.click();
+    const confirm = [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === "→ confirmed")!;
+    confirm.click();
     await vi.waitFor(() => {
       flushSync(() => {});
-      expect(toastHost.textContent).toContain("Transitioned to paid");
+      expect(toastHost.textContent).toContain("Transitioned to confirmed");
     });
 
     expect(transitionUrls()).toEqual(["http://api.test/api/orders/7/transition/"]);
     const init = mockFetch.mock.calls.find((c) => String(c[0]).includes("/transition/"))![1];
     expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body)).toEqual({ transition: "paid" });
+    expect(JSON.parse(init.body)).toEqual({ transition: "confirmed" });
     expect(init.headers.Authorization).toBe("Token tok");
   });
 
@@ -107,14 +110,14 @@ describe("mounted lifecycle renderer — the bytes on the wire", () => {
     const REASON = "pending → shipped is not allowed by the lifecycle";
     routeOrders(PAGE, { status: 409, body: { reason: REASON } });
     const { host, toastHost } = render(LIVE);
-    let paid: HTMLButtonElement | undefined;
+    let confirm: HTMLButtonElement | undefined;
     await vi.waitFor(() => {
       flushSync(() => {});
-      paid = [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === "→ paid") as HTMLButtonElement;
-      expect(paid).toBeTruthy();
+      confirm = [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === "→ confirmed") as HTMLButtonElement;
+      expect(confirm).toBeTruthy();
     });
 
-    paid!.click();
+    confirm!.click();
     await vi.waitFor(() => {
       flushSync(() => {});
       expect(toastHost.textContent).toContain(REASON);
@@ -153,7 +156,7 @@ describe("mounted lifecycle renderer — the bytes on the wire", () => {
       if (u.includes("/history/")) {
         return reply(200, [
           { id: 1, order: 7, from_status: "", to_status: "pending", actor: null, created_at: "2026-10-17T09:00:00Z" },
-          { id: 2, order: 7, from_status: "pending", to_status: "paid", actor: "admin", created_at: "2026-10-17T11:30:00Z" },
+          { id: 2, order: 7, from_status: "pending", to_status: "confirmed", actor: "admin", created_at: "2026-10-17T11:30:00Z" },
         ]);
       }
       if (u.includes("/audit/")) return reply(200, { count: 0, results: [] });
@@ -176,7 +179,7 @@ describe("mounted lifecycle renderer — the bytes on the wire", () => {
     expect(urls().some((u) => u === "http://api.test/api/orders/7/history/")).toBe(true);
     // oldest first, as the contract pins it — the render order follows the body
     const trail = host.textContent ?? "";
-    expect(trail.indexOf("created as pending")).toBeLessThan(trail.indexOf("pending → paid"));
+    expect(trail.indexOf("created as pending")).toBeLessThan(trail.indexOf("pending → confirmed"));
   });
 
   it("the sub-view's audit half reads the DISCOVERED path, and a schema without it reads nothing", async () => {
