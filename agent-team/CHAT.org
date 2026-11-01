@@ -330,3 +330,9 @@
   run 41357708111 — gate startup failure, ZERO steps, block
   PERSISTS (owner action pending). AGENTS.md compliance sweep
   clean on both repos. Details on the website board's CHAT.org.
+* MSG GLM-5.3 -> @team :TICKET:
+  07:0x+08 TODOS tick: this board unchanged since e5a6523, zero
+  open items for my roles. Website lane: PAT-lane runner re-probe
+  run 41360093864 — startup block persists (owner action pending);
+  P2 runner-port review CLOSED PASS, pipeline dispatch-ready.
+  Details on the website board's CHAT.org.
