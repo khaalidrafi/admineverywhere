@@ -60,7 +60,11 @@ const ORDERS = modelSpec(
     field("id", "number"),
     field("customer", "fk"),
     field("total", "number"),
-    field("status", "enum", ["pending", "paid", "shipped", "refunded"]),
+    field("status", "enum", [
+      "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+      "in_transit", "delivered", "delivery_failed", "returned", "on_hold",
+      "cancelled",
+    ]),
   ],
   "name",
   ORDERS_LIFECYCLE,
@@ -77,7 +81,11 @@ const TRANSITION_AXIS: ResolvedAxis = {
   modelId: "orders",
   field: "status",
   via: "transition",
-  columns: ["pending", "paid", "shipped", "refunded"],
+  columns: [
+    "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+    "in_transit", "delivered", "delivery_failed", "returned", "on_hold",
+    "cancelled",
+  ],
 };
 
 const FREE_AXIS: ResolvedAxis = {
@@ -99,7 +107,11 @@ describe("kanban axis is declared, never guessed", () => {
     expect(axis).not.toBeNull();
     expect(axis!.field).toBe("status");
     expect(axis!.via).toBe("transition");
-    expect(axis!.columns).toEqual(["pending", "paid", "shipped", "refunded"]);
+    expect(axis!.columns).toEqual([
+      "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+      "in_transit", "delivered", "delivery_failed", "returned", "on_hold",
+      "cancelled",
+    ]);
   });
 
   it("never infers column order from the schema enum list", () => {
@@ -109,14 +121,18 @@ describe("kanban axis is declared, never guessed", () => {
       "orders",
       [
         field("id", "number"),
-        field("status", "enum", ["refunded", "pending", "shipped", "paid"]),
+        field("status", "enum", [
+          "cancelled", "delivered", "pending", "returned", "confirmed",
+        ]),
       ],
       "name",
       ORDERS_LIFECYCLE,
     );
-    expect(resolveAxis(shuffled)!.columns).toEqual(
-      ["pending", "paid", "shipped", "refunded"],
-    );
+    expect(resolveAxis(shuffled)!.columns).toEqual([
+      "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+      "in_transit", "delivered", "delivery_failed", "returned", "on_hold",
+      "cancelled",
+    ]);
   });
 
   it("refuses a transition axis whose endpoint the API does not document", () => {
@@ -126,7 +142,9 @@ describe("kanban axis is declared, never guessed", () => {
     // lifecycle field (docs/independent-enums.md §6).
     const undocumented = modelSpec("orders", [
       field("id", "number"),
-      field("status", "enum", ["pending", "paid", "shipped", "refunded"]),
+      field("status", "enum", [
+        "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+      ]),
     ]);
     expect(resolveAxis(undocumented)).toBeNull();
     expect(axisProblem(undocumented, kanbanAxes)).toMatch(/does not document/);
@@ -213,17 +231,19 @@ describe("kanban axis is declared, never guessed", () => {
 describe("boardColumns", () => {
   const rows = [
     { id: 1, status: "pending" },
-    { id: 2, status: "paid" },
+    { id: 2, status: "confirmed" },
     { id: 3, status: "pending" },
     { id: 4, status: "" },
     { id: 5, status: null },
-    { id: 6, status: "cancelled" }, // a value outside the declared set
+    { id: 6, status: "teleported" }, // a value outside the declared set
   ];
 
   it("shows every declared column, empty ones included", () => {
     const cols = boardColumns(rows, TRANSITION_AXIS);
     expect(cols.map((c) => c.key)).toEqual([
-      "pending", "paid", "shipped", "refunded", UNASSIGNED,
+      "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+      "in_transit", "delivered", "delivery_failed", "returned", "on_hold",
+      "cancelled", UNASSIGNED,
     ]);
     expect(cols.find((c) => c.key === "shipped")!.rows).toEqual([]);
   });
@@ -239,16 +259,24 @@ describe("boardColumns", () => {
   });
 
   it("drops the unassigned column when nothing needs it", () => {
-    const cols = boardColumns([{ id: 1, status: "paid" }], TRANSITION_AXIS);
-    expect(cols.map((c) => c.key)).toEqual(["pending", "paid", "shipped", "refunded"]);
+    const cols = boardColumns([{ id: 1, status: "confirmed" }], TRANSITION_AXIS);
+    expect(cols.map((c) => c.key)).toEqual([
+      "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+      "in_transit", "delivered", "delivery_failed", "returned", "on_hold",
+      "cancelled",
+    ]);
   });
 });
 
 describe("reachableColumns", () => {
   it("offers only the machine's next states on a lifecycle axis", () => {
-    expect(reachableColumns(TRANSITION_AXIS, "pending")).toEqual(["paid"]);
-    expect(reachableColumns(TRANSITION_AXIS, "paid")).toEqual(["shipped", "refunded"]);
-    expect(reachableColumns(TRANSITION_AXIS, "refunded")).toEqual([]);
+    expect(reachableColumns(TRANSITION_AXIS, "pending")).toEqual([
+      "confirmed", "on_hold", "cancelled",
+    ]);
+    expect(reachableColumns(TRANSITION_AXIS, "confirmed")).toEqual([
+      "processing", "ready_to_ship", "on_hold", "cancelled",
+    ]);
+    expect(reachableColumns(TRANSITION_AXIS, "returned")).toEqual([]);
   });
 
   it("offers every other value on a free enum", () => {
@@ -258,8 +286,8 @@ describe("reachableColumns", () => {
 
 describe("planMove — exactly one request body per drop", () => {
   it("a legal lifecycle drop posts the R-001 transition, nothing else", () => {
-    const plan = planMove(TRANSITION_AXIS, { id: 7, status: "pending" }, "paid");
-    expect(plan).toEqual({ ok: true, via: "transition", column: "paid", body: { transition: "paid" } });
+    const plan = planMove(TRANSITION_AXIS, { id: 7, status: "pending" }, "confirmed");
+    expect(plan).toEqual({ ok: true, via: "transition", column: "confirmed", body: { transition: "confirmed" } });
   });
 
   it("refuses an illegal lifecycle drop before the network sees it", () => {
@@ -267,28 +295,28 @@ describe("planMove — exactly one request body per drop", () => {
     expect(plan.ok).toBe(false);
     if (!plan.ok) {
       expect(plan.reason).toMatch(/illegal transition: 'pending' -> 'shipped'/);
-      expect(plan.reason).toMatch(/allowed from current state: paid/);
+      expect(plan.reason).toMatch(/allowed from current state: confirmed, on_hold, cancelled/);
     }
   });
 
   it("names the allowed set for a terminal state instead of leaving it blank", () => {
-    const plan = planMove(TRANSITION_AXIS, { id: 7, status: "refunded" }, "paid");
+    const plan = planMove(TRANSITION_AXIS, { id: 7, status: "returned" }, "confirmed");
     expect(!plan.ok && plan.reason).toMatch(/none — terminal/);
   });
 
   it("treats a same-column drop as a no-op rejection", () => {
-    const plan = planMove(TRANSITION_AXIS, { id: 7, status: "paid" }, "paid");
-    expect(!plan.ok && plan.reason).toMatch(/already in "paid"/);
+    const plan = planMove(TRANSITION_AXIS, { id: 7, status: "confirmed" }, "confirmed");
+    expect(!plan.ok && plan.reason).toMatch(/already in "confirmed"/);
   });
 
   it("refuses the unassigned bucket and any undeclared column", () => {
-    expect(planMove(TRANSITION_AXIS, { id: 7, status: "paid" }, UNASSIGNED).ok).toBe(false);
-    const offBoard = planMove(TRANSITION_AXIS, { id: 7, status: "paid" }, "cancelled");
+    expect(planMove(TRANSITION_AXIS, { id: 7, status: "confirmed" }, UNASSIGNED).ok).toBe(false);
+    const offBoard = planMove(TRANSITION_AXIS, { id: 7, status: "confirmed" }, "teleported");
     expect(!offBoard.ok && offBoard.reason).toMatch(/not a declared column/);
   });
 
   it("refuses a record without an id", () => {
-    const plan = planMove(TRANSITION_AXIS, { status: "pending" }, "paid");
+    const plan = planMove(TRANSITION_AXIS, { status: "pending" }, "confirmed");
     expect(!plan.ok && plan.reason).toMatch(/no id/);
   });
 
@@ -304,7 +332,7 @@ describe("planMove — exactly one request body per drop", () => {
   });
 
   it("a transition plan never leaks the status field into the body", () => {
-    const plan = planMove(TRANSITION_AXIS, { id: 7, status: "pending" }, "paid");
+    const plan = planMove(TRANSITION_AXIS, { id: 7, status: "pending" }, "confirmed");
     expect(plan.ok && plan.body).not.toHaveProperty("status");
   });
 });
@@ -328,7 +356,11 @@ describe("against the real drf-spectacular fixture", () => {
     expect(axis).not.toBeNull();
     expect(axis!.field).toBe("status");
     expect(axis!.via).toBe("transition");
-    expect(axis!.columns).toEqual(["pending", "paid", "shipped", "refunded"]);
+    expect(axis!.columns).toEqual([
+      "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+      "in_transit", "delivered", "delivery_failed", "returned", "on_hold",
+      "cancelled",
+    ]);
   });
 
   it("products gets a FREE-ENUM board — its own choices, no lifecycle in sight", () => {
@@ -361,17 +393,24 @@ describe("against the real drf-spectacular fixture", () => {
     const axis = resolveAxis(schema.byId.orders)!;
     const rows = [
       { id: 1, status: "pending" },
-      { id: 2, status: "paid" },
+      { id: 2, status: "confirmed" },
       { id: 3, status: "shipped" },
-      { id: 4, status: "refunded" },
+      { id: 4, status: "returned" },
       { id: 5, status: "pending" },
     ];
     const cols = boardColumns(rows, axis);
     expect(cols.map((c) => [c.key, c.rows.length])).toEqual([
       ["pending", 2],
-      ["paid", 1],
+      ["confirmed", 1],
+      ["processing", 0],
+      ["ready_to_ship", 0],
       ["shipped", 1],
-      ["refunded", 1],
+      ["in_transit", 0],
+      ["delivered", 0],
+      ["delivery_failed", 0],
+      ["returned", 1],
+      ["on_hold", 0],
+      ["cancelled", 0],
     ]);
   });
 });
