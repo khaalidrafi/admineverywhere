@@ -41,12 +41,11 @@
 name: build-all
 
 on:
+  # CI LAW (owner 16:41:59Z, board 46daa46 @freshorama/website): Actions
+  # minutes exhausted — push/pull_request triggers are DEAD on both repos;
+  # builds are dispatched by hand only (workflow_dispatch), e.g. from the
+  # CI runner repo khaalidrafi/freshorama when legs are needed.
   workflow_dispatch:
-  push:
-    branches: [ai/main]
-    tags: ['v*']
-  pull_request:
-    branches: [ai/main]
 
 permissions:
   contents: read
