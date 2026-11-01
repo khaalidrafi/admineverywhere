@@ -31,6 +31,8 @@ DEMO_RIG_MODULES = {
     # build_mcp generates from the project's OpenAPI document, so its tests
     # need core.urls (the /api/ router) + the demo SPECTACULAR policy.
     "test_build_mcp",
+    # build_cli generates from the same document for the same reason.
+    "test_build_cli",
     # build_admin --targets mcp,emacs shells into those commands, which
     # need the same rig for their schema generation.
     "test_commands",
