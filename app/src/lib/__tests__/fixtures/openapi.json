@@ -1698,12 +1698,19 @@
             "FromStatusEnum": {
                 "enum": [
                     "pending",
-                    "paid",
+                    "confirmed",
+                    "processing",
+                    "ready_to_ship",
                     "shipped",
-                    "refunded"
+                    "in_transit",
+                    "delivered",
+                    "delivery_failed",
+                    "returned",
+                    "on_hold",
+                    "cancelled"
                 ],
                 "type": "string",
-                "description": "* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+                "description": "* `pending` - Waiting for our call\n* `confirmed` - Confirmed by phone\n* `processing` - Being packed\n* `ready_to_ship` - Ready to ship\n* `shipped` - Out for delivery\n* `in_transit` - In transit\n* `delivered` - Delivered\n* `delivery_failed` - Delivery failed\n* `returned` - Returned to shop\n* `on_hold` - On hold\n* `cancelled` - Cancelled"
             },
             "Order": {
                 "type": "object",
@@ -2210,32 +2217,53 @@
             "StatusEnum": {
                 "enum": [
                     "pending",
-                    "paid",
+                    "confirmed",
+                    "processing",
+                    "ready_to_ship",
                     "shipped",
-                    "refunded"
+                    "in_transit",
+                    "delivered",
+                    "delivery_failed",
+                    "returned",
+                    "on_hold",
+                    "cancelled"
                 ],
                 "type": "string",
-                "description": "* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+                "description": "* `pending` - Waiting for our call\n* `confirmed` - Confirmed by phone\n* `processing` - Being packed\n* `ready_to_ship` - Ready to ship\n* `shipped` - Out for delivery\n* `in_transit` - In transit\n* `delivered` - Delivered\n* `delivery_failed` - Delivery failed\n* `returned` - Returned to shop\n* `on_hold` - On hold\n* `cancelled` - Cancelled"
             },
             "ToStatusEnum": {
                 "enum": [
                     "pending",
-                    "paid",
+                    "confirmed",
+                    "processing",
+                    "ready_to_ship",
                     "shipped",
-                    "refunded"
+                    "in_transit",
+                    "delivered",
+                    "delivery_failed",
+                    "returned",
+                    "on_hold",
+                    "cancelled"
                 ],
                 "type": "string",
-                "description": "* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+                "description": "* `pending` - Waiting for our call\n* `confirmed` - Confirmed by phone\n* `processing` - Being packed\n* `ready_to_ship` - Ready to ship\n* `shipped` - Out for delivery\n* `in_transit` - In transit\n* `delivered` - Delivered\n* `delivery_failed` - Delivery failed\n* `returned` - Returned to shop\n* `on_hold` - On hold\n* `cancelled` - Cancelled"
             },
             "TransitionEnum": {
                 "enum": [
                     "pending",
-                    "paid",
+                    "confirmed",
+                    "processing",
+                    "ready_to_ship",
                     "shipped",
-                    "refunded"
+                    "in_transit",
+                    "delivered",
+                    "delivery_failed",
+                    "returned",
+                    "on_hold",
+                    "cancelled"
                 ],
                 "type": "string",
-                "description": "* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+                "description": "* `pending` - Waiting for our call\n* `confirmed` - Confirmed by phone\n* `processing` - Being packed\n* `ready_to_ship` - Ready to ship\n* `shipped` - Out for delivery\n* `in_transit` - In transit\n* `delivered` - Delivered\n* `delivery_failed` - Delivery failed\n* `returned` - Returned to shop\n* `on_hold` - On hold\n* `cancelled` - Cancelled"
             },
             "TransitionRequestRequest": {
                 "type": "object",
@@ -2247,7 +2275,7 @@
                                 "$ref": "#/components/schemas/TransitionEnum"
                             }
                         ],
-                        "description": "Target lifecycle state (must be legal from the current state).\n\n* `pending` - Pending\n* `paid` - Paid\n* `shipped` - Shipped\n* `refunded` - Refunded"
+                        "description": "Target lifecycle state (must be legal from the current state).\n\n* `pending` - Waiting for our call\n* `confirmed` - Confirmed by phone\n* `processing` - Being packed\n* `ready_to_ship` - Ready to ship\n* `shipped` - Out for delivery\n* `in_transit` - In transit\n* `delivered` - Delivered\n* `delivery_failed` - Delivery failed\n* `returned` - Returned to shop\n* `on_hold` - On hold\n* `cancelled` - Cancelled"
                     }
                 },
                 "required": [
