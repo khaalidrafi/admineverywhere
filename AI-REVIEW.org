@@ -130,3 +130,33 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
     the OS bridge never throws into callers; the list is capped at 50
   - [ ] app/src-tauri/ — tauri-plugin-notification registration + notification:default
     capability (Cargo.lock resolves at CI build time — no cargo in the sandbox)
+
+* TODO P1 — REVIEW: the 11-state demo-rig landing (GLM-5.3, 2026-11-02; branch ai/demo-rig-11 @ 0e2ce36 + aac6f17, pushed, queued for review — NOT self-merged)
+  The rig's 4-state FR-R001 sketch is replaced by the production BYTE-SACRED
+  11-state COD machine (the README 6203c72 promise made true; the earlier
+  uncommitted rewrite was lost with a recycled sandbox and is rebuilt here).
+  Review seams, highest-value first:
+  - [ ] demo-backend/shop/models.py — Status/STATUS_ORDER/TRANSITIONS must stay
+    byte-equal to the production machine (Freshorama shop/models.py): 11 states
+    in declared order, production user-facing labels, cancel reachable from
+    every state EXCEPT delivered, delivered exits only into returned,
+    returned/cancelled terminal, STOCK_* constants carry the production policy
+  - [ ] plugin/tests/test_order_lifecycle.py — the 29 legal edges and the
+    illegal matrix are pinned EXPLICITLY (never derived from TRANSITIONS, or
+    the test could not catch a broken table); STATES is the hand-written
+    enum-order witness; cancel-law endpoint sweep walks real paths
+  - [ ] demo-backend/shop/migrations/0006_*.py — choices-only alter;
+    makemigrations --check must stay clean
+  - [ ] demo-backend/shop/management/commands/seed_demo.py — targets drawn from
+    STATUS_ORDER (BFS walk unchanged); `returned` hops acted by the seeded
+    non-superuser (the rig's analogue of production's refund flow)
+  - [ ] three-way lockstep — app/src/lib/statusTransitions.ts registry, the
+    recaptured app/src/lib/__tests__/fixtures/openapi.json (over HTTP, 16
+    paths) and the rig model must never drift again; the drift gate + vitest
+    pins grade it
+  - [ ] scripts/landing_gate.py — EXPECTED_PYTEST 504 / EXPECTED_VITEST 577 /
+    EXPECTED_VITEST_FILES 49 re-measured on this branch; re-measure after any
+    test-count change
+  Verify: bash .github/scripts/gate.sh (pytest + check + migrations) and
+  cd app && npm test — then merge ai/demo-rig-11 into ai/main through the
+  usual gate.
