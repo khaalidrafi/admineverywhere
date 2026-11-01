@@ -89,18 +89,28 @@ Standard DRF `{count, next, previous, results}` shape; results newest first:
  "created_at": "2026-10-19T03:40:00.123456Z"}
 ```
 
-### POST /api/audit/ — the append surface
+### POST /api/audit/ — the allowlisted append surface
 
 Body `{"action", "object_type", "object_id", "summary"?, "data"?}` → `201`
-with the created entry; `actor`/`created_at` are read-only. Intended for
-actions the server cannot anticipate yet — first-party action code should
-create entries server-side (see the reference actions below).
+with the created entry; `actor`/`created_at` are read-only. The append
+surface is **allowlisted** (FR-R007 phase b): only the actions in
+`AuditEntry.CREATE_ALLOWLIST` (action slug → the `object_type` it may
+audit) are accepted, and the target must exist — an open surface let any
+authenticated caller plant arbitrary history in the triage screen, the
+forged-content half of the 2026-11-02 security-audit finding. A
+downstream host extends the allowlist as a plain class-attribute mapping
+and the validation follows at request time. First-party action code
+should still create entries server-side (see the reference actions
+below) — that path bypasses the allowlist by construction.
 
-| case                 | status | body         |
-| -------------------- | ------ | ------------ |
-| append               | `201`  | AuditEntry   |
-| unauthenticated      | `401`  | DRF default  |
-| PUT / PATCH / DELETE | `405`  | DRF default — append-only |
+| case                        | status | body                          |
+| --------------------------- | ------ | ----------------------------- |
+| append (allowlisted action) | `201`  | AuditEntry                    |
+| unknown/missing `action`    | `400`  | field error on `action`       |
+| wrong `object_type`         | `400`  | field error on `object_type`  |
+| unknown/non-numeric target  | `400`  | field error on `object_id`    |
+| unauthenticated             | `401`  | DRF default                   |
+| PUT / PATCH / DELETE        | `405`  | DRF default — append-only     |
 
 ## 3. The reference actions (copy these two)
 
