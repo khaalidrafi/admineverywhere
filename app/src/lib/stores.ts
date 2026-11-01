@@ -70,7 +70,35 @@ export const app = writable<AppState>({
 export function effectiveConfig(): AppConfig {
   const a = get(app);
   const base = a.config ?? { apiUrl: "", authPath: "/api/auth/token/", schemaPath: "/api/schema/" };
-  return { ...base, apiUrl: a.apiUrlOverride || base.apiUrl };
+  // ORIGIN LAW: a dropped (path-bearing/garbage) override never reaches a
+  // fetch — the bundled apiUrl wins, so a stale override can degrade the
+  // app to "the URL it shipped with", never to a 404 subpath.
+  const override = sanitizeApiOverride(a.apiUrlOverride);
+  return { ...base, apiUrl: override || base.apiUrl };
+}
+
+/** ORIGIN LAW (ported upstream from the Freshorama client hardening,
+ *  2026-11-02 audit follow-up): the saved API override may only ever be an
+ *  ORIGIN — scheme://host[:port], no path/query/hash. A path-bearing
+ *  override is the dead-surface class (an old build pointed every fetch at
+ *  a subpath no backend ever served, so the app looked down while the API
+ *  was fine): it is dropped WHOLE — never trimmed to "the good part" — and
+ *  effectiveConfig() falls back to the URL the bundle shipped with.
+ *  Pure: trim, parse, decide. Everything unparsable, non-http(s), or
+ *  carrying a path/query/hash answers "". */
+export function sanitizeApiOverride(raw: string): string {
+  const value = (raw ?? "").trim();
+  if (!value) return "";
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return "";
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+  if (url.pathname && url.pathname !== "/") return "";
+  if (url.search || url.hash) return "";
+  return url.origin && url.origin !== "null" ? url.origin : "";
 }
 
 async function fetchJson(url: string): Promise<any | null> {
@@ -99,6 +127,15 @@ async function devFetchOverrides(): Promise<{ config: AppConfig | null; brand: B
 }
 
 export async function initApp(): Promise<void> {
+  // ORIGIN LAW self-heal: a stale path-bearing override (the dead-surface
+  // class) is dropped wholesale AND its localStorage copy removed, so the
+  // poison cannot outlive the process; effectiveConfig() below already
+  // answers the bundled apiUrl while the override sits here.
+  const staleOverride = get(app).apiUrlOverride;
+  if (staleOverride && !sanitizeApiOverride(staleOverride)) {
+    localStorage.removeItem("dad.apiUrl");
+    app.update((a) => ({ ...a, apiUrlOverride: "" }));
+  }
   // Boot identity = the build-time inlined brand.gen.ts. a.apiUrlOverride
   // still wins over the bundled apiUrl at call time (effectiveConfig()).
   let config = BUNDLED_CFG;

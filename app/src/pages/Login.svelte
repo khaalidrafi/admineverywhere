@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-  import { app, handleApiError, loadSchema, login, toast } from "../lib/stores";
+  import { app, handleApiError, loadSchema, login, sanitizeApiOverride, toast } from "../lib/stores";
   import { navigate } from "../lib/router";
   import Icon from "../components/Icon.svelte";
   import { ApiError } from "../lib/api";
@@ -38,8 +38,13 @@
     }
     busy = true;
     try {
-      app.update((a) => ({ ...a, apiUrlOverride: apiUrl.trim() }));
-      localStorage.setItem("dad.apiUrl", apiUrl.trim());
+      // ORIGIN LAW: only an origin is ever persisted. A path-bearing entry
+      // (the dead-surface 404 class) is dropped wholesale here and falls
+      // back to the URL the bundle shipped with — sanitizeApiOverride owns
+      // the rule, effectiveConfig() owns the fallback.
+      const cleanUrl = sanitizeApiOverride(apiUrl);
+      app.update((a) => ({ ...a, apiUrlOverride: cleanUrl }));
+      localStorage.setItem("dad.apiUrl", cleanUrl);
       await login(username, password);
       toast("success", `Welcome, ${username}!`);
       navigate("#/");
@@ -106,6 +111,19 @@
             <input id="api" class="input" type="url" bind:value={apiUrl}
                    placeholder="https://your-api.example.com" />
             <div class="mt-1 text-[11px] text-text/40">DRF + drf-spectacular backend (token auth)</div>
+            {#if $app.config?.apiUrl && apiUrl !== $app.config.apiUrl}
+              <button
+                type="button"
+                class="mt-1 text-[11px] text-accent/80 underline-offset-2 transition-colors hover:text-accent hover:underline"
+                onclick={() => {
+                  apiUrl = $app.config?.apiUrl ?? "";
+                  app.update((a) => ({ ...a, apiUrlOverride: "" }));
+                  localStorage.removeItem("dad.apiUrl");
+                }}
+              >
+                Use the URL this app shipped with ({$app.config.apiUrl})
+              </button>
+            {/if}
             <div class="mt-2 text-[11px] text-text/40">
               No API at hand? Run the bundled demo backend — see <code>README → demo-backend/</code> (admin / admin123).
             </div>
