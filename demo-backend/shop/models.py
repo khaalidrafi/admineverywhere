@@ -82,26 +82,62 @@ class IllegalTransition(Exception):
 
 class Order(models.Model):
     class Status(models.TextChoices):
-        # Declared in lifecycle order — this IS the ordered states enum.
-        # STATUS_ORDER and TRANSITIONS below depend on this order.
-        PENDING = "pending", "Pending"
-        PAID = "paid", "Paid"
-        SHIPPED = "shipped", "Shipped"
-        REFUNDED = "refunded", "Refunded"
+        # The BYTE-SACRED 11-state COD machine, mirrored VERBATIM from the
+        # production backend (Freshorama shop/models.py) — same states, same
+        # user-facing labels, same edges. Declared in lifecycle order; this IS
+        # the ordered states enum. STATUS_ORDER and TRANSITIONS below depend
+        # on this order. The money axis (paid/refunded) is a production
+        # Payment-row concern and deliberately has NO status here.
+        PENDING = "pending", "Waiting for our call"
+        CONFIRMED = "confirmed", "Confirmed by phone"
+        PROCESSING = "processing", "Being packed"
+        READY_TO_SHIP = "ready_to_ship", "Ready to ship"
+        SHIPPED = "shipped", "Out for delivery"
+        IN_TRANSIT = "in_transit", "In transit"
+        DELIVERED = "delivered", "Delivered"
+        DELIVERY_FAILED = "delivery_failed", "Delivery failed"
+        RETURNED = "returned", "Returned to shop"
+        ON_HOLD = "on_hold", "On hold"
+        CANCELLED = "cancelled", "Cancelled"
 
     # The canonical forward order of the lifecycle (index 0 = entry state).
-    # REFUNDED sits last as the absorbing exit, not a forward stage.
-    STATUS_ORDER = (Status.PENDING, Status.PAID, Status.SHIPPED, Status.REFUNDED)
+    # `returned` and `cancelled` sit last as the terminal exits, not stages.
+    STATUS_ORDER = (
+        Status.PENDING, Status.CONFIRMED, Status.PROCESSING, Status.READY_TO_SHIP,
+        Status.SHIPPED, Status.IN_TRANSIT, Status.DELIVERED, Status.DELIVERY_FAILED,
+        Status.RETURNED, Status.ON_HOLD, Status.CANCELLED,
+    )
 
     # The whole state machine: current -> frozenset of legal targets.
     # Single source of truth for legality — views, serializers and tests
     # must derive from this, never hand-roll their own rules.
+    # Laws (production admin-panel spec, mirrored verbatim):
+    #   - cancel is reachable from every state EXCEPT delivered (a completed
+    #     sale is not cancelled; its money is refunded on the payment axis);
+    #   - delivered is terminal except the refund flow: delivered -> returned
+    #     (goods come back; production restores stock and refunds Payment rows);
+    #   - `returned` and `cancelled` are terminal.
     TRANSITIONS = {
-        Status.PENDING: frozenset({Status.PAID}),
-        Status.PAID: frozenset({Status.SHIPPED, Status.REFUNDED}),
-        Status.SHIPPED: frozenset({Status.REFUNDED}),
-        Status.REFUNDED: frozenset(),  # terminal — nothing leaves refunded
+        Status.PENDING: frozenset({Status.CONFIRMED, Status.ON_HOLD, Status.CANCELLED}),
+        Status.CONFIRMED: frozenset({Status.PROCESSING, Status.READY_TO_SHIP, Status.ON_HOLD, Status.CANCELLED}),
+        Status.PROCESSING: frozenset({Status.READY_TO_SHIP, Status.ON_HOLD, Status.CANCELLED}),
+        Status.READY_TO_SHIP: frozenset({Status.SHIPPED, Status.ON_HOLD, Status.CANCELLED}),
+        Status.SHIPPED: frozenset({Status.IN_TRANSIT, Status.DELIVERED, Status.DELIVERY_FAILED, Status.ON_HOLD, Status.CANCELLED}),
+        Status.IN_TRANSIT: frozenset({Status.DELIVERED, Status.DELIVERY_FAILED, Status.ON_HOLD, Status.CANCELLED}),
+        Status.DELIVERY_FAILED: frozenset({Status.SHIPPED, Status.RETURNED, Status.CANCELLED}),
+        Status.RETURNED: frozenset(),  # terminal — nothing leaves returned
+        Status.DELIVERED: frozenset({Status.RETURNED}),
+        Status.ON_HOLD: frozenset({Status.CONFIRMED, Status.PROCESSING, Status.CANCELLED}),
+        Status.CANCELLED: frozenset(),  # terminal — nothing leaves cancelled
     }
+
+    # Production stock law (docs/order-lifecycle.md §3), mirrored as constants:
+    # stock is a movement log, not a hand-edited counter — confirm = no change;
+    # shipped = deduct; delivery_failed / returned / cancelled-after-ship =
+    # restore. The reference seam below stays a deliberate no-op (clients
+    # implement their own policy against these constants).
+    STOCK_DEDUCT_STATUS = (Status.SHIPPED,)
+    STOCK_RESTORE_STATUS = (Status.DELIVERY_FAILED, Status.RETURNED, Status.CANCELLED)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="orders")
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="orders")
@@ -175,14 +211,19 @@ class Order(models.Model):
         This reference implementation ships the stubs as deliberate
         no-ops: every client project implements its own stock policy.
         Replace the bodies, keep the seam and the (from, to) signature.
+        The production policy these stubs mirror (see the STOCK_* constants
+        above): shipped deducts one `sale` movement per item;
+        delivery_failed / returned / cancelled restore one `return`
+        movement per item, once per order (the movement log makes the
+        effect idempotent).
         """
-        if from_status == Order.Status.PENDING and to_status == Order.Status.PAID:
-            # TODO(client): reserve stock — e.g. decrement order.product.stock
-            # or bump a reserved counter. Implement your own policy.
+        if to_status in Order.STOCK_DEDUCT_STATUS:
+            # TODO(client): deduct stock — one negative sale movement per
+            # order item. Implement your own policy.
             pass
-        if to_status == Order.Status.REFUNDED:
-            # TODO(client): release stock — undo the reservation made when
-            # the order was paid. Implement your own policy.
+        if to_status in Order.STOCK_RESTORE_STATUS:
+            # TODO(client): restore stock — undo the deduction made when
+            # the order shipped. Implement your own policy.
             pass
 
 
