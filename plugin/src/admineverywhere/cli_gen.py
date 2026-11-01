@@ -424,7 +424,8 @@ def main(argv=None):
     ap = build_parser()
     ns = ap.parse_args(argv)
     if getattr(ns, "_func", None) is not None:
-        ns._params_values = [getattr(ns, p, None) for p in ns._params]
+        ns._params_values = [getattr(ns, p, None)
+                             for p in getattr(ns, "_params", [])]
         return ns._func(ns) or 0
     if getattr(ns, "_resource", None) is not None:
         return _run_resource(ns) or 0
