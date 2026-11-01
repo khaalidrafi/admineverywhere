@@ -198,28 +198,30 @@ def test_seed_and_the_wire_action_write_the_same_row(seeded):
     assert wire["object_id"] == str(target.pk)
 
 
-def test_refund_hops_are_performed_by_the_seeded_role_holder(seeded):
-    """Every seeded move INTO refunded names the non-superuser, every other hop
-    names admin and the creation entry stays unattributed — universal over
+def test_return_hops_are_performed_by_the_seeded_role_holder(seeded):
+    """Every seeded move INTO `returned` names the non-superuser, every other
+    hop names admin and the creation entry stays unattributed — universal over
     whatever the random seed produced, so the assertion cannot pass by luck of
-    an absent refund.
+    an absent return. (The 11-state COD machine carries no `refunded` status —
+    the money axis is production's Payment concern; `returned` is the
+    goods-come-back state and plays the sensitive-hop role in the rig.)
     """
-    seen_refund = False
+    seen_return = False
     for row in OrderHistory.objects.select_related("actor"):
         if row.from_status == "":
             assert row.actor_id is None, f"creation row {row.pk} names an actor"
-        elif row.to_status == Order.Status.REFUNDED:
-            seen_refund = True
+        elif row.to_status == Order.Status.RETURNED:
+            seen_return = True
             assert row.actor_id == seeded["auditor"].pk, (
-                f"history row {row.pk} refunded by {row.actor}"
+                f"history row {row.pk} returned by {row.actor}"
             )
         else:
             assert row.actor_id == seeded["admin"].pk, (
                 f"history row {row.pk} moved by {row.actor}, expected admin"
             )
     assert Order.objects.filter(status=Order.Status.PENDING).count() >= 0
-    if not seen_refund:
-        pytest.skip("this random seed produced no refund hop to grade")
+    if not seen_return:
+        pytest.skip("this random seed produced no return hop to grade")
 
 
 def test_reseeding_does_not_accumulate_the_trail_or_the_log(seeded):

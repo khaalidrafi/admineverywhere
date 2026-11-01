@@ -358,7 +358,7 @@ class TestLineLevelShape:
         """order fixture came from the API-less ORM (no history), so drive two
         transitions through the R-001 machine and expect the trail flattened."""
         OrderHistory.objects.create(order=order, from_status="", to_status="pending", actor=user)
-        OrderHistory.objects.create(order=order, from_status="pending", to_status="paid", actor=user)
+        OrderHistory.objects.create(order=order, from_status="pending", to_status="confirmed", actor=user)
         rows = read_csv(auth_api.get(export_url()).content.decode("utf-8-sig"))
         mine = [r for r in rows[1:] if r and r[0] == str(order.pk)]
         assert len(mine) == 2
@@ -366,7 +366,7 @@ class TestLineLevelShape:
         # creation entry first, then the move: child order is replay order, not
         # insertion order of the join
         assert [r[col("from_status")] for r in mine] == ["", "pending"]
-        assert [r[col("to_status")] for r in mine] == ["pending", "paid"]
+        assert [r[col("to_status")] for r in mine] == ["pending", "confirmed"]
         assert [r[col("history_actor")] for r in mine] == ["exp1", "exp1"]
 
     def test_an_order_with_no_history_still_gets_a_row(self, auth_api, order):

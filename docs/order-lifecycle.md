@@ -11,29 +11,49 @@ executable spec; `plugin/tests/test_order_lifecycle.py` is its test harness and
 
 The lifecycle is an **ordered enum plus an explicit transition table** — both
 live on the model, in one place, and nothing else may hand-roll status rules.
+The machine is the production **11-state COD machine**, mirrored verbatim
+(states, labels, edges) from the Freshorama backend's `shop/models.py`.
 
 ```
-                pay                ship               refund
-  [pending] ---------> [paid] ---------> [shipped] ---------> [refunded]
-                          \                                  ^
-                           +---------------------------------+
-                                      refund (before shipping)
+  main line (COD delivery):
+  [pending] -> [confirmed] -> [processing] -> [ready_to_ship] -> [shipped]
+                  -> [in_transit] -> [delivered] -> [returned]   (terminal)
 
-  refunded is TERMINAL — nothing leaves it.
+  hold / recover (every pre-delivered stage):
+      any of pending..in_transit, delivery_failed -> [on_hold]
+      on_hold -> back to [confirmed] or [processing]
+
+  delivery trouble:
+      shipped | in_transit -> [delivery_failed]
+      delivery_failed -> re-ship [shipped] | [returned] | [cancelled]
+
+  cancel: reachable from every state EXCEPT delivered (a completed sale is
+          not cancelled — its money is refunded on the payment axis).
+  returned and cancelled are TERMINAL — nothing leaves them.
 ```
 
 - `Order.Status` (TextChoices) is declared **in lifecycle order** —
-  `pending, paid, shipped, refunded`. Declaration order is the contract.
+  `pending, confirmed, processing, ready_to_ship, shipped, in_transit,
+  delivered, delivery_failed, returned, on_hold, cancelled`. Declaration
+  order is the contract.
 - `Order.STATUS_ORDER` pins the canonical order explicitly (index 0 is the
-  entry state; `refunded` sits last as the absorbing exit, not a stage).
+  entry state; `returned` and `cancelled` sit last as the terminal exits,
+  not stages).
 - `Order.TRANSITIONS` maps every state to the frozenset of legal targets:
 
-  | from      | legal targets            |
-  | --------- | ------------------------ |
-  | `pending` | `paid`                   |
-  | `paid`    | `shipped`, `refunded`    |
-  | `shipped` | `refunded`               |
-  | `refunded`| — (terminal)             |
+  | from             | legal targets                                          |
+  | ---------------- | ------------------------------------------------------ |
+  | `pending`        | `confirmed`, `on_hold`, `cancelled`                    |
+  | `confirmed`      | `processing`, `ready_to_ship`, `on_hold`, `cancelled`  |
+  | `processing`     | `ready_to_ship`, `on_hold`, `cancelled`                |
+  | `ready_to_ship`  | `shipped`, `on_hold`, `cancelled`                      |
+  | `shipped`        | `in_transit`, `delivered`, `delivery_failed`, `on_hold`, `cancelled` |
+  | `in_transit`     | `delivered`, `delivery_failed`, `on_hold`, `cancelled` |
+  | `delivery_failed`| `shipped`, `returned`, `cancelled`                     |
+  | `delivered`      | `returned` (the refund flow: goods come back)          |
+  | `returned`       | — (terminal)                                           |
+  | `on_hold`        | `confirmed`, `processing`, `cancelled`                 |
+  | `cancelled`      | — (terminal)                                           |
 
 - `Order.transition_allowed(current, target)` is the single predicate; it
   answers `False` for unknown states, never raises.
@@ -94,10 +114,13 @@ carries the states **in lifecycle order**.
 
 `Order._apply_side_effects(order, from_status, to_status)` runs **inside the
 transition transaction**. The reference implementation ships it as
-deliberate `# TODO(client)` no-ops:
+deliberate `# TODO(client)` no-ops. The production stock policy the stubs
+mirror is carried as constants on the model (`STOCK_DEDUCT_STATUS` /
+`STOCK_RESTORE_STATUS`):
 
-- `pending -> paid`: **reserve stock** (TODO client no-op)
-- `* -> refunded`: **release stock** (TODO client no-op)
+- `shipped`: **deduct stock** (TODO client no-op)
+- `delivery_failed`, `returned`, `cancelled`: **restore stock** (TODO client
+  no-op)
 
 Client projects replace the two bodies with their own stock policy and keep
 the seam: same name, same `(order, from, to)` signature, still called inside
@@ -188,17 +211,18 @@ documents `transition` as `[post]` and `history` as `[get]`, which is the eviden
   may make the field read-only once all clients are migrated.
 - `seed_demo` walks every seeded order through `apply_transition()` — the
   creation row (`from_status: ""`, actor null) plus one row per legal hop to
-  the status the order ends on, refunds performed by the seeded non-superuser
+  the status the order ends on, returns performed by the seeded non-superuser
   `auditor`. The trail is produced by the machine, never hand-written, so a
   demo trail can never show a hop the endpoint would refuse with 409;
   `plugin/tests/test_seed_demo.py` grades exactly that invariant.
 - The client's proof fixture `app/src/lib/__tests__/fixtures/openapi.json` IS
-  the captured document of this rig (recaptured 2026-10-21 from a running
-  `manage.py runserver` + `GET /api/schema/?format=json`: 16 paths, 5 models,
-  the R-001 `transition`/`history`, the R-003 `flag`/`bulk_flag`/`audit`, the
-  R-005 `export` and the R-007 `me`). Recapture it whenever the rig gains an
-  endpoint — a client test that passes against a document the server no longer
-  answers is not proof. That duty is now a gate, not prose:
+  the captured document of this rig (recaptured 2026-11-02 over HTTP from a
+  running `manage.py runserver` + `GET /api/schema/?format=json` after the
+  rig's machine moved to the production 11-state COD machine: 16 paths
+  unchanged, the four status enum components now carry the 11 states in
+  lifecycle order). Recapture it whenever the rig gains an endpoint or its
+  contract moves — a client test that passes against a document the server no
+  longer answers is not proof. That duty is now a gate, not prose:
   `plugin/tests/test_schema_drift.py` regenerates the schema in a subprocess
   under the rig's own `core.settings` and fails the pytest suite on any drift
   between the rig and the fixture (paths and component schemas compared
@@ -209,6 +233,8 @@ documents `transition` as `[post]` and `history` as `[get]`, which is the eviden
   profile (`COMPONENT_SPLIT_REQUEST` since 2026-10-21, measured zero drift on
   all 16 paths), so the four rig modules' schema tests generate a
   fixture-consistent document too.
-- Suites: `pytest 299` / `vitest 418` (32 files) — the counts `scripts/landing_gate.py`
-  pins (`EXPECTED_PYTEST`/`EXPECTED_VITEST`/`EXPECTED_VITEST_FILES`), re-measured
-  2026-10-22 by the QA seat on this branch.
+- Suites: `pytest 504` / `vitest 575` (49 files) — the counts
+  `scripts/landing_gate.py` pins (`EXPECTED_PYTEST`/`EXPECTED_VITEST`/
+  `EXPECTED_VITEST_FILES`), re-measured 2026-11-02 after the 11-state
+  machine landing (pytest grew by the explicit 29-legal/39-illegal
+  transition matrices and the cancel-law endpoint sweep).
