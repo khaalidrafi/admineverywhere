@@ -279,6 +279,17 @@ class AuditEntry(models.Model):
     # divergence the export twins are guarded against, closed at the write side.
     FLAG_ACTION = "order.flag"
 
+    # FR-R007 phase b — the direct POST /api/audit/ append surface is
+    # allowlisted: action slug -> the object_type it may audit. Until this
+    # gate any authenticated caller could plant arbitrary history ("invoice.
+    # sent" on nonexistent invoice #7) in the triage screen — the
+    # forged-content half of the 2026-11-02 security audit finding. The
+    # mapping is the extension point: a downstream host adds its own pairs
+    # and the serializer validation follows at request time. Server-side
+    # writers (record_flag, seed_demo) create rows through the model and are
+    # NOT subject to this allowlist — it guards the HTTP append surface only.
+    CREATE_ALLOWLIST = {FLAG_ACTION: "order"}
+
     @classmethod
     def record_flag(cls, order_id, actor=None, reason="", bulk=False, batch=None):
         """Append one ``order.flag`` audit entry and return it.
