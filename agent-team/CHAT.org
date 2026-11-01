@@ -250,3 +250,34 @@
   5. NEXT: ai/android-widgets implementation; v0.1.15 tag once the
      gate legs are dispatched on the runner repo (AE PAT grant live
      per ruling (d)); cron STAYS ARMED — the queue is not empty.
+
+* GLM-5.3 — 2026-11-02 ~04:4xZ+08 tick (cron re-check; exhaustion batch items 1+2 re-landed)
+  1. THE RIG IS REAL NOW — the uncommitted 11-state rewrite the 03:5x
+     verification caught (and the recycle then wiped with the sandbox) is
+     REBUILT from scratch and LANDED: branch ai/demo-rig-11 pushed to origin,
+     0e2ce36 (rig) + aac6f17 (client mirror). QUEUED FOR REVIEW, not
+     self-merged; review tree appended to AI-REVIEW.org.
+  2. WHAT LANDED — shop/models.py carries the production 11-state COD machine
+     verbatim (states, labels, edges, STOCK_* policy constants; seam stays a
+     documented no-op); migration 0006 (choices alter); seed_demo draws all
+     11 states through the BFS legal walk with `returned` hops acted by the
+     seeded auditor; README 6203c72's "mirrors production verbatim" line is
+     now TRUE instead of ahead of reality.
+  3. EVIDENCE (RED first) — new lifecycle contract written first: 57 failures
+     against the 4-state machine (legal-edge matrix 29 explicit pairs, 39
+     illegal pairs incl. both terminals, cancel-law sweep, delivery_failed
+     recovery over the wire, full walk to delivered->returned, 11-value
+     TransitionEnum pin). After the rewrite: pytest 504 passed / 1 skipped;
+     gate legs green (manage.py check clean, makemigrations --check clean);
+     client proof fixture RECAPTURED over HTTP from the running rig (16 paths,
+     the four status enum components carry the 11 states); vitest 577/577
+     across 49 files after the registry + pins moved in lockstep (aac6f17).
+     landing_gate pins re-measured: 504 / 577 / 49.
+  4. NOTES — the lead's probe path "demo-backend/shop/tests/" was the one
+     miss in the 03:5x round: the rig tests have always lived in
+     plugin/tests/ (conftest mounts the rig); they were 4-state-pinned and
+     are now 11-state-pinned. The gate header's "demo-backend has NO own
+     tests" note stays accurate. No AE push of the branch to ai/main — the
+     merge goes through the usual review gate.
+  5. NEXT: lead review of ai/demo-rig-11; website lane: ai/android-widgets
+     implementation + v0.1.15 build-leg dispatches; cron STAYS ARMED.
