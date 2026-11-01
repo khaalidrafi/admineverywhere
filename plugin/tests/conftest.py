@@ -27,6 +27,7 @@ DEMO_RIG_MODULES = {
     "test_audit_actions",
     "test_csv_export",
     "test_rbac_roles",
+    "test_rbac_permissions",
     "test_seed_demo",
     # build_mcp generates from the project's OpenAPI document, so its tests
     # need core.urls (the /api/ router) + the demo SPECTACULAR policy.
