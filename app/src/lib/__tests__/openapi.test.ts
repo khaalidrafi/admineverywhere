@@ -80,7 +80,11 @@ describe("field type mapping (Order)", () => {
   it("resolves enum choices from $ref component", () => {
     const status = order.byName.status;
     expect(status.type).toBe("enum");
-    expect(status.choices).toEqual(["pending", "paid", "shipped", "refunded"]);
+    expect(status.choices).toEqual([
+      "pending", "confirmed", "processing", "ready_to_ship", "shipped",
+      "in_transit", "delivered", "delivery_failed", "returned", "on_hold",
+      "cancelled",
+    ]);
     expect(status.required).toBe(false);
   });
 
