@@ -206,3 +206,47 @@
   3. AE board sweep: zero open TODO headlines remain for my roles after
      this delivery; the queue item ai/authz-1 was self-queued in chat on
      the ~02:2xZ tick and is now delivered.
+* GLM-5.3 — 2026-11-02 ~04:1xZ+08 tick (cron re-check, website lane unblocked)
+  1. WEBSITE ACCESS RESTORED — the owner handed both PATs in-channel
+     (03:03Z cron firing); freshorama/website re-cloned, ai/main
+     re-read to the tip. The "access lost" flag above is CLOSED. The
+     runner repo khaalidrafi/freshorama now answers 200 to the AE PAT
+     (repo + actions/workflows lists), so the v0.1.15 CI dispatch path
+     is live per owner ruling 19:24:22Z (d) — dispatches are GLM-5.3's
+     to exercise.
+  2. RELAY MODULE SHIPPED then PARKED — deploy/tg_discord_relay.py
+     (0f2eba9, rebased as d272200): stdlib-only callable relay(update)
+     hook, NOT a getUpdates loop (AMENDMENT 2); 15/15 payload+delivery
+     tests (deploy/test_tg_discord_relay.py, direct-run, zero deps);
+     the AMENDMENT 3 stale-literal reconciliation landed with it (both
+     section 2/3 lines now carry 889871494065291275; verbatim quotes
+     keep the old id). The owner's 19:24:22Z ruling (webhook ask
+     REJECTED) then PARKED the relay — the hook stays DORMANT on
+     ai/main, the poller is not calling it, adoptable only on the
+     owner's un-park; the board row carries the park note. No fake
+     bridge.
+  3. ai/authz-1 MERGED to ai/main (7b43442) — the Lead's gate ran at
+     the BRANCH tip and again at the MERGE tip, both GATE GREEN 4/4
+     (pytest 434 passed, 1 skipped; manage.py check + makemigrations
+     clean). The demo-rig README (exhaustion-batch item 3) rode the
+     branch as 6203c72 and is on ai/main through the merge.
+  4. EXHAUSTION BATCH (owner's 8 items) — 7 of 8 done this tick, all
+     with per-item evidence on the website board row: (1) the
+     "uncommitted rig rewrite" no longer exists (worktree clean — the
+     work is committed on ai/main); (2) transition coverage verified
+     landed (parametrized illegal moves 409+reason+no-side-effects,
+     noop-409, legal walk, audit-log idempotency); (3) README 6203c72;
+     (5) relay done-as-parked; (6) mobile-orders.png RE-SHOT (1dd4b1e:
+     md5 9b4b82ca != dashboard 2f88558c, 10 rows rendered, overflow
+     0px, Freshorama chrome verified on the bytes, manifest provenance
+     updated — vid maker cleared to cut the beat); (7)
+     docs/RELEASE-NOTES-v0.1.15-draft.md (61e5a5f); (8) English-only
+     sweep of admin-client/src CLEAN (zero CJK/Kana/Hangul/Cyrillic/
+     Arabic/Devanagari/Thai hits). Item (4) ANDROID WIDGETS: scope
+     landed on the board (W1 "Today at a glance" 2x2, W2 "Orders
+     needing you" 4x2; low-stock cut pending an allowlisted read) with
+     the Lead's gate call v0.1.16 post-release — implementation
+     starts on ai/android-widgets next tick.
+  5. NEXT: ai/android-widgets implementation; v0.1.15 tag once the
+     gate legs are dispatched on the runner repo (AE PAT grant live
+     per ruling (d)); cron STAYS ARMED — the queue is not empty.
