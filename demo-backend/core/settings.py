@@ -4,6 +4,7 @@ Everything aggressive here (CORS allow-all, DEBUG) is intentional for
 local testing only — see AI-REVIEW.org before reusing anywhere.
 """
 import os
+import sys
 import warnings
 from pathlib import Path
 
@@ -80,12 +81,47 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ---------------------------------------------------------------------------
-# P0: loud dev-only warning — the aggressive values above are intentionally
+# P0: loud dev-only guard — the aggressive values above are intentionally
 # UNCHANGED. This rig runs wide open (tracebacks on, any host, any origin).
 # Anyone importing these settings outside the local demo must find out at
-# startup, not in an incident review. Acknowledge the demo rig explicitly
-# to silence it:  DEMO_DEV=1 python manage.py runserver
+# startup, not in an incident review:
+#   * SERVING invocations (runserver, gunicorn, uwsgi, daphne, ... or a bare
+#     wsgi/asgi script) hard-exit without the explicit ack — FR-R007 phase b
+#     (2026-11-02 audit follow-up): a warning scrolls past nobody during a
+#     deploy of the rig with real data; a wall stops it.
+#   * every other invocation (check, migrate, shell, the gate legs, the test
+#     runner) keeps the loud UserWarning, so CI and developer tooling never
+#     feel the gate.
+# Acknowledge the demo rig explicitly to serve it:  DEMO_DEV=1 manage.py runserver
 # ---------------------------------------------------------------------------
+_SERVING_MARKERS = (
+    "runserver",
+    "gunicorn",
+    "uwsgi",
+    "daphne",
+    "hypercorn",
+    "granian",
+    "wsgi",
+    "asgi",
+)
+
+
+def _is_serving_invocation() -> bool:
+    """True when the process booting these settings would serve requests.
+
+    Settings are imported during management-command execution, so sys.argv
+    names the command at this point. The markers substring-match the joined
+    argv, which covers every shape a deploy actually tries: the subcommand
+    (``manage.py runserver``), the server binary (``/usr/local/bin/daphne``),
+    the WSGI/ASGI module tail (``gunicorn core.wsgi:application``) and bare
+    entry-point scripts (``python core/wsgi.py``). Failing closed is the
+    point: a path that merely LOOKS like serving gets the same wall, and
+    the ack is one environment variable away.
+    """
+    joined = " ".join(sys.argv or [])
+    return any(marker in joined for marker in _SERVING_MARKERS)
+
+
 def _dev_only_active() -> list[str]:
     """Names of the dangerous demo values that are currently switched on."""
     active = []
@@ -101,6 +137,14 @@ def _dev_only_active() -> list[str]:
 
 
 if _dev_only_active() and os.environ.get("DEMO_DEV") != "1":
+    if _is_serving_invocation():
+        raise SystemExit(
+            "demo-backend settings are DEV-ONLY ("
+            + ", ".join(_dev_only_active())
+            + ") — refusing to serve. This rig must never face a real network: "
+            "deploy the host project's own settings instead. To run the local "
+            "demo, acknowledge explicitly with DEMO_DEV=1."
+        )
     warnings.warn(
         "demo-backend settings are DEV-ONLY ("
         + ", ".join(_dev_only_active())
