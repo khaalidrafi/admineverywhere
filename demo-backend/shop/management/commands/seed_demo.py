@@ -174,7 +174,11 @@ class Command(BaseCommand):
             ) for n, e in CUSTOMERS
         ]
 
-        statuses = ["pending", "paid", "shipped", "refunded"]
+        # The 11-state COD machine's full state set (mirrored from production):
+        # every seeded order lands on a real state, drawn across the whole
+        # lifecycle so the demo shows deliveries, holds, failures and returns —
+        # not just the entry state. Targets are walked LEGALLY by trail_to().
+        statuses = [s.value for s in Order.STATUS_ORDER]
         # FR-R005: the rig's FloatField is seeded with the values the two export
         # layers used to disagree on — integral floats (Python str() -> "1.0",
         # the browser -> "1"), an exponent switch point ("1e-07" vs "1e-7"), a
@@ -197,16 +201,16 @@ class Command(BaseCommand):
             # FR-R001: every seeded order gets the trail the machine itself
             # would have written — the creation entry (from_status="", the
             # shape perform_create appends) and then each legal hop to the
-            # status the row ends on. A hand-written `"" -> "refunded"` row is
+            # status the row ends on. A hand-written `"" -> "returned"` row is
             # a move apply_transition() refuses with 409, so the old one-row
             # seed showed a history the API could never have produced.
-            # Refunds are performed by `auditor`, the seeded non-superuser, so
+            # Returns are performed by `auditor`, the seeded non-superuser, so
             # a live trail names a role-holder as its actor too (FR-R007-LIVE).
             OrderHistory.objects.create(
                 order=order, from_status="", to_status=order.status, actor=None
             )
             for target in trail_to(status):
-                actor = auditor if target == Order.Status.REFUNDED else admin
+                actor = auditor if target == Order.Status.RETURNED else admin
                 order.apply_transition(target, actor=actor)
             seeded_orders.append(order)
 
