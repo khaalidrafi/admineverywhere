@@ -17,43 +17,99 @@ describe("statusTransitions registry", () => {
   it("has orders configured", () => {
     expect(statusTransitions.orders).toBeDefined();
     expect(statusTransitions.orders.statusField).toBe("status");
-    expect(statusTransitions.orders.states).toEqual(["pending", "paid", "shipped", "refunded"]);
+    expect(statusTransitions.orders.states).toEqual([
+      "pending",
+      "confirmed",
+      "processing",
+      "ready_to_ship",
+      "shipped",
+      "in_transit",
+      "delivered",
+      "delivery_failed",
+      "returned",
+      "on_hold",
+      "cancelled",
+    ]);
   });
 
-  it("maps pending -> [paid]", () => {
-    expect(getLegalTransitions("orders", "pending")).toEqual(["paid"]);
-    expect(isTransitionLegal("orders", "pending", "paid")).toBe(true);
+  it("maps pending -> [confirmed, on_hold, cancelled]", () => {
+    expect(getLegalTransitions("orders", "pending")).toEqual([
+      "confirmed",
+      "on_hold",
+      "cancelled",
+    ]);
+    expect(isTransitionLegal("orders", "pending", "confirmed")).toBe(true);
+    expect(isTransitionLegal("orders", "pending", "processing")).toBe(false);
     expect(isTransitionLegal("orders", "pending", "shipped")).toBe(false);
-    expect(isTransitionLegal("orders", "pending", "refunded")).toBe(false);
+    expect(isTransitionLegal("orders", "pending", "returned")).toBe(false);
   });
 
-  it("maps paid -> [shipped, refunded]", () => {
-    expect(getLegalTransitions("orders", "paid")).toEqual(["shipped", "refunded"]);
-    expect(isTransitionLegal("orders", "paid", "shipped")).toBe(true);
-    expect(isTransitionLegal("orders", "paid", "refunded")).toBe(true);
-    expect(isTransitionLegal("orders", "paid", "pending")).toBe(false);
+  it("maps the forward main line: confirmed -> processing -> ready_to_ship -> shipped", () => {
+    expect(getLegalTransitions("orders", "confirmed")).toEqual([
+      "processing",
+      "ready_to_ship",
+      "on_hold",
+      "cancelled",
+    ]);
+    expect(getLegalTransitions("orders", "processing")).toEqual([
+      "ready_to_ship",
+      "on_hold",
+      "cancelled",
+    ]);
+    expect(getLegalTransitions("orders", "ready_to_ship")).toEqual([
+      "shipped",
+      "on_hold",
+      "cancelled",
+    ]);
+    expect(isTransitionLegal("orders", "processing", "shipped")).toBe(false);
   });
 
-  it("maps shipped -> [refunded]", () => {
-    expect(getLegalTransitions("orders", "shipped")).toEqual(["refunded"]);
-    expect(isTransitionLegal("orders", "shipped", "refunded")).toBe(true);
-    expect(isTransitionLegal("orders", "shipped", "paid")).toBe(false);
+  it("maps shipped -> [in_transit, delivered, delivery_failed, on_hold, cancelled]", () => {
+    expect(getLegalTransitions("orders", "shipped")).toEqual([
+      "in_transit",
+      "delivered",
+      "delivery_failed",
+      "on_hold",
+      "cancelled",
+    ]);
+    expect(isTransitionLegal("orders", "shipped", "delivered")).toBe(true);
+    expect(isTransitionLegal("orders", "shipped", "returned")).toBe(false);
   });
 
-  it("maps refunded -> [] (terminal)", () => {
-    expect(getLegalTransitions("orders", "refunded")).toEqual([]);
-    expect(isTransitionLegal("orders", "refunded", "pending")).toBe(false);
-    expect(isTransitionLegal("orders", "refunded", "paid")).toBe(false);
+  it("maps the delivery_failed recovery path", () => {
+    expect(getLegalTransitions("orders", "delivery_failed")).toEqual([
+      "shipped",
+      "returned",
+      "cancelled",
+    ]);
+    expect(isTransitionLegal("orders", "delivery_failed", "shipped")).toBe(true);
+    expect(isTransitionLegal("orders", "delivery_failed", "delivered")).toBe(false);
+  });
+
+  it("delivered exits only into returned; on_hold re-enters the line", () => {
+    expect(getLegalTransitions("orders", "delivered")).toEqual(["returned"]);
+    expect(getLegalTransitions("orders", "on_hold")).toEqual([
+      "confirmed",
+      "processing",
+      "cancelled",
+    ]);
+  });
+
+  it("maps returned and cancelled to [] (terminal)", () => {
+    expect(getLegalTransitions("orders", "returned")).toEqual([]);
+    expect(getLegalTransitions("orders", "cancelled")).toEqual([]);
+    expect(isTransitionLegal("orders", "returned", "pending")).toBe(false);
+    expect(isTransitionLegal("orders", "cancelled", "confirmed")).toBe(false);
   });
 
   it("returns [] for unknown states", () => {
     expect(getLegalTransitions("orders", "unknown")).toEqual([]);
-    expect(isTransitionLegal("orders", "unknown", "paid")).toBe(false);
+    expect(isTransitionLegal("orders", "unknown", "confirmed")).toBe(false);
   });
 
   it("returns [] for models without lifecycle", () => {
     expect(getLegalTransitions("products", "pending")).toEqual([]);
-    expect(isTransitionLegal("products", "pending", "paid")).toBe(false);
+    expect(isTransitionLegal("products", "pending", "confirmed")).toBe(false);
   });
 });
 
