@@ -203,6 +203,25 @@ class TestBuildCliCommand:
         assert proc.returncode == 2
         assert "frobnicate" in (proc.stderr + proc.stdout)
 
+    def test_builtin_commands_dispatch_without_params(self, tmp_path):
+        """Regression: login/logout/whoami have no _params; main() used to
+        read ns._params unconditionally and crash before doing anything."""
+        import runpy
+        import types
+        out = tmp_path / "cli.py"
+        call_command("build_cli", out=str(out),
+                     api_host="https://admin.example.com", stdout=io.StringIO())
+        code = compile(out.read_text(), str(out), "exec")
+        mod = types.ModuleType("generated_cli")
+        mod.__dict__["__name__"] = "generated_cli"
+        exec(code, mod.__dict__)
+        seen = {}
+        mod._request = lambda *a, **k: seen.setdefault("args", (a, k)) or {}
+        assert mod.main(["whoami"]) == 0          # no AttributeError
+        assert mod.main(["logout"]) == 0
+        args = seen["args"][0]                    # (method, path, ...)
+        assert args[0] == "GET" and args[1] == "/api/me/"
+
     def test_cli_name_flag_renames(self, tmp_path):
         out = tmp_path / "cli.py"
         call_command("build_cli", out=str(out), cli_name="freshorama-admin-cli",
