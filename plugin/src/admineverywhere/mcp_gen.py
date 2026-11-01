@@ -84,22 +84,28 @@ def _resource_tool(name, args):
     spec = next((r for r in RESOURCES if r["name"] == resource), None)
     if spec is None:
         raise KeyError(name)
-    # Detail paths were written with {id} by the schema generator; fill it
-    # from the tool arguments (quoted — ids may contain odd characters).
-    detail = spec["detail_path"].replace("{id}", urllib.parse.quote(str(args["id"]), safe="")) \\
-        if spec["detail_path"] else None
+    # Detail paths were written with {id} by the schema generator; filled from
+    # the tool arguments ONLY for detail actions (quoted — ids may contain odd
+    # characters). The old unconditional fill made EVERY list/create tool
+    # demand a dummy "id" argument that the list path never uses — schema-
+    # honest clients crashed on "missing argument: id" (owner evidence
+    # 2026-11-01, freshorama-admin-mcp.py v0.1.5/v0.1.9).
+    def _detail():
+        if not spec["detail_path"]:
+            raise RuntimeError("%s has no detail path" % name)
+        return spec["detail_path"].replace("{id}", urllib.parse.quote(str(args["id"]), safe=""))
     if action == "list":
         params = {k: str(args[k]) for k in ("page", "page_size") if k in args}
         qs = ("?" + urllib.parse.urlencode(params)) if params else ""
         return _call("GET", spec["list_path"] + qs)
     if action == "retrieve":
-        return _call("GET", detail)
+        return _call("GET", _detail())
     if action == "create":
         return _call("POST", spec["list_path"], args["data"])
     if action == "update":
-        return _call("PATCH", detail, args["data"])
+        return _call("PATCH", _detail(), args["data"])
     if action == "destroy":
-        return _call("DELETE", detail)
+        return _call("DELETE", _detail())
     raise KeyError(name)
 
 
