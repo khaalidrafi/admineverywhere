@@ -157,3 +157,52 @@
      hard-exit + upstreaming the origin-law guard from the Freshorama
      client). CI blast-radius flags (agent-chain secrets, burn lanes)
      are owner/ops calls — flagged, not touched.
+
+* GLM-5.3 — 2026-11-02 ~03:5xZ+08 tick (cron re-check)
+  1. ai/authz-1 DELIVERED — the demo-rig half of the CRITICAL finding
+     from the 2026-11-02 dual-repo security audit, closed test-first in
+     four commits (gate GREEN 4/4 on the tip: env + pytest 434 passed,
+     1 skipped + manage.py check + makemigrations clean):
+     - 07c6d06 bulk_flag requires the `managers` role — new reusable
+       admineverywhere.permissions.RequireGroups / require_groups(),
+       mirroring the client's roleAllows() exactly (superuser bypass,
+       at-least-one-of groups, is_staff deliberately NOT a bypass);
+       auditor/staff-without-claim get 403 with ZERO rows written; the
+       ungated surfaces (reads, transition, flag, audit list) stay
+       any-authenticated so the narrow gate cannot break real users;
+       OpenAPI description states the 403; proof fixture re-captured by
+       the canonical spectacular command.
+     - 9f506c5 POST /api/audit/ is allowlisted — AuditEntry.CREATE_ALLOWLIST
+       {"order.flag": "order"} is the documented extension point; unknown
+       action / wrong object_type / unknown or non-numeric target answer
+       field-level 400 (no more "invoice.sent" on nonexistent invoice #7
+       poisoning the triage screen); serializer fields untouched so the
+       OpenAPI document does not move; docs/custom-actions.md rewritten.
+     - 13beb4a serving invocations (runserver/gunicorn/uwsgi/daphne/
+       hypercorn/granian + wsgi/asgi scripts) hard-exit without DEMO_DEV=1;
+       check/migrate/shell/seed/gate legs keep the loud warning only —
+       live-verified both ways against the landing gate.
+     - 4c6adef thin client ORIGIN LAW — saved API override must be a bare
+       origin (scheme://host[:port]); path/query/hash/non-http(s)/garbage
+       dropped WHOLE with fallback to the bundled apiUrl; boot self-heal
+       removes the stale localStorage poison; login gains the "Use the URL
+       this app shipped with" reset. vitest 575/575 (49 files), prod build
+       green. Upstreams the Freshorama client hardening.
+     EXPECTED_PYTEST pin bumped 334 -> 434 in the branch's final commit
+     (the pin was 72 stale on ai/main — burn-lane test additions never
+     bumped it; graded at tip, so the merge carries tests + pin together).
+     Merge is the Lead's gate; the harness 11-leg --fe is the merger's, as
+     always.
+  2. WEBSITE ACCESS LOST — owner action needed. The freshorama/website
+     clone died with a sandbox recycle and the account PAT no longer
+     reaches the freshorama org: GET /user/repos lists zero freshorama/*
+     repos; git ls-remote on freshorama/website answers 403
+     ("Write access to repository not granted") while khaalidrafi/
+     freshorama (the runner fork — only main + a copilot branch, NOT the
+     team repo) answers fine. Blocked until a token with
+     freshorama/website access is provided: the TODOS re-check itself,
+     the TG->Discord relay module (webhook pending anyway), and the
+     v0.1.15 gate legs.
+  3. AE board sweep: zero open TODO headlines remain for my roles after
+     this delivery; the queue item ai/authz-1 was self-queued in chat on
+     the ~02:2xZ tick and is now delivered.
