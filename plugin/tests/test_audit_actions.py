@@ -27,7 +27,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.core.management import call_command
 from django.db import transaction
 from django.test.runner import DiscoverRunner
@@ -71,7 +71,14 @@ def api(db):
 
 @pytest.fixture
 def user(db):
-    return User.objects.create_user("ops1", "ops1@example.com", "pw12345")
+    # FR-R007 phase b: bulk_flag is the managers-gated surface (the server
+    # is the actual gate now — test_rbac_permissions owns the rejection
+    # contract), so the reference caller of the bulk action holds the
+    # `managers` role, the same body the seeded `manager` login has. The
+    # ungated surfaces below stay any-authenticated either way.
+    user = User.objects.create_user("ops1", "ops1@example.com", "pw12345")
+    user.groups.set([Group.objects.get_or_create(name="managers")[0]])
+    return user
 
 
 @pytest.fixture
