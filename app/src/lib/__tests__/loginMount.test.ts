@@ -157,12 +157,14 @@ describe("mounted login page — the bytes on the wire", () => {
     const a = get(app);
     expect(a.token).toBe("tok-123");
     expect(a.username).toBe("admin");
-    // whitespace is trimmed; a trailing slash survives because api.ts's
-    // baseUrl() strips it per request — the stored override stays verbatim
-    expect(a.apiUrlOverride).toBe("http://api.test/");
+    // ORIGIN LAW (ai/authz-1): the stored override is the CANONICAL ORIGIN,
+    // not the typed text — trailing slashes and empty paths normalize away
+    // (URL.origin), and anything beyond an origin is dropped wholesale
+    // (sanitizeApiOverride) before it is ever persisted.
+    expect(a.apiUrlOverride).toBe("http://api.test");
     expect(localStorage.getItem("dad.token")).toBe("tok-123");
     expect(localStorage.getItem("dad.username")).toBe("admin");
-    expect(localStorage.getItem("dad.apiUrl")).toBe("http://api.test/");
+    expect(localStorage.getItem("dad.apiUrl")).toBe("http://api.test");
 
     // the schema arrived through the config's schemaPath and went through
     // normalizeOpenAPI — byId/listPath only exist on the normalized shape,
