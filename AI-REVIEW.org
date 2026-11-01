@@ -131,32 +131,53 @@ AI wrote ~95% of this code. Review in this order — cheap-to-review & high-risk
   - [ ] app/src-tauri/ — tauri-plugin-notification registration + notification:default
     capability (Cargo.lock resolves at CI build time — no cargo in the sandbox)
 
-* TODO P1 — REVIEW: the 11-state demo-rig landing (GLM-5.3, 2026-11-02; branch ai/demo-rig-11 @ 0e2ce36 + aac6f17, pushed, queued for review — NOT self-merged)
+* DONE P1 — REVIEW: the 11-state demo-rig landing (GLM-5.3, 2026-11-02; branch ai/demo-rig-11 @ 0e2ce36 + aac6f17 — review PASS 04:5x+08, LANDED on ai/main 027988a ~05:2x+08)
   The rig's 4-state FR-R001 sketch is replaced by the production BYTE-SACRED
   11-state COD machine (the README 6203c72 promise made true; the earlier
   uncommitted rewrite was lost with a recycled sandbox and is rebuilt here).
   Review seams, highest-value first:
-  - [ ] demo-backend/shop/models.py — Status/STATUS_ORDER/TRANSITIONS must stay
+  - [X] demo-backend/shop/models.py — Status/STATUS_ORDER/TRANSITIONS must stay
     byte-equal to the production machine (Freshorama shop/models.py): 11 states
     in declared order, production user-facing labels, cancel reachable from
     every state EXCEPT delivered, delivered exits only into returned,
     returned/cancelled terminal, STOCK_* constants carry the production policy
-  - [ ] plugin/tests/test_order_lifecycle.py — the 29 legal edges and the
+  - [X] plugin/tests/test_order_lifecycle.py — the 29 legal edges and the
     illegal matrix are pinned EXPLICITLY (never derived from TRANSITIONS, or
     the test could not catch a broken table); STATES is the hand-written
     enum-order witness; cancel-law endpoint sweep walks real paths
-  - [ ] demo-backend/shop/migrations/0006_*.py — choices-only alter;
+  - [X] demo-backend/shop/migrations/0006_*.py — choices-only alter;
     makemigrations --check must stay clean
-  - [ ] demo-backend/shop/management/commands/seed_demo.py — targets drawn from
+  - [X] demo-backend/shop/management/commands/seed_demo.py — targets drawn from
     STATUS_ORDER (BFS walk unchanged); `returned` hops acted by the seeded
     non-superuser (the rig's analogue of production's refund flow)
-  - [ ] three-way lockstep — app/src/lib/statusTransitions.ts registry, the
+  - [X] three-way lockstep — app/src/lib/statusTransitions.ts registry, the
     recaptured app/src/lib/__tests__/fixtures/openapi.json (over HTTP, 16
     paths) and the rig model must never drift again; the drift gate + vitest
     pins grade it
-  - [ ] scripts/landing_gate.py — EXPECTED_PYTEST 504 / EXPECTED_VITEST 577 /
+  - [X] scripts/landing_gate.py — EXPECTED_PYTEST 504 / EXPECTED_VITEST 577 /
     EXPECTED_VITEST_FILES 49 re-measured on this branch; re-measure after any
     test-count change
   Verify: bash .github/scripts/gate.sh (pytest + check + migrations) and
   cd app && npm test — then merge ai/demo-rig-11 into ai/main through the
   usual gate.
+  VERDICT (Lead P1 review, 04:5x+08 tick, live probes): PASS on every
+  seam — byte-faithfulness diffed against production shop/models.py
+  (11 states, 29 edges edge-for-edge, STOCK members identical, cancel /
+  delivered / terminal laws hold); two-tip gate (branch tip aac6f17 and
+  merge tip) identical green: pytest 504 passed / 1 skipped, check
+  clean, makemigrations --check clean, vitest 577 passed / 49 files.
+  LANDED (GLM-5.3, ~05:2x+08 tick): the reviewer's merge sandbox held no
+  AE credential (b5f6995 push-blocked, bundle lost with the sandbox
+  recycle) — the merge was re-created from the SAME refs with the SAME
+  evidence as 027988a (no-ff from a74aaed; 16 product/test files, zero
+  board files, zero conflicts) and the FULL 11-leg landing gate re-run
+  at the merge tip before pushing: pytest 504 / check clean / migrations
+  clean / vitest 577 (49 files) / csv+brand+parity BYTE-IDENTICAL /
+  gate-twin ROSTER-IDENTICAL / registry+doc twins OK — GATE GREEN.
+  Pushed a74aaed..027988a. Exhaustion batch items 1+2 LANDED (batch
+  8/8); README 6203c72's byte-sacred 11-state promise is now TRUE.
+  ENV NOTE (one honest gate RED this tick, sandbox not tree): a stray
+  pytest-django in the venv put 504 SETUP errors under this suite's
+  "(no pytest-django)" conftest; landing_gate graded it RED (never a
+  false green) and the fix was one uninstall — the population pins did
+  exactly what they were built for.
