@@ -20,7 +20,27 @@ html, body {
   background-color: var(--brand-bg);
   color: var(--brand-text);
   font-family: var(--brand-font);
+  /* Fallback under the dvh utilities: never let the document be shorter
+     than the viewport on browsers without unit support quirks. */
+  min-height: 100%;
 }
+
+/*
+ * Android edge-to-edge fix (owner bug report, 2026-11-02: "overflow issue
+ * in the bottom of the Android app").
+ *
+ * In the Tauri Android WebView the page is laid out edge-to-edge, so the
+ * classic `min-h-screen` (100vh) is TALLER than the visible viewport: the
+ * system/gesture nav bar area is included, which produced a phantom scroll
+ * and bottom content (chat launcher, toasts, last rows) hiding under the
+ * bar. Fix, applied in the components:
+ *   - shells use `min-h-dvh` (tracks the visible/dynamic viewport),
+ *   - every `fixed bottom-*` element adds `env(safe-area-inset-bottom)` to
+ *     its offset, which the WebView populates exactly when it draws
+ *     edge-to-edge (viewport-fit=cover is set in index.html).
+ * On desktop/iOS-safe viewports env() resolves to 0px, so this is a no-op
+ * outside Android.
+ */
 
 /* --- shared primitives (kept tiny; components compose Tailwind classes) --- */
 .card {

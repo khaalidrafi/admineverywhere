@@ -110,7 +110,7 @@
     </div>
   {:else}
     <div
-      class="flex min-h-screen flex-col items-center justify-center gap-4"
+      class="flex min-h-dvh flex-col items-center justify-center gap-4"
       role="status"
       aria-label="{$app.brand.appName} is loading"
     >
@@ -123,7 +123,7 @@
     {@const AuthPage = authPage.component}
     <AuthPage />
   {:else}
-    <div class="flex min-h-screen items-center justify-center text-text/60">
+    <div class="flex min-h-dvh items-center justify-center text-text/60">
       No page declares <code>standalone: true</code> — a sign-in module is required.
     </div>
   {/if}
