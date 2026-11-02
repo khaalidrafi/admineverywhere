@@ -28,15 +28,11 @@ jobs:
             git log --oneline -1
       - run:
           name: CSP hygiene — shipped tauri.conf.json stays dev-origin-free
+          # NOTE: no heredocs anywhere in this file — CircleCI config v2.1
+          # treats '<<' as a parameter tag (proven: pipeline errored on
+          # 'Unclosed << tag'); python -c keeps the scanner happy.
           command: |
-            python3 - <<'PY'
-            import json, sys
-            csp = json.load(open("app/src-tauri/tauri.conf.json"))["app"]["security"]["csp"]
-            bad = [t for t in ("localhost", "http://", "ws://", "wss://", "*") if t in csp]
-            if bad:
-                sys.exit(f"dev-shaped CSP leaked into app/src-tauri/tauri.conf.json: {bad}")
-            print("csp hygiene ok:", csp)
-            PY
+            python3 -c "import json,sys; csp=json.load(open('app/src-tauri/tauri.conf.json'))['app']['security']['csp']; bad=[t for t in ('localhost','http://','ws://','wss://','*') if t in csp]; sys.exit(f'dev-shaped CSP leaked into app/src-tauri/tauri.conf.json: {bad}') if bad else print('csp hygiene ok:', csp)"
       - run:
           name: vitest — app unit suite
           command: |
