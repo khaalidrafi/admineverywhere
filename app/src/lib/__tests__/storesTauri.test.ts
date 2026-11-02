@@ -283,7 +283,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
 
     const a = get(app);
     expect(a.booted).toBe(true);
-    expect(a.brand.appName).toBe("Admineverywhere"); // the shipped neutral default
+    expect(a.brand.appName).toBe("Freshorama Admin"); // the shipped release-tree brand
     expect(get(toasts)).toEqual([]);
     expect(a.backendDown).toBe(false); // banner belongs to the schema flow, not boot
     // exactly one probe of the documented plugin path — a 404 is never chased
@@ -306,11 +306,15 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
     // stock bundle ships an empty origin + documented paths, never a null
     // config (that null used to be what "the URL doesn't work" felt like)
     expect(get(app).config).toEqual({
-      apiUrl: "",
+      apiUrl: "https://freshorama-production.up.railway.app",
       authPath: "/api/auth/token/",
       schemaPath: "/api/schema/",
     });
-    expect(urlsSeen()).toEqual(["config.json", "brand.json"]); // DEV-only reads
+    expect(urlsSeen()).toEqual([
+      "config.json",
+      "brand.json",
+      "https://freshorama-production.up.railway.app/admineverywhere/branding/",
+    ]); // DEV-only reads + the release tree's bundled apiUrl probe
   });
 
   it("a backend that is unreachable at boot still boots: fetch rejects, the bundled brand stays, nothing throws", async () => {
@@ -322,9 +326,9 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
 
     const a = get(app);
     expect(a.booted).toBe(true);
-    expect(a.brand.appName).toBe("Admineverywhere"); // the bundled identity
+    expect(a.brand.appName).toBe("Freshorama Admin"); // the bundled release-tree identity
     expect(a.config).toEqual({
-      apiUrl: "",
+      apiUrl: "https://freshorama-production.up.railway.app",
       authPath: "/api/auth/token/",
       schemaPath: "/api/schema/",
     });
