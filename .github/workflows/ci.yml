@@ -1,0 +1,93 @@
+name: ae-gate
+
+# ---------------------------------------------------------------------------
+# .github/workflows/ci.yml — khaalidrafi/admineverywhere
+# (Lead lane: Freshorama Agent, owner 06:11Z: "configure CCI as the API
+# has admin perms")
+#
+# GH-WORKFLOW ROUTE (proven on freshorama/website build 7): this file is
+# executed by CircleCI's GH Actions compatibility runner (machine image
+# ubuntu-2404:gha, `circleci run actions exec`) once the repo is inside
+# the CircleCI GitHub App's scope. Runner facts (measured on website):
+# NO auto-checkout → explicit PAT clone below; docker available; the
+# image is PEP-668 externally-managed AND ~/.npm ships root-owned AND
+# ~/.local/bin is not writable — hence the /tmp venv and /tmp npm cache.
+#
+# Scope = the test-gate ONLY (CSP hygiene + app vitest + plugin pytest
+# with the demo-backend fixture — mirrors build-all.yml test-gate).
+# ZERO build/deploy legs here: web/windows/linux/android/nix/guix stay
+# on the hand-dispatched build-all.yml legs (CI LAW: push triggers dead,
+# zero duplication of deployment into CircleCI).
+#
+# AE_PAT lives in the project's env-vars (set via API from the vault;
+# never in files).
+# ---------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [ai/main]
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout khaalidrafi/admineverywhere (explicit PAT clone)
+        run: |
+          cd "$HOME"
+          if [ -z "$AE_PAT" ]; then echo "AE_PAT missing from project env-vars"; exit 1; fi
+          git clone --depth 1 --branch "$CIRCLE_BRANCH" \
+            "https://x-access-token:${AE_PAT}@github.com/khaalidrafi/admineverywhere.git" project
+          cd project
+          echo "checked out $(git log --oneline -1)"
+
+      - name: CSP hygiene — shipped tauri.conf.json stays dev-origin-free
+        run: |
+          cd "$HOME/project"
+          python3 - <<'PY'
+          import json, sys
+          csp = json.load(open("app/src-tauri/tauri.conf.json"))["app"]["security"]["csp"]
+          bad = [t for t in ("localhost", "http://", "ws://", "wss://", "*") if t in csp]
+          if bad:
+              sys.exit(f"dev-shaped CSP leaked into app/src-tauri/tauri.conf.json: {bad}")
+          print("csp hygiene ok:", csp)
+          PY
+
+      - name: Zero-Chinese policy — no CJK characters in tracked sources
+        run: |
+          cd "$HOME/project"
+          # Owner 06:11Z: NO Chinese absolutely anywhere. Bangla content
+          # (CLIENT-DEMANDS.md) is sanctioned; CJK ideographs are not.
+          hits=$(grep -rPl '[\x{4E00}-\x{9FFF}\x{3400}-\x{4DBF}\x{F900}-\x{FAFF}]' \
+            --include='*.py' --include='*.ts' --include='*.tsx' --include='*.js' \
+            --include='*.rs' --include='*.yml' --include='*.md' --include='*.json' \
+            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist \
+            . || true)
+          if [ -n "$hits" ]; then
+            echo "CJK characters found in:"; echo "$hits"; exit 1
+          fi
+          echo "zero-CJK policy ok"
+
+      - name: vitest — app unit suite (Node 22, /tmp npm cache)
+        run: |
+          cd "$HOME/project/app"
+          export npm_config_cache=/tmp/.npm
+          export PATH="/usr/bin:$PATH"
+          hash -r
+          if ! command -v node >/dev/null 2>&1 || [ "$(node -v | cut -c2-3)" != "22" ]; then
+            curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            hash -r
+            export PATH="/usr/bin:$PATH"
+          fi
+          node -v
+          npm ci --no-audit --no-fund
+          NODE_OPTIONS=--max-old-space-size=1024 npx vitest run --maxWorkers=1
+
+      - name: pytest — plugin suite with demo-backend fixture (venv, PEP-668 safe)
+        run: |
+          cd "$HOME/project"
+          python3 -m venv /tmp/aevenv
+          /tmp/aevenv/bin/pip install --quiet --upgrade pip
+          /tmp/aevenv/bin/pip install --quiet -e "plugin[test]" -r demo-backend/requirements.txt
+          /tmp/aevenv/bin/python -m pytest plugin/tests -q
