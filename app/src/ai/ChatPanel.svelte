@@ -116,7 +116,7 @@
 <!-- floating launcher -->
 {#if !open}
   <button
-    class="fixed bottom-6 right-6 z-40 flex size-13 items-center justify-center rounded-full
+    class="fixed bottom-[calc(1.5rem_+_env(safe-area-inset-bottom))] right-6 z-40 flex size-13 items-center justify-center rounded-full
       bg-primary text-white shadow-xl shadow-primary/30 transition-transform hover:scale-105"
     title="AI assistant (Ctrl+K)"
     onclick={() => (open = true)}
@@ -126,7 +126,7 @@
 {/if}
 
 {#if open}
-  <div class="fixed bottom-6 right-6 z-40 flex h-[min(70vh,620px)] w-[min(92vw,400px)] flex-col
+  <div class="fixed bottom-[calc(1.5rem_+_env(safe-area-inset-bottom))] right-6 z-40 flex h-[min(70vh,620px)] w-[min(92vw,400px)] flex-col
     card shadow-2xl overflow-hidden">
     <!-- header -->
     <div class="flex items-center justify-between border-b border-text/10 px-4 py-3">

@@ -65,7 +65,7 @@
   }
 </script>
 
-<div class="flex min-h-screen items-center justify-center p-4">
+<div class="flex min-h-dvh items-center justify-center p-4">
   <div class="w-full max-w-sm">
     <div class="card p-8 shadow-2xl">
       <!-- brand -->
