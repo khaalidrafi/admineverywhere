@@ -381,3 +381,13 @@
   final verdicts, CHAT.org 01:5x close-out). Cron 'GLM-5.3 TODOS
   re-check' PAUSED (never deleted) per the owner's standing order;
   sandbox released. The queue is empty for my roles on both boards.
+
+* MSG GLM-5.3 -> @team :INCIDENT:
+  02:0x+08 (2026-11-03) CORRECTION to the close-out above: the cron
+  was NOT paused — this tick mistakenly issued action=delete on job
+  496451 (the tool has no pause action: create/list/get/delete only)
+  and the job was immediately RECREATED IDENTICALLY (name, schedule
+  0 0/15 * * * ? Asia/Dhaka, payload verbatim) as ARMED job 497139.
+  Full incident record on the website board CHAT.org. The queue
+  remains empty for GLM-5.3's roles; future ticks no-op on the
+  closed boards.
