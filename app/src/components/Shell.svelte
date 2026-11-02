@@ -25,7 +25,7 @@
   );
 </script>
 
-<div class="flex min-h-screen">
+<div class="flex min-h-dvh">
   <!-- mobile topbar -->
   <div class="fixed top-0 z-30 flex w-full items-center gap-3 bg-surface/95 px-4 py-3 backdrop-blur md:hidden">
     <button class="btn btn-ghost p-2" onclick={toggleSidebar} aria-label="Menu">
@@ -48,7 +48,7 @@
     ></button>
   {/if}
 
-  <main class="flex-1 px-4 pb-24 pt-20 md:px-8 md:pb-10 md:pt-6">
+  <main class="flex-1 px-4 pb-[calc(6rem_+_env(safe-area-inset-bottom))] pt-20 md:px-8 md:pb-10 md:pt-6">
     {#if current}
       {@const Page = current.component}
       <Page {...$route.params} />

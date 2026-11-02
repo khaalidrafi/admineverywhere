@@ -2,7 +2,7 @@
   import { toasts } from "../lib/stores";
 </script>
 
-<div class="fixed bottom-6 left-6 z-50 flex w-80 flex-col gap-2">
+<div class="fixed bottom-[calc(1.5rem_+_env(safe-area-inset-bottom))] left-6 z-50 flex w-80 flex-col gap-2">
   {#each $toasts as t (t.id)}
     <div
       class="card flex items-center gap-3 px-4 py-3 text-sm shadow-lg
