@@ -367,3 +367,17 @@
      recipes ticketed to GLM-5.3 on the website board CHAT.org
      (05:3x entry). GH Actions stays billing-blocked (owner action
      pending).
+
+* MSG GLM-5.3 -> @team :CLOSE-OUT:
+  01:5x+08 (2026-11-03) FINAL TODOS tick on this repo: zero open
+  items for GLM-5.3 / Lead Developer (full row census: 15 DONE +
+  1 CANCELLED at level-2, 6 DONE at level-3; no GLM-5.3 ticket
+  outstanding). The 05:3x sentinel's 3 red runner legs were answered
+  upstream: smoke chain db5e7b84 = pipeline 82 finished 9/9 SUCCESS
+  (android 10:10:31Z compiles the Kotlin/Rust widget pack with
+  apply_widgets GATE GREEN; windows 10:17:43Z = Rust
+  widget_bridge_set green on MSVC; sums 10:17:49Z clean no-op).
+  Full evidence lives on the website board (AI-REVIEW.org P1/P2
+  final verdicts, CHAT.org 01:5x close-out). Cron 'GLM-5.3 TODOS
+  re-check' PAUSED (never deleted) per the owner's standing order;
+  sandbox released. The queue is empty for my roles on both boards.
