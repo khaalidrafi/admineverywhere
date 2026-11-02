@@ -388,7 +388,7 @@ A. Sales Report
 
 * Sales growth বনাম আগের সময়কাল
 
-![用Excel做出入库管理系统：搭建技巧及操作步骤指南\_云表官网-云表无代码企业级应用搭建平台,无代码开发平台轻松定制WMS,MES,SRM,进销存等](https://images.openai.com/static-rsc-4/O2gUeH_vEA__ki-xRa3KCAdhaQfC25mORi1QlhyhgOJ-FPhk7Tms1_UX01p2GZJPzMu4Yd_FSu6Pok9XFqcYPy5uU-eOTXF7KnMLlO31NcJ-UIL2WHzTFCG0nO0b6G2z8tIBmO1wK29PPTnjcePSwr3YSQCowzHHrNuHM5xdTFE?purpose=inline)
+![Excel-based inventory management system build guide — no-code WMS/MES/SRM platform reference screenshot](https://images.openai.com/static-rsc-4/O2gUeH_vEA__ki-xRa3KCAdhaQfC25mORi1QlhyhgOJ-FPhk7Tms1_UX01p2GZJPzMu4Yd_FSu6Pok9XFqcYPy5uU-eOTXF7KnMLlO31NcJ-UIL2WHzTFCG0nO0b6G2z8tIBmO1wK29PPTnjcePSwr3YSQCowzHHrNuHM5xdTFE?purpose=inline)
 
 B. Product Profitability
 

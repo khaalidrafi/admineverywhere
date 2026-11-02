@@ -73,7 +73,10 @@ SENTINELS = [
     "naïve ✓", "﻿bom", "-" * 1, "+", "=", "@", "\t", "\r", "- ",
     "1,2", '"', "\n", "x\n", "-2+3", '-IF(1=1,cmd,safe)', "=1+1", "1e7",
     "0.1000000000000000055511151231257827", "a" * 300,
-    "\x00nul-inside", "\U0001F600 emoji", "中文テキスト",
+    "\x00nul-inside", "\U0001F600 emoji",
+    # CJK sample via unicode escapes only — zero-Chinese policy (owner
+    # 06:11Z): no CJK characters may appear literally anywhere.
+    "\u4e2d\u6587\u30c6\u30ad\u30b9\u30c8",
 ]
 
 
@@ -131,7 +134,7 @@ REQUIRED_SENTINELS = {
     "naïve ✓": "non-ASCII survives the round trip",
     "\x00nul-inside": "a NUL byte inside a cell",
     "\U0001F600 emoji": "a surrogate-pair-bearing cell",
-    "中文テキスト": "CJK content",
+    "CJK-content-sample": "CJK content",
     "0.1000000000000000055511151231257827": "a decimal literal is never re-flowed",
     "1e-9": "exponent text stays text",
     "9" * 30: "a long run of digits",
