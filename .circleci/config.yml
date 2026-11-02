@@ -1,0 +1,69 @@
+version: 2.1
+
+# ---------------------------------------------------------------------------
+# .circleci/config.yml — khaalidrafi/admineverywhere (legacy project route)
+# (Lead lane: Freshorama Agent — the repo sits outside the CircleCI GitHub
+# App scope, so the gh-workflow route (.github/workflows/ci.yml) cannot
+# fire yet; this legacy config gives the same test-gate on the v1.1
+# project, dispatch-only. Owner 06:11Z: configure CCI via API.)
+#
+# Scope = the test-gate ONLY (mirrors build-all.yml test-gate: CSP hygiene
+# + app vitest + plugin pytest with the demo-backend fixture). ZERO
+# build/deploy legs here — web/windows/linux/android/nix/guix stay on the
+# hand-dispatched build-all legs (CI LAW: push triggers dead, zero deploy
+# duplication into CircleCI). Checkout rides $AE_PAT (project env-var, set
+# via API from the vault; no deploy key needed).
+# ---------------------------------------------------------------------------
+
+jobs:
+  vitest:
+    docker:
+      - image: cimg/node:22.9
+    steps:
+      - run:
+          name: Checkout (explicit PAT clone — no deploy key)
+          command: |
+            git clone --depth 1 --branch "$CIRCLE_BRANCH" \
+              "https://x-access-token:${AE_PAT}@github.com/khaalidrafi/admineverywhere.git" .
+            git log --oneline -1
+      - run:
+          name: CSP hygiene — shipped tauri.conf.json stays dev-origin-free
+          command: |
+            python3 - <<'PY'
+            import json, sys
+            csp = json.load(open("app/src-tauri/tauri.conf.json"))["app"]["security"]["csp"]
+            bad = [t for t in ("localhost", "http://", "ws://", "wss://", "*") if t in csp]
+            if bad:
+                sys.exit(f"dev-shaped CSP leaked into app/src-tauri/tauri.conf.json: {bad}")
+            print("csp hygiene ok:", csp)
+            PY
+      - run:
+          name: vitest — app unit suite
+          command: |
+            cd app
+            npm ci --no-audit --no-fund
+            NODE_OPTIONS=--max-old-space-size=1024 npx vitest run --maxWorkers=1
+
+  pytest:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - run:
+          name: Checkout (explicit PAT clone — no deploy key)
+          command: |
+            git clone --depth 1 --branch "$CIRCLE_BRANCH" \
+              "https://x-access-token:${AE_PAT}@github.com/khaalidrafi/admineverywhere.git" .
+            git log --oneline -1
+      - run:
+          name: pytest — plugin suite with demo-backend fixture
+          command: |
+            python -m pip install --quiet --upgrade pip
+            python -m pip install --quiet -e "plugin[test]" -r demo-backend/requirements.txt
+            python -m pytest plugin/tests -q
+
+workflows:
+  version: 2
+  gate:
+    jobs:
+      - vitest
+      - pytest
