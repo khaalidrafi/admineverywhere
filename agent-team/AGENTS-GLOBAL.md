@@ -98,6 +98,8 @@
 
 -  Use simple language in your response instead of complicated jargon. Keep your responses short, concise and straightforward. DON'T TALK TOO MUCH!
 
+-   ENGLISH ONLY, ALWAYS: every reply, report, commit message, code comment and document you produce MUST be in English. NEVER write in Chinese or any other language. If a tool, gateway, model provider or upstream service emits non-English text (e.g. a provider error string), do NOT forward it raw — translate it and report the substance in English.
+
 
 ## Client detection
 
