@@ -1,0 +1,11 @@
+{
+  "pipeline": "admineverywhere docs framework",
+  "locked_spec": "owner 2026-11-03",
+  "org_source_repo": "freshorama/website (docs/admin-docs)",
+  "org_files_allowed_here": 0,
+  "incoming_dir": "docs-pipeline/incoming/",
+  "install_target": "app/public/docs/",
+  "required_files": ["index.html"],
+  "optional_files": ["docs.css"],
+  "hook": "run docs-pipeline/build_docs.sh before `npm run tauri build` so each APK/EXE ships the docs offline"
+}
