@@ -2,7 +2,8 @@
   export const meta = {
     title: "Trend — daily volume",
     size: "lg",
-    data: { aggregate: "bucket", days: 30 },
+    // Pinned to real order volume (auto-pick used to land on the empty audit log).
+    data: { endpoint: "orders", field: "created_at", aggregate: "bucket", days: 30 },
   };
 </script>
 

@@ -2,7 +2,9 @@
   export const meta = {
     title: "7-day change",
     size: "sm",
-    data: { aggregate: "delta", days: 7, pollInterval: 60_000 },
+    // Pinned to the shop's real momentum (owner blank-dashboard report:
+    // the auto-pick landed on the empty audit log — pin the source).
+    data: { endpoint: "orders", field: "created_at", aggregate: "delta", days: 7, pollInterval: 60_000 },
   };
 </script>
 

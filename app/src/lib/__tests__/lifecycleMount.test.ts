@@ -7,12 +7,13 @@
  *  hand-written builder. Harness = browser resolve condition + flushSync +
  *  stubbed fetch, and the schema is normalizeOpenAPI of the captured fixture.
  */
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { flushSync, mount, unmount } from "svelte";
 import ModelPage from "../../pages/ModelPage.svelte";
 import Toaster from "../../components/Toaster.svelte";
 import { normalizeOpenAPI } from "../openapi";
-import { lifecycleAvailable, lifecycleProblem } from "../statusTransitions";
+import { lifecycleAvailable, lifecycleProblem, statusTransitions } from "../statusTransitions";
+import type { ModelSpec } from "../types";
 import { findAuditModel } from "../rbac";
 import { app, toasts } from "../stores";
 import fixture from "./fixtures/openapi.json";
@@ -73,51 +74,98 @@ function render(schema: AdminSchema, modelId = "orders") {
 const PENDING_ROW = { id: 7, status: "pending", total: "12.50", customer: 3, created_at: "2026-10-20T10:00:00Z" };
 const PAGE = { count: 1, results: [PENDING_ROW] };
 
+/** OWNER DIRECTIVE 2026-11-04 (#freshorama): "we won't approve/deny orders. So,
+ *  nothing like pending orders." Orders are ungoverned — the two wire legs
+ *  below ride a SYNTHETIC "jobs" machine registered here, never product code,
+ *  so the renderer stays tested while orders keep rendering as plain records. */
+const JOBS_MODEL: ModelSpec = {
+  id: "jobs",
+  name: "Job",
+  singular: "job",
+  listPath: "/api/jobs/",
+  detailPath: "/api/jobs/{id}/",
+  transitionPath: "/api/jobs/{id}/transition/",
+  historyPath: "/api/jobs/{id}/history/",
+  fields: [
+    { name: "id", type: "number", required: false, readOnly: true },
+    { name: "status", type: "enum", required: false, readOnly: false, choices: ["queued", "running", "done"] },
+    { name: "label", type: "text", required: false, readOnly: false },
+  ],
+  byName: {},
+  labelField: "id",
+};
+JOBS_MODEL.byName = Object.fromEntries(JOBS_MODEL.fields.map((f) => [f.name, f]));
+const JOBS_SCHEMA: AdminSchema = { models: [JOBS_MODEL], byId: { jobs: JOBS_MODEL } };
+const QUEUED_ROW = { id: 7, status: "queued", label: "Nightly pack", created_at: "2026-10-20T10:00:00Z" };
+const JOBS_PAGE = { count: 1, results: [QUEUED_ROW] };
+
+function routeJobs(transition?: { status: number; body: any }) {
+  mockFetch.mockImplementation(async (url: string) => {
+    const u = String(url);
+    if (u.includes("/transition/")) {
+      if (!transition) throw new Error(`unexpected transition call to ${u}`);
+      return reply(transition.status, transition.body);
+    }
+    if (u.includes("/history/")) return reply(200, []);
+    if (u.includes("/audit/")) return reply(200, { count: 0, results: [] });
+    if (u.includes("/jobs/")) return reply(200, JOBS_PAGE);
+    return reply(200, { count: 0, results: [] });
+  });
+}
+
+beforeAll(() => {
+  statusTransitions.jobs = {
+    statusField: "status",
+    states: ["queued", "running", "done"],
+    transitions: { queued: ["running"], running: ["done"], done: [] },
+  };
+});
+afterAll(() => {
+  delete statusTransitions.jobs;
+});
+
 const urls = () => mockFetch.mock.calls.map((c) => String(c[0]));
 const transitionUrls = () => urls().filter((u) => u.includes("/transition/"));
 
 describe("mounted lifecycle renderer — the bytes on the wire", () => {
   it("binds the discovered transition URL and sends only the target", async () => {
-    routeOrders(PAGE, { status: 200, body: { ...PENDING_ROW, status: "confirmed" } });
-    const { host, toastHost } = render(LIVE);
+    routeJobs({ status: 200, body: { ...QUEUED_ROW, status: "running" } });
+    const { host, toastHost } = render(JOBS_SCHEMA, "jobs");
     await vi.waitFor(() => {
       flushSync(() => {});
-      expect(host.textContent).toContain("confirmed");
+      expect(host.textContent).toContain("queued");
     });
 
-    // pending's legal targets, straight from the registry — the illegal
-    // jumps (shipped, delivered, …) must not be offered at all
+    // queued's ONLY legal target — done must not be offered
     const buttons = [...host.querySelectorAll("button")].map((b) => b.textContent?.trim());
-    expect(buttons.filter((t) => t?.startsWith("→"))).toEqual([
-      "→ confirmed", "→ on_hold", "→ cancelled",
-    ]);
+    expect(buttons.filter((t) => t?.startsWith("→"))).toEqual(["→ running"]);
 
-    const confirm = [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === "→ confirmed")!;
-    confirm.click();
+    const running = [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === "→ running")!;
+    running.click();
     await vi.waitFor(() => {
       flushSync(() => {});
-      expect(toastHost.textContent).toContain("Transitioned to confirmed");
+      expect(toastHost.textContent).toContain("Transitioned to running");
     });
 
-    expect(transitionUrls()).toEqual(["http://api.test/api/orders/7/transition/"]);
+    expect(transitionUrls()).toEqual(["http://api.test/api/jobs/7/transition/"]);
     const init = mockFetch.mock.calls.find((c) => String(c[0]).includes("/transition/"))![1];
     expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body)).toEqual({ transition: "confirmed" });
+    expect(JSON.parse(init.body)).toEqual({ transition: "running" });
     expect(init.headers.Authorization).toBe("Token tok");
   });
 
   it("surfaces a 409 guard failure's reason verbatim, untranslated", async () => {
-    const REASON = "pending → shipped is not allowed by the lifecycle";
-    routeOrders(PAGE, { status: 409, body: { reason: REASON } });
-    const { host, toastHost } = render(LIVE);
-    let confirm: HTMLButtonElement | undefined;
+    const REASON = "queued → done is not allowed by the lifecycle";
+    routeJobs({ status: 409, body: { reason: REASON } });
+    const { host, toastHost } = render(JOBS_SCHEMA, "jobs");
+    let running: HTMLButtonElement | undefined;
     await vi.waitFor(() => {
       flushSync(() => {});
-      confirm = [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === "→ confirmed") as HTMLButtonElement;
-      expect(confirm).toBeTruthy();
+      running = [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === "→ running") as HTMLButtonElement;
+      expect(running).toBeTruthy();
     });
 
-    confirm!.click();
+    running!.click();
     await vi.waitFor(() => {
       flushSync(() => {});
       expect(toastHost.textContent).toContain(REASON);
@@ -127,20 +175,39 @@ describe("mounted lifecycle renderer — the bytes on the wire", () => {
   });
 
   it("offers nothing when the API does not document the machine", async () => {
-    // Same rig, R-001 actions stripped: the client-side registry still declares
-    // the machine, but there is no POST …/transition/ to bind, so the row must
-    // render as plain CRUD — no dead buttons, and zero requests to a guess.
-    const { transitionPath, historyPath, ...bare } = LIVE.byId.orders;
+    // Same synthetic rig, R-001 actions stripped: the client-side registry still
+    // declares the machine, but there is no POST …/transition/ to bind, so the
+    // row must render as plain CRUD — no dead buttons, zero guessed requests.
+    const { transitionPath, historyPath, ...bare } = JOBS_MODEL;
     const schema: AdminSchema = {
-      ...LIVE,
-      models: LIVE.models.map((m) => (m.id === "orders" ? (bare as typeof m) : m)),
-      byId: { ...LIVE.byId, orders: bare as typeof LIVE.byId.orders },
+      ...JOBS_SCHEMA,
+      models: [bare as ModelSpec],
+      byId: { jobs: bare as ModelSpec },
     };
-    expect(lifecycleAvailable(schema.byId.orders)).toBe(false);
-    expect(lifecycleProblem(schema.byId.orders)).toMatch(/does not document POST/);
+    expect(lifecycleAvailable(schema.byId.jobs)).toBe(false);
+    expect(lifecycleProblem(schema.byId.jobs)).toMatch(/does not document POST/);
+
+    routeJobs();
+    const { host } = render(schema, "jobs");
+    await vi.waitFor(() => {
+      flushSync(() => {});
+      expect(host.textContent).toContain("queued");
+    });
+    const targets = [...host.querySelectorAll("button")].map((b) => b.textContent?.trim() ?? "");
+    expect(targets.filter((t) => t.startsWith("→"))).toEqual([]);
+    expect(transitionUrls()).toEqual([]);
+  });
+
+  it("orders render NO transition buttons even though the rig documents the machine — owner law", async () => {
+    // "we won't approve/deny orders. So, nothing like pending orders."
+    // The captured document carries POST /api/orders/{id}/transition/ and the
+    // renderer would happily bind it — the EMPTY registry is the law.
+    expect(LIVE.byId.orders.transitionPath).toBeTruthy();
+    expect(lifecycleAvailable(LIVE.byId.orders)).toBe(false);
+    expect(lifecycleProblem(LIVE.byId.orders)).toBeNull(); // ungoverned is not a defect
 
     routeOrders(PAGE);
-    const { host } = render(schema);
+    const { host } = render(LIVE, "orders");
     await vi.waitFor(() => {
       flushSync(() => {});
       expect(host.textContent).toContain("pending");
@@ -156,7 +223,7 @@ describe("mounted lifecycle renderer — the bytes on the wire", () => {
       if (u.includes("/history/")) {
         return reply(200, [
           { id: 1, order: 7, from_status: "", to_status: "pending", actor: null, created_at: "2026-10-17T09:00:00Z" },
-          { id: 2, order: 7, from_status: "pending", to_status: "confirmed", actor: "admin", created_at: "2026-10-17T11:30:00Z" },
+          { id: 2, order: 7, from_status: "pending", to_status: "paid", actor: "admin", created_at: "2026-10-17T11:30:00Z" },
         ]);
       }
       if (u.includes("/audit/")) return reply(200, { count: 0, results: [] });
@@ -179,7 +246,7 @@ describe("mounted lifecycle renderer — the bytes on the wire", () => {
     expect(urls().some((u) => u === "http://api.test/api/orders/7/history/")).toBe(true);
     // oldest first, as the contract pins it — the render order follows the body
     const trail = host.textContent ?? "";
-    expect(trail.indexOf("created as pending")).toBeLessThan(trail.indexOf("pending → confirmed"));
+    expect(trail.indexOf("created as pending")).toBeLessThan(trail.indexOf("pending → paid"));
   });
 
   it("the sub-view's audit half reads the DISCOVERED path, and a schema without it reads nothing", async () => {

@@ -2,7 +2,8 @@
   export const meta = {
     title: "Live orders",
     size: "sm",
-    data: { aggregate: "count", pollInterval: 15_000 },
+    // Pinned to the orders model (auto-pick used to count the empty audit log).
+    data: { endpoint: "orders", aggregate: "count", pollInterval: 15_000 },
   };
 </script>
 

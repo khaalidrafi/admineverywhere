@@ -12,6 +12,9 @@
   --color-bg: var(--brand-bg);
   --color-surface: var(--brand-surface);
   --color-text: var(--brand-text);
+  --color-line: var(--brand-line);
+  --color-muted: var(--brand-muted);
+  --color-onbrand: var(--brand-on-brand);
   --radius-brand: var(--brand-radius);
   --font-brand: var(--brand-font);
 }
@@ -43,10 +46,35 @@ html, body {
  */
 
 /* --- shared primitives (kept tiny; components compose Tailwind classes) --- */
+
+/* --- shared primitives (kept tiny; components compose Tailwind classes) ---
+   Website-faithful surfaces: white cards on the cream page, brand-green
+   hairlines and the site's own card shadow (base.css --shadow-card). */
 .card {
   background-color: var(--brand-surface);
-  border: 1px solid color-mix(in srgb, var(--brand-text) 10%, transparent);
+  border: 1px solid var(--brand-line, color-mix(in srgb, var(--brand-text) 12%, transparent));
   border-radius: var(--brand-radius);
+  box-shadow: 0 6px 14px rgba(21, 49, 38, 0.06);
+}
+
+/* Chrome primitives painted with the WEBSITE's gradients (owner law:
+   the admin apps wear the website's colors and gradients).
+   .band-chrome  — the site's green header band with its white radial highlight
+   .brand-fill   — the 3-stop clickable green (buttons, primary chips)
+   .sale-chip    — amber belongs to the offer alone (base.css --sale-gradient) */
+.band-chrome {
+  background: var(--brand-band-gradient,
+    linear-gradient(145deg, #006e33, #00a651));
+  color: var(--brand-on-brand, #ffffff);
+}
+.brand-fill {
+  background: var(--brand-highlight-gradient,
+    linear-gradient(135deg, #006e33, #00a651 55%, #22be6f));
+  color: var(--brand-on-brand, #ffffff);
+}
+.sale-chip {
+  background: var(--brand-sale-gradient, linear-gradient(135deg, #ffa400, #ffc44d));
+  color: #3f2d02;
 }
 
 .input {
@@ -74,8 +102,13 @@ select.input option { color: #111; background: #fff; }
   border: 1px solid transparent;
   transition: filter 0.15s ease, opacity 0.15s ease;
 }
-.btn:hover { filter: brightness(1.1); }
-.btn-primary { background-color: var(--brand-primary); color: #fff; }
+.btn:hover { filter: brightness(1.06); }
+.btn-primary {
+  background: var(--brand-highlight-gradient,
+    linear-gradient(135deg, #006e33, #00a651 55%, #22be6f));
+  color: var(--brand-on-brand, #fff);
+  box-shadow: 0 8px 18px rgba(0, 110, 51, 0.26); /* base.css --shadow-cta */
+}
 .btn-ghost {
   background: transparent;
   border-color: color-mix(in srgb, var(--brand-text) 15%, transparent);

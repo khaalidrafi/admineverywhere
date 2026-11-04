@@ -122,7 +122,7 @@ describe("the rendered nav is exactly the declared nav", () => {
       mainButtons(aside)[i].click();
       expect(location.hash, `${page.id} click`).toBe(pageHref(page));
       goto(pageHref(page)); // the browser's reply
-      const lit = mainButtons(aside).filter((b) => b.className.includes("bg-primary/15")).map(label);
+      const lit = mainButtons(aside).filter((b) => b.className.includes("bg-white/20")).map(label);
       expect(lit, `${page.id} lit the wrong entry`).toEqual([page.title]);
     });
   });

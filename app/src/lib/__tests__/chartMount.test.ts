@@ -63,12 +63,22 @@ function model(id: string, name: string, fields: FieldSpec[]): ModelSpec {
   };
 }
 
-/** Schema that can feed every chart: an enum field + a readOnly created_at. */
+/** Schema that can feed every chart: an enum field + a readOnly created_at.
+ *  StatusDonut is PINNED to orders.order_source (owner law 2026-11-04: no
+ *  status framing in the dashboards); LeaderBars is pinned to reviews.product. */
 const ORDERS = model("orders", "Order", [
   f("created_at", "datetime", { readOnly: true }),
-  f("status", "enum", { choices: ["pending", "paid", "shipped", "refunded"] }),
+  f("order_source", "enum", { choices: ["website", "facebook", "whatsapp", "campaign"] }),
 ]);
-const SCHEMA: AdminSchema = { models: [ORDERS], byId: { orders: ORDERS } };
+const REVIEWS = model("reviews", "Review", [
+  f("date", "date", { readOnly: true }),
+  f("product", "text"),
+  f("rating", "number"),
+]);
+const SCHEMA: AdminSchema = {
+  models: [ORDERS, REVIEWS],
+  byId: { orders: ORDERS, reviews: REVIEWS },
+};
 
 /** A second timestamped model whose fields rank worse — the picker must
  *  still choose the readOnly created_at on the first model. */
@@ -112,7 +122,13 @@ async function paint(host: HTMLElement, want: () => boolean) {
 
 const groupRows = (...pairs: Array<[string, number]>) => ({
   count: pairs.reduce((s, [, n]) => s + n, 0),
-  results: pairs.flatMap(([status, n]) => Array.from({ length: n }, (_, i) => ({ id: `${status}${i}`, status }))),
+  results: pairs.flatMap(([value, n]) => Array.from({ length: n }, (_, i) => ({ id: `${value}${i}`, order_source: value }))),
+  next: null,
+});
+
+const productRows = (...pairs: Array<[string, number]>) => ({
+  count: pairs.reduce((s, [, n]) => s + n, 0),
+  results: pairs.flatMap(([product, n]) => Array.from({ length: n }, (_, i) => ({ id: `${product}${i}`, product }))),
   next: null,
 });
 
@@ -123,7 +139,7 @@ describe("StatusDonut", () => {
   it("draws one slice per group with exact dash geometry and the total in the middle", async () => {
     boot(SCHEMA);
     mockFetch.mockResolvedValue(
-      jsonReply(groupRows(["pending", 8], ["paid", 3], ["shipped", 1], ["canceled", 2])),
+      jsonReply(groupRows(["website", 8], ["facebook", 3], ["whatsapp", 1], ["campaign", 2])),
     );
     const host = await render(StatusDonut);
     await paint(host, () => host.querySelectorAll("svg circle").length === 5);
@@ -131,10 +147,10 @@ describe("StatusDonut", () => {
     const slices = [...host.querySelectorAll("svg circle")].slice(1); // [0] is the ring
     expect(slices.length).toBe(4); // zero-count declared choices are dropped, unseen values appended
     const legend = legendOf(host);
-    expect(legend.map((l) => l.split(" ")[0])).toEqual(["pending", "paid", "shipped", "canceled"]);
+    expect(legend.map((l) => l.split(" ")[0])).toEqual(["website", "facebook", "whatsapp", "campaign"]);
     expect(legend[0]).toContain("8");
     expect(legend[3]).toContain("2");
-    // geometry: pending is 8/14 of the ring at offset 0; paid starts one 8/14 turn later
+    // geometry: website is 8/14 of the ring at offset 0; facebook starts one 8/14 turn later
     const dash = (i: number) => slices[i].getAttribute("stroke-dasharray")!;
     const offset = (i: number) => slices[i].getAttribute("stroke-dashoffset")!;
     expect(dash(0).split(" ")[0]).toBe(((8 / 14) * C).toFixed(2));
@@ -151,23 +167,23 @@ describe("StatusDonut", () => {
   it("folds every group past the fifth into one (other) slice", async () => {
     boot(SCHEMA);
     mockFetch.mockResolvedValue(
-      jsonReply(groupRows(["pending", 5], ["paid", 4], ["shipped", 3], ["refunded", 2], ["canceled", 2], ["held", 1])),
+      jsonReply(groupRows(["website", 5], ["facebook", 4], ["whatsapp", 3], ["campaign", 2], ["phone", 2], ["bazar", 1])),
     );
     const host = await render(StatusDonut);
     await paint(host, () => host.querySelectorAll("svg circle").length === 7);
     const legend = legendOf(host);
     expect(legend.length).toBe(6);
     expect(legend[5]).toContain("(other)");
-    expect(legend[5]).toContain("1"); // "held" — the only group past the cut
+    expect(legend[5]).toContain("1"); // "bazar" — the only group past the cut
     expect(legend.slice(0, 5).every((l) => !l.includes("(other)"))).toBe(true);
     expect(host.querySelector("svg text")?.textContent).toBe("17");
   });
 
-  it("renders the nameable reason, zero requests, when no enum field can feed it", async () => {
+  it("renders the nameable reason, zero requests, when the pinned model is not in the schema", async () => {
     boot(NO_FEED);
     const host = await render(StatusDonut);
-    await paint(host, () => host.textContent!.includes("enum"));
-    expect(host.textContent).toContain("no model in this API has an enum (choices) field to aggregate.");
+    await paint(host, () => host.textContent!.includes("schema"));
+    expect(host.textContent).toContain('model "orders" is not in this API\'s schema');
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
@@ -184,24 +200,24 @@ describe("LeaderBars", () => {
   it("sorts bars by value descending, cuts after six, widths are percent-of-max", async () => {
     boot(SCHEMA);
     mockFetch.mockResolvedValue(
-      jsonReply(groupRows(["pending", 10], ["paid", 5], ["shipped", 7], ["refunded", 1], ["canceled", 2], ["held", 3], ["archived", 4])),
+      jsonReply(productRows(["Sundarbans Khalisa", 10], ["Zahedi Dates", 5], ["Mountain Honey", 7], ["Litchi Honey", 1], ["Dabbas", 2], ["Mustard Honey", 3], ["Black Cumin", 4])),
     );
     const host = await render(LeaderBars);
     await paint(host, () => host.querySelectorAll("ul li").length > 0);
     const lis = [...host.querySelectorAll("ul li")];
     expect(lis.length).toBe(6);
     expect(lis.map((li) => li.querySelector("span")!.textContent)).toEqual([
-      "pending", "shipped", "paid", "archived", "held", "canceled",
+      "Sundarbans Khalisa", "Mountain Honey", "Zahedi Dates", "Black Cumin", "Mustard Honey", "Dabbas",
     ]);
     const widthOf = (li: Element) => li.querySelector("div[style]")?.getAttribute("style") ?? "";
     expect(widthOf(lis[0])).toMatch(/^width:\s*100%/); // max sets the scale
     expect(widthOf(lis[2])).toMatch(/^width:\s*50%/); // 5 of 10, rounded
-    expect(host.textContent).toContain("Order · status");
+    expect(host.textContent).toContain("Review · product");
   });
 
   it("names the rows it grouped, without claiming a cap that was not applied", async () => {
     boot(SCHEMA);
-    const rows = Array.from({ length: 50 }, (_, i) => ({ id: i, status: i % 2 ? "pending" : "paid" }));
+    const rows = Array.from({ length: 50 }, (_, i) => ({ id: i, product: i % 2 ? "Sundarbans Khalisa" : "Zahedi Dates" }));
     mockFetch.mockResolvedValue(jsonReply({ count: 50, results: rows, next: null }));
     const host = await render(LeaderBars);
     await paint(host, () => host.textContent!.includes("records"));
@@ -221,8 +237,8 @@ describe("LeaderBars", () => {
       pages++;
       return jsonReply({
         count: 99_999,
-        results: Array.from({ length: 100 }, (_, i) => ({ id: `${pages}-${i}`, status: "pending" })),
-        next: `http://api.test/api/orders/?page=${pages + 1}`,
+        results: Array.from({ length: 100 }, (_, i) => ({ id: `${pages}-${i}`, product: "Sundarbans Khalisa" })),
+        next: `http://api.test/api/reviews/?page=${pages + 1}`,
       });
     });
     const host = await render(LeaderBars);
@@ -231,10 +247,10 @@ describe("LeaderBars", () => {
     expect(pages).toBe(3); // pageSize 100 × 3 = the default rowCap, then stop walking
   });
 
-  it("renders the nameable reason, zero requests, when no enum field can feed it", async () => {
+  it("renders the nameable reason, zero requests, when the pinned model is not in the schema", async () => {
     boot(NO_FEED);
     const host = await render(LeaderBars);
-    await paint(host, () => host.textContent!.includes("enum"));
+    await paint(host, () => host.textContent!.includes("schema"));
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });

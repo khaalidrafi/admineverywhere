@@ -1,4 +1,10 @@
-/** statusTransitions registry tests — pure logic, no fetch. */
+/** statusTransitions registry tests — pure logic, no fetch.
+ *
+ *  OWNER DIRECTIVE 2026-11-04 (#freshorama): "we won't approve/deny orders.
+ *  So, nothing like pending orders." The registry ships EMPTY: the Freshorama
+ *  admin renders orders as plain records — no transition buttons, no status
+ *  board — even when the schema documents a transition endpoint. The tests
+ *  pin that law from both sides. */
 import { describe, expect, it } from "vitest";
 import {
   getLegalTransitions,
@@ -13,123 +19,24 @@ import { normalizeOpenAPI } from "../openapi";
 import fixture from "./fixtures/openapi.json";
 import type { ModelSpec } from "../types";
 
-describe("statusTransitions registry", () => {
-  it("has orders configured", () => {
-    expect(statusTransitions.orders).toBeDefined();
-    expect(statusTransitions.orders.statusField).toBe("status");
-    expect(statusTransitions.orders.states).toEqual([
-      "pending",
-      "confirmed",
-      "processing",
-      "ready_to_ship",
-      "shipped",
-      "in_transit",
-      "delivered",
-      "delivery_failed",
-      "returned",
-      "on_hold",
-      "cancelled",
-    ]);
+describe("statusTransitions registry — the no-approve/deny law", () => {
+  it("ships empty: no model carries a client-side machine", () => {
+    expect(Object.keys(statusTransitions)).toEqual([]);
   });
 
-  it("maps pending -> [confirmed, on_hold, cancelled]", () => {
-    expect(getLegalTransitions("orders", "pending")).toEqual([
-      "confirmed",
-      "on_hold",
-      "cancelled",
-    ]);
-    expect(isTransitionLegal("orders", "pending", "confirmed")).toBe(true);
-    expect(isTransitionLegal("orders", "pending", "processing")).toBe(false);
-    expect(isTransitionLegal("orders", "pending", "shipped")).toBe(false);
-    expect(isTransitionLegal("orders", "pending", "returned")).toBe(false);
+  it("orders have NO lifecycle — every transition answer is [] / false", () => {
+    expect(hasLifecycle("orders")).toBe(false);
+    expect(getStatusField("orders")).toBeNull();
+    expect(getLegalTransitions("orders", "pending")).toEqual([]);
+    expect(isTransitionLegal("orders", "pending", "confirmed")).toBe(false);
+    expect(isTransitionLegal("orders", "pending", "cancelled")).toBe(false);
   });
 
-  it("maps the forward main line: confirmed -> processing -> ready_to_ship -> shipped", () => {
-    expect(getLegalTransitions("orders", "confirmed")).toEqual([
-      "processing",
-      "ready_to_ship",
-      "on_hold",
-      "cancelled",
-    ]);
-    expect(getLegalTransitions("orders", "processing")).toEqual([
-      "ready_to_ship",
-      "on_hold",
-      "cancelled",
-    ]);
-    expect(getLegalTransitions("orders", "ready_to_ship")).toEqual([
-      "shipped",
-      "on_hold",
-      "cancelled",
-    ]);
-    expect(isTransitionLegal("orders", "processing", "shipped")).toBe(false);
-  });
-
-  it("maps shipped -> [in_transit, delivered, delivery_failed, on_hold, cancelled]", () => {
-    expect(getLegalTransitions("orders", "shipped")).toEqual([
-      "in_transit",
-      "delivered",
-      "delivery_failed",
-      "on_hold",
-      "cancelled",
-    ]);
-    expect(isTransitionLegal("orders", "shipped", "delivered")).toBe(true);
-    expect(isTransitionLegal("orders", "shipped", "returned")).toBe(false);
-  });
-
-  it("maps the delivery_failed recovery path", () => {
-    expect(getLegalTransitions("orders", "delivery_failed")).toEqual([
-      "shipped",
-      "returned",
-      "cancelled",
-    ]);
-    expect(isTransitionLegal("orders", "delivery_failed", "shipped")).toBe(true);
-    expect(isTransitionLegal("orders", "delivery_failed", "delivered")).toBe(false);
-  });
-
-  it("delivered exits only into returned; on_hold re-enters the line", () => {
-    expect(getLegalTransitions("orders", "delivered")).toEqual(["returned"]);
-    expect(getLegalTransitions("orders", "on_hold")).toEqual([
-      "confirmed",
-      "processing",
-      "cancelled",
-    ]);
-  });
-
-  it("maps returned and cancelled to [] (terminal)", () => {
-    expect(getLegalTransitions("orders", "returned")).toEqual([]);
-    expect(getLegalTransitions("orders", "cancelled")).toEqual([]);
-    expect(isTransitionLegal("orders", "returned", "pending")).toBe(false);
-    expect(isTransitionLegal("orders", "cancelled", "confirmed")).toBe(false);
-  });
-
-  it("returns [] for unknown states", () => {
-    expect(getLegalTransitions("orders", "unknown")).toEqual([]);
-    expect(isTransitionLegal("orders", "unknown", "confirmed")).toBe(false);
-  });
-
-  it("returns [] for models without lifecycle", () => {
+  it("models without lifecycle stay without one", () => {
     expect(getLegalTransitions("products", "pending")).toEqual([]);
-    expect(isTransitionLegal("products", "pending", "confirmed")).toBe(false);
-  });
-});
-
-describe("getStatusField", () => {
-  it("returns field name for models with lifecycle", () => {
-    expect(getStatusField("orders")).toBe("status");
-  });
-
-  it("returns null for models without lifecycle", () => {
+    expect(isTransitionLegal("products", "pending", "paid")).toBe(false);
     expect(getStatusField("products")).toBeNull();
     expect(getStatusField("categories")).toBeNull();
-  });
-});
-
-describe("hasLifecycle", () => {
-  it("returns true for orders", () => {
-    expect(hasLifecycle("orders")).toBe(true);
-  });
-
-  it("returns false for other models", () => {
     expect(hasLifecycle("products")).toBe(false);
     expect(hasLifecycle("categories")).toBe(false);
   });
@@ -143,15 +50,14 @@ describe("lifecycleProblem — declared here AND documented there", () => {
     expect(lifecycleAvailable(LIVE.byId.products)).toBe(false); // no affordance either way
   });
 
-  it("is silent for orders against the captured rig, which documents both actions", () => {
-    expect(lifecycleProblem(LIVE.byId.orders)).toBeNull();
-    expect(lifecycleAvailable(LIVE.byId.orders)).toBe(true);
+  it("orders get no affordance EVEN THOUGH the captured rig documents both actions — owner law", () => {
+    expect(lifecycleProblem(LIVE.byId.orders)).toBeNull(); // ungoverned is not a defect
+    expect(lifecycleAvailable(LIVE.byId.orders)).toBe(false); // and still no buttons
   });
 
-  it("refuses a machine whose transition endpoint the API does not document", () => {
+  it("an ungoverned model missing the endpoints is still not a defect", () => {
     const { transitionPath, historyPath, ...bare } = LIVE.byId.orders;
-    const reason = lifecycleProblem(bare as ModelSpec);
-    expect(reason).toMatch(/does not document POST \/api\/orders\/\{id\}\/transition\//);
+    expect(lifecycleProblem(bare as ModelSpec)).toBeNull();
     expect(lifecycleAvailable(bare as ModelSpec)).toBe(false);
   });
 

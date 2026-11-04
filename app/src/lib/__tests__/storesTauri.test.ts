@@ -283,7 +283,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
 
     const a = get(app);
     expect(a.booted).toBe(true);
-    expect(a.brand.appName).toBe("Admineverywhere"); // the shipped neutral default
+    expect(a.brand.appName).toBe("Freshorama Admin"); // the shipped neutral default
     expect(get(toasts)).toEqual([]);
     expect(a.backendDown).toBe(false); // banner belongs to the schema flow, not boot
     // exactly one probe of the documented plugin path — a 404 is never chased
@@ -322,7 +322,7 @@ describe("initApp — boot: bundled files first, server brand wins", () => {
 
     const a = get(app);
     expect(a.booted).toBe(true);
-    expect(a.brand.appName).toBe("Admineverywhere"); // the bundled identity
+    expect(a.brand.appName).toBe("Freshorama Admin"); // the bundled identity
     expect(a.config).toEqual({
       apiUrl: "",
       authPath: "/api/auth/token/",
