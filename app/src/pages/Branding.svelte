@@ -160,7 +160,7 @@
   </div>
 
   {#if errors.length}
-    <div class="card mb-4 border-red-400/40 bg-red-500/10 p-4 text-sm text-red-300">
+    <div class="card mb-4 border-error-line bg-error-bg p-4 text-sm text-error" role="alert">
       <div class="mb-1 font-semibold">The backend rejected this brand:</div>
       <ul class="list-disc pl-5">
         {#each errors as e (e)}
