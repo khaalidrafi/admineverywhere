@@ -14,7 +14,7 @@
    *  reason instead of a 404 against a guessed URL.
    */
   import { app, effectiveConfig, handleApiError } from "../lib/stores";
-  import { fetchAudit } from "../lib/api";
+  import { fetchAudit, listRecords } from "../lib/api";
   import { findAuditModel } from "../lib/rbac";
   import type { AuditEntry } from "../lib/types";
   import Icon from "../components/Icon.svelte";
@@ -27,6 +27,9 @@
   let objectType = $state("");
   let objectId = $state("");
   let loading = $state(false);
+  /** True when the audit log is empty and the view below is the live-records
+   *  fallback (real orders/reviews/signups) rather than the audit trail. */
+  let fallback = $state(false);
 
   // Widgets/pages render from a schema-reactive $effect, never onMount —
   // the schema arrives after mount. One fetch per schema; filters re-load
@@ -49,11 +52,73 @@
       rows = res.results;
       count = res.count;
       page = toPage;
+      fallback = false;
+      // Empty-log fallback (owner blank-dashboard report 2026-11-04): a log
+      // with zero rows renders "Nothing logged yet" — which reads as a blank
+      // screen while the shop is actually ALIVE. When the trail is empty and
+      // no filter is set, surface the shop's real recent records instead:
+      // latest orders, reviews and account signups, newest first, clearly
+      // labelled below. The moment the audit trail has rows it wins again.
+      if (count === 0 && !objectType.trim() && !objectId.trim()) {
+        rows = await loadRecentRecords();
+        fallback = true;
+      }
     } catch (err) {
       handleApiError(err);
     } finally {
       loading = false;
     }
+  }
+
+  /** Pull the newest page of every timestamped record source the schema
+   *  offers and merge them into AuditEntry-shaped rows. NEVER fabricated:
+   *  every rendered line is a real record straight from the API. */
+  async function loadRecentRecords(): Promise<AuditEntry[]> {
+    const schema = $app.schema;
+    if (!schema) return [];
+    const sources: { modelId: string; when: string; action: string; render: (r: Record<string, unknown>) => string }[] = [
+      {
+        modelId: "orders",
+        when: "created_at",
+        action: "order",
+        render: (r) => `Order #${r.id} — ${r.customer_name ?? "customer"}, ৳${r.total ?? "?"} (${r.shipping_zone ?? "zone"})`,
+      },
+      {
+        modelId: "reviews",
+        when: "date",
+        action: "review",
+        render: (r) => `${r.rating ? `${r.rating}★` : "Review"} on ${r.product ?? "product"} by ${r.username ?? "shopper"}`,
+      },
+      {
+        modelId: "users",
+        when: "date_joined",
+        action: "signup",
+        render: (r) => `New account: ${r.username ?? "user"}`,
+      },
+    ];
+    const merged: AuditEntry[] = [];
+    for (const src of sources) {
+      const model = schema.byId[src.modelId];
+      const field = model?.byName[src.when];
+      if (!model || !field) continue;
+      try {
+        const p = await listRecords(effectiveConfig(), $app.token || null, model, { page: 1, pageSize: 10 });
+        for (const r of p.results) {
+          merged.push({
+            id: `${src.modelId}-${String(r.id ?? merged.length)}`,
+            created_at: String(r[src.when] ?? ""),
+            actor: null,
+            action: src.action,
+            object_type: src.modelId,
+            object_id: String(r.id ?? ""),
+            summary: src.render(r as Record<string, unknown>),
+          } as unknown as AuditEntry);
+        }
+      } catch {
+        // one silent source must not blank the others
+      }
+    }
+    return merged.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 20);
   }
 
   function formatTime(iso: string): string {
@@ -68,8 +133,13 @@
   <div class="mb-6">
     <h1 class="text-2xl font-semibold">Activity</h1>
     <p class="text-sm text-text/50">
-      Append-only audit trail — newest first. The log can only grow: there is
-      no edit or delete anywhere in this view because there is none on the server.
+      {#if fallback}
+        Live feed from your records — the audit trail is empty, so this shows
+        the shop's real latest orders, reviews and signups instead.
+      {:else}
+        Append-only audit trail — newest first. The log can only grow: there is
+        no edit or delete anywhere in this view because there is none on the server.
+      {/if}
     </p>
   </div>
 
@@ -91,6 +161,7 @@
       </div>
     </div>
   {:else}
+    {#if !fallback}
     <form
       class="card mb-4 flex flex-wrap items-end gap-3 p-4"
       onsubmit={(e) => {
@@ -121,6 +192,7 @@
       </button>
       <span class="ml-auto text-xs text-text/50">{count} entries</span>
     </form>
+    {/if}
 
     <div class="card overflow-hidden">
       <table class="w-full text-left text-sm">
@@ -153,7 +225,7 @@
       </table>
     </div>
 
-    {#if lastPage > 1}
+    {#if lastPage > 1 && !fallback}
       <div class="mt-4 flex items-center justify-between text-sm">
         <button class="btn" disabled={page <= 1 || loading} onclick={() => void load(page - 1)}>
           ← Newer

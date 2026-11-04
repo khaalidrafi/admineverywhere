@@ -27,11 +27,15 @@
 
 <div class="flex min-h-dvh">
   <!-- mobile topbar -->
-  <div class="fixed top-0 z-30 flex w-full items-center gap-3 bg-surface/95 px-4 py-3 backdrop-blur md:hidden">
-    <button class="btn btn-ghost p-2" onclick={toggleSidebar} aria-label="Menu">
+  <div class="band-chrome fixed top-0 z-30 flex w-full items-center gap-3 px-4 py-3 md:hidden">
+    <button
+      class="btn border-white/30 bg-transparent p-2 text-white"
+      onclick={toggleSidebar}
+      aria-label="Menu"
+    >
       <Icon name="menu" />
     </button>
-    <span class="font-semibold">{$app.brand.appName}</span>
+    <span class="font-semibold text-white">{$app.brand.appName}</span>
   </div>
 
   <!-- sidebar: fixed overlay on mobile, static on md+ -->

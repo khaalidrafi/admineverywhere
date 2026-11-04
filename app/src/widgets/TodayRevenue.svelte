@@ -2,7 +2,8 @@
   export const meta = {
     title: "Today — 7-day window",
     size: "sm",
-    data: { aggregate: "bucket", days: 7 },
+    // Pinned to real orders (auto-pick used to land on the empty audit log).
+    data: { endpoint: "orders", field: "created_at", aggregate: "bucket", days: 7 },
   };
 </script>
 

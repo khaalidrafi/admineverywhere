@@ -69,9 +69,16 @@ const FEEDABLE: AdminSchema = (() => {
     f("id", "number"),
     f("created_at", "datetime", { readOnly: true }),
     f("status", "enum", { choices: ["pending", "paid", "shipped"] }),
+    f("order_source", "enum", { choices: ["website", "facebook", "whatsapp", "campaign"] }),
     f("total", "number"),
   ]);
-  return { models: [orders], byId: { orders } };
+  const reviews = model("reviews", "Review", [
+    f("id", "number"),
+    f("date", "date", { readOnly: true }),
+    f("product", "text"),
+    f("rating", "number"),
+  ]);
+  return { models: [orders, reviews], byId: { orders, reviews } };
 })();
 
 /** A schema that can feed NOTHING. With a count-fed tile in the registry
@@ -87,13 +94,36 @@ function feedableRows() {
   const twoAgo = keys[keys.length - 3];
   const lastWeek = keys[keys.length - 12];
   return [
-    { id: 1, created_at: `${today}T08:00:00Z`, status: "pending", total: "10.00" },
-    { id: 2, created_at: `${today}T09:00:00Z`, status: "pending", total: "5.50" },
-    { id: 3, created_at: `${today}T10:00:00Z`, status: "paid", total: "7.25" },
-    { id: 4, created_at: `${twoAgo}T08:00:00Z`, status: "paid", total: "3.00" },
-    { id: 5, created_at: `${twoAgo}T11:00:00Z`, status: "shipped", total: "1.00" },
-    { id: 6, created_at: `${lastWeek}T08:00:00Z`, status: "pending", total: "2.00" },
+    { id: 1, created_at: `${today}T08:00:00Z`, status: "pending", order_source: "website", total: "10.00" },
+    { id: 2, created_at: `${today}T09:00:00Z`, status: "pending", order_source: "website", total: "5.50" },
+    { id: 3, created_at: `${today}T10:00:00Z`, status: "paid", order_source: "whatsapp", total: "7.25" },
+    { id: 4, created_at: `${twoAgo}T08:00:00Z`, status: "paid", order_source: "facebook", total: "3.00" },
+    { id: 5, created_at: `${twoAgo}T11:00:00Z`, status: "shipped", order_source: "website", total: "1.00" },
+    { id: 6, created_at: `${lastWeek}T08:00:00Z`, status: "pending", order_source: "campaign", total: "2.00" },
   ];
+}
+
+/** Review rows for the pinned group widgets (reviews.rating / reviews.product). */
+function reviewRows() {
+  const keys = dayKeys(35);
+  return [
+    { id: 1, date: keys[keys.length - 1], product: "Sundarbans Khalisa", rating: 5 },
+    { id: 2, date: keys[keys.length - 2], product: "Sundarbans Khalisa", rating: 5 },
+    { id: 3, date: keys[keys.length - 3], product: "Zahedi Dates", rating: 4 },
+  ];
+}
+
+/** Route every feed request by path — the pinned sources pull from two models. */
+function routeFeeds() {
+  mockFetch.mockImplementation(async (url: string) => {
+    const u = String(url);
+    const rows = u.includes("/api/reviews/") ? reviewRows() : feedableRows();
+    return {
+      ok: true, status: 200,
+      json: async () => ({ count: rows.length, results: rows, next: null }),
+      text: async () => JSON.stringify({ count: rows.length, results: rows, next: null }),
+    };
+  });
 }
 
 /** Widgets the glob found that declare a feed — the domain of this harness. */
@@ -158,7 +188,7 @@ describe("FR-R008: the globbed feed declaration reaches the engine through the g
   });
 
   it("every data-fed widget paints chart DOM from the schema-resolved feed", async () => {
-    mockFetch.mockResolvedValue(jsonReply(feedableRows()));
+    routeFeeds();
     renderGrid(FEEDABLE);
 
     await vi.waitFor(() => {
@@ -174,11 +204,13 @@ describe("FR-R008: the globbed feed declaration reaches the engine through the g
     // the buckets and the groups are the engine's output, seen as text
     const heat = cellFor(oneFedBy("the 35-day bucket", (w) => w.spec.aggregate === "bucket" && w.spec.days === 35).title);
     expect(heat.querySelectorAll("span[title]").length, "heat strip lost its day cells").toBe(35);
-    const bars = cellFor(oneFedBy("an enum-group feed", (w) => w.spec.aggregate === "group").title);
-    for (const status of ["pending", "paid", "shipped"]) {
-      expect(bars.textContent, `group "${status}" never rendered`).toContain(status);
+    const bars = cellFor(oneFedBy("a group feed", (w) => w.spec.aggregate === "group" && w.spec.field === "product").title);
+    for (const product of ["Sundarbans Khalisa", "Zahedi Dates"]) {
+      expect(bars.textContent, `group "${product}" never rendered`).toContain(product);
     }
-    expect(bars.textContent, "grouped row count never surfaced").toContain("6");
+    expect(bars.textContent, "grouped row count never surfaced").toContain("3");
+    const gauge = cellFor(oneFedBy("the rating gauge", (w) => w.spec.field === "rating").title);
+    expect(gauge.textContent, "rating gauge never rendered").toContain("5");
     const chip = cellFor(oneFedBy("a delta feed", (w) => w.spec.aggregate === "delta").title);
     expect(chip.textContent, "delta chip rendered no window comparison").toContain("5 vs 1");
   });
@@ -203,7 +235,7 @@ describe("FR-R008: the globbed feed declaration reaches the engine through the g
     // separator silently breaks every call and no per-side unit test sees it)
     for (const href of hrefs) {
       expect(href, `feed request left the configured origin: ${href}`).toMatch(
-        /^http:\/\/feed\.test\/api\/orders\/(\?[\w=&%.-]*)?$/,
+        /^http:\/\/feed\.test\/api\/(orders|reviews)\/(\?[\w=&%.-]*)?$/,
       );
     }
     // polling widgets ask for pages, so a feed that guessed a whole-row path
@@ -212,7 +244,7 @@ describe("FR-R008: the globbed feed declaration reaches the engine through the g
   });
 
   it("a widget wakes when the schema lands after mount (the $effect law)", async () => {
-    mockFetch.mockResolvedValue(jsonReply(feedableRows()));
+    routeFeeds();
     renderGrid(null);
     // schema-less boot: the grid paints its placeholders and sends nothing
     expect(mockFetch.mock.calls.length, "the grid fetched without a schema").toBe(0);
@@ -230,21 +262,25 @@ describe("FR-R008: the globbed feed declaration reaches the engine through the g
     mockFetch.mockResolvedValue(jsonReply([{ id: 1, body: "hi" }]));
     renderGrid(UNFEEDABLE);
 
-    const wantByKind: Record<string, string> = {
-      group: "enum (choices) field",
-      bucket: "a date or datetime field",
-      delta: "a date or datetime field",
-    };
+    // Every shipped feed is PINNED to a model id (owner blank-dashboard fix,
+    // 2026-11-04) — on a schema without that model the refusal is the engine's
+    // nameable "model X is not in this API's schema", not the old auto-pick
+    // "no model has …" wording. HeatStrip still auto-picks (audit stream), so
+    // it keeps the aggregate wording.
+    const refusal = (el: HTMLElement) =>
+      [...el.querySelectorAll("div, span, p")]
+        .map((n) => (n.textContent ?? "").trim())
+        .filter((t) => t.includes("is not in this API's schema") || t.startsWith("no model in this API has"))[0] ?? "";
     await vi.waitFor(() => {
       flushSync(() => {});
       for (const w of FED) {
         const cell = cellFor(w.title);
         expect(skeleton(cell), `"${w.title}" is still loading on a refused feed`).toBe(false);
-        const said = reasonLine(cell);
-        // the engine's wording, not a component's "no data": the reason is the
-        // promise AGENTS.md:41 makes ("friendly empty with a nameable reason")
-        expect(said, `"${w.title}" hid its refusal`).toContain(wantByKind[w.spec.aggregate] ?? "no model");
-        expect(said, `"${w.title}" says "${said}"`).toContain("no model in this API has");
+        const said = refusal(cell);
+        const want = (w.spec as WidgetDataSpec).endpoint
+          ? `model "${(w.spec as WidgetDataSpec).endpoint}" is not in this API's schema`
+          : "no model in this API has";
+        expect(said, `"${w.title}" hid its refusal`).toContain(want);
         expect(chartDom(cell), `"${w.title}" painted a chart over its own refusal`).toBe(false);
       }
     });
@@ -261,9 +297,13 @@ describe("FR-R008: the globbed feed declaration reaches the engine through the g
   it("a refused feed stays refused quietly: one render, no retry barrage", async () => {
     mockFetch.mockResolvedValue(jsonReply([{ id: 1, body: "hi" }]));
     renderGrid(UNFEEDABLE);
+    const refusalOf = (el: HTMLElement) =>
+      [...el.querySelectorAll("div, span, p")]
+        .map((n) => (n.textContent ?? "").trim())
+        .filter((t) => t.includes("is not in this API's schema") || t.startsWith("no model in this API has"))[0] ?? "";
     await vi.waitFor(() => {
       flushSync(() => {});
-      expect(FED.every((w) => reasonLine(cellFor(w.title)) !== "")).toBe(true);
+      expect(FED.every((w) => refusalOf(cellFor(w.title)) !== "")).toBe(true);
     });
     const before = mockFetch.mock.calls.length;
     // startWidgetFeed returns a no-op stop and schedules nothing, so the

@@ -65,13 +65,23 @@ function model(id: string, name: string, fields: FieldSpec[]): ModelSpec {
 }
 
 /** Schema that can feed every tile: a readOnly created_at, a status enum and
- *  a numeric total — none of the three widgets names any of them. */
+ *  a numeric total. LiveOrders and TodayRevenue are PINNED to orders (owner
+ *  blank-dashboard fix); CompletionGauge is pinned to reviews.rating (owner
+ *  law: no status framing in the dashboards). */
 const ORDERS = model("orders", "Order", [
   f("created_at", "datetime", { readOnly: true }),
   f("status", "enum", { choices: ["pending", "paid", "shipped"] }),
   f("total", "number"),
 ]);
-const SCHEMA: AdminSchema = { models: [ORDERS], byId: { orders: ORDERS } };
+const REVIEWS = model("reviews", "Review", [
+  f("date", "date", { readOnly: true }),
+  f("product", "text"),
+  f("rating", "number"),
+]);
+const SCHEMA: AdminSchema = {
+  models: [ORDERS, REVIEWS],
+  byId: { orders: ORDERS, reviews: REVIEWS },
+};
 
 /** No date and no enum — refuses the bucket and the group feed. */
 const PLAIN = model("notes", "Note", [f("body", "string")]);
@@ -106,9 +116,9 @@ async function paint(host: HTMLElement, want: () => boolean) {
   });
 }
 
-const groupRows = (...pairs: Array<[string, number]>) => ({
+const ratingRows = (...pairs: Array<[number, number]>) => ({
   count: pairs.reduce((s, [, n]) => s + n, 0),
-  results: pairs.flatMap(([status, n]) => Array.from({ length: n }, (_, i) => ({ id: `${status}${i}`, status }))),
+  results: pairs.flatMap(([rating, n]) => Array.from({ length: n }, (_, i) => ({ id: `r${rating}-${i}`, rating }))),
   next: null,
 });
 
@@ -157,11 +167,11 @@ describe("LiveOrders", () => {
     }
   });
 
-  it("renders the nameable reason, zero requests, when no model exists to count", async () => {
+  it("renders the nameable reason, zero requests, when the pinned model is not in the schema", async () => {
     boot(EMPTY);
     const host = await render(LiveOrders);
-    await paint(host, () => host.textContent!.includes("no model"));
-    expect(host.textContent).toContain("no model in this API has any model to aggregate.");
+    await paint(host, () => host.textContent!.includes("schema"));
+    expect(host.textContent).toContain('model "orders" is not in this API\'s schema.');
     expect(host.querySelector("svg, [role='status']")).toBeNull();
     expect(mockFetch).not.toHaveBeenCalled();
   });
@@ -225,11 +235,11 @@ describe("TodayRevenue", () => {
     expect(host.textContent).not.toContain("NaN");
   });
 
-  it("renders the nameable reason, zero requests, when no date field can bucket it", async () => {
+  it("renders the nameable reason, zero requests, when the pinned model is not in the schema", async () => {
     boot(NO_FEED);
     const host = await render(TodayRevenue);
-    await paint(host, () => host.textContent!.includes("date or datetime"));
-    expect(host.textContent).toContain("no model in this API has a date or datetime field to aggregate.");
+    await paint(host, () => host.textContent!.includes("schema"));
+    expect(host.textContent).toContain('model "orders" is not in this API\'s schema.');
     expect(host.querySelector("svg")).toBeNull();
     expect(mockFetch).not.toHaveBeenCalled();
   });
@@ -254,32 +264,32 @@ describe("TodayRevenue", () => {
 describe("CompletionGauge", () => {
   it("sizes one arc off the leading choice's fraction and captions the grouped count", async () => {
     boot(SCHEMA);
-    mockFetch.mockResolvedValue(jsonReply(groupRows(["pending", 3], ["paid", 2], ["shipped", 1])));
+    mockFetch.mockResolvedValue(jsonReply(ratingRows([5, 3], [4, 2], [3, 1])));
     const host = await render(CompletionGauge);
     await paint(host, () => host.querySelectorAll("svg circle").length === 2);
 
     const circles = [...host.querySelectorAll("svg circle")];
     expect(circles[0].getAttribute("stroke-dasharray")).toBeNull(); // [0] is the track
-    // pending is 3/6 of the ring — half the circumference, from the top
+    // 5★ is 3/6 of the ring — half the circumference, from the top
     expect(circles[1].getAttribute("stroke-dasharray")).toBe(`${((3 / 6) * C).toFixed(2)} ${C.toFixed(2)}`);
     expect(circles[1].getAttribute("stroke-dashoffset")).toBe("0");
     expect(host.querySelector("svg text")?.textContent).toBe("50%");
-    expect(host.querySelector("svg")?.getAttribute("aria-label")).toBe("pending 50% of 6");
+    expect(host.querySelector("svg")?.getAttribute("aria-label")).toBe("5 50% of 6");
     const legend = [...host.querySelectorAll("ul li")].map((li) =>
       (li.textContent ?? "").replace(/\s+/g, " ").trim(),
     );
-    expect(legend).toEqual(["pending 3", "paid 2", "shipped 1"]); // declared order, no cut needed
-    expect(host.textContent).toContain("Order · status · grouped from 6 records");
+    expect(legend).toEqual(["5 3", "4 2", "3 1"]); // insertion order, no cut needed
+    expect(host.textContent).toContain("Review · rating · grouped from 6 records");
 
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("http://api.test/api/orders/?page=1&page_size=100");
+    expect(url).toBe("http://api.test/api/reviews/?page=1&page_size=100");
     expect((init.headers as Record<string, string>).Authorization).toBe("Token tkn");
   });
 
   it("folds every group past the fifth into one (other) legend row", async () => {
     boot(SCHEMA);
     mockFetch.mockResolvedValue(
-      jsonReply(groupRows(["pending", 5], ["paid", 4], ["shipped", 3], ["refunded", 2], ["canceled", 2], ["held", 1])),
+      jsonReply(ratingRows([5, 5], [4, 4], [3, 3], [2, 2], [1, 2], [6, 1])),
     );
     const host = await render(CompletionGauge);
     await paint(host, () => host.querySelectorAll("ul li").length > 0);
@@ -289,8 +299,8 @@ describe("CompletionGauge", () => {
     expect(legend.length).toBe(6);
     expect(legend[5]).toContain("(other)");
     expect(legend[5]).toContain("1");
-    // "held" is never the leading choice: pending keeps the arc and the name
-    expect(host.querySelector("svg")?.getAttribute("aria-label")).toBe("pending 29% of 17");
+    // the unseen 6 is never the leading choice: 5 keeps the arc and the name
+    expect(host.querySelector("svg")?.getAttribute("aria-label")).toBe("5 29% of 17");
   });
 
   it("stays ready on an empty feed: an empty track, an em-dash, and an honest 0-record caption", async () => {
@@ -304,18 +314,18 @@ describe("CompletionGauge", () => {
     expect(host.textContent).not.toContain("NaN");
   });
 
-  it("renders the nameable reason, zero requests, when no enum field can feed it", async () => {
+  it("renders the nameable reason, zero requests, when the pinned model is not in the schema", async () => {
     boot(NO_FEED);
     const host = await render(CompletionGauge);
-    await paint(host, () => host.textContent!.includes("enum"));
-    expect(host.textContent).toContain("no model in this API has an enum (choices) field to aggregate.");
+    await paint(host, () => host.textContent!.includes("schema"));
+    expect(host.textContent).toContain('model "reviews" is not in this API\'s schema.');
     expect(host.querySelector("svg")).toBeNull();
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("shows the friendly error line when the group feed fails", async () => {
     boot(SCHEMA);
-    mockFetch.mockResolvedValue(jsonReply(groupRows(["pending", 1]), 500));
+    mockFetch.mockResolvedValue(jsonReply(ratingRows([5, 1]), 500));
     const host = await render(CompletionGauge);
     await paint(host, () => host.textContent!.includes("Could not load"));
     expect(host.textContent).toContain("Could not load this widget's data.");
