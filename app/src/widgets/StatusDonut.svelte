@@ -1,8 +1,11 @@
 <script module lang="ts">
   export const meta = {
-    title: "Share by status",
+    title: "Orders by source",
     size: "sm",
-    data: { aggregate: "group" },
+    // Owner law 2026-11-04: nothing like pending orders — the donut shows
+    // where orders COME FROM (website/facebook/whatsapp/campaign), never a
+    // workflow status. Pinned; auto-pick used to grab the status enum.
+    data: { endpoint: "orders", field: "order_source", aggregate: "group" },
   };
 </script>
 

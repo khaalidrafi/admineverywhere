@@ -1,8 +1,10 @@
 <script module lang="ts">
   export const meta = {
-    title: "Completion gauge",
+    title: "Reviews by rating",
     size: "sm",
-    data: { aggregate: "group" },
+    // Leading rating share — real shopper signal (owner law: no status
+    // framing in the dashboards; auto-pick used to grab the status enum).
+    data: { endpoint: "reviews", field: "rating", aggregate: "group" },
   };
 </script>
 

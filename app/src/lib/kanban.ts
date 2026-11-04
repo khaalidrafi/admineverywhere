@@ -56,7 +56,9 @@ export const UNASSIGNED = "__unassigned__";
  *  board — `axisProblem()` refuses the declaration nameably and `resolveAxis()`
  *  returns null — which is the same silent degrade every other registry does. */
 export const kanbanAxes: Record<string, KanbanAxis> = {
-  orders: { field: "status", via: "transition" },
+  // OWNER DIRECTIVE 2026-11-04 (#freshorama): "we won't approve/deny orders.
+  // So, nothing like pending orders." — the orders status board is gone: no
+  // pending column, no drag-to-approve. Orders render as plain records.
   products: { field: "packaging", via: "patch" },
 };
 
