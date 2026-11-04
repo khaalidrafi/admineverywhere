@@ -13,6 +13,7 @@
   let counts = $state<Record<string, number | null>>({});
   let failed = $state(false);
   let modelName = $state<Record<string, string>>({});
+  let schemaReady = $state(false);
   let started = false;
 
   // widgets can mount before the schema finishes loading -> react to it
@@ -20,6 +21,7 @@
     const schema = $app.schema;
     if (!schema || started) return;
     started = true;
+    schemaReady = true;
     void loadCounts(schema);
   });
 
@@ -58,6 +60,12 @@
       </button>
     {/each}
   </div>
+{:else if schemaReady}
+  <!-- The schema loaded but declares zero models: a skeleton wall here would
+       pulse forever (the blank-dashboard law) — say so instead. -->
+  <div class="card p-6 text-center text-sm text-muted">
+    No modules in this schema yet.
+  </div>
 {:else}
   <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
     {#each Array(6) as _, i (i)}
@@ -67,5 +75,13 @@
 {/if}
 
 {#if failed}
-  <div class="mt-2 text-xs text-text/40">Some counts could not be loaded.</div>
+  <div class="mt-2 flex items-center justify-between gap-2 text-xs text-error">
+    <span>Some counts could not be loaded.</span>
+    <button
+      class="btn btn-ghost px-2 py-1 text-xs"
+      onclick={() => { failed = false; counts = {}; started = false; schemaReady = false; }}
+    >
+      Retry
+    </button>
+  </div>
 {/if}
