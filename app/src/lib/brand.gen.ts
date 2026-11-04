@@ -9,7 +9,7 @@ import type { Brand, AppConfig } from "./stores";
 
 export const BUNDLED_BRAND: Brand = {
   "appName": "Freshorama Admin",
-  "tagline": "Fresh from Sylhet, managed everywhere",
+  "tagline": "Safe Food, Healthy Life",
   "logo": "logo.png",
   "colors": {
     "primary": "#006e33",
