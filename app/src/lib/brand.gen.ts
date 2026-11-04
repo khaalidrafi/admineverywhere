@@ -8,11 +8,18 @@
 import type { Brand, AppConfig } from "./stores";
 
 export const BUNDLED_BRAND: Brand = {
-  "appName": "Admineverywhere",
-  "tagline": "Django-powered admin",
-  "colors": {},
-  "radius": "0.75rem",
-  "font": "Inter",
+  "appName": "Freshorama Admin",
+  "tagline": "Fresh from Sylhet, managed everywhere",
+  "logo": "logo.png",
+  "colors": {
+    "primary": "#006e33",
+    "accent": "#ffa400",
+    "bg": "#f8fff7",
+    "surface": "#ffffff",
+    "text": "#153126",
+  },
+  "radius": "0.875rem",
+  "font": "Lato",
 };
 
 export const BUNDLED_CONFIG: AppConfig = {
