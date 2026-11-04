@@ -182,8 +182,9 @@
                     <Icon name="pencil" size={15} />
                   </button>
                   <button
-                    class="btn btn-ghost p-2 hover:!border-red-500/40 hover:text-red-400"
+                    class="btn btn-ghost p-2 hover:!border-error-line hover:text-error"
                     title="Delete"
+                    aria-label="Delete {row.id ?? 'record'}"
                     onclick={() => ondelete(row)}
                   >
                     <Icon name="trash" size={15} />
@@ -203,7 +204,7 @@
     <span class="text-text/30">—</span>
   {:else if col.type === "boolean"}
     <span class="inline-flex items-center gap-2">
-      <span class="inline-block size-2 rounded-full {value ? 'bg-emerald-500' : 'bg-text/25'}"></span>
+      <span class="inline-block size-2 rounded-full {value ? 'bg-success' : 'bg-text/25'}"></span>
       {value ? "Yes" : "No"}
     </span>
   {:else if col.type === "enum"}

@@ -3,9 +3,10 @@
   "tagline": "Safe Food, Healthy Life",
   "logo": "logo.png",
   "favicon": "icon.png",
+  "loaderVideo": "intro.mp4",
   "colors": {
     "primary": "#006e33",
-    "accent": "#ffa400",
+    "accent": "#22be6f",
     "bg": "#f8fff7",
     "surface": "#ffffff",
     "text": "#153126"

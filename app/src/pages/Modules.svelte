@@ -79,7 +79,7 @@
   </div>
 
   {#if refusedPages.length}
-    <div class="mt-6 rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+    <div class="mt-6 rounded-lg border border-error-line bg-error-bg p-4">
       <h2 class="mb-2 flex items-center gap-2 text-sm font-semibold">
         <Icon name="alert" size={16} />
         Refused declarations

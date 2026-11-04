@@ -17,6 +17,13 @@
   --color-onbrand: var(--brand-on-brand);
   --radius-brand: var(--brand-radius);
   --font-brand: var(--brand-font);
+  /* The website's own state colors (base.css --error/--error-bg/--error-line
+     and --success): components stopped inventing red/emerald from the Tailwind
+     palette (owner law: the admin apps wear the website's colors). */
+  --color-error: #b23b3b;
+  --color-error-bg: #fdecea;
+  --color-error-line: #f3c0bd;
+  --color-success: #138f46;
 }
 
 html, body {
@@ -45,11 +52,22 @@ html, body {
  * outside Android.
  */
 
-/* --- shared primitives (kept tiny; components compose Tailwind classes) --- */
-
 /* --- shared primitives (kept tiny; components compose Tailwind classes) ---
    Website-faithful surfaces: white cards on the cream page, brand-green
    hairlines and the site's own card shadow (base.css --shadow-card). */
+
+/* Keyboard focus + selection follow the site: a brand-green ring with an
+   offset (base.css's 3px rule, ported) and a tinted text selection
+   (admin-client's harvest layer). Before this only .input had a focus
+   treatment — buttons, links and icon buttons fell back to UA defaults. */
+:focus-visible {
+  outline: 3px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand-accent) 32%, transparent);
+}
 .card {
   background-color: var(--brand-surface);
   border: 1px solid var(--brand-line, color-mix(in srgb, var(--brand-text) 12%, transparent));
@@ -91,7 +109,13 @@ html, body {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 25%, transparent);
 }
 .input::placeholder { color: color-mix(in srgb, var(--brand-text) 45%, transparent); }
-select.input option { color: #111; background: #fff; }
+/* Option lists are painted by the OS everywhere except the closed <select>
+   popover; the old #111/#fff literals broke on dark brand packs, so the
+   popover now derives both from the brand ink/surface. */
+select.input option {
+  color: var(--brand-text);
+  background: var(--brand-surface);
+}
 
 .btn {
   display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;
@@ -127,6 +151,38 @@ select.input option { color: #111; background: #fff; }
 .flip-scene { perspective: 900px; }
 .flip-card { transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1); transform-style: preserve-3d; }
 .flip-card.flipping { transform: rotateY(180deg); }
+
+/* The website kills its own animations for vestibular safety (base.css
+   prefers-reduced-motion); the admin app now matches it — skeleton pulse,
+   quote flip and hover/press transforms all go still. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .skeleton { animation: none; }
+  .flip-card { transition: none; }
+}
+
+/* Status vocabulary (DataTable row dots, Toaster rails, Login error boxes):
+   one pair of brand tokens instead of five Tailwind palette literals. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: color-mix(in srgb, var(--brand-accent) 15%, transparent);
+  color: var(--brand-text);
+}
+
+.text-warning { color: #7a5b00; } /* the site's --notice-ink amber-brown */
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--brand-text) 18%, transparent); border-radius: 8px; }

@@ -131,7 +131,7 @@
         {/if}
 
         {#if error}
-          <div class="rounded-lg border border-red-500/40 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+          <div class="rounded-lg border border-error-line bg-error-bg px-3 py-2 text-sm text-error" role="alert">
             {error}
           </div>
         {/if}
