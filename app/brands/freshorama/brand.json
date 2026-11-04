@@ -1,6 +1,6 @@
 {
   "appName": "Freshorama Admin",
-  "tagline": "Manage everything, beautifully",
+  "tagline": "Safe Food, Healthy Life",
   "logo": "assets/logo.png",
   "favicon": "assets/icon.png",
   "icon": "assets/icon-1024.png",
@@ -8,10 +8,10 @@
   "colors": {
     "primary": "#006e33",
     "accent": "#22be6f",
-    "bg": "#f6faf6",
+    "bg": "#f8fff7",
     "surface": "#ffffff",
-    "text": "#14301f"
+    "text": "#153126"
   },
-  "radius": "0.75rem",
-  "font": "Inter"
+  "radius": "0.875rem",
+  "font": "Lato"
 }
