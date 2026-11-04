@@ -27,18 +27,18 @@
   }
 </script>
 
-<aside class="flex h-full w-64 flex-col border-r border-text/10 bg-surface">
+<aside class="band-chrome flex h-full w-64 flex-col">
   <!-- brand header -->
   <div class="flex items-center gap-3 px-5 py-5">
     {#if $app.brand.logo}
-      <img src={$app.brand.logo} alt="logo" class="size-9 rounded-lg" />
+      <img src={$app.brand.logo} alt="logo" class="size-9 rounded-lg bg-white/90 p-0.5" />
     {:else}
-      <div class="size-9 rounded-lg bg-gradient-to-br from-primary to-accent"></div>
+      <div class="size-9 rounded-lg bg-white/90"></div>
     {/if}
     <div class="min-w-0">
-      <div class="truncate font-semibold leading-tight">{$app.brand.appName}</div>
+      <div class="truncate font-semibold leading-tight text-white">{$app.brand.appName}</div>
       {#if $app.brand.tagline}
-        <div class="truncate text-xs text-text/50">{$app.brand.tagline}</div>
+        <div class="truncate text-xs text-white/70">{$app.brand.tagline}</div>
       {/if}
     </div>
   </div>
@@ -47,7 +47,7 @@
     {#each mainNav as page (page.id)}
       <button
         class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-          {isActive($route.path, page.path) ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
+          {isActive($route.path, page.path) ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10'}"
         onclick={() => go(pageHref(page))}
       >
         <Icon name={page.icon} size={16} />
@@ -55,7 +55,7 @@
       </button>
     {/each}
 
-    <div class="mt-4 px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text/40">
+    <div class="mt-4 px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-white/60">
       Models
     </div>
 
@@ -67,7 +67,7 @@
       {#each $app.schema.models as model (model.id)}
         <button
           class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-            {isActive($route.path, `/m/${model.id}`) ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
+            {isActive($route.path, `/m/${model.id}`) ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10'}"
           onclick={() => go(`#/m/${model.id}`)}
         >
           <Icon name="table" size={16} />
@@ -75,20 +75,20 @@
         </button>
       {/each}
     {:else}
-      <div class="px-3 py-2 text-xs text-text/50">Schema unavailable</div>
+      <div class="px-3 py-2 text-xs text-white/70">Schema unavailable</div>
     {/if}
   </nav>
 
   <!-- settings: every page that declared nav: "settings" -->
   {#if settingsNav.length}
-    <div class="border-t border-text/10 px-3 py-3">
-      <div class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text/40">
+    <div class="border-t border-white/20 px-3 py-3">
+      <div class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-white/60">
         Settings
       </div>
       {#each settingsNav as page (page.id)}
         <button
           class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
-            {isActive($route.path, page.path) ? 'bg-primary/15 text-primary' : 'text-text/70 hover:bg-text/5'}"
+            {isActive($route.path, page.path) ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10'}"
           onclick={() => go(pageHref(page))}
         >
           <Icon name={page.icon} size={16} />
@@ -99,8 +99,8 @@
   {/if}
 
   <!-- footer -->
-  <div class="px-3 py-3">
-    <div class="flex items-center justify-between gap-2 px-2 pb-2 text-xs text-text/50">
+  <div class="px-3 py-3 [&_.btn-ghost]:border-white/30 [&_.btn-ghost]:text-white [&_.bg-primary]:bg-white [&_.text-bg]:text-primary">
+    <div class="flex items-center justify-between gap-2 px-2 pb-2 text-xs text-white/70">
       <span class="truncate">@{$app.username || "admin"}</span>
       <div class="flex items-center gap-1">
         <NotificationBell />

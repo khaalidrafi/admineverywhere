@@ -17,13 +17,13 @@ import type { Brand } from "./types";
 const STYLE_ID = "brand-runtime";
 
 export const BRAND_DEFAULTS = {
-  primary: "#4f46e5",
-  accent: "#06b6d4",
-  bg: "#0f172a",
-  surface: "#1e293b",
-  text: "#f1f5f9",
-  radius: "0.75rem",
-  font: "Inter",
+  primary: "#006e33",
+  accent: "#ffa400",
+  bg: "#f8fff7",
+  surface: "#ffffff",
+  text: "#153126",
+  radius: "0.875rem",
+  font: "Lato",
 };
 
 const DEFAULTS = BRAND_DEFAULTS;

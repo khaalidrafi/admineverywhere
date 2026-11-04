@@ -1,8 +1,9 @@
 <script module lang="ts">
   export const meta = {
-    title: "Top values",
+    title: "Top products",
     size: "sm",
-    data: { aggregate: "group" },
+    // Reviews per product — real catalog vibrancy, no workflow framing.
+    data: { endpoint: "reviews", field: "product", aggregate: "group" },
   };
 </script>
 

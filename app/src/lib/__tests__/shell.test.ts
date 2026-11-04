@@ -54,7 +54,7 @@ function labels(scope: HTMLElement): string[] {
 
 function lit(scope: HTMLElement): string[] {
   return navButtons(scope)
-    .filter((b) => b.className.includes("bg-primary/15"))
+    .filter((b) => b.className.includes("bg-white/20"))
     .map((b) => (b.textContent ?? "").trim());
 }
 
