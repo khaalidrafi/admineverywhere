@@ -6,7 +6,11 @@
   /** ActivityChart — hand-rolled SVG line chart of records per day.
    *  Picks the first model with a datetime field (drives off schema only —
    *  no hardcoded model names), buckets the first pages of data by day.
-   */
+   *
+   *  Empty-source fallback (owner blank-dashboard report 2026-11-04): the
+   *  candidates are tried in rank order until one has a non-zero day in the
+   *  window — an all-zero first source (a fresh audit log) no longer renders
+   *  as a blank flat line while real activity sits in another model. */
   import { get } from "svelte/store";
   import { app, effectiveConfig, handleApiError } from "../lib/stores";
   import { listRecords } from "../lib/api";
@@ -19,21 +23,23 @@
   let state = $state<"loading" | "ready" | "empty" | "error">("loading");
   let started = false;
 
-  function pickModel(schema: AdminSchema): { model: ModelSpec; field: string } | null {
+  function pickModels(schema: AdminSchema): { model: ModelSpec; field: string }[] {
     // prefer auto timestamps (readOnly) on fields named created_at, then any
     // readOnly datetime — manually-set datetimes (e.g. Category.created_at)
     // usually describe old backfill, not recent activity
     const rank = (f: { type: string; name: string; readOnly: boolean }) =>
       (f.type === "datetime" ? 0 : 99) + (f.readOnly ? 0 : 10) + (f.name === "created_at" ? 0 : 1);
-    let best: { model: ModelSpec; field: string; score: number } | null = null;
+    const scored: { model: ModelSpec; field: string; score: number }[] = [];
     for (const m of schema.models) {
       for (const f of m.fields) {
         if (f.type !== "datetime") continue;
-        const score = rank(f);
-        if (!best || score < best.score) best = { model: m, field: f.name, score };
+        scored.push({ model: m, field: f.name, score: rank(f) });
       }
     }
-    return best ? { model: best.model, field: best.field } : null;
+    return scored
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3)
+      .map(({ model, field }) => ({ model, field }));
   }
 
   // widgets can mount before the schema finishes loading -> react to it
@@ -41,15 +47,26 @@
     const schema = $app.schema;
     if (!schema || started) return;
     started = true;
-    const picked = pickModel(schema);
-    if (!picked) {
+    const candidates = pickModels(schema);
+    if (!candidates.length) {
       state = "empty";
       return;
     }
-    void load(picked);
+    void tryCandidate(candidates, 0);
   });
 
-  async function load(picked: { model: ModelSpec; field: string }) {
+  async function tryCandidate(candidates: { model: ModelSpec; field: string }[], index: number) {
+    await load(candidates[index]);
+    if (state === "error") return; // a failed walk must stay an error — never downgraded
+    const anyActivity = buckets.some((v) => v > 0);
+    if (!anyActivity && index + 1 < candidates.length) {
+      await tryCandidate(candidates, index + 1);
+      return;
+    }
+    state = "ready";
+  }
+
+  async function load(picked: { model: ModelSpec; field: string }): Promise<RecordRow[]> {
     modelName = picked.model.name;
     fieldName = picked.field;
     const today = new Date();
@@ -73,10 +90,11 @@
         if (byDay.has(k)) byDay.set(k, (byDay.get(k) ?? 0) + 1);
       }
       buckets = keys.map((k) => byDay.get(k) ?? 0);
-      state = "ready";
+      return rows;
     } catch (err) {
       handleApiError(err);
       state = "error";
+      return [];
     }
   }
 

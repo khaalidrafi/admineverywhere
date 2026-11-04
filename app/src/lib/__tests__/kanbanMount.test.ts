@@ -7,13 +7,14 @@
  *  lifecycleMount.test.ts: browser resolve condition + flushSync + stubbed
  *  fetch, schema from normalizeOpenAPI of the captured fixture.
  */
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, afterEach, describe, expect, it, vi } from "vitest";
 import { flushSync, mount, unmount } from "svelte";
 import ModelPage from "../../pages/ModelPage.svelte";
 import KanbanBoard from "../../components/KanbanBoard.svelte";
 import Toaster from "../../components/Toaster.svelte";
 import { normalizeOpenAPI } from "../openapi";
-import { axisProblem, resolveAxis } from "../kanban";
+import { axisProblem, resolveAxis, type ResolvedAxis } from "../kanban";
+import { statusTransitions } from "../statusTransitions";
 import { app, toasts } from "../stores";
 import fixture from "./fixtures/openapi.json";
 import type { AdminSchema, ModelSpec, RecordRow } from "../types";
@@ -32,6 +33,19 @@ afterEach(() => {
 
 const LIVE = normalizeOpenAPI(fixture);
 
+/** Products routes for the declared patch axis (see the last describe). */
+function routeProducts() {
+  const BOX_ROW = { id: 11, name: "Olives", price: "8.00", stock: 3, packaging: "box" };
+  const BLANK_ROW = { id: 12, name: "Cheese", price: "12.00", stock: 1, packaging: "" };
+  mockFetch.mockImplementation(async (url: string, init?: any) => {
+    const u = String(url);
+    if (u.includes("/transition/")) return reply(404, { detail: "no machine governs this field" });
+    if (/\/api\/products\/[^/]+\/$/.test(u)) return reply(200, { ...BOX_ROW, packaging: "crate" });
+    if (u.includes("/api/products/")) return reply(200, { count: 2, results: [BOX_ROW, BLANK_ROW] });
+    return reply(200, { count: 0, results: [] });
+  });
+}
+
 function reply(status: number, data: any) {
   return { ok: status < 400, status, json: async () => data, text: async () => JSON.stringify(data) };
 }
@@ -40,7 +54,7 @@ const PENDING_ROW = { id: 7, status: "pending", total: "12.50", customer: 3, cre
 const PAGE = { count: 1, results: [PENDING_ROW] };
 
 /** Route by URL, and record the METHOD + body so the test can name the bytes. */
-function route(page: any = PAGE, transition: { status: number; body: any } = { status: 200, body: { ...PENDING_ROW, status: "confirmed" } }) {
+function route(page: any = PAGE, transition: { status: number; body: any } = { status: 200, body: { ...PENDING_ROW, status: "paid" } }) {
   mockFetch.mockImplementation(async (url: string, init?: any) => {
     const u = String(url);
     if (u.includes("/transition/")) return reply(transition.status, transition.body);
@@ -98,173 +112,35 @@ function settleTo(host: HTMLElement, text: string) {
   });
 }
 
-describe("mounted kanban board — columns, keyboard path, wire", () => {
-  it("the toggle asks the discovered list path for a board-sized page", async () => {
+describe("orders carry NO board — the no-approve/deny law, mounted", () => {
+  it("orders get no Kanban toggle, no board-sized probe and no transition call", async () => {
     route();
-    const { host } = render(LIVE);
+    const { host } = render(LIVE, "orders");
     await settleTo(host, "pending");
-    expect(resolveAxis(LIVE.byId["orders"])).not.toBeNull();
+    // the schema still documents the machine (transitionPath) and the board
+    // machinery exists — the REGISTRY is the law: orders are plain records.
+    expect(LIVE.byId["orders"].transitionPath).toBeTruthy();
+    expect(resolveAxis(LIVE.byId["orders"])).toBeNull();
 
-    const toggle = boardToggle(host);
-    expect(toggle).toBeTruthy();
-    expect(toggle!.getAttribute("aria-pressed")).toBe("false");
-    flushSync(() => toggle!.click());
-    await settleTo(host, "Board by status");
-
-    // table load first (no page_size), then the board's widened page — both on
-    // the DISCOVERED listPath, never a hand-written /api/orders/
-    expect(urls()[0]).toBe("http://api.test/api/orders/?page=1");
-    expect(urls().some((u) => u.startsWith("http://api.test/api/orders/?") && u.includes("page_size=100"))).toBe(true);
-    // every declared column renders, empty ones included
-    const labels = [...host.querySelectorAll("section")].map((s) => s.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "pending column, 1 record",
-      "confirmed column, 0 records",
-      "processing column, 0 records",
-      "ready_to_ship column, 0 records",
-      "shipped column, 0 records",
-      "in_transit column, 0 records",
-      "delivered column, 0 records",
-      "delivery_failed column, 0 records",
-      "returned column, 0 records",
-      "on_hold column, 0 records",
-      "cancelled column, 0 records",
-    ]);
-  });
-
-  it("a card move fires POST <discovered detail path>transition/ with only the target", async () => {
-    route();
-    const { host, toastHost } = render(LIVE);
-    await settleTo(host, "pending");
-    flushSync(() => boardToggle(host)!.click());
-    await vi.waitFor(() => {
-      flushSync(() => {});
-      expect(host.querySelector("select[aria-label^='Move ']")).toBeTruthy();
-    });
-
-    const select = host.querySelector<HTMLSelectElement>("select[aria-label^='Move ']")!;
-    const options = [...select.options].map((o) => ({ value: o.value, disabled: o.disabled }));
-    // pending's legal targets are confirmed/on_hold/cancelled — the UI
-    // pre-filters, the server stays authority
-    expect(options).toEqual([
-      { value: "", disabled: false },
-      { value: "pending", disabled: true },
-      { value: "confirmed", disabled: false },
-      { value: "processing", disabled: true },
-      { value: "ready_to_ship", disabled: true },
-      { value: "shipped", disabled: true },
-      { value: "in_transit", disabled: true },
-      { value: "delivered", disabled: true },
-      { value: "delivery_failed", disabled: true },
-      { value: "returned", disabled: true },
-      { value: "on_hold", disabled: false },
-      { value: "cancelled", disabled: false },
-    ]);
-
-    flushSync(() => {
-      select!.value = "confirmed";
-      select!.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    await settleTo(toastHost, "7 → confirmed");
-
-    expect(bodies("/transition/")).toEqual(['{"transition":"confirmed"}']);
-    expect(urls().filter((u) => u.includes("/transition/"))).toEqual([
-      "http://api.test/api/orders/7/transition/",
-    ]);
-    // the board re-renders the moved record into its new column
-    await vi.waitFor(() => {
-      flushSync(() => {});
-      const confirmed = [...host.querySelectorAll("section")].find((s) => s.getAttribute("aria-label")?.startsWith("confirmed"));
-      expect(confirmed?.getAttribute("aria-label")).toBe("confirmed column, 1 record");
-    });
-  });
-
-  it("drag offers drop feedback on legal columns only and refuses the illegal one", async () => {
-    route();
-    const { host } = render(LIVE);
-    await settleTo(host, "pending");
-    flushSync(() => boardToggle(host)!.click());
-    await vi.waitFor(() => {
-      flushSync(() => {});
-      expect(host.querySelector("article")).toBeTruthy();
-    });
-
-    const card = host.querySelector("article")!;
-    expect(card.getAttribute("draggable")).toBe("true");
-    const sections = [...host.querySelectorAll("section")];
-    const confirmedCol = sections.find((s) => s.getAttribute("aria-label")?.startsWith("confirmed"))!;
-    const shippedCol = sections.find((s) => s.getAttribute("aria-label")?.startsWith("shipped"))!;
-
-    flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
-    const dropOn = (col: Element) => {
-      col.dispatchEvent(dragEvent("dragover"));
-      flushSync(() => col.dispatchEvent(dragEvent("drop")));
-    };
-
-    // illegal target: no feedback, and nothing reaches the network
-    dropOn(shippedCol);
-    await new Promise((r) => setTimeout(r, 50));
-    expect(urls().some((u) => u.includes("/transition/"))).toBe(false);
-
-    // legal target: the drag ends there and the transition fires once
-    flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
-    dropOn(confirmedCol);
-    await vi.waitFor(() => {
-      flushSync(() => {});
-      expect(urls().filter((u) => u.includes("/transition/")).length).toBe(1);
-    });
-    expect(bodies("/transition/")).toEqual(['{"transition":"confirmed"}']);
-  });
-
-  it("a record with an undeclared status lands in Unassigned, visible and read-only", async () => {
-    const rows = { count: 2, results: [PENDING_ROW, { ...PENDING_ROW, id: 8, status: "void" }] };
-    route(rows);
-    const { host } = render(LIVE);
-    await vi.waitFor(() => {
-      flushSync(() => {});
-      expect(host.textContent).toContain("2 records");
-    });
-    flushSync(() => boardToggle(host)!.click());
-    const unassigned = await vi.waitFor(() => {
-      flushSync(() => {});
-      const col = [...host.querySelectorAll("section")].find((c) =>
-        c.getAttribute("aria-label") === "Unassigned column, 1 record",
-      );
-      // the column label appears while the board is still on its skeleton, so
-      // wait for the CARD, not the heading — a transient frame is not evidence
-      expect(col?.querySelector("article")).toBeTruthy();
-      return col!;
-    });
-    const card = unassigned.querySelector("article")!;
-    // display-only: not draggable, and its select is disabled
-    expect(card.getAttribute("draggable")).not.toBe("true");
-    expect(card.querySelector("select")!.disabled).toBe(true);
-  });
-
-  it("a backend that documents no transition endpoint gets no board at all", async () => {
-    const stripped: ModelSpec[] = LIVE.models.map((m) => {
-      if (m.id !== "orders") return m;
-      const copy: ModelSpec = { ...m };
-      delete copy.transitionPath;
-      return copy;
-    });
-    const NO_MACHINE: AdminSchema = {
-      ...LIVE,
-      models: stripped,
-      byId: Object.fromEntries(stripped.map((m) => [m.id, m])),
-    };
-    expect(NO_MACHINE.byId["orders"].transitionPath).toBeUndefined();
-    expect(resolveAxis(NO_MACHINE.byId["orders"])).toBeNull();
-
-    route();
-    const { host, toastHost } = render(NO_MACHINE);
-    await settleTo(host, "pending");
     expect(boardToggle(host)).toBeNull();
     await new Promise((r) => setTimeout(r, 150));
+    expect(urls().some((u) => u.includes("page_size"))).toBe(false);
     expect(urls().some((u) => u.includes("/transition/"))).toBe(false);
-    expect(toastHost.textContent).toBe("");
-    // the table view still works — refusing the board is a degrade, not a break
+    // the table view still renders the records — data, not a workflow
     expect(host.textContent).toContain("pending");
+  });
+
+  it("the board machinery still mounts for a DECLARED patch axis (products)", async () => {
+    routeProducts();
+    const { host } = render(LIVE, "products");
+    await settleTo(host, "Olives");
+    const toggle = boardToggle(host);
+    expect(toggle).toBeTruthy();
+    flushSync(() => toggle!.click());
+    await settleTo(host, "Board by packaging");
+    expect(
+      urls().some((u) => u.startsWith("http://api.test/api/products/?") && u.includes("page_size=100")),
+    ).toBe(true);
   });
 });
 
@@ -275,14 +151,44 @@ describe("mounted kanban board — columns, keyboard path, wire", () => {
  *  every page-level assertion green (mutant survived, R-004 report 12:59Z).
  *  With a spy `onmove` the component is judged on its own contract. */
 describe("KanbanBoard mounted alone — its drop guard answers to no one", () => {
+  /** A synthetic governed model: the transition machinery must stay tested
+   *  even though orders (the real governed model) is ungoverned by owner law
+   *  2026-11-04. Registered here, never through shipped product code. */
+  const JOBS: ModelSpec = {
+    id: "jobs",
+    name: "Job",
+    singular: "job",
+    listPath: "/api/jobs/",
+    detailPath: "/api/jobs/{id}/",
+    fields: [
+      { name: "id", type: "number", required: false, readOnly: true },
+      { name: "status", type: "enum", required: false, readOnly: false, choices: ["queued", "running", "done"] },
+    ],
+    byName: {},
+    labelField: "id",
+  };
+  JOBS.byName = Object.fromEntries(JOBS.fields.map((f) => [f.name, f]));
+  const AXIS: ResolvedAxis = { modelId: "jobs", field: "status", via: "transition", columns: ["queued", "running", "done"] };
+  const QUEUED_ROW = { id: 7, status: "queued" };
+
+  beforeAll(() => {
+    statusTransitions.jobs = {
+      statusField: "status",
+      states: ["queued", "running", "done"],
+      transitions: { queued: ["running"], running: ["done"], done: [] },
+    };
+  });
+  afterAll(() => {
+    delete statusTransitions.jobs;
+  });
+
   function renderBoard(onmove: (row: RecordRow, column: string) => void) {
-    const model = LIVE.byId["orders"];
-    const axis = resolveAxis(model)!;
-    expect(axis).not.toBeNull();
+    const model = JOBS;
+    const axis = AXIS;
     const host = document.createElement("div");
     document.body.append(host);
     flushSync(() => {
-      hosts.push({ instance: mount(KanbanBoard, { target: host, props: { model, rows: [{ ...PENDING_ROW }], axis, onmove } }) });
+      hosts.push({ instance: mount(KanbanBoard, { target: host, props: { model, rows: [{ ...QUEUED_ROW }], axis, onmove } }) });
     });
     const column = (label: string) =>
       [...host.querySelectorAll("section")].find((s) => s.getAttribute("aria-label")?.startsWith(label))!;
@@ -295,7 +201,7 @@ describe("KanbanBoard mounted alone — its drop guard answers to no one", () =>
     const onmove = vi.fn();
     const { column, card } = renderBoard(onmove);
     flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
-    const illegal = column("shipped"); // pending → shipped is not a transition
+    const illegal = column("done"); // queued -> done is not a transition
     illegal.dispatchEvent(dragEvent("dragover"));
     flushSync(() => illegal.dispatchEvent(dragEvent("drop")));
     expect(onmove).not.toHaveBeenCalled();
@@ -305,11 +211,11 @@ describe("KanbanBoard mounted alone — its drop guard answers to no one", () =>
     const onmove = vi.fn();
     const { column, card } = renderBoard(onmove);
     flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
-    const legal = column("confirmed");
+    const legal = column("running");
     legal.dispatchEvent(dragEvent("dragover"));
     flushSync(() => legal.dispatchEvent(dragEvent("drop")));
     expect(onmove).toHaveBeenCalledTimes(1);
-    expect(onmove.mock.calls[0][1]).toBe("confirmed");
+    expect(onmove.mock.calls[0][1]).toBe("running");
     expect(String(onmove.mock.calls[0][0].id)).toBe("7");
     // drop() calls endDrag, so a second drop on the same column is inert
     flushSync(() => legal.dispatchEvent(dragEvent("drop")));
@@ -321,10 +227,10 @@ describe("KanbanBoard mounted alone — its drop guard answers to no one", () =>
     const { column, card } = renderBoard(onmove);
     flushSync(() => card.dispatchEvent(dragEvent("dragstart")));
     const overLegal = dragEvent("dragover");
-    column("confirmed").dispatchEvent(overLegal);
+    column("running").dispatchEvent(overLegal);
     expect(overLegal.defaultPrevented).toBe(true);
     const overIllegal = dragEvent("dragover");
-    column("returned").dispatchEvent(overIllegal);
+    column("done").dispatchEvent(overIllegal);
     expect(overIllegal.defaultPrevented).toBe(false);
   });
 });

@@ -23,42 +23,15 @@ export interface TransitionConfig {
   states: string[];
 }
 
-/** Registry of models with lifecycle-governed status fields. */
-export const statusTransitions: Record<string, TransitionConfig> = {
-  orders: {
-    statusField: "status",
-    // The production 11-state COD machine, mirrored from the demo rig's
-    // Order model (shop/models.py) — the same states in the same declared
-    // order with the same legal edges. The rig's /api/schema/ carries the
-    // same enum (proof fixture + drift gate keep the two in lockstep).
-    states: [
-      "pending",
-      "confirmed",
-      "processing",
-      "ready_to_ship",
-      "shipped",
-      "in_transit",
-      "delivered",
-      "delivery_failed",
-      "returned",
-      "on_hold",
-      "cancelled",
-    ],
-    transitions: {
-      pending: ["confirmed", "on_hold", "cancelled"],
-      confirmed: ["processing", "ready_to_ship", "on_hold", "cancelled"],
-      processing: ["ready_to_ship", "on_hold", "cancelled"],
-      ready_to_ship: ["shipped", "on_hold", "cancelled"],
-      shipped: ["in_transit", "delivered", "delivery_failed", "on_hold", "cancelled"],
-      in_transit: ["delivered", "delivery_failed", "on_hold", "cancelled"],
-      delivery_failed: ["shipped", "returned", "cancelled"],
-      returned: [], // terminal
-      delivered: ["returned"],
-      on_hold: ["confirmed", "processing", "cancelled"],
-      cancelled: [], // terminal
-    },
-  },
-};
+/** Registry of models with lifecycle-governed status fields.
+ *
+ *  OWNER DIRECTIVE 2026-11-04 (#freshorama): "we won't approve/deny orders.
+ *  So, nothing like pending orders." — the orders entry is deliberately GONE:
+ *  the admin client renders orders as plain records, with no transition
+ *  buttons, no status board, no approval affordance, regardless of what the
+ *  schema documents. The registry machinery stays for backends that declare
+ *  their own governed models. */
+export const statusTransitions: Record<string, TransitionConfig> = {};
 
 /** Get the legal transitions from a given state for a model. */
 export function getLegalTransitions(modelId: string, currentState: string): string[] {
