@@ -1,21 +1,56 @@
 <script lang="ts">
-  /** AI chat — one floating panel, streaming, OpenAI-compatible.
+  /** AI agent — one floating panel, streaming, OpenAI-compatible tool calling.
    *  Ctrl+K or the spark button opens it. Unconfigured = friendly setup.
-   *  No tool calling, no history persistence (v2 material).
+   *  The agent runs admin actions through the operator's own session: reads
+   *  execute at once, every write waits for a Confirm card in the transcript
+   *  (agent.ts law). No cross-turn tool history is replayed — text memory
+   *  only, so a fresh turn starts clean.
    */
   import { onMount } from "svelte";
   import { get } from "svelte/store";
   import { ai, app, loadAiSettings, saveAiSettings, toast } from "../lib/stores";
-  import { buildSchemaPrompt, ChatError, streamChatCompletion, systemPrompt, type ChatMessage } from "../lib/chat";
+  import {
+    buildSchemaPrompt,
+    ChatError,
+    streamAssistantTurn,
+    systemPrompt,
+    type ParsedToolCall,
+    type WireMessage,
+  } from "../lib/chat";
+  import {
+    agentSystemAddendum,
+    buildAgentTools,
+    executeTool,
+    humanSummary,
+    isDestructive,
+    toolResultMessage,
+    type ToolCtx,
+  } from "../lib/agent";
 
   import { isWebStorage } from "../lib/secrets";
   import Icon from "../components/Icon.svelte";
 
+  const MAX_ROUNDS = 6;
+
+  interface ToolInv {
+    id: string;
+    name: string;
+    args: Record<string, any>;
+    destructive: boolean;
+    summary: string;
+    status: "awaiting" | "running" | "done" | "error" | "denied";
+    result?: any;
+  }
+
+  type ChatEntry =
+    | { kind: "msg"; role: "user" | "assistant"; content: string }
+    | { kind: "tool"; inv: ToolInv };
+
   let open = $state(false);
   let showSettings = $state(false);
-  let messages = $state<ChatMessage[]>([]);
+  let entries = $state<ChatEntry[]>([]);
   let input = $state("");
-  let streaming = $state(false);
+  let busy = $state(false);
   let streamError = $state("");
   let scroller: HTMLDivElement | undefined = $state();
 
@@ -25,6 +60,8 @@
   let model = $state("");
 
   let abort: AbortController | null = null;
+  /** operator gate: call id → resolver of its Confirm/Deny promise */
+  const gates = new Map<string, (ok: boolean) => void>();
 
   const configured = $derived(Boolean($ai.baseUrl && $ai.model));
 
@@ -52,9 +89,122 @@
     });
   }
 
+  /* ---- operator gate ---- */
+
+  function decide(callId: string, ok: boolean) {
+    const resolve = gates.get(callId);
+    if (resolve) {
+      gates.delete(callId);
+      resolve(ok);
+    }
+  }
+
+  /** Resolves false for every still-pending gate (Stop pressed). */
+  function denyAllPending() {
+    for (const [id, resolve] of [...gates]) {
+      gates.delete(id);
+      resolve(false);
+    }
+  }
+
+  /* ---- wire helpers ---- */
+
+  /** Cross-turn memory: text bubbles only (tool traffic lives inside its turn). */
+  function historyWire(): WireMessage[] {
+    return entries
+      .filter((e): e is { kind: "msg"; role: "user" | "assistant"; content: string } =>
+        e.kind === "msg" && e.content.trim() !== "",
+      )
+      .slice(-8)
+      .map((e) => ({ role: e.role, content: e.content }));
+  }
+
+  const toWireCall = (c: ParsedToolCall) => ({
+    id: c.id,
+    type: "function" as const,
+    function: { name: c.name, arguments: JSON.stringify(c.args) },
+  });
+
+  /* ---- the agent loop ---- */
+
+  async function runAgentTurn(
+    text: string,
+    history: WireMessage[],
+    ctx: ToolCtx,
+    tools: ReturnType<typeof buildAgentTools>,
+  ) {
+    const wire: WireMessage[] = [
+      {
+        role: "system",
+        content:
+          systemPrompt(
+            get(app).brand.appName,
+            get(app).schema ? buildSchemaPrompt(get(app).schema!) : "no schema loaded",
+          ) + agentSystemAddendum(),
+      },
+      ...history,
+      { role: "user", content: text },
+    ];
+
+    for (let round = 0; round < MAX_ROUNDS; round++) {
+      entries.push({ kind: "msg", role: "assistant", content: "" });
+      const liveIdx = entries.length - 1;
+      scrollToBottom();
+
+      const turn = await streamAssistantTurn(get(ai), wire, {
+        tools,
+        signal: abort?.signal,
+        onDelta: (delta) => {
+          const e = entries[liveIdx];
+          if (e.kind === "msg") e.content += delta;
+          scrollToBottom();
+        },
+      });
+
+      if (!turn.toolCalls.length) {
+        if (!turn.text) entries.splice(liveIdx, 1); // no empty bubble
+        return;
+      }
+
+      if (!turn.text) entries.splice(liveIdx, 1); // tools-only turn: drop the shell
+      wire.push({ role: "assistant", content: turn.text, tool_calls: turn.toolCalls.map(toWireCall) });
+
+      for (const call of turn.toolCalls) {
+        const inv: ToolInv = {
+          id: call.id,
+          name: call.name,
+          args: call.args,
+          destructive: isDestructive(call.name),
+          summary: humanSummary(call, get(app).schema),
+          status: "awaiting",
+        };
+        entries.push({ kind: "tool", inv });
+        scrollToBottom();
+
+        if (inv.destructive) {
+          const ok = await new Promise<boolean>((resolve) => gates.set(call.id, resolve));
+          if (!ok) {
+            inv.status = "denied";
+            wire.push(
+              toolResultMessage(call, { ok: false, result: { error: "denied by operator" } }),
+            );
+            continue;
+          }
+        }
+
+        inv.status = "running";
+        const res = await executeTool(call, ctx);
+        inv.status = res.ok ? "done" : "error";
+        inv.result = res.result;
+        wire.push(toolResultMessage(call, res));
+        scrollToBottom();
+      }
+    }
+  }
+
   async function send() {
     const text = input.trim();
-    if (!text || streaming) return;
+    if (!text || busy) return;
     if (!configured) {
       showSettings = true;
       return;
@@ -63,39 +213,32 @@
     streamError = "";
 
     const a = get(app);
-    const outgoing: ChatMessage[] = [
-      {
-        role: "system",
-        content: systemPrompt(a.brand.appName, a.schema ? buildSchemaPrompt(a.schema) : "no schema loaded"),
-      },
-      ...messages.slice(-8), // short memory, no persistence by design
-      { role: "user", content: text },
-    ];
-    messages.push({ role: "user", content: text });
-    messages.push({ role: "assistant", content: "" });
+    const schema = a.schema ?? null;
+    const ctx: ToolCtx = { cfg: get(ai), token: a.token || null, schema };
+    const tools = buildAgentTools(schema);
+    // history BEFORE the new user bubble lands (runAgentTurn re-appends it)
+    const history = historyWire();
+
+    entries.push({ kind: "msg", role: "user", content: text });
     scrollToBottom();
 
-    streaming = true;
+    busy = true;
     abort = new AbortController();
     try {
-      await streamChatCompletion(
-        get(ai),
-        outgoing,
-        (delta) => {
-          messages[messages.length - 1].content += delta;
-          scrollToBottom();
-        },
-        abort.signal,
-      );
+      await runAgentTurn(text, history, ctx, tools);
     } catch (err: any) {
       if (err?.name === "AbortError") {
-        messages[messages.length - 1].content += " — stopped.";
+        const last = entries[entries.length - 1];
+        if (last?.kind === "msg" && last.role === "assistant") last.content += " — stopped.";
       } else {
         streamError = err instanceof ChatError ? err.message : String(err?.message ?? err);
-        if (messages[messages.length - 1]?.content === "") messages.pop();
+        const last = entries[entries.length - 1];
+        if (last?.kind === "msg" && last.role === "assistant" && last.content === "")
+          entries.pop();
       }
     } finally {
-      streaming = false;
+      denyAllPending();
+      busy = false;
       abort = null;
       scrollToBottom();
     }
@@ -103,6 +246,7 @@
 
   function stop() {
     abort?.abort();
+    denyAllPending();
   }
 
   async function saveSettings(e: SubmitEvent) {
@@ -111,6 +255,25 @@
     toast("success", "AI provider saved");
     showSettings = false;
   }
+
+  /* ---- card helpers ---- */
+
+  function preview(value: any, cap = 420): string {
+    try {
+      const s = JSON.stringify(value);
+      return s.length > cap ? s.slice(0, cap) + " …" : s;
+    } catch {
+      return String(value);
+    }
+  }
+
+  const statusLabel: Record<ToolInv["status"], string> = {
+    awaiting: "needs your confirm",
+    running: "running…",
+    done: "done",
+    error: "failed",
+    denied: "denied",
+  };
 </script>
 
 <!-- floating launcher -->
@@ -145,7 +308,7 @@
         <button class="btn btn-ghost p-2" title="Provider settings" onclick={() => (showSettings = !showSettings)}>
           <Icon name="gear" size={15} />
         </button>
-        <button class="btn btn-ghost p-2" title="Close" onclick={() => (open = false)}>
+        <button class="btn btn-ghost p-2" title="Close" onclick={() => { if (busy) stop(); open = false; }}>
           <Icon name="x" size={15} />
         </button>
       </div>
@@ -176,6 +339,7 @@
         </div>
         <div class="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-[11px] text-text/70">
           Works with OpenAI, Groq, Ollama, Mistral, LM Studio &amp; any OpenAI-compatible provider.
+          The agent can run admin actions with your own login — writes ask before they land.
         </div>
         <div class="mt-auto flex gap-2">
           <button type="button" class="btn btn-ghost" onclick={() => (showSettings = false)}>Cancel</button>
@@ -191,7 +355,7 @@
         <div class="text-sm font-semibold">Talk to your data</div>
         <p class="text-xs leading-relaxed text-text/50">
           Connect any OpenAI-compatible provider — OpenAI, Groq, Ollama, LM Studio —
-          and ask questions about your {$app.brand.appName} models.
+          and let the agent look up, create, update and transition your {$app.brand.appName} records.
         </p>
         <button class="btn btn-primary mt-1" onclick={() => (showSettings = true)}>
           <Icon name="gear" size={15} />
@@ -199,26 +363,67 @@
         </button>
       </div>
     {:else}
-      <!-- messages -->
+      <!-- transcript -->
       <div bind:this={scroller} class="flex-1 space-y-3 overflow-y-auto p-4">
-        {#if messages.length === 0}
+        {#if entries.length === 0}
           <div class="mt-8 text-center text-xs text-text/40">
-            Ask anything about your data —
-            <span class="text-text/60">"which models exist?", "what fields does Product have?"</span>
+            Ask anything, or tell the agent to act —
+            <span class="text-text/60">"show the 5 latest orders", "mark order 7 as paid"</span>
           </div>
         {/if}
-        {#each messages as m, i (i)}
-          <div class="flex {m.role === 'user' ? 'justify-end' : 'justify-start'}">
-            <div class="max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed
-              {m.role === 'user'
-                ? 'rounded-br-md bg-primary text-white'
-                : 'rounded-bl-md bg-text/10 text-text/90'}">
-              {m.content || (streaming && i === messages.length - 1 ? "…" : "")}
-              {#if streaming && i === messages.length - 1 && m.role === "assistant"}
-                <span class="ml-1 inline-block h-3 w-1.5 animate-pulse bg-accent align-middle"></span>
+        {#each entries as e, i (i)}
+          {#if e.kind === "msg"}
+            <div class="flex {e.role === 'user' ? 'justify-end' : 'justify-start'}">
+              <div class="max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed
+                {e.role === 'user'
+                  ? 'rounded-br-md bg-primary text-white'
+                  : 'rounded-bl-md bg-text/10 text-text/90'}">
+                {e.content || (busy && i === entries.length - 1 ? "…" : "")}
+                {#if busy && i === entries.length - 1 && e.role === "assistant"}
+                  <span class="ml-1 inline-block h-3 w-1.5 animate-pulse bg-accent align-middle"></span>
+                {/if}
+              </div>
+            </div>
+          {:else}
+            <!-- tool card -->
+            <div class="rounded-xl border p-3 text-xs {e.inv.status === 'awaiting' ? 'border-accent/50' : 'border-text/10'} bg-text/[0.04]">
+              <div class="flex items-center gap-2">
+                <span class="flex size-5 shrink-0 items-center justify-center rounded-md
+                  {e.inv.destructive ? 'bg-accent/20 text-[var(--brand-accent)]' : 'bg-primary/15 text-primary'}">
+                  <Icon name={e.inv.destructive ? "gear" : "chat"} size={11} />
+                </span>
+                <span class="font-medium">{e.inv.summary}</span>
+                <span class="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px]
+                  {e.inv.status === 'awaiting' ? 'bg-accent/15 text-[var(--brand-accent)]' : ''}
+                  {e.inv.status === 'running' ? 'bg-primary/15 text-primary' : ''}
+                  {e.inv.status === 'done' ? 'bg-primary/10 text-primary' : ''}
+                  {e.inv.status === 'error' ? 'bg-text/10 text-text/70' : ''}
+                  {e.inv.status === 'denied' ? 'bg-text/10 text-text/50' : ''}">
+                  {statusLabel[e.inv.status]}
+                </span>
+              </div>
+
+              <details class="mt-1.5" open={e.inv.status === "awaiting"}>
+                <summary class="cursor-pointer select-none text-[10px] text-text/40">{e.inv.name}</summary>
+                <pre class="mt-1 overflow-x-auto rounded-md bg-text/[0.06] p-2 text-[10px] leading-snug">{preview(e.inv.args)}</pre>
+              </details>
+
+              {#if e.inv.status === "done" && e.inv.result !== undefined}
+                <pre class="mt-1.5 max-h-24 overflow-y-auto rounded-md bg-text/[0.06] p-2 text-[10px] leading-snug">{preview(e.inv.result)}</pre>
+              {:else if e.inv.status === "error"}
+                <pre class="mt-1.5 overflow-x-auto rounded-md bg-text/[0.06] p-2 text-[10px] leading-snug text-text/70">{preview(e.inv.result)}</pre>
+              {/if}
+
+              {#if e.inv.status === "awaiting"}
+                <div class="mt-2 flex justify-end gap-2">
+                  <button class="btn btn-ghost px-3 py-1 text-[11px]"
+                          onclick={() => decide(e.inv.id, false)}>Deny</button>
+                  <button class="btn btn-primary px-3 py-1 text-[11px]"
+                          onclick={() => decide(e.inv.id, true)}>Confirm</button>
+                </div>
               {/if}
             </div>
-          </div>
+          {/if}
         {/each}
         {#if streamError}
           <div class="rounded-lg border border-[color-mix(in_srgb,var(--brand-text)_40%,transparent)] bg-[color-mix(in_srgb,var(--brand-surface)_40%,transparent)] px-3 py-2 text-xs text-[var(--brand-text)]">
@@ -236,9 +441,9 @@
           class="input"
           placeholder="Ask about your data…"
           bind:value={input}
-          disabled={streaming}
+          disabled={busy}
         />
-        {#if streaming}
+        {#if busy}
           <button type="button" class="btn btn-ghost px-3" title="Stop" onclick={stop}>
             <Icon name="x" size={16} />
           </button>
