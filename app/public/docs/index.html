@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!doctype html><html><head><meta charset="utf-8">
 <title>Freshorama Admin Docs — Freshorama Admin Docs</title>
 <style>body{font:15px/1.6 system-ui,sans-serif;margin:2rem auto;max-width:52rem;padding:0 1rem;color:#1a1a1a}
@@ -129,3 +130,443 @@ nav a{margin-right:.8rem} .subtitle{color:#666} code{background:#f4f4f4;padding:
 <p>The docs-pipeline in the admineverywhere repo copies these exported HTML</p>
 <p>files into the app bundle (app<i>public</i>docs/), so Help → Docs works offline</p>
 <p>inside every APK and EXE from the next release onward.</p></body></html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Freshorama Admin — User Guide</title>
+<style>
+  :root{
+    --green:#006e33; --green-dark:#00552a; --green-soft:#e8f3ec;
+    --ink:#1d2b22; --muted:#5b6b60; --line:#d8e4db; --bg:#fbfdfb;
+    --amber:#8a6d1a; --amber-bg:#fdf6e3; --red:#8b2020; --red-bg:#fbeaea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Lato','Hind Siliguri',-apple-system,'Segoe UI',sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.65;font-size:15.5px}
+  .layout{display:flex;min-height:100vh}
+  nav{width:264px;flex-shrink:0;background:var(--green);color:#eaf6ee;
+      padding:28px 0 40px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  nav .brand{padding:0 24px 18px;border-bottom:1px solid rgba(255,255,255,.18);margin-bottom:14px}
+  nav .brand .leaf{font-size:26px}
+  nav .brand h1{font-family:'Montserrat','Lato',sans-serif;font-size:18px;margin:6px 0 2px;color:#fff}
+  nav .brand p{margin:0;font-size:12.5px;opacity:.75}
+  nav ol{list-style:none;margin:0;padding:8px 0}
+  nav li a{display:block;padding:7px 24px;color:#d9ede0;text-decoration:none;font-size:14px}
+  nav li a:hover{background:rgba(255,255,255,.10);color:#fff}
+  nav .grp{padding:14px 24px 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.6}
+  main{flex:1;min-width:0;padding:48px 56px 90px;max-width:880px}
+  h2{font-family:'Montserrat',sans-serif;color:var(--green-dark);font-size:24px;
+     margin:0 0 6px;padding-top:38px;border-top:1px solid var(--line)}
+  h2:first-of-type{border-top:none;padding-top:0}
+  h3{font-family:'Montserrat',sans-serif;color:var(--ink);font-size:17px;margin:26px 0 8px}
+  p{margin:10px 0}
+  .lead{font-size:16.5px;color:var(--muted)}
+  section{margin-bottom:8px}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14.5px}
+  th{background:var(--green-soft);color:var(--green-dark);text-align:left}
+  th,td{border:1px solid var(--line);padding:8px 12px;vertical-align:top}
+  tr:nth-child(even) td{background:#f4faf6}
+  code{background:#eef4ef;border:1px solid var(--line);border-radius:4px;
+       padding:1px 6px;font-size:13.5px;font-family:'Cascadia Code',Consolas,monospace}
+  pre{background:#f2f7f3;border:1px solid var(--line);border-left:4px solid var(--green);
+      border-radius:6px;padding:12px 16px;overflow-x:auto;font-size:13.5px}
+  pre code{background:none;border:none;padding:0}
+  .tip,.warn{border-radius:6px;padding:12px 16px;margin:14px 0;font-size:14.5px}
+  .tip{background:var(--green-soft);border-left:4px solid var(--green)}
+  .warn{background:var(--amber-bg);border-left:4px solid var(--amber)}
+  .crit{background:var(--red-bg);border-left:4px solid var(--red)}
+  kbd{background:#fff;border:1px solid #b9c8be;border-bottom-width:2px;border-radius:5px;
+      padding:1px 7px;font-size:13px;font-family:inherit;box-shadow:0 1px 0 #b9c8be}
+  figure{margin:18px 0;text-align:center}
+  figure img{max-width:100%;border:1px solid var(--line);border-radius:8px;
+             box-shadow:0 2px 10px rgba(0,60,25,.08)}
+  figcaption{font-size:13px;color:var(--muted);margin-top:8px}
+  .steps{counter-reset:st;list-style:none;padding-left:0}
+  .steps li{counter-increment:st;position:relative;padding-left:44px;margin:14px 0}
+  .steps li::before{content:counter(st);position:absolute;left:0;top:1px;width:28px;height:28px;
+      background:var(--green);color:#fff;border-radius:50%;display:flex;align-items:center;
+      justify-content:center;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700}
+  .badge{display:inline-block;background:var(--green-soft);color:var(--green-dark);
+         border:1px solid var(--line);border-radius:999px;padding:1px 10px;font-size:12.5px}
+  footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);
+         color:var(--muted);font-size:13px}
+  @media (max-width:900px){nav{display:none}main{padding:28px 20px 70px}}
+  @media print{nav{display:none}main{padding:0;max-width:none}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav>
+  <div class="brand">
+    <div class="leaf">&#127807;</div>
+    <h1>Freshorama Admin</h1>
+    <p>User guide &middot; v0.1.4 &middot; the Admineverywhere back office</p>
+  </div>
+  <ol>
+    <li><a href="#about">About this app</a></li>
+    <li><a href="#install">Install &amp; first launch</a></li>
+    <li><a href="#login">Signing in</a></li>
+    <li><a href="#tour">The screen map</a></li>
+    <li><a href="#dashboard">Dashboard &amp; widgets</a></li>
+    <li><a href="#data">Working with data (CRUD)</a></li>
+    <li><a href="#actions">Record &amp; bulk actions</a></li>
+    <li><a href="#history">Record history &amp; audit</a></li>
+    <li><a href="#csv">CSV &amp; Excel export</a></li>
+    <li><a href="#widgets">Widget Studio</a></li>
+    <li><a href="#notifications">Notifications</a></li>
+    <li><a href="#activity">Activity log</a></li>
+    <li><a href="#branding">Branding</a></li>
+    <li><a href="#chat">AI assistant (Ctrl+K)</a></li>
+    <li><a href="#roles">Accounts &amp; roles</a></li>
+    <li><a href="#update">Updating the app</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="about">
+<h2>About this app</h2>
+<p class="lead">Admineverywhere is the back-office desktop app for the Freshorama team:
+one window for orders, catalog data, customer records, reports-style exports and the
+audit trail — everything the public website must never expose.</p>
+<p>The app is a <em>thin client</em>: it signs in to the Freshorama API with your staff
+account and builds its screens directly from the API's published contract. That is why
+the app always matches what the server truly offers — there is no second, drifting copy
+of the data model. The back office lives <strong>only here</strong>: there is no admin
+website to visit, and no admin page on the public site. If you are reading this guide as
+a website link, the same document ships inside the app itself.</p>
+<div class="tip"><strong>Who this guide is for:</strong> Freshorama staff working orders,
+catalog and customer care. Every screen name below matches the app's sidebar exactly.</div>
+</section>
+
+<section id="install">
+<h2>Install &amp; first launch</h2>
+<ol class="steps">
+  <li>Get the installer from your team lead — the file is named like
+      <code>admineverywhere_0.1.4_x64-setup.exe</code> (Windows 64-bit).</li>
+  <li>Run the installer. If Windows SmartScreen shows a warning, choose
+      <strong>More info &rarr; Run anyway</strong> — the app is signed internally and
+      distributed by the team, not through the Store.</li>
+  <li>Launch <strong>Freshorama Admin</strong> from the Start menu (the app family is also known as Admineverywhere). The window opens on
+      the sign-in screen.</li>
+</ol>
+<p>The installer upgrades in place: installing a newer version over an older one keeps
+your saved settings, widgets and dashboard layout.</p>
+<div class="warn"><strong>Android:</strong> a companion Android build is part of the same
+release line. Installation and updates for Android are announced in the team chat together
+with the desktop build.</div>
+</section>
+
+<section id="login">
+<h2>Signing in</h2>
+<ol class="steps">
+  <li>Open the app. The <strong>API address</strong> is preconfigured to the Freshorama
+      production server — leave it as it is.</li>
+  <li>Enter your Freshorama <strong>username (or email or phone)</strong> and your password.
+      All three forms of sign-in name are accepted.</li>
+  <li>Press sign-in. The app exchanges your credentials for an access token and loads the
+      working screens.</li>
+</ol>
+<p>Your password is the same one you use for your Freshorama staff account. The app never
+shows or stores your password after sign-in; it keeps only the access token, and signing
+out clears it completely.</p>
+<figure>
+  <img src="assets/shot-dashboard.png" alt="Dashboard screen of the app">
+  <figcaption>The dashboard as it looks after a successful sign-in.</figcaption>
+</figure>
+<div class="warn"><strong>Access is staff-only.</strong> If your account is not a staff
+account, sign-in fails even with a correct password. Ask the owner/admin to grant staff
+status — do not try to work around it.</div>
+</section>
+
+<section id="tour">
+<h2>The screen map</h2>
+<p>The sidebar is the whole app. What you see depends on your roles (see
+<a href="#roles">Accounts &amp; roles</a>):</p>
+<table>
+  <tr><th>Screen</th><th>What it is for</th></tr>
+  <tr><td><strong>Dashboard</strong></td><td>Your live overview: built-in and custom widgets in one grid.</td></tr>
+  <tr><td><strong>Data pages</strong> (one per record type: Orders, Products, Customers, &hellip;)</td><td>Browse, search, create, edit and act on records — generated straight from the server's contract.</td></tr>
+  <tr><td><strong>Modules</strong></td><td>Self-documenting registry of every screen the app loaded, with a reason shown for anything your roles gate.</td></tr>
+  <tr><td><strong>Activity</strong></td><td>The append-only audit log of everything done through actions.</td></tr>
+  <tr><td><strong>Widget Studio</strong></td><td>Compose your own dashboard widgets and threshold alerts.</td></tr>
+  <tr><td><strong>Notifications</strong></td><td>The in-app notification center and the OS-toast switch.</td></tr>
+  <tr><td><strong>Branding</strong></td><td>Runtime look &amp; feel (colors, font, logo) — restricted to manager roles.</td></tr>
+</table>
+<p>At the bottom of the sidebar sits the <strong>notification bell</strong> with an unread
+badge. <kbd>Ctrl</kbd>+<kbd>K</kbd> opens the AI assistant from anywhere.</p>
+</section>
+
+<section id="dashboard">
+<h2>Dashboard &amp; widgets</h2>
+<p>The dashboard is a grid of widgets. Eight built-in fed widgets ship with the app:</p>
+<table>
+  <tr><th>Widget</th><th>Shows</th></tr>
+  <tr><td>LiveOrders</td><td>Orders in the active window, updating on each feed tick</td></tr>
+  <tr><td>TodayRevenue</td><td>Revenue total for today</td></tr>
+  <tr><td>TrendArea</td><td>A filled trend line of a number over time</td></tr>
+  <tr><td>StatusDonut</td><td>Records split by status as a donut chart</td></tr>
+  <tr><td>LeaderBars</td><td>Top groups as ranked bars</td></tr>
+  <tr><td>HeatStrip</td><td>A strip heat-map of activity</td></tr>
+  <tr><td>DeltaChip</td><td>Now-vs-previous change on one number</td></tr>
+  <tr><td>CompletionGauge</td><td>Progress toward completion as a gauge</td></tr>
+</table>
+<p>Widgets refresh on a feed tick; a widget whose data source cannot be resolved shows a
+named reason instead of failing silently. Your own widgets — built in the
+<a href="#widgets">Widget Studio</a> — render in the same grid right after the built-ins.</p>
+</section>
+
+<section id="data">
+<h2>Working with data (CRUD)</h2>
+<p>Every record type the server publishes gets its own page automatically. On any data page:</p>
+<ol class="steps">
+  <li><strong>Browse</strong> — records load in a table, newest first. Use the search box
+      to filter (the server does the searching, so results are complete, not just what is
+      on screen).</li>
+  <li><strong>Open</strong> — click a row to see the full record with all fields.</li>
+  <li><strong>Create</strong> — use the new-record button; the form fields follow exactly
+      what the server accepts, including which fields are required.</li>
+  <li><strong>Edit / delete</strong> — from the open record or the row menu. Deletion asks
+      for confirmation.</li>
+</ol>
+<p>Because the forms are generated from the server contract, a field that the server
+rejects is rejected with the server's own message — the app never invents different
+validation rules.</p>
+</section>
+
+<section id="actions">
+<h2>Record &amp; bulk actions</h2>
+<p>Beyond plain editing, data pages can carry <em>actions</em> — operations the server
+defines, such as flagging a suspicious order.</p>
+<h3>Record actions (one row)</h3>
+<p>Row-level action buttons appear on each record. An action that needs a note opens a
+small dialog: type the reason (it refuses to send empty), confirm, and the action fires.
+Whatever the server answers — success or a rejection — comes back as a clear message;
+a rejected action shows the server's reason, never a bare error code.</p>
+<h3>Bulk actions (many rows at once)</h3>
+<p>When a bulk action exists, a checkbox column appears in the table. Select the rows,
+press the bulk button, review the confirm dialog (with the reason field if the action
+uses one), and send. The server writes <strong>one audit entry per touched record</strong>,
+so every affected order's own history shows the batch effect.</p>
+<div class="tip"><strong>Flag actions change nothing by design</strong> — they only append
+a signed note to the audit trail. Flag freely whenever something looks off; flagging never
+edits the order.</div>
+</section>
+
+<section id="history">
+<h2>Record history &amp; audit</h2>
+<p>Open a record and press the <strong>history icon</strong> to see its story in two
+layers:</p>
+<table>
+  <tr><th>Layer</th><th>Order</th><th>What it holds</th></tr>
+  <tr><td>Lifecycle trail</td><td>oldest first</td><td>Every status hop the record went through — a replay of its life</td></tr>
+  <tr><td>Audit entries</td><td>newest first</td><td>Everything done to it through actions: who, what, when, and the reason given</td></tr>
+</table>
+<p>The audit trail is append-only by construction — entries cannot be edited or deleted
+through the app or the API, and the recorded actor is always the signed-in account that
+performed the action, never a name typed into a form.</p>
+</section>
+
+<section id="csv">
+<h2>CSV &amp; Excel export</h2>
+<p>Two export buttons live on data pages, and they answer two different questions:</p>
+<table>
+  <tr><th></th><th>Export table</th><th>Full export</th></tr>
+  <tr><td><strong>Scope</strong></td><td>The current page, the columns you see</td><td>The entire collection from the server</td></tr>
+  <tr><td><strong>Shape</strong></td><td>Exactly the table on screen</td><td>Line-level rows: child rows (e.g. order items) repeat their parent's ids, so the file regroups cleanly downstream</td></tr>
+  <tr><td><strong>Search-aware</strong></td><td>— (it is what you see)</td><td>Yes — the current search box filters the export</td></tr>
+  <tr><td><strong>Needs server</strong></td><td>No — instant, works offline</td><td>Yes — appears only when the server publishes an export endpoint</td></tr>
+</table>
+<p>Both produce the same byte-level format: RFC 4180 CSV, UTF-8 with BOM — files open
+cleanly in Excel on Windows without the codepage mess — and both guard against formula
+injection: a text cell that a spreadsheet would treat as a formula gets a safe leading
+apostrophe, while real numbers are never touched.</p>
+<div class="tip"><strong>Accounting tip:</strong> decimal values arrive exactly as the
+server stores them (<code>19.99</code> stays <code>19.99</code>). Datetimes carry the
+server's timezone format — sort and filter in Excel as text-safe ISO values.</div>
+</section>
+
+<section id="widgets">
+<h2>Widget Studio</h2>
+<p>Widget Studio (sidebar &rarr; <strong>Widget Studio</strong>) lets you compose custom
+widgets from the same eight fed types — no code, pure configuration:</p>
+<ol class="steps">
+  <li><strong>Pick a type</strong> — TrendArea, StatusDonut, LeaderBars, HeatStrip,
+      DeltaChip, LiveOrders, TodayRevenue or CompletionGauge.</li>
+  <li><strong>Give it a title</strong> — your title shows on the dashboard card.</li>
+  <li><strong>Choose a size</strong> — <span class="badge">sm</span> (one grid cell) or
+      <span class="badge">lg</span> (two cells wide).</li>
+  <li><strong>Choose an accent</strong> — a brand <em>role</em> (brand / accent / text),
+      not a raw color: if the app is rebranded, your widget recolors itself with
+      everything else.</li>
+  <li><strong>Point at data</strong> — pick the record type (a model, never a hand-typed
+      URL) and what to watch: a count, a number field, a change (delta), a series, or
+      groups. Unresolvable sources render a named reason on the card.</li>
+  <li><strong>Optionally add a threshold alert</strong> — see below.</li>
+</ol>
+<h3>Threshold alerts on any widget</h3>
+<table>
+  <tr><th>Mode</th><th>Fires when</th></tr>
+  <tr><td><code>above</code></td><td>the number crosses <em>above</em> your value</td></tr>
+  <tr><td><code>below</code></td><td>the number crosses <em>below</em> your value</td></tr>
+  <tr><td><code>change</code></td><td>the number differs from the previous tick</td></tr>
+</table>
+<p>Alerts fire once on entering the hot state and stay quiet while it holds — no repeat
+spam. A fired alert lands in the same notification center as everything else (see
+<a href="#notifications">Notifications</a>).</p>
+<h3>Managing your widgets</h3>
+<ul>
+  <li>Up to <strong>24 custom widgets</strong>; their order in the studio list is their
+      dashboard order (swap neighbours to rearrange).</li>
+  <li><strong>Export / import</strong> your whole dashboard as one JSON text — all or
+      nothing, so a broken paste can never half-apply. This is how you copy a dashboard
+      between devices or teammates.</li>
+  <li>Widgets persist per device; a malformed entry is dropped on load and can never
+      break the dashboard.</li>
+</ul>
+</section>
+
+<section id="notifications">
+<h2>Notifications</h2>
+<p>One center, three surfaces: the <strong>bell badge</strong> in the sidebar footer, the
+<strong>Notifications page</strong> (newest first, keeps the last 50), and optional
+<strong>OS toasts</strong> that pop even when the window is not focused.</p>
+<ol class="steps">
+  <li>Open <strong>Notifications</strong> from the sidebar.</li>
+  <li>Press the <strong>Enable</strong> row to ask the operating system for toast
+      permission (on Android this is the system notification prompt).</li>
+  <li>From then on, threshold alerts and events toast to the desktop — best-effort: if
+      the OS refuses permission, the in-app center still records every event.</li>
+</ol>
+<p>Manage the list with mark-read, mark-all-read and clear. Unread count drives the bell
+badge.</p>
+</section>
+
+<section id="activity">
+<h2>Activity log</h2>
+<p>The <strong>Activity</strong> screen is the whole audit trail, newest first — the
+triage view: the latest event on top. Filter by object type or object id to follow one
+record, or read it as the day's ledger.</p>
+<p>Every entry records: the <strong>actor</strong> (always the signed-in account), the
+<strong>action</strong> (e.g. <code>order.flag</code>), the <strong>target</strong>
+(type + id), a human <strong>summary</strong>, the structured <strong>data</strong> the
+action attached (e.g. the reason text), and the timestamp. Entries are immutable: the
+screen reads, it never rewrites history.</p>
+<div class="warn">Audit entries exist only for actions that write them. Plain browsing
+leaves no trace — by design, so staff can read without noise.</div>
+</section>
+
+<section id="branding">
+<h2>Branding</h2>
+<p>The <strong>Branding</strong> screen (settings group; manager roles) edits the app's
+runtime identity: colors, corner radius, font and logo — a single brand definition that
+recolors <em>everything</em>, including custom widgets, on the next feed of the theme.
+Brand changes are stored against the server (staff-only to write), so a rebrand applies
+to the whole team, not just one device.</p>
+<p>The app ships with neutral default branding and ready-made presets. If a color or the
+logo looks wrong after an update, re-open Branding and re-apply the Freshorama preset —
+and tell the owner, because it should not drift by itself.</p>
+<figure>
+  <img src="assets/shot-light-brand.png" alt="Light brand variant of the app">
+  <figcaption>The same app under a light brand preset.</figcaption>
+</figure>
+</section>
+
+<section id="chat">
+<h2>AI assistant (Ctrl+K)</h2>
+<p>Press <kbd>Ctrl</kbd>+<kbd>K</kbd> (or the launcher button) anywhere to open the
+floating AI panel: ask about records, draft replies, summarize a customer's history —
+it streams the answer inline.</p>
+<h3>One-time setup — exactly three inputs</h3>
+<table>
+  <tr><th>Setting</th><th>What to enter</th></tr>
+  <tr><td>Base URL</td><td>An <strong>OpenAI-compatible</strong> chat endpoint — OpenAI,
+      Groq, Ollama, LM Studio or Mistral all work on the same code path. Ask the owner
+      which provider the team uses.</td></tr>
+  <tr><td>API key</td><td>Your key for that provider. Saving an <em>empty</em> key clears
+      the stored one.</td></tr>
+  <tr><td>Model name</td><td>The model id the provider should serve.</td></tr>
+</table>
+<p>The panel keeps <strong>no history</strong>: close it and the conversation is gone —
+nothing about your records is stored by the assistant. If the chat errors, check the
+three settings first; a wrong base URL or key is the cause in almost every case.</p>
+<figure>
+  <img src="assets/shot-chat.png" alt="The Ctrl+K AI chat panel">
+  <figcaption>The Ctrl+K assistant streaming an answer.</figcaption>
+</figure>
+</section>
+
+<section id="roles">
+<h2>Accounts &amp; roles</h2>
+<p>What the sidebar shows you is driven by <strong>roles</strong> the server attaches to
+your account (Django groups, e.g. <code>managers</code>, <code>auditors</code>):</p>
+<ul>
+  <li>A page or button your roles do not cover is simply <strong>not shown</strong> —
+      you will not stumble into someone else's tools.</li>
+  <li>The <strong>Modules</strong> screen lists everything the app loaded, including rows
+      gated away from you, marked <code>gated &middot; &lt;roles&gt;</code> with no open
+      button — so you always know what exists and what to ask for.</li>
+  <li>Superusers see everything, always.</li>
+</ul>
+<div class="crit"><strong>Hiding is convenience, not security.</strong> The server checks
+every request against your real permissions regardless of what your screen shows. Never
+assume something is "allowed" because a link existed; never assume something "did not
+happen" because you could not see it — check the Activity log.</div>
+<p>Need a role change? Ask the owner/admin. Role grants come from the server's group
+membership, not from anything in this app.</p>
+</section>
+
+<section id="update">
+<h2>Updating the app</h2>
+<ol class="steps">
+  <li>Watch the team chat for the release announcement — the version number in this
+      guide's sidebar (v0.1.4) matches the build that carries it.</li>
+  <li>Download the new <code>&hellip;-setup.exe</code> and run it. It replaces the old
+      version in place; your sign-in token, widgets and dashboard layout survive.</li>
+  <li>Re-open the app. The version is shown in this guide's sidebar and in the app's
+      about area.</li>
+</ol>
+<p><strong>What is new in v0.1.4:</strong> this user guide now ships <em>inside</em> the
+app bundle — no external site needed — alongside the full v0.1.3 feature set (schema-driven
+CRUD, custom &amp; bulk actions with audit, dual-layer CSV export, Widget Studio with
+threshold alerts, notification center, runtime branding, Ctrl+K assistant, role-aware
+navigation).</p>
+<div class="warn">Update promptly when announced: older builds talk to the same live
+server, and the team can only support the current version.</div>
+</section>
+
+<section id="trouble">
+<h2>Troubleshooting</h2>
+<table>
+  <tr><th>Symptom</th><th>Meaning &amp; fix</th></tr>
+  <tr><td>Sign-in fails with correct password</td><td>Your account may not be staff. Ask the owner/admin to check staff status.</td></tr>
+  <tr><td>Sign-in fails after typing a custom API address</td><td>Only the official Freshorama server is honored; a dead address typed earlier is dropped on upgrade. Clear the override field and restart.</td></tr>
+  <tr><td>A page or button is missing for me</td><td>Role gating. Check <strong>Modules</strong> — gated rows name the required roles. Request the role from the owner/admin.</td></tr>
+  <tr><td>An action returns a red message</td><td>That is the server's reason (e.g. missing reason text, unknown id). Read it, fix the input, retry.</td></tr>
+  <tr><td>Full export button absent</td><td>The server has not published an export action for that record type. Use <em>Export table</em> for the visible page meanwhile.</td></tr>
+  <tr><td>A widget shows a reason instead of data</td><td>Its data source does not resolve (model renamed or removed). Edit the widget in Widget Studio and re-point it.</td></tr>
+  <tr><td>No OS toasts</td><td>Notification permission not granted or unsupported. Enable it from the Notifications page; the in-app center always works.</td></tr>
+  <tr><td>AI panel errors</td><td>Check the three settings (base URL, API key, model). The assistant speaks OpenAI-compatible APIs only; an empty saved key means "clear the key".</td></tr>
+  <tr><td>Everything looks unstyled/wrong colors</td><td>Re-apply the Freshorama brand preset in <strong>Branding</strong>; report it if it drifts again.</td></tr>
+</table>
+<p>Anything else: message the team lead in the team chat with a screenshot and what you
+clicked — the audit trail on the server side will show the same action from the app's
+point of view.</p>
+</section>
+
+<footer>
+Freshorama Admin user guide &middot; v0.1.4 &middot; ships inside the app bundle &middot;
+deep dive: the auto-generated <a href="api-reference.html">API reference</a> &middot;
+Freshorama back office &mdash; natural, fresh, organic &nbsp;&#127807;
+</footer>
+
+</main>
+</div>
+</body>
+</html>
+>>>>>>> cf60bf8 (docs(user): ship the v0.1.4 user guide inside the app bundle — app/public/docs/index.html (17 sections: install, sign-in, screen map, CRUD, record/bulk actions, history+audit, dual-layer CSV export, Widget Studio, notifications, activity, branding, Ctrl+K assistant, roles, updating, troubleshooting) + 3 screenshots; version 0.1.3 -> 0.1.4 (package.json, tauri.conf.json, Cargo.toml). Owner order 2026-11-07: 'Build docs into apps! The docs should cover detailed instructions on admin apps.')
