@@ -23,11 +23,20 @@
     executeTool,
     humanSummary,
     isDestructive,
+    navigateTool,
     toolResultMessage,
+    tourGuideAddendum,
     type ToolCtx,
   } from "../lib/agent";
 
   import { isWebStorage } from "../lib/secrets";
+  import {
+    tourActive,
+    onboardingAgent,
+  } from "../lib/tourBus";
+  import { stepAgentTurn } from "../lib/onboarding";
+  import { AI_PRESETS } from "../lib/aiProviders";
+  import AiDisclaimer from "./AiDisclaimer.svelte";
   import Icon from "../components/Icon.svelte";
 
   const MAX_ROUNDS = 6;
@@ -64,6 +73,9 @@
   const gates = new Map<string, (ok: boolean) => void>();
 
   const configured = $derived(Boolean($ai.baseUrl && $ai.model));
+  /** Guided-tour mode (owner order 2026-11-08): the agent becomes the tour
+   *  guide — it may open screens (navigate tool) and narrates each stop. */
+  const tourMode = $derived($tourActive);
 
   $effect(() => {
     baseUrl = $ai.baseUrl;
@@ -80,6 +92,13 @@
       }
     };
     window.addEventListener("keydown", onKey);
+    // agentic onboarding: the overlay asks, this panel narrates (owner order
+    // 2026-11-08: the agent drives the app and the user can chat mid-tour)
+    onboardingAgent.bindNarrationSender((step) => {
+      if (busy) return;
+      open = true;
+      void sendText(stepAgentTurn(step, get(app).brand.appName));
+    });
     return () => window.removeEventListener("keydown", onKey);
   });
 
@@ -140,7 +159,9 @@
           systemPrompt(
             get(app).brand.appName,
             get(app).schema ? buildSchemaPrompt(get(app).schema!) : "no schema loaded",
-          ) + agentSystemAddendum(),
+          ) +
+          agentSystemAddendum() +
+          (tourMode ? tourGuideAddendum() : ""),
       },
       ...history,
       { role: "user", content: text },
@@ -202,8 +223,14 @@
     }
   }
 
-  async function send() {
-    const text = input.trim();
+  /** The composer entry point — sends what the operator typed. */
+  function send(): void {
+    void sendText(input);
+  }
+
+  /** One agent turn with any text (the agentic tour narrates through this). */
+  async function sendText(raw: string) {
+    const text = raw.trim();
     if (!text || busy) return;
     if (!configured) {
       showSettings = true;
@@ -215,7 +242,14 @@
     const a = get(app);
     const schema = a.schema ?? null;
     const ctx: ToolCtx = { cfg: get(ai), token: a.token || null, schema };
-    const tools = buildAgentTools(schema);
+    let tools = buildAgentTools(schema);
+    if (tourMode) {
+      // the tour guide can DRIVE the app: open the screens it narrates
+      tools = [...tools, navigateTool()];
+      ctx.navigateTo = (path: string) => {
+        window.location.hash = `#${path}`;
+      };
+    }
     // history BEFORE the new user bubble lands (runAgentTurn re-appends it)
     const history = historyWire();
 
@@ -317,6 +351,22 @@
     {#if showSettings}
       <!-- provider settings -->
       <form class="flex flex-1 flex-col gap-3 overflow-y-auto p-4" onsubmit={saveSettings}>
+        <!-- one-click presets — buttons, not inputs: the form keeps exactly
+             three inputs (MVP brief); keyless ones verified live 2026-11-08 -->
+        <div class="flex flex-wrap gap-1.5" data-tour="ai-presets">
+          {#each AI_PRESETS as p (p.id)}
+            <button
+              type="button"
+              class="rounded-full border px-2.5 py-1 text-[11px] transition-colors
+                {p.keyless ? 'border-accent/40 text-[var(--brand-accent)]' : 'border-text/15 text-text/60'}
+                hover:bg-text/5"
+              title={p.note}
+              onclick={() => { baseUrl = p.baseUrl; model = p.model; apiKey = p.apiKey; }}
+            >
+              {p.label}{p.keyless ? " · free" : ""}
+            </button>
+          {/each}
+        </div>
         <div>
           <label class="mb-1 block text-xs font-medium text-text/60" for="ai-base">Base URL</label>
           <input id="ai-base" class="input" type="url" placeholder="https://api.openai.com/v1"
@@ -341,6 +391,7 @@
           Works with OpenAI, Groq, Ollama, Mistral, LM Studio &amp; any OpenAI-compatible provider.
           The agent can run admin actions with your own login — writes ask before they land.
         </div>
+        <AiDisclaimer />
         <div class="mt-auto flex gap-2">
           <button type="button" class="btn btn-ghost" onclick={() => (showSettings = false)}>Cancel</button>
           <button type="submit" class="btn btn-primary flex-1">Save provider</button>
@@ -433,6 +484,7 @@
       </div>
 
       <!-- composer -->
+      <AiDisclaimer compact />
       <form
         class="flex items-center gap-2 border-t border-text/10 p-3"
         onsubmit={(e) => { e.preventDefault(); send(); }}

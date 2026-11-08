@@ -379,6 +379,60 @@ class TestBundledConfig:
         (app_dir / "public" / "config.json").write_text("{not json")
         assert branding._bundled_config(app_dir, None)["apiUrl"] == ""
 
+    def test_updater_fields_ride_into_the_bundled_config(self, app_dir):
+        cfg = branding._bundled_config(
+            app_dir, "https://admin.example.com",
+            update_repo="khaalidrafi/freshorama", github_client_id="Iv1.public123")
+        assert cfg["updateRepo"] == "khaalidrafi/freshorama"
+        assert cfg["githubClientId"] == "Iv1.public123"
+
+    def test_updater_fields_absent_when_not_given(self, app_dir):
+        cfg = branding._bundled_config(app_dir, None)
+        assert "updateRepo" not in cfg
+        assert "githubClientId" not in cfg
+
+
+CSP_TEMPLATE = (
+    "default-src 'self'; connect-src 'self' https://API_HOST; script-src 'self'; "
+    "img-src 'self' data: https:"
+)
+
+
+class TestAppendCspConnectOrigins:
+    def _conf(self, csp=CSP_TEMPLATE):
+        return {"app": {"security": {"csp": csp}}}
+
+    def test_appends_validated_origins_after_substitution(self):
+        conf = self._conf()
+        branding.substitute_api_host(conf, "https://admin.example.com")
+        appended = branding.append_csp_connect_origins(conf, [
+            "https://ai-gateway.kilo.ai", "https://api.github.com"])
+        assert appended == ["https://ai-gateway.kilo.ai", "https://api.github.com"]
+        assert "connect-src 'self' https://admin.example.com "                "https://ai-gateway.kilo.ai https://api.github.com" in conf["app"]["security"]["csp"]
+
+    def test_idempotent_no_duplicates(self):
+        conf = self._conf()
+        branding.substitute_api_host(conf, "https://admin.example.com")
+        branding.append_csp_connect_origins(conf, ["https://api.github.com"])
+        appended = branding.append_csp_connect_origins(conf, ["https://api.github.com"])
+        assert appended == []
+        csp = conf["app"]["security"]["csp"]
+        assert csp.count("https://api.github.com") == 1
+
+    def test_same_validation_law_as_api_host(self):
+        conf = self._conf()
+        with pytest.raises(ValueError):
+            branding.append_csp_connect_origins(conf, ["http://localhost:11434"])
+        with pytest.raises(ValueError):
+            branding.append_csp_connect_origins(conf, ["https://*.example.com"])
+
+    def test_missing_csp_or_connect_src_raises_loud(self):
+        with pytest.raises(ValueError):
+            branding.append_csp_connect_origins({"app": {"security": {}}}, ["https://x.example.com"])
+        with pytest.raises(ValueError):
+            branding.append_csp_connect_origins(
+                {"app": {"security": {"csp": "default-src 'self'"}}}, ["https://x.example.com"])
+
 
 class TestInjectBrandGen:
     def _gen(self, app_dir) -> str:

@@ -59,6 +59,10 @@ export interface ToolCtx {
   cfg: AppConfig;
   token: string | null;
   schema: AdminSchema | null;
+  /** Agentic onboarding only (owner order 2026-11-08): lets the agent drive
+   *  the app by navigating the shell (hash router). Read-only, never moves
+   *  data — injected by the panel ONLY while the tour is active. */
+  navigateTo?: (path: string) => void;
 }
 
 /* ---- tool catalog ---- */
@@ -188,9 +192,32 @@ export function buildAgentTools(schema: AdminSchema | null): ToolDef[] {
   ];
 }
 
+/** Agentic-onboarding extra (owner order 2026-11-08): the tour-guide agent
+ *  can DRIVE the app — open the module it is narrating. Added on top of
+ *  buildAgentTools() only while a tour runs; the executor accepts it only
+ *  when the panel injected navigateTo into the context. Navigation is a
+ *  read-only surface change, so it is classified non-destructive. */
+export function navigateTool(): ToolDef {
+  return {
+    type: "function",
+    function: {
+      name: "navigate",
+      description:
+        "Open a screen of the admin app by route path (hash routing). Use it to SHOW the feature you are narrating, e.g. '/m/orders' for a model table, '/widget-studio' or '/activity'.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: { type: "string", description: "Route path starting with '/', e.g. '/m/orders'" },
+        },
+        required: ["path"],
+      },
+    },
+  };
+}
+
 /* ---- classification + summaries ---- */
 
-const READ_TOOLS = new Set(["list_records", "get_record", "read_audit"]);
+const READ_TOOLS = new Set(["list_records", "get_record", "read_audit", "navigate"]);
 
 /** Writes always wait for the operator's Confirm; reads never do. */
 export function isDestructive(name: string): boolean {
@@ -217,6 +244,8 @@ export function humanSummary(call: ToolCall, schema: AdminSchema | null): string
       return `Move ${label}${id} to “${call.args?.to_status ?? "?"}”`;
     case "read_audit":
       return `Read audit log${call.args?.object_type ? ` for ${call.args.object_type}` : ""}`;
+    case "navigate":
+      return `Open screen ${call.args?.path ?? "?"}`;
     default:
       return call.name;
   }
@@ -364,6 +393,14 @@ export async function executeTool(call: ToolCall, ctx: ToolCtx): Promise<ToolRes
         return { ok: true, result: { count: data.count, entries: data.results } };
       }
 
+      case "navigate": {
+        if (!ctx.navigateTo) return fail("navigation is only available during the guided tour");
+        const path = String(call.args?.path ?? "").trim();
+        if (!path.startsWith("/")) return fail("path must start with '/'");
+        ctx.navigateTo(path);
+        return { ok: true, result: { navigatedTo: path } };
+      }
+
       default:
         return fail(`unknown tool "${call.name}"`);
     }
@@ -398,5 +435,19 @@ export function agentSystemAddendum(): string {
     "- Use only model ids, field names and status values that appear in the model list above. If a value is unknown, look it up first.",
     "- After an action, report what happened with the record id from the tool result. If a tool returns {error}, say so and fix the request before retrying once.",
     "- Batch independent reads; never batch a write with anything that depends on it.",
+  ].join("\n");
+}
+
+/** Tour-guide persona for the agentic onboarding (owner order 2026-11-08:
+ *  "the AI Agent will drive the app, show its features, and the user can
+ *  chat with the AI while onboarding"). Appended ON TOP of the standard
+ *  addendum while the guided tour is active. */
+export function tourGuideAddendum(): string {
+  return [
+    "",
+    "TOUR GUIDE MODE: you are walking the operator through this admin app, stop by stop.",
+    "- You can open screens with the navigate tool — do it when you narrate a feature, seeing beats telling.",
+    "- Keep each narration to one short paragraph, then hand the turn back with one question at most.",
+    "- Reads (list/get) are free to run as demonstrations; still never write without the operator asking.",
   ].join("\n");
 }

@@ -2,6 +2,9 @@
 import { defineConfig } from "vitest/config";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
+import { readFileSync } from "node:fs";
+
+const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
 export default defineConfig({
   plugins: [tailwindcss(), svelte()],
@@ -14,6 +17,8 @@ export default defineConfig({
   optimizeDeps: {
     include: ["svelte", "svelte/store", "svelte/internal/client", "svelte/internal/disclose-version"],
   },
+  // the self-updater compares this build's version against GitHub releases
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   server: {
     port: 5173,
     strictPort: true,
@@ -36,5 +41,6 @@ export default defineConfig({
     environment: "happy-dom",
     include: ["src/**/*.test.ts"],
     server: { deps: { inline: [/svelte/] } },
+    define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   },
 });

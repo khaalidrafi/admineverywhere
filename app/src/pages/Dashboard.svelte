@@ -9,7 +9,7 @@
   import { app } from "../lib/stores";
 </script>
 
-<div class="mx-auto max-w-6xl">
+<div class="mx-auto max-w-6xl" data-tour="dashboard">
   <div class="mb-6">
     <h1 class="text-2xl font-semibold">Dashboard</h1>
     <p class="text-sm text-text/50">

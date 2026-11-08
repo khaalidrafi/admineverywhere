@@ -4,6 +4,9 @@ Usage:
     python manage.py build_admin --brand brands/fresh.json [--app ./app]
                                   [--targets web,desktop,android,mcp,emacs]
                                   [--build] [--api-host https://admin.example.com]
+                                  [--csp-connect-origin https://api.github.com ...]
+                                  [--update-repo owner/name]
+                                  [--github-client-id <public client id>]
 
 --app       : thin-client directory (default: ./app)
 --targets   : what to build, comma-separated.  The user chooses:
@@ -22,6 +25,16 @@ Usage:
 --api-host  : deployed API origin substituted for the CSP's API_HOST
               placeholder (validated: https, dotted DNS, no localhost, no
               wildcards — see admineverywhere.branding.normalize_api_host)
+--csp-connect-origin : further https origins appended to connect-src at
+              build time (repeatable). Needed so the packaged app can reach
+              the AI providers (keyless presets, owner order 2026-11-08)
+              and api.github.com for the self-updater. Same validation law
+              as --api-host; the committed template never changes.
+--update-repo : GitHub "owner/name" whose Releases carry the installers
+              (inlined into AppConfig.updateRepo for the Updates screen).
+--github-client-id : the OAuth app's PUBLIC client id enabling the
+              Updates screen's device-flow authorization (no secret;
+              inlined into AppConfig.githubClientId).
 
 The stamp also rewrites the vite app's index.html identity at build time
 (tab <title> + favicon <link> from the brand) — dist/ ships that file
@@ -69,6 +82,17 @@ class Command(BaseCommand):
                             help="Deployed API origin substituted for the CSP's "
                                  "https://API_HOST placeholder (e.g. https://admin.example.com). "
                                  "localhost/wildcards are rejected.")
+        parser.add_argument("--csp-connect-origin", action="append", default=None,
+                            dest="csp_connect_origin",
+                            help="Extra https origin appended to connect-src at build "
+                                 "time (repeatable) — AI provider hosts and "
+                                 "api.github.com for the self-updater.")
+        parser.add_argument("--update-repo", default=None,
+                            help="GitHub owner/name whose Releases carry the app "
+                                 "installers (self-updater source).")
+        parser.add_argument("--github-client-id", default=None,
+                            help="PUBLIC GitHub OAuth app client id for the Updates "
+                                 "screen's device-flow authorization.")
 
     def handle(self, *args, **options):
         from pathlib import Path
@@ -77,8 +101,13 @@ class Command(BaseCommand):
             raise CommandError(f"app directory not found: {app_dir}")
 
         try:
-            summary = branding.inject_brand(app_dir, options["brand"],
-                                            api_host=options.get("api_host"))
+            summary = branding.inject_brand(
+                app_dir, options["brand"],
+                api_host=options.get("api_host"),
+                csp_connect_origins=options.get("csp_connect_origin"),
+                update_repo=options.get("update_repo"),
+                github_client_id=options.get("github_client_id"),
+            )
         except FileNotFoundError as exc:
             raise CommandError(str(exc)) from exc
         except ValueError as exc:
@@ -93,6 +122,8 @@ class Command(BaseCommand):
         if summary.get("csp_api_host"):
             self.stdout.write(self.style.SUCCESS(
                 f"  csp connect-src -> {summary['csp_api_host']}"))
+        for origin in summary.get("csp_connect_origins", []):
+            self.stdout.write(self.style.SUCCESS(f"  csp connect-src + {origin}"))
 
         try:
             targets = parse_targets(options["targets"], options["build"])
