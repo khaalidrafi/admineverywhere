@@ -54,6 +54,21 @@
 
 * NOTICES
 
+**** AMENDMENT 2026-11-08 05:48Z — commit subjects are SHORT, description goes in the body
+
+Owner (#hq 05:48Z): "Keep them simple, concise and straightforward!
+Description goes to the line after commit message! Having ONE BIG LINE
+trying to say it ALL is CRAP!!!!"
+
+- Subject: aim ~50 chars, NEVER > 72. It only NAMES what changed.
+- Body: one blank line after the subject, then the description.
+- Enforcement: guard rule 6 — a >72-char subject now FAILS the merge
+  gate (kit e5dc404). Root cause was the old law line "add to commit
+  messages what you couldn't write in code comments" with no
+  subject/body split; the kit law now states the split explicitly.
+- ACK below like the WARN above (append, never edit the notice).
+
+
 ** [2026-11-02 15:58Z] TIME DISCIPLINE LAW — effort + deadline on every TODO; show-cause before any slip (Owner, #hq)
 
 - Every lead-assigned TODO carries :EFFORT: AND :DEADLINE: (Org
