@@ -20,8 +20,12 @@ for tests plus a live backend for browser E2E (login `admin` / `admin123`,
 Product constraints — do not relax:
 
 - AI chat is OpenAI-compatible only (OpenAI / Groq / Ollama / LM Studio /
-  Mistral — one code path). No Anthropic. No tool calling, no provider
-  abstraction, no history persistence (all v2 material).
+  Mistral — one code path). No Anthropic. No provider abstraction, no
+  history persistence (v2 material). TOOL CALLING SHIPPED 2026-11-07
+  (owner order — agent.ts executes admin actions through api.ts, writes
+  confirm-gated); provider presets (aiProviders.ts, keyless trio verified
+  live) and the AI cloud-data disclaimer (AiDisclaimer.svelte) shipped
+  2026-11-08 (owner order), same OpenAI-only wire.
 - All visual identity comes from a single `brand.json` (colors, radius,
   font, logo). Components carry zero hard-coded colors: Tailwind 4
   `@theme inline` maps `--color-*` utilities onto the runtime `--brand-*`
@@ -116,12 +120,18 @@ Acceptance criteria the brief pins down beyond the constraints above.
 
 - **AI chat panel** — one floating panel, opened by Ctrl+K or a button.
   Settings are *exactly* three inputs — base URL, API key, model name —
-  under the hint "Works with OpenAI, Groq, Ollama & more". Streaming is
-  non-negotiable; the system prompt embeds a schema summary so answers
-  track the live API, and the key lives in the Tauri keyring. The panel
-  stays fully functional when unconfigured: a friendly setup prompt, not
-  an error. The v2 exclusions above (no tool calling / history / provider
-  abstraction) still apply. The prompt the panel ACTUALLY sends is
+  under the hint "Works with OpenAI, Groq, Ollama & more", now with
+  one-click preset BUTTONS above them (aiProviders.ts; buttons are not
+  inputs — the three-input contract holds; keyless: Kilo Gateway free
+  auto-route, AI Horde anonymous, Pollinations, each verified live
+  2026-11-08). Streaming is non-negotiable; the system prompt embeds a
+  schema summary so answers track the live API, and the key lives in the
+  Tauri keyring. The panel stays fully functional when unconfigured: a
+  friendly setup prompt, not an error. History persistence / provider
+  abstraction remain out of scope. Every AI surface carries the cloud-data
+  disclaimer (AiDisclaimer.svelte — owner law: AI features state that app
+  data goes to the AI provider's cloud). The prompt the panel ACTUALLY
+  sends is
   `systemPrompt(brand.appName, buildSchemaPrompt(schema))`
   (`app/src/ai/ChatPanel.svelte:69`) and `app/src/lib/__tests__/chatMount.test.ts`
   pins it by asserting the captured request body of a mounted panel —
@@ -132,6 +142,25 @@ Acceptance criteria the brief pins down beyond the constraints above.
   enum-select and FK-dropdown fields; schema-driven, graceful when the
   schema omits constraints. `DataTable` = pagination + search + delete.
   Login is token auth against `config.apiUrl` with a settings field.
+- **Onboarding / Take a tour** (owner order 2026-11-08) —
+  `app/src/onboarding/Onboarding.svelte` + `lib/onboarding.ts` +
+  `lib/tourBus.ts`, mounted by Shell. First run opens a CHOICE screen:
+  AI-guided tour (the agent narrates each stop in the chat panel and may
+  open screens via the `navigate` tool — read-only, tour-context only) vs
+  classic spotlight tour (no AI). Replayable from the sidebar's
+  "Take a tour" entry. Steps whose selector matches nothing are skipped.
+  First-run auto-open is skipped under vitest.
+- **Self-updater** (owner order 2026-11-08) — `app/src/lib/updater.ts` +
+  `app/src/pages/Updates.svelte` (nav: settings). Compares
+  `__APP_VERSION__` (vite define from package.json) against the release
+  repo's latest GitHub release. Auth ladder: stored release token
+  (keyring "updates.token") → GitHub OAuth DEVICE FLOW
+  (AppConfig.githubClientId, inlined by build_admin
+  `--github-client-id`; token session-scoped, memory only) → anonymous.
+  build_admin `--update-repo` names the release repo;
+  `--csp-connect-origin` (repeatable, same validation as --api-host)
+  appends provider/GitHub origins to the production CSP — the committed
+  template still names only `https://API_HOST`.
 - **Scope rationale & demo flow** — the out-of-scope line above plus
   multi-provider abstraction, tool calling and history are all *v2*; the
   nav is built so ⌘K drops in later. Definition of done (demo flow):
