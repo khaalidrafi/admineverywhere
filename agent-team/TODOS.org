@@ -1,4 +1,4 @@
-#+TITLE: TODOS — admincraft
+#+TITLE: TODOS — admineverywhere
 #+TODO: TODO(t) ONGOING(o) WAIT(w@) PENDING(p@) | DONE(d!) CANCELLED(c@) DEFERRED(f@)
 #+COLUMNS: %40ITEM %TODO %EFFORT %CLOCKSUM(Clocked)
 # Hiring rule (SEGREGATION LAW, Owner 18:14Z): the assignee (AUTHOR) is clocked in to ONGOING by AUTOMATION at the exact dispatch (Owner 2026-10-26 10:42Z — never by hand) and flips the item to PENDING with :DELIVERED: evidence on delivery; the NEXT seat (REVIEWER) reviews the branch read-only; the CI merger (MERGER) lands it only on the reviewer's APPROVED verdict. Marking DONE is the duty REVIEWER's when everything is clear (Owner 2026-10-26 10:55Z); CANCELLED/DEFERRED stay Lead-only.
