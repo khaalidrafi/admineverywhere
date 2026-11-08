@@ -370,6 +370,40 @@ def normalize_api_host(api_host: str) -> str:
     return origin
 
 
+def append_csp_connect_origins(conf: dict, origins: list[str]) -> list[str]:
+    """Append extra validated https origins to the CSP's connect-src.
+
+    Owner order 2026-11-08 (keyless AI providers + the GitHub self-updater):
+    production builds must reach the provider hosts and api.github.com, not
+    only the Django API origin. The committed template stays untouched —
+    like --api-host, this ONLY ever runs at build time on the parsed conf,
+    with the SAME validation normalize_api_host applies (https, dotted DNS,
+    no localhost, no wildcards). Idempotent: an origin already present is
+    not duplicated. Returns the origins actually appended (order kept).
+    """
+    security = conf.get("app", {}).get("security", {})
+    csp = security.get("csp") if isinstance(security, dict) else None
+    if not isinstance(csp, str) or not csp:
+        raise ValueError("tauri.conf.json: app.security.csp missing — cannot extend connect-src")
+    directives = [d.strip() for d in csp.split(";") if d.strip()]
+    connect = next((d for d in directives if d.startswith("connect-src")), None)
+    if connect is None:
+        raise ValueError("tauri.conf.json: CSP has no connect-src directive — refusing to guess")
+    existing = connect.split()[1:]
+    appended: list[str] = []
+    for raw in origins:
+        origin = normalize_api_host(raw)  # same https / no-wildcard / no-localhost law
+        if origin in existing or origin in appended:
+            continue
+        appended.append(origin)
+    if appended:
+        new_connect = " ".join(["connect-src", *existing, *appended])
+        security["csp"] = "; ".join(
+            (new_connect if d.startswith("connect-src") else d) for d in directives
+        )
+    return appended
+
+
 def substitute_api_host(conf: dict, api_host: str) -> str | None:
     """Substitute the CSP API_HOST placeholder in a parsed tauri.conf dict.
 
@@ -397,7 +431,9 @@ def substitute_api_host(conf: dict, api_host: str) -> str | None:
     )
 
 
-def _bundled_config(app: Path, api_host: str | None) -> dict:
+def _bundled_config(app: Path, api_host: str | None,
+                    update_repo: str | None = None,
+                    github_client_id: str | None = None) -> dict:
     """The config object inlined into brand.gen.ts (see render_brand_gen).
 
     With --api-host the validated origin wins as apiUrl. Without it, a
@@ -406,6 +442,11 @@ def _bundled_config(app: Path, api_host: str | None) -> dict:
     the login screen and --api-host are the sanctioned ways to name one.
     authPath/schemaPath ride along from that file so a customized backend
     shape survives stamping, else the documented defaults.
+
+    Self-updater (owner order 2026-11-08): --update-repo names the GitHub
+    "owner/name" whose Releases carry the installers; --github-client-id
+    is the OAuth app's PUBLIC client id enabling the Updates screen's
+    device-flow authorization. Both are safe to inline (no secrets).
     """
     defaults = {"apiUrl": "", "authPath": "/api/auth/token/", "schemaPath": "/api/schema/"}
     existing: dict = {}
@@ -425,6 +466,10 @@ def _bundled_config(app: Path, api_host: str | None) -> dict:
     cfg = {"apiUrl": pick("apiUrl"), "authPath": pick("authPath"), "schemaPath": pick("schemaPath")}
     if api_host is not None:
         cfg["apiUrl"] = normalize_api_host(api_host)
+    if update_repo:
+        cfg["updateRepo"] = str(update_repo)
+    if github_client_id:
+        cfg["githubClientId"] = str(github_client_id)
     return cfg
 
 
@@ -451,7 +496,10 @@ def _tauri_icon(app_dir: Path, icon_png: Path) -> None:
 
 
 def inject_brand(app_dir: str | Path, brand_path: str | Path,
-                 api_host: str | None = None) -> dict:
+                 api_host: str | None = None,
+                 csp_connect_origins: list[str] | None = None,
+                 update_repo: str | None = None,
+                 github_client_id: str | None = None) -> dict:
     """Apply a brand to the thin-client app directory.
 
     Writes:  public/brand.css, public/brand.json (normalized asset paths),
@@ -461,7 +509,10 @@ def inject_brand(app_dir: str | Path, brand_path: str | Path,
              `npm run tauri icon` regenerates the platform icons, best effort)
     Patches: src-tauri/tauri.conf.json (productName, window title) if present
     CSP:     with api_host, substitutes the API_HOST placeholder in
-             app.security.csp (see substitute_api_host; validated + loud)
+             app.security.csp (see substitute_api_host; validated + loud);
+             csp_connect_origins appends further validated origins
+             (AI provider hosts, api.github.com — keyless AI + self-updater,
+             owner order 2026-11-08)
 
     P0: brand.json is untrusted — every source and destination below goes
     through _jailed() (realpath + commonpath), so neither hostile asset
@@ -476,6 +527,8 @@ def inject_brand(app_dir: str | Path, brand_path: str | Path,
     # substitution itself happens at the tauri.conf patching step below).
     if api_host is not None:
         normalize_api_host(api_host)
+    for raw in csp_connect_origins or []:
+        normalize_api_host(raw)
 
     app = Path(app_dir)
     brand_file = Path(brand_path)
@@ -540,7 +593,7 @@ def inject_brand(app_dir: str | Path, brand_path: str | Path,
     gen_rel = "src/lib/brand.gen.ts"
     (app / "src" / "lib").mkdir(parents=True, exist_ok=True)
     gen_path = _jailed(app, gen_rel, "brand.gen.ts")
-    gen_path.write_text(render_brand_gen(out_brand, _bundled_config(app, api_host)))
+    gen_path.write_text(render_brand_gen(out_brand, _bundled_config(app, api_host, update_repo, github_client_id)))
     written.append(str((app / gen_rel).relative_to(app)))
 
     # 3c. The vite index.html identity: dist/ ships this file verbatim, so
@@ -566,6 +619,7 @@ def inject_brand(app_dir: str | Path, brand_path: str | Path,
     #    stays — dev/CI builds keep a host-free CSP.
     patched: list[str] = []
     substituted: str | None = None
+    csp_appended: list[str] = []
     tauri_conf = app / "src-tauri" / "tauri.conf.json"
 
     # 4a. Brand launcher/installer icon: stage the png into public/ (same
@@ -598,8 +652,11 @@ def inject_brand(app_dir: str | Path, brand_path: str | Path,
             windows[0]["title"] = brand["appName"]
         if api_host is not None:
             substituted = substitute_api_host(conf, api_host)
+        if csp_connect_origins:
+            csp_appended = append_csp_connect_origins(conf, csp_connect_origins)
         conf_target.write_text(json.dumps(conf, indent=2) + "\n")
         patched.append(str(tauri_conf.relative_to(app)))
 
     return {"written": written, "copied": copied, "patched": patched,
-            "skipped": skipped, "csp_api_host": substituted}
+            "skipped": skipped, "csp_api_host": substituted,
+            "csp_connect_origins": csp_appended}

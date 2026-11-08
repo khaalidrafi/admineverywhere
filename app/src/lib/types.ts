@@ -77,6 +77,12 @@ export interface AppConfig {
   apiUrl: string;
   authPath: string;
   schemaPath: string;
+  /** Self-updater source: the GitHub repo whose Releases carry the app's
+   *  installers ("owner/name"). Default when absent: khaalidrafi/freshorama. */
+  updateRepo?: string;
+  /** GitHub OAuth app client id enabling the device-flow authorization in
+   *  the Updates screen (public value — safe to inline in builds). */
+  githubClientId?: string;
 }
 
 /** One append-only audit entry (FR-R003). Loose targeting: object_type is the
