@@ -10,6 +10,7 @@
   import { navigate, route, isActive } from "../lib/router";
   import { navPages, pageHref, authHref } from "../lib/pages";
   import { roleAllows } from "../lib/rbac";
+  import { onboardingAgent } from "../lib/tourBus";
   import Icon from "./Icon.svelte";
   import NotificationBell from "./NotificationBell.svelte";
 
@@ -81,7 +82,7 @@
 
   <!-- settings: every page that declared nav: "settings" -->
   {#if settingsNav.length}
-    <div class="border-t border-white/20 px-3 py-3">
+    <div class="border-t border-white/20 px-3 py-3" data-tour="settings-group">
       <div class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-white/60">
         Settings
       </div>
@@ -90,6 +91,7 @@
           class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
             {isActive($route.path, page.path) ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10'}"
           onclick={() => go(pageHref(page))}
+          data-tour={page.id === "branding" ? "branding" : undefined}
         >
           <Icon name={page.icon} size={16} />
           {page.title}
@@ -98,12 +100,26 @@
     </div>
   {/if}
 
+  <!-- help: re-runnable tour (owner order 2026-11-08) -->
+  <div class="border-t border-white/20 px-3 py-3">
+    <button
+      class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10"
+      onclick={() => onboardingAgent.startTour()}
+      data-tour="take-a-tour"
+    >
+      <Icon name="info" size={16} />
+      Take a tour
+    </button>
+  </div>
+
   <!-- footer -->
   <div class="px-3 py-3 [&_.btn-ghost]:border-white/30 [&_.btn-ghost]:text-white [&_.bg-primary]:bg-white [&_.text-bg]:text-primary">
     <div class="flex items-center justify-between gap-2 px-2 pb-2 text-xs text-white/70">
       <span class="truncate">@{$app.username || "admin"}</span>
       <div class="flex items-center gap-1">
-        <NotificationBell />
+        <span data-tour="notifications">
+          <NotificationBell />
+        </span>
         <button
           class="btn btn-ghost px-2 py-1 text-xs"
           onclick={() => { logout(); navigate(authHref()); }}

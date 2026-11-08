@@ -11,6 +11,7 @@
   import { pageById } from "../lib/pages";
   import Sidebar from "./Sidebar.svelte";
   import ChatPanel from "../ai/ChatPanel.svelte";
+  import Onboarding from "../onboarding/Onboarding.svelte";
   import Icon from "./Icon.svelte";
 
   let sidebarOpen = $state(false);
@@ -68,3 +69,4 @@
 </div>
 
 <ChatPanel />
+<Onboarding />
