@@ -8,7 +8,7 @@
    */
   import { onMount } from "svelte";
   import { get } from "svelte/store";
-  import { ai, app, loadAiSettings, saveAiSettings, toast } from "../lib/stores";
+  import { ai, app, effectiveConfig, loadAiSettings, saveAiSettings, toast } from "../lib/stores";
   import {
     buildSchemaPrompt,
     ChatError,
@@ -67,6 +67,7 @@
   let baseUrl = $state("");
   let apiKey = $state("");
   let model = $state("");
+  let systemPromptText = $state("");
 
   let abort: AbortController | null = null;
   /** operator gate: call id → resolver of its Confirm/Deny promise */
@@ -81,6 +82,7 @@
     baseUrl = $ai.baseUrl;
     apiKey = $ai.apiKey;
     model = $ai.model;
+    systemPromptText = $ai.systemPrompt;
     if (!$ai.baseUrl) showSettings = open && true;
   });
 
@@ -159,6 +161,7 @@
           systemPrompt(
             get(app).brand.appName,
             get(app).schema ? buildSchemaPrompt(get(app).schema!) : "no schema loaded",
+            get(ai).systemPrompt,
           ) +
           agentSystemAddendum() +
           (tourMode ? tourGuideAddendum() : ""),
@@ -201,11 +204,17 @@
         };
         entries.push({ kind: "tool", inv });
         scrollToBottom();
+        // REACTIVITY LAW: `inv` above is the RAW object — mutating it after the
+        // push never reaches the $state proxy, so the card froze on its first
+        // painted status ("awaiting"/"running…") forever. All status/result
+        // writes below go through entries[idx] — the PROXIED entry.
+        const idx = entries.length - 1;
+        const card = () => (entries[idx] as { kind: "tool"; inv: ToolInv }).inv;
 
-        if (inv.destructive) {
+        if (card().destructive) {
           const ok = await new Promise<boolean>((resolve) => gates.set(call.id, resolve));
           if (!ok) {
-            inv.status = "denied";
+            card().status = "denied";
             wire.push(
               toolResultMessage(call, { ok: false, result: { error: "denied by operator" } }),
             );
@@ -213,10 +222,10 @@
           }
         }
 
-        inv.status = "running";
+        card().status = "running";
         const res = await executeTool(call, ctx);
-        inv.status = res.ok ? "done" : "error";
-        inv.result = res.result;
+        card().status = res.ok ? "done" : "error";
+        card().result = res.result;
         wire.push(toolResultMessage(call, res));
         scrollToBottom();
       }
@@ -241,7 +250,13 @@
 
     const a = get(app);
     const schema = a.schema ?? null;
-    const ctx: ToolCtx = { cfg: get(ai), token: a.token || null, schema };
+    // Tool context carries the APP config (the Django API origin the agent's
+    // actions run against) — NOT the AI provider settings. Passing the provider
+    // store here made every tool call fail with "no backend is configured"
+    // (owner report 2026-11-09): the provider store has no apiUrl at all.
+    // effectiveConfig() = the same origin the rest of the app talks to (baked
+    // brand host, or the login page's sanitized override).
+    const ctx: ToolCtx = { cfg: effectiveConfig(), token: a.token || null, schema };
     let tools = buildAgentTools(schema);
     if (tourMode) {
       // the tour guide can DRIVE the app: open the screens it narrates
@@ -285,8 +300,8 @@
 
   async function saveSettings(e: SubmitEvent) {
     e.preventDefault();
-    await saveAiSettings(baseUrl, apiKey, model);
-    toast("success", "AI provider saved");
+    await saveAiSettings(baseUrl, apiKey, model, systemPromptText);
+    toast("success", "AI settings saved");
     showSettings = false;
   }
 
@@ -351,8 +366,11 @@
     {#if showSettings}
       <!-- provider settings -->
       <form class="flex flex-1 flex-col gap-3 overflow-y-auto p-4" onsubmit={saveSettings}>
-        <!-- one-click presets — buttons, not inputs: the form keeps exactly
-             three inputs (MVP brief); keyless ones verified live 2026-11-08 -->
+        <!-- one-click presets — buttons, not inputs. Owner order 2026-11-09
+             ("where is the option to set system prompt and other AI settings?")
+             added the System-prompt field: the form now keeps FOUR inputs
+             (base URL, API key, model, system prompt); presets still fill
+             only provider fields and never touch the prompt. -->
         <div class="flex flex-wrap gap-1.5" data-tour="ai-presets">
           {#each AI_PRESETS as p (p.id)}
             <button
@@ -387,6 +405,15 @@
           <input id="ai-model" class="input" type="text" placeholder="gpt-4o-mini / llama3.2 / …"
                  bind:value={model} required />
         </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text/60" for="ai-prompt">System prompt</label>
+          <textarea id="ai-prompt" class="input min-h-20" rows={3}
+            placeholder="Optional — how the assistant should behave. Left empty, it introduces itself as your {$app.brand.appName} admin assistant and follows the live model list."
+            bind:value={systemPromptText}></textarea>
+          <div class="mt-1 text-[11px] text-text/40">
+            Replaces the default persona; the model list and safety rules stay.
+          </div>
+        </div>
         <div class="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-[11px] text-text/70">
           Works with OpenAI, Groq, Ollama, Mistral, LM Studio &amp; any OpenAI-compatible provider.
           The agent can run admin actions with your own login — writes ask before they land.
@@ -394,7 +421,7 @@
         <AiDisclaimer />
         <div class="mt-auto flex gap-2">
           <button type="button" class="btn btn-ghost" onclick={() => (showSettings = false)}>Cancel</button>
-          <button type="submit" class="btn btn-primary flex-1">Save provider</button>
+          <button type="submit" class="btn btn-primary flex-1">Save AI settings</button>
         </div>
       </form>
     {:else if !configured}

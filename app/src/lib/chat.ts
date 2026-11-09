@@ -58,10 +58,20 @@ ${lines.join("\n")}`;
 }
 
 /** Build the schema-aware system prompt. */
-export function systemPrompt(appName: string, modelLines: string): string {
+/** A non-empty `custom` (owner order 2026-11-09: system prompt setting)
+ *  replaces the default persona lines but keeps the schema model-list and the
+ *  behavior rules — the agent can never lose its grounding, whatever the
+ *  persona says. Wording law (owner 2026-11-09): the assistant belongs to the
+ *  ADMIN, never to a "dashboard". */
+export function systemPrompt(appName: string, modelLines: string, custom = ""): string {
+  const persona = custom.trim()
+    ? custom.trim()
+    : [
+        `You are the assistant inside the ${appName} admin.`,
+        "You help the operator understand and manage their data.",
+      ].join("\n");
   return [
-    `You are the assistant inside the ${appName} admin dashboard.`,
-    "You help the operator understand and manage their data.",
+    persona,
     modelLines,
     "",
     "Answer concisely. When asked about data structure, refer to the models above.",

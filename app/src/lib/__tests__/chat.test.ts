@@ -173,6 +173,26 @@ describe("systemPrompt", () => {
     expect(p).toContain("Models: Product (3 fields)");
     expect(p).toContain("Never invent fields");
   });
+
+  it("introduces the app as an ADMIN, never a dashboard (owner wording 2026-11-09)", () => {
+    const p = systemPrompt("Freshorama Admin", "Models: Product (3 fields)");
+    expect(p).toContain("You are the assistant inside the Freshorama Admin admin.");
+    expect(p).not.toContain("dashboard");
+  });
+
+  it("a custom system prompt replaces the persona but keeps grounding (owner order 2026-11-09)", () => {
+    const p = systemPrompt("Freshorama Admin", "Models: Product (3 fields)", "You are Padma, the friendly order desk.");
+    expect(p).toContain("You are Padma, the friendly order desk.");
+    expect(p).not.toContain("You are the assistant inside");
+    // grounding survives the persona swap
+    expect(p).toContain("Models: Product (3 fields)");
+    expect(p).toContain("Never invent fields");
+  });
+
+  it("a blank/whitespace custom prompt falls back to the default persona", () => {
+    const p = systemPrompt("Freshorama Admin", "Models: Product", "   ");
+    expect(p).toContain("You are the assistant inside the Freshorama Admin admin.");
+  });
 });
 
 describe("setup state logic", () => {

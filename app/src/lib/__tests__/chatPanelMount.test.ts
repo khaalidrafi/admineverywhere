@@ -17,7 +17,7 @@ import fixture from "./fixtures/openapi.json";
 const schema = normalizeOpenAPI(fixture);
 
 function configureProvider(baseUrl = "http://provider.test/v1", model = "gpt-4o-mini", apiKey = "sk-x") {
-  ai.set({ baseUrl, apiKey, model });
+  ai.set({ baseUrl, apiKey, model, systemPrompt: "" });
   app.update((a) => ({ ...a, schema }));
 }
 
@@ -68,7 +68,7 @@ afterEach(() => {
   while (hosts.length) hosts.pop()!.remove();
   localStorage.clear();
   toasts.set([]);
-  ai.set({ baseUrl: "", apiKey: "", model: "" });
+  ai.set({ baseUrl: "", apiKey: "", model: "", systemPrompt: "" });
   mockFetch.mockReset();
 });
 
@@ -82,7 +82,7 @@ describe("mounted ChatPanel — provider settings form (web mode)", () => {
 
     expect(host.querySelector("#ai-base")).toBeNull();
     expect(localStorage.getItem("dad.ai.baseUrl")).toBeNull();
-    expect(get(ai)).toEqual({ baseUrl: "", apiKey: "", model: "" });
+    expect(get(ai)).toEqual({ baseUrl: "", apiKey: "", model: "", systemPrompt: "" });
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
@@ -100,18 +100,19 @@ describe("mounted ChatPanel — provider settings form (web mode)", () => {
     expect(host.querySelector("#ai-model")).not.toBeNull();
   });
 
-  it("Save provider writes trimmed values to store + localStorage + the secret store, then shows the chat", async () => {
+  it("Save AI settings writes trimmed values to store + localStorage + the secret store, then shows the chat", async () => {
     const host = openPanel(mountPanel());
     setField(host.querySelector("#ai-base")!, "  http://provider.test/v1  ");
     setField(host.querySelector("#ai-key")!, "  sk-sentinel-key  ");
     setField(host.querySelector("#ai-model")!, "  gpt-4o-mini  ");
-    click(byText(host, "Save provider"));
+    click(byText(host, "Save AI settings"));
 
     await vi.waitFor(() => {
       expect(get(ai)).toEqual({
         baseUrl: "http://provider.test/v1",
         apiKey: "sk-sentinel-key",
         model: "gpt-4o-mini",
+        systemPrompt: "",
       });
     });
     expect(localStorage.getItem("dad.ai.baseUrl")).toBe("http://provider.test/v1");
@@ -121,7 +122,7 @@ describe("mounted ChatPanel — provider settings form (web mode)", () => {
     // signal lands in a later task (17:46Z note: assert absence/presence at a
     // macrotask boundary, never after two microtask ticks)
     await new Promise((r) => setTimeout(r, 50));
-    expect(get(toasts).map((t) => t.text)).toContain("AI provider saved");
+    expect(get(toasts).map((t) => t.text)).toContain("AI settings saved");
     expect(host.querySelector("#ai-base")).toBeNull();
     // configured: composer back, model badge in the header
     expect(host.querySelector('input[placeholder="Ask about your data…"]')).not.toBeNull();
@@ -138,10 +139,10 @@ describe("mounted ChatPanel — provider settings form (web mode)", () => {
     expect(host.querySelector<HTMLInputElement>("#ai-key")!.value).toBe("sk-first");
 
     setField(host.querySelector("#ai-key")!, "");
-    click(byText(host, "Save provider"));
+    click(byText(host, "Save AI settings"));
     await vi.waitFor(() => expect(localStorage.getItem("dad.secret.ai.apiKey")).toBeNull());
 
-    ai.set({ baseUrl: "", apiKey: "", model: "" });
+    ai.set({ baseUrl: "", apiKey: "", model: "", systemPrompt: "" });
     await loadAiSettings();
     expect(get(ai).apiKey).toBe("");
     expect(get(ai).baseUrl).toBe("http://provider.test/v1");
@@ -334,11 +335,11 @@ describe("mounted ChatPanel — provider settings under the Tauri keyring", () =
     setField(host.querySelector("#ai-base")!, "http://provider.test/v1");
     setField(host.querySelector("#ai-key")!, key);
     setField(host.querySelector("#ai-model")!, "llama3.2");
-    click(byText(host, "Save provider"));
+    click(byText(host, "Save AI settings"));
     await vi.waitFor(() => expect(host.querySelector("#ai-base")).toBeNull());
   }
 
-  it("Save provider writes the key through the keyring and keeps it out of localStorage", async () => {
+  it("Save AI settings writes the key through the keyring and keeps it out of localStorage", async () => {
     const host = mountTauriPanel();
 
     expect(host.textContent).toContain("Stored in the OS keychain.");
@@ -365,7 +366,7 @@ describe("mounted ChatPanel — provider settings under the Tauri keyring", () =
     expect(host.querySelector<HTMLInputElement>("#ai-key")!.value).toBe("sk-tauri-sentinel");
     setField(host.querySelector("#ai-key")!, "");
     invoke.mockClear();
-    click(byText(host, "Save provider"));
+    click(byText(host, "Save AI settings"));
 
     await vi.waitFor(() =>
       expect(invoke).toHaveBeenCalledWith("delete_secret", {
@@ -374,5 +375,145 @@ describe("mounted ChatPanel — provider settings under the Tauri keyring", () =
       }),
     );
     expect(get(ai).apiKey).toBe("");
+  });
+});
+
+/** THE 2026-11-09 REGRESSION (mirrored from the Freshorama client): the tool
+ *  context carried the AI-provider store (which has no apiUrl) instead of the
+ *  app config, so EVERY agent action failed with {"error":"no backend is
+ *  configured"} — the owner's report. Mounted proof: with the provider
+ *  configured and the app config carrying the real backend origin, a
+ *  tool-call turn must hit THAT origin. */
+describe("mounted ChatPanel — the agent acts on the APP config, not the provider store", () => {
+  afterEach(() => {
+    app.update((a) => ({ ...a, config: null }));
+  });
+
+  function configuredHost() {
+    configureProvider();
+    return openPanel(mountPanel());
+  }
+
+  function typeAndSubmit(host: HTMLElement, text: string) {
+    const input = host.querySelector<HTMLInputElement>('input[placeholder="Ask about your data…"]')!;
+    setField(input, text);
+    flushSync(() =>
+      input.closest("form")!.dispatchEvent(new Event("submit", { bubbles: false, cancelable: true })),
+    );
+    return input;
+  }
+
+  function sseReply(...chunks: string[]) {
+    const payload = [...chunks.map((c) => `data: ${c}\n\n`), "data: [DONE]\n\n"];
+    let i = 0;
+    return {
+      ok: true,
+      status: 200,
+      text: async () => "",
+      body: {
+        getReader() {
+          return {
+            read: async () =>
+              i < payload.length
+                ? { done: false, value: new TextEncoder().encode(payload[i++]) }
+                : { done: true, value: undefined as never },
+          };
+        },
+      },
+    };
+  }
+
+  const toolCallChunks = [
+    JSON.stringify({
+      choices: [{ delta: { tool_calls: [{ index: 0, id: "tc1", type: "function", function: { name: "list_records", arguments: '{"model":' } }] } }],
+    }),
+    JSON.stringify({
+      choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: '"Product"}' } }] } }],
+    }),
+  ];
+
+  it("a tool call reaches the backend origin baked into the app config", async () => {
+    configureProvider();
+    app.update((a) => ({
+      ...a,
+      config: { apiUrl: "https://admin-backend.test", authPath: "/api/auth/token/", schemaPath: "/api/schema/" },
+    }));
+    // stateful mock: provider turn 1 = list_records tool call, later turns text
+    let providerTurns = 0;
+    mockFetch.mockImplementation((url: string) => {
+      if (String(url).startsWith("https://admin-backend.test")) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({ count: 2, results: [{ id: 1, name: "Honey" }] }),
+        });
+      }
+      providerTurns++;
+      return Promise.resolve(
+        providerTurns === 1
+          ? sseReply(...toolCallChunks)
+          : sseReply(JSON.stringify({ choices: [{ delta: { content: "Done — 2 products." } }] })),
+      );
+    });
+
+    const host = configuredHost();
+    typeAndSubmit(host, "list the products");
+
+    await vi.waitFor(() => {
+      const apiCall = mockFetch.mock.calls.find((c) => String(c[0]).startsWith("https://admin-backend.test"));
+      expect(apiCall).toBeDefined();
+      expect(String(apiCall![0])).toContain("/api/");
+    }, { timeout: 8000 });
+    await vi.waitFor(() => {
+      flushSync(() => {});
+      expect(host.textContent).toContain("Done — 2 products.");
+    }, { timeout: 8000 });
+  });
+
+  it("without an app config the tool says the backend is missing — verbatim, not a crash", async () => {
+    configureProvider();
+    app.update((a) => ({ ...a, config: null }));
+    let providerTurns = 0;
+    mockFetch.mockImplementation(() => {
+      providerTurns++;
+      return Promise.resolve(
+        providerTurns === 1
+          ? sseReply(...toolCallChunks)
+          : sseReply(JSON.stringify({ choices: [{ delta: { content: "I cannot reach the admin." } }] })),
+      );
+    });
+
+    const host = configuredHost();
+    typeAndSubmit(host, "list the products");
+
+    await vi.waitFor(() => {
+      flushSync(() => {});
+      const card = host.textContent;
+      expect(card).toContain("no backend is configured");
+    }, { timeout: 8000 });
+  });
+
+  it("the System-prompt field saves, persists and hydrates back (owner order 2026-11-09)", async () => {
+    const host = openPanel(mountPanel());
+    setField(host.querySelector("#ai-base")!, "http://provider.test/v1");
+    setField(host.querySelector("#ai-model")!, "gpt-4o-mini");
+    setField(host.querySelector("#ai-prompt")!, "  You are Padma, the order desk.  ");
+    click(byText(host, "Save AI settings"));
+
+    await vi.waitFor(() => expect(localStorage.getItem("dad.ai.systemPrompt")).toBe("You are Padma, the order desk."));
+    expect(get(ai).systemPrompt).toBe("You are Padma, the order desk.");
+    // the form closes when saveSettings fully lands — wait for it so the gear
+    // click below TOGGLES OPEN instead of racing the still-open form
+    await vi.waitFor(() => expect(host.querySelector("#ai-base")).toBeNull());
+
+    // re-open the gear: the textarea hydrates from the store
+    click(byTitle(host, "Provider settings"));
+    expect(host.querySelector<HTMLTextAreaElement>("#ai-prompt")!.value).toBe("You are Padma, the order desk.");
+
+    // clearing it falls back to the default persona
+    setField(host.querySelector("#ai-prompt")!, "");
+    click(byText(host, "Save AI settings"));
+    await vi.waitFor(() => expect(localStorage.getItem("dad.ai.systemPrompt")).toBe(""));
+    expect(get(ai).systemPrompt).toBe("");
   });
 });

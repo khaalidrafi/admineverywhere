@@ -27,7 +27,7 @@ afterEach(() => {
   if (instance) unmount(instance);
   instance = null;
   while (hosts.length) hosts.pop()!.remove();
-  ai.set({ baseUrl: "", apiKey: "", model: "" });
+  ai.set({ baseUrl: "", apiKey: "", model: "", systemPrompt: "" });
   mockFetch.mockReset();
 });
 
@@ -53,7 +53,7 @@ function sseReply(...texts: string[]) {
 
 async function openAndSend(text: string, liveSchema: AdminSchema | null = schema) {
   app.update((a) => ({ ...a, schema: liveSchema }));
-  ai.set({ baseUrl: "http://provider.test/v1", apiKey: "sk-test", model: "test-model" });
+  ai.set({ baseUrl: "http://provider.test/v1", apiKey: "sk-test", model: "test-model", systemPrompt: "" });
   const host = document.createElement("div");
   document.body.append(host);
   hosts.push(host);
@@ -95,7 +95,7 @@ describe("mounted ChatPanel prompt path", () => {
     // and it is the REAL normalized schema, not a fixture-shaped guess
     expect(messages[0].content).toContain("- Product [/api/products/]:");
     expect(messages[0].content).toContain("category(fk->categories)");
-    expect(messages[0].content).toContain("You are the assistant inside the Freshorama Admin admin dashboard.");
+    expect(messages[0].content).toContain("You are the assistant inside the Freshorama Admin admin.");
     expect(messages[1]).toEqual({ role: "user", content: "which models exist?" });
 
     await vi.waitFor(() => {
@@ -114,7 +114,7 @@ describe("mounted ChatPanel prompt path", () => {
   });
 
   it("stays a friendly setup panel and sends nothing while unconfigured", async () => {
-    ai.set({ baseUrl: "", apiKey: "", model: "" });
+    ai.set({ baseUrl: "", apiKey: "", model: "", systemPrompt: "" });
     const host = document.createElement("div");
     document.body.append(host);
     hosts.push(host);
