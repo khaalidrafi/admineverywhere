@@ -174,16 +174,20 @@ describe("systemPrompt", () => {
     expect(p).toContain("Never invent fields");
   });
 
-  it("introduces the app as an ADMIN, never a dashboard (owner wording 2026-11-09)", () => {
+  it("introduces the agent by its team identity, in an ADMIN, never a dashboard (owner wording 2026-11-09 + role order)", () => {
     const p = systemPrompt("Freshorama Admin", "Models: Product (3 fields)");
-    expect(p).toContain("You are the assistant inside the Freshorama Admin admin.");
+    expect(p).toContain("Freshorama Admin");
+    expect(p).toContain("Models: Product (3 fields)");
+    expect(p).toContain("Never invent fields");
+    // the agent has a team identity like every human roster member
+    expect(p).toContain("You are Ovi, the Admin Operations Assistant inside the Freshorama Admin admin.");
     expect(p).not.toContain("dashboard");
   });
 
   it("a custom system prompt replaces the persona but keeps grounding (owner order 2026-11-09)", () => {
     const p = systemPrompt("Freshorama Admin", "Models: Product (3 fields)", "You are Padma, the friendly order desk.");
     expect(p).toContain("You are Padma, the friendly order desk.");
-    expect(p).not.toContain("You are the assistant inside");
+    expect(p).not.toContain("You are Ovi, the Admin Operations Assistant");
     // grounding survives the persona swap
     expect(p).toContain("Models: Product (3 fields)");
     expect(p).toContain("Never invent fields");
@@ -191,7 +195,7 @@ describe("systemPrompt", () => {
 
   it("a blank/whitespace custom prompt falls back to the default persona", () => {
     const p = systemPrompt("Freshorama Admin", "Models: Product", "   ");
-    expect(p).toContain("You are the assistant inside the Freshorama Admin admin.");
+    expect(p).toContain("You are Ovi, the Admin Operations Assistant inside the Freshorama Admin admin.");
   });
 });
 
