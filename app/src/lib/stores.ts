@@ -289,23 +289,35 @@ export interface AiState {
   baseUrl: string;
   apiKey: string;
   model: string;
+  /** Operator-written persona (owner order 2026-11-09: "where is the option
+   *  to set system prompt and other AI settings?"). Empty = the built-in
+   *  default persona; the schema model-list and safety addenda always stay. */
+  systemPrompt: string;
 }
 
-export const ai = writable<AiState>({ baseUrl: "", apiKey: "", model: "" });
+export const ai = writable<AiState>({ baseUrl: "", apiKey: "", model: "", systemPrompt: "" });
 
 export async function loadAiSettings(): Promise<void> {
   ai.set({
     baseUrl: localStorage.getItem("dad.ai.baseUrl") ?? "",
     model: localStorage.getItem("dad.ai.model") ?? "",
     apiKey: (await loadSecret("ai.apiKey")) ?? "",
+    systemPrompt: localStorage.getItem("dad.ai.systemPrompt") ?? "",
   });
 }
 
-export async function saveAiSettings(baseUrl: string, apiKey: string, model: string): Promise<void> {
+export async function saveAiSettings(
+  baseUrl: string,
+  apiKey: string,
+  model: string,
+  systemPrompt = "",
+): Promise<void> {
   const key = apiKey.trim();
-  ai.set({ baseUrl: baseUrl.trim(), apiKey: key, model: model.trim() });
+  const prompt = systemPrompt.trim();
+  ai.set({ baseUrl: baseUrl.trim(), apiKey: key, model: model.trim(), systemPrompt: prompt });
   localStorage.setItem("dad.ai.baseUrl", baseUrl.trim());
   localStorage.setItem("dad.ai.model", model.trim());
+  localStorage.setItem("dad.ai.systemPrompt", prompt);
   // An empty key field means "forget it", not "keep the stored one": the
   // settings form hydrates from this store, so skipping the write would
   // resurrect the old key on next boot and it could never be cleared.
