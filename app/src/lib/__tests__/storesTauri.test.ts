@@ -85,6 +85,7 @@ describe("saveAiSettings — the key crosses the keyring boundary", () => {
       baseUrl: "https://api.groq.com/openai/v1",
       apiKey: "sk-sentinel-9x",
       model: "llama-3.1",
+      systemPrompt: "",
     });
     expect(localStorage.getItem("dad.ai.baseUrl")).toBe("https://api.groq.com/openai/v1");
     expect(localStorage.getItem("dad.ai.model")).toBe("llama-3.1");
@@ -142,6 +143,7 @@ describe("saveAiSettings — the key crosses the keyring boundary", () => {
       baseUrl: "http://localhost:11435/v1",
       apiKey: "sk-web",
       model: "qwen",
+      systemPrompt: "",
     });
     // save + load each hit the fallback: the accepted-P2 warning is one-time
     expect(warn).toHaveBeenCalledTimes(1);
@@ -164,6 +166,7 @@ describe("saveAiSettings — the key crosses the keyring boundary", () => {
       baseUrl: "https://groq.test/v1",
       apiKey: "sk-from-keychain",
       model: "mixtral",
+      systemPrompt: "",
     });
     expect(invoke).toHaveBeenCalledWith("load_secret", { service: "admineverywhere", key: "ai.apiKey" });
 
