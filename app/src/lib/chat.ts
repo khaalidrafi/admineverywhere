@@ -4,6 +4,7 @@
  *  No provider SDK: raw fetch + SSE. Keeps the bundle tiny and universal.
  */
 import type { AdminSchema, AppConfig } from "./types";
+import { AGENT_IDENTITY } from "./agent";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -67,7 +68,7 @@ export function systemPrompt(appName: string, modelLines: string, custom = ""): 
   const persona = custom.trim()
     ? custom.trim()
     : [
-        `You are the assistant inside the ${appName} admin.`,
+        `You are ${AGENT_IDENTITY.name}, the ${AGENT_IDENTITY.role} inside the ${appName} admin.`,
         "You help the operator understand and manage their data.",
       ].join("\n");
   return [

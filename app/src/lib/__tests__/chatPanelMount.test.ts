@@ -181,8 +181,11 @@ describe("mounted ChatPanel — provider settings form (web mode)", () => {
     });
     expect(host.querySelector("form")).toBeNull();
 
-    // the launcher returns when the panel is closed
-    expect(byTitle(host, "AI assistant (Ctrl+K)") ?? host.querySelector("button")).toBeTruthy();
+    // the launcher returns when the panel is closed (title carries the
+    // agent's team identity — owner order 2026-11-09: name + role)
+    expect(
+      byTitle(host, "Ovi — Admin Operations Assistant (Ctrl+K)") ?? host.querySelector("button"),
+    ).toBeTruthy();
   });
 
   it("the Close button dismisses the panel and keeps the saved provider", () => {
