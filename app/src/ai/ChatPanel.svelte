@@ -19,22 +19,16 @@
   } from "../lib/chat";
   import {
     agentSystemAddendum,
+    AGENT_IDENTITY,
     buildAgentTools,
     executeTool,
     humanSummary,
     isDestructive,
-    navigateTool,
     toolResultMessage,
-    tourGuideAddendum,
     type ToolCtx,
   } from "../lib/agent";
 
   import { isWebStorage } from "../lib/secrets";
-  import {
-    tourActive,
-    onboardingAgent,
-  } from "../lib/tourBus";
-  import { stepAgentTurn } from "../lib/onboarding";
   import { AI_PRESETS } from "../lib/aiProviders";
   import AiDisclaimer from "./AiDisclaimer.svelte";
   import Icon from "../components/Icon.svelte";
@@ -74,9 +68,6 @@
   const gates = new Map<string, (ok: boolean) => void>();
 
   const configured = $derived(Boolean($ai.baseUrl && $ai.model));
-  /** Guided-tour mode (owner order 2026-11-08): the agent becomes the tour
-   *  guide — it may open screens (navigate tool) and narrates each stop. */
-  const tourMode = $derived($tourActive);
 
   $effect(() => {
     baseUrl = $ai.baseUrl;
@@ -94,13 +85,6 @@
       }
     };
     window.addEventListener("keydown", onKey);
-    // agentic onboarding: the overlay asks, this panel narrates (owner order
-    // 2026-11-08: the agent drives the app and the user can chat mid-tour)
-    onboardingAgent.bindNarrationSender((step) => {
-      if (busy) return;
-      open = true;
-      void sendText(stepAgentTurn(step, get(app).brand.appName));
-    });
     return () => window.removeEventListener("keydown", onKey);
   });
 
@@ -162,9 +146,7 @@
             get(app).brand.appName,
             get(app).schema ? buildSchemaPrompt(get(app).schema!) : "no schema loaded",
             get(ai).systemPrompt,
-          ) +
-          agentSystemAddendum() +
-          (tourMode ? tourGuideAddendum() : ""),
+          ) + agentSystemAddendum(),
       },
       ...history,
       { role: "user", content: text },
@@ -257,14 +239,7 @@
     // effectiveConfig() = the same origin the rest of the app talks to (baked
     // brand host, or the login page's sanitized override).
     const ctx: ToolCtx = { cfg: effectiveConfig(), token: a.token || null, schema };
-    let tools = buildAgentTools(schema);
-    if (tourMode) {
-      // the tour guide can DRIVE the app: open the screens it narrates
-      tools = [...tools, navigateTool()];
-      ctx.navigateTo = (path: string) => {
-        window.location.hash = `#${path}`;
-      };
-    }
+    const tools = buildAgentTools(schema);
     // history BEFORE the new user bubble lands (runAgentTurn re-appends it)
     const history = historyWire();
 
@@ -330,7 +305,7 @@
   <button
     class="fixed bottom-[calc(1.5rem_+_env(safe-area-inset-bottom))] right-6 z-40 flex size-13 items-center justify-center rounded-full
       bg-primary text-white shadow-xl shadow-primary/30 transition-transform hover:scale-105"
-    title="AI assistant (Ctrl+K)"
+    title="{AGENT_IDENTITY.name} — {AGENT_IDENTITY.role} (Ctrl+K)"
     onclick={() => (open = true)}
   >
     <Icon name="chat" size={22} />
@@ -346,9 +321,14 @@
         <span class="flex size-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
           <Icon name="chat" size={15} />
         </span>
-        <span class="text-sm font-semibold">AI Assistant</span>
+        <!-- the agent carries a team identity, same shape as the human roster
+             (owner order 2026-11-09: name + role, like every team member) -->
+        <span class="text-sm font-semibold">{AGENT_IDENTITY.name}</span>
+        <span class="hidden rounded-full bg-text/10 px-2 py-0.5 text-[10px] font-medium text-text/60 sm:inline">
+          {AGENT_IDENTITY.role}
+        </span>
         {#if configured}
-          <span class="rounded-full bg-[color-mix(in_srgb,var(--brand-accent)_15%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--brand-accent)]">
+          <span class="hidden rounded-full bg-[color-mix(in_srgb,var(--brand-accent)_15%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--brand-accent)] md:inline">
             {$ai.model}
           </span>
         {/if}
