@@ -425,6 +425,13 @@ export function toolResultMessage(call: ToolCall, res: ToolResult): any {
 
 /* ---- system-prompt addendum ---- */
 
+/** The in-app agent's team identity (owner order 2026-11-09: "The agent
+ *  inside admin apps should have a role, too, just like your team members.
+ *  Assign it a suitable role."). Same shape as the human roster entries:
+ *  a name plus the role it holds. Surfaced in the chat header, the tour
+ *  speech bubble and the default persona. */
+export const AGENT_IDENTITY = { name: "Ovi", role: "Admin Operations Assistant" } as const;
+
 /** Appended to the schema-aware base prompt whenever tools are active. */
 export function agentSystemAddendum(): string {
   return [

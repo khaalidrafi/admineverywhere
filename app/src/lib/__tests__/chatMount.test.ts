@@ -95,7 +95,7 @@ describe("mounted ChatPanel prompt path", () => {
     // and it is the REAL normalized schema, not a fixture-shaped guess
     expect(messages[0].content).toContain("- Product [/api/products/]:");
     expect(messages[0].content).toContain("category(fk->categories)");
-    expect(messages[0].content).toContain("You are the assistant inside the Freshorama Admin admin.");
+    expect(messages[0].content).toContain("You are Ovi, the Admin Operations Assistant inside the Freshorama Admin admin.");
     expect(messages[1]).toEqual({ role: "user", content: "which models exist?" });
 
     await vi.waitFor(() => {

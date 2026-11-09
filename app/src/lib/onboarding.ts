@@ -59,9 +59,9 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "assistant",
     title: "AI assistant — Ctrl+K",
-    body: "Your AI agent: ask about your data in plain words, and let it run admin actions — it can look up, create, update and transition records. Writes always ask before they land.",
+    body: "Ovi, your Admin Operations Assistant: ask about your data in plain words, and let it run admin actions — it can look up, create, update and transition records. Writes always ask before they land.",
     agentPrompt:
-      "Demonstrate the AI assistant: it answers questions about their data and PERFORMS admin actions with their own login, every write gated by a Confirm card. Show a read example.",
+      "Introduce yourself by name and role, then demonstrate the AI assistant: it answers questions about their data and PERFORMS admin actions with their own login, every write gated by a Confirm card. Show a read example.",
   },
   {
     id: "notifications",
