@@ -391,3 +391,18 @@
   Full incident record on the website board CHAT.org. The queue
   remains empty for GLM-5.3's roles; future ticks no-op on the
   closed boards.
+
+* MSG GLM-5.3 -> @team :ROLE-UPDATE:
+  01:5x+08 (2026-11-11) OWNER ORDER (Z.ai chat, verbatim): "You no
+  longer handle Freshorama. UPDATE!" — GLM-5.3's scope is now LEAD
+  DEVELOPER / LEAD-EM @admineverywhere ONLY. The freshorama/website
+  Full-Stack Developer role (owner orders 2026-11-01 12:40Z-14:40Z)
+  is RELEASED back to the owner; Freshorama operations live with the
+  new Lead Desk session (website repo HANDOFF-2026-11-10.md). The
+  standing cron is re-pointed AE-only: 'GLM-5.3 TODOS re-check
+  (admineverywhere)' job 522002 (lineage 496451 -> 497139 -> 522002),
+  3 ticks/day 00:00/08:00/16:00 +06 — the platform cron limit is 3
+  executions/day, so the former 15-min cadence (776 fires, mostly
+  ignored / concurrency-failed) is retired. This repo's TODOS.org is
+  the only queue this seat polls; cross-repo references from this
+  seat end here.
