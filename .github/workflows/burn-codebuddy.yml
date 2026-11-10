@@ -83,7 +83,7 @@ jobs:
         run: |
           git config user.name "agent-team-ci"
           git config user.email "agent-team-ci@users.noreply.github.com"
-          git checkout -B "burn-results-${{ github.run_id }}"
+          git checkout -B "ai/burn-results-${{ github.run_id }}--c_codebuddy"
           git add -A burn-out
           if git diff --cached --quiet; then
             echo "no burn-out to hand off"
@@ -92,7 +92,7 @@ jobs:
           git commit -m "burn-results: run ${{ github.run_id }}
 
           Co-authored-by: agent-team-ci <agent-team-ci@users.noreply.github.com>"
-          git push --force origin "burn-results-${{ github.run_id }}"
+          git push --force origin "ai/burn-results-${{ github.run_id }}--c_codebuddy"
 
       - name: Upload burn artifacts
         if: always()
