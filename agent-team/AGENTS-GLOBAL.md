@@ -74,7 +74,14 @@
 
 -   Always commit -- it documents AI-generated code.  But, never
     commit directly to `main`. `ai/main` is your main branch. Use a
-    separate git branch `ai/<topic>` for any long multi-step work.
+    separate git branch for any long multi-step work, named
+    `ai/<feature>--<member-contraction>` (Owner 2026-11-10 #freshorama):
+    the feature/work the branch carries, then the member's ID contracted
+    -- initials of the model-name tokens (skip version numbers) + `_` +
+    the provider. Examples: qwen-3.8-flash@qoder doing animations -->
+    `ai/animation--qf_qoder`; glm-5.3-flash@z.ai --> `ai/<feature>--gf_z.ai`.
+    CI/machine handoff lanes append the executing agent's contraction
+    (Copilot on GitHub runners --> `--c_github`). No bare-named branches.
 
 -   NEVER procrastinate commits by piling up a stack of uncommitted work:
     commit as soon as each small step is done and verified, so every commit
