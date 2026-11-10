@@ -13,7 +13,7 @@
 #     must save a complete unified diff to burn-out/task-<n>.diff (+ notes to
 #     task-<n>.md) — the LEAD reviews, integrates and pushes
 #   - quota-proof: burn-out/ is committed and pushed to the branch
-#     burn-results-fix-<run_id> (GitHub artifact storage hit its quota wall
+#     ai/burn-results-fix-<label>-<run_id>--c_codebuddy (GitHub artifact storage hit its quota wall
 #     2026-10-31 and eats uploads for hours; branches survive)
 #   - artifacts remain best-effort
 #
@@ -105,7 +105,7 @@ jobs:
       - name: Hand off results to a branch (quota-proof)
         if: always()
         run: |
-          git checkout -B "burn-results-fix-${{ github.event.inputs.label }}-${{ github.run_id }}"
+          git checkout -B "ai/burn-results-fix-${{ github.event.inputs.label }}-${{ github.run_id }}--c_codebuddy"
           git add -A burn-out
           if git diff --cached --quiet; then
             echo "no burn-out to hand off"
@@ -114,7 +114,7 @@ jobs:
           git commit -m "burn-results: fix lane run ${{ github.run_id }} (label: ${{ github.event.inputs.label }})
 
           Co-authored-by: agent-team-ci <agent-team-ci@users.noreply.github.com>"
-          git push --force origin "burn-results-fix-${{ github.event.inputs.label }}-${{ github.run_id }}"
+          git push --force origin "ai/burn-results-fix-${{ github.event.inputs.label }}-${{ github.run_id }}--c_codebuddy"
 
       - name: Upload burn artifacts (best-effort)
         if: always()
