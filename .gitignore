@@ -36,3 +36,6 @@ admineverywhere_brand/
 .review-upload/
 # pytest/vitest coverage data (demo-backend/.coverage reached ai/main via add -A)
 .coverage
+
+# setuptools build residue (generated, never source)
+plugin/build/
