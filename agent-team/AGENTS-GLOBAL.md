@@ -39,6 +39,15 @@
 -   We consider code review to be VERY important for AI-generated code. Do WHATEVER is needed to facilitate that. Ask/suggest user to install tools that will help him review your code. And, also ask the user to review some of your code right away if it's crucial during development to review that portion of code. Also, document what to review in AI-REVIEW.org with a TODO tree.
 
 -   Don't create any technical debt for future human development, or keep it the lowest. Add clear comments that help understand and debug code. Add descriptive commit messages that clearly explain your code and algorithm. Add to commit messages what you couldn't write in code comments since they can't be long. Your code MUST be easy to handle for future human developers. It should be possible to review, debug and build upon without hassle. Also, remind me to review important works which might be harder to review/debug in future for technical debt.
+
+-   COMMIT MESSAGE FORMAT (Owner 2026-11-08 #hq: "Keep them simple, concise and straightforward! Description goes to the line after commit message! Having ONE BIG LINE trying to say it ALL is CRAP"): the SUBJECT line is short — aim ~50, NEVER more than 72 characters — and only NAMES what changed. The full description goes in the BODY: one blank line after the subject, then plain paragraphs (what + why + evidence). NEVER cram the whole description into the one subject line. Example:
+
+        guard: fix trailer parser for multi-line bodies
+
+        The field split used `read`, which stops at the first newline,
+        so trailers after the first body line were invisible. Split the
+        four leading fields with parameter expansion instead.
+
 -   When developing Emacs packages, read the Emacs, Elisp and (if relevant) Org manuals, since LLMs are generally less skilled in Emacs.
 
 -   I wanna learn software development for the agentic era. I wish to learn skills that will help me make money, preferrably through business/entrepreneurship, but also through jobs. You will help me learn as I develop with you. Explain important concepts briefly at the time of development. Remind me to learn, read or review important concepts and tell me how better to prompt you or suggest corrections to my prompts at the time of development. Suggest what to do for learning while developing.
@@ -97,6 +106,8 @@
 ## Responses
 
 -  Use simple language in your response instead of complicated jargon. Keep your responses short, concise and straightforward. DON'T TALK TOO MUCH!
+
+-   ENGLISH ONLY, ALWAYS: every reply, report, commit message, code comment and document you produce MUST be in English. NEVER write in Chinese or any other language. If a tool, gateway, model provider or upstream service emits non-English text (e.g. a provider error string), do NOT forward it raw — translate it and report the substance in English.
 
 
 ## Client detection
