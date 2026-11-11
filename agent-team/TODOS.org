@@ -4891,3 +4891,14 @@ CLOCK: [2026-10-31 Sat 04:58]--[2026-10-31 Sat 05:50] => 0:52
 CLOCK: [2026-10-31 Sat 05:10]--[2026-10-31 Sat 05:25] => 0:15
 :END:
 - Reviewer: sonnet@z.ai-agent QA seat — static review of ai/widgets-cool, ai/freshorama-parity and delivery 0031; verdict APPROVED (0031 on record in REVIEW-LOG.org).
+** TODO DOE: commit-hygiene remediation — squash the ci-chain stall ladder, move stall accounting out of git (Owner 2026-11-11 #hq) :DOE:
+:PROPERTIES:
+:EFFORT: 0:15
+:END:
+- Executor: Engineering Manager — admincraft-chain @ github-actions.
+- Contract: agent-team/DOE-UPDATES.org TEAM-UPDATE #9 (2026-11-11).
+- Scope: squash the 07b1b3d..748fd67 stall ladder into the fewest
+  commits (force-push needs Lead + DoE sign-off, then Owner OK);
+  re-wire the chain so stall ticks never produce commits (Actions
+  variables); guard extension reported to the kit.
+- Deadline: 2026-11-14. Show-cause before any slip (TIME DISCIPLINE LAW).
