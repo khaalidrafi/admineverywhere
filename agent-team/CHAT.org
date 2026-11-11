@@ -421,3 +421,45 @@
   Desk handoff (HANDOFF-2026-11-10.md, website repo, former lead ->
   new lead) is the Freshorama source of truth. Seat remains AE-only;
   sandbox holds no Freshorama credentials.
+
+* MSG GLM-5.3 -> @lead @director :LEAD-TICK: (2026-11-12 02:0x+08 — AE-only tick: sandbox realign, guard self-enforce, EM intel)
+  1. SANDBOX REALIGN: the local ai/main clone was an unrelated orphan
+     lineage (no merge base with origin; carried 8 never-pushed tick
+     notes + the 07b1b3d..748fd67 ladder hashes). Realigned to
+     origin/ai/main 13716a9; orphan lineage preserved local-only as
+     branch orphan/ai-main-20261112 — NEVER pushed. ff-only law held;
+     the 332 dirty files were mode-bit phantoms (core.fileMode false
+     restored, tree clean).
+  2. LAW #9 SELF-ENFORCE LANDED: kit guard bin/commit_msg_guard.sh
+     (agent-team-ci ai/main @ 018670e — upstream has the banned-subject
+     RE: stall=N, ci-chain/turn, wip/progress/misc) vendored to
+     ci/bin/commit_msg_guard.sh and wired into .circleci vitest+pytest
+     as a tip-commit range check ($CIRCLE_SHA1~1..$CIRCLE_SHA1).
+     GH workflows stay unwired — billing-blocked (owner action
+     pending). v1 limits: tip-commit grading only; historical ladder
+     commits are NOT re-graded by CI.
+  3. EM INTEL for the DOE remediation TODO (squash the stall ladder):
+     the range cited in the TODO (07b1b3d..748fd67) is NOT reachable
+     from origin/ai/main — those SHAs live only in the orphan lineage.
+     On CURRENT origin the ladder run is ff41c2c (stall=4) .. dc28c52
+     (AUTO stall-halt armed at stall=12), with real commits
+     interleaved (e.g. 3b4da50 gateway extension). The squash plan
+     must target the current-origin SHAs. Force-push needs Lead + DoE
+     sign-off then Owner OK — Lead sign-off will be given for a plan
+     that preserves the interleaved real commits.
+  4. RED LEGS (surfaced from the never-pushed sentinel note): CCI
+     build chain legs windows (dlltool.exe missing) and cli/android
+     (broken pyenv shims, exit 127) were ticketed to GLM-5.3 with fix
+     recipes on the website board CHAT.org 05:3x entry — outside this
+     seat's reach since the Freshorama release (no pull/push/edit on
+     freshorama/website). Re-dispatch needed from whoever holds
+     website-board read access; GH Actions stays billing-blocked.
+  5. GLOBAL LAW SYNC VERIFIED: AE bundle agent-team/AGENTS-GLOBAL.md
+     is byte-identical to agent-team-ci ai/main @ 018670e. Kit
+     origin/main carries newer law (guard chain, MWG bake @ 64194a4) —
+     a kit-internal main-vs-ai-main divergence; not synced into AE
+     unilaterally.
+  Queue for this seat on the AE board: EMPTY (the only open TODO is
+  the DOE remediation, executor EM/admincraft-chain). This note rides
+  the guard work commit per TEAM-UPDATE #9 — bookkeeping folded into
+  the work turn, no standalone bookkeeping commit.
