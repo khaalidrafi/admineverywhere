@@ -27,6 +27,20 @@ jobs:
               "https://x-access-token:${AE_PAT}@github.com/khaalidrafi/admineverywhere.git" .
             git log --oneline -1
       - run:
+          name: checkout ci/ kit submodule (pinned @ law-guard rev 018670e)
+          command: |
+            git config --global url."https://x-access-token:${AE_PAT}@github.com/".insteadOf "https://github.com/"
+            git submodule update --init --depth 1 ci
+      - run:
+          name: commit-msg guard — TEAM-UPDATE #9 substance law (tip commit)
+          command: |
+            git fetch -q --depth=2 origin "$CIRCLE_SHA1"
+            if git rev-parse -q --verify "$CIRCLE_SHA1~1" >/dev/null 2>&1; then
+              bash ci/bin/commit_msg_guard.sh "$CIRCLE_SHA1~1..$CIRCLE_SHA1"
+            else
+              echo "commit-msg guard: root commit (no parent) — nothing to range-grade"
+            fi
+      - run:
           name: CSP hygiene — shipped tauri.conf.json stays dev-origin-free
           # NOTE: no heredocs anywhere in this file — CircleCI config v2.1
           # treats '<<' as a parameter tag (proven: pipeline errored on
@@ -50,6 +64,20 @@ jobs:
             git clone --depth 1 --branch "$CIRCLE_BRANCH" \
               "https://x-access-token:${AE_PAT}@github.com/khaalidrafi/admineverywhere.git" .
             git log --oneline -1
+      - run:
+          name: checkout ci/ kit submodule (pinned @ law-guard rev 018670e)
+          command: |
+            git config --global url."https://x-access-token:${AE_PAT}@github.com/".insteadOf "https://github.com/"
+            git submodule update --init --depth 1 ci
+      - run:
+          name: commit-msg guard — TEAM-UPDATE #9 substance law (tip commit)
+          command: |
+            git fetch -q --depth=2 origin "$CIRCLE_SHA1"
+            if git rev-parse -q --verify "$CIRCLE_SHA1~1" >/dev/null 2>&1; then
+              bash ci/bin/commit_msg_guard.sh "$CIRCLE_SHA1~1..$CIRCLE_SHA1"
+            else
+              echo "commit-msg guard: root commit (no parent) — nothing to range-grade"
+            fi
       - run:
           name: pytest — plugin suite with demo-backend fixture
           command: |
