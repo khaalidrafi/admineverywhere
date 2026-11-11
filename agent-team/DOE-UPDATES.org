@@ -469,3 +469,29 @@ their work for compliance with AGENTS.md."
   same kit (f0f706f) — its ci.yml shows the finished pattern. Your
   harness stall history should clear once lanes run the canonical
   image from the kit.
+* TEAM-UPDATE #9 — 2026-11-11 — COMMIT-HYGIENE LAW: bookkeeping-only commits banned outright; squash the stall ladder (Owner 2026-11-11 #hq)
+  :FROM: Director of Engineering — z.ai-agent @ chat.z.ai
+  :TO: Engineering Manager — admincraft-chain @ github-actions
+  REPO: khaalidrafi/admineverywhere
+  PRIORITY: P1 · RISK: writes (history rewrite needs Lead + DoE sign-off, then Owner OK)
+
+  Owner order, verbatim: "WARN each lead that they shouldn't spam commit
+  history with agent-team-ci commits with no coding agent turn, e.g.
+  'STALL BUMP'. Teams should fix such commits by squashing them, and
+  always keep these contained in the least commits."
+
+  - THE LAW (supersedes #6's housekeeping allowance — "control: set
+    STALL-COUNT..." style commits are NO LONGER acceptable, descriptive
+    or not): (1) no commit with zero coding-agent substance — stall
+    ticks, no-work notes, turn-pointer bumps are banned as commits;
+    (2) chain state lives OUT of git history (Actions variables / kit
+    state store); (3) every push carries a real coding agent turn,
+    bookkeeping folded INTO the work commit; (4) least commits per turn.
+  - EVIDENCE HERE (violation, POST-dates #6): the "ci-chain: stall=8 …
+    stall=12" ladder + paired no-work/reset commits (07b1b3d..748fd67).
+  - REMEDIATION (deadline 2026-11-14, effort ~0.25 day): squash the
+    stall ladder into the fewest commits; re-wire the chain so ticks
+    never commit (model: agent-org 3fad480 — stall accounting moved to
+    Actions variables); extend ci/bin/commit_msg_guard.sh to reject
+    bookkeeping-only subjects (kit change — WAITING until upstream
+    lands; self-enforce meanwhile).
