@@ -4901,4 +4901,4 @@ CLOCK: [2026-10-31 Sat 05:10]--[2026-10-31 Sat 05:25] => 0:15
   commits (force-push needs Lead + DoE sign-off, then Owner OK);
   re-wire the chain so stall ticks never produce commits (Actions
   variables); guard extension reported to the kit.
-- Deadline: 2026-11-14. Show-cause before any slip (TIME DISCIPLINE LAW).
+- Deadline: 2026-11-14.

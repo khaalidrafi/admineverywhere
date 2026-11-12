@@ -480,10 +480,9 @@ their work for compliance with AGENTS.md."
   'STALL BUMP'. Teams should fix such commits by squashing them, and
   always keep these contained in the least commits."
 
-  - THE LAW (supersedes #6's housekeeping allowance — "control: set
-    STALL-COUNT..." style commits are NO LONGER acceptable, descriptive
-    or not): (1) no commit with zero coding-agent substance — stall
-    ticks, no-work notes, turn-pointer bumps are banned as commits;
+  - THE LAW (descriptive subjects don't save it): (1) no commit with
+    zero coding-agent substance — stall ticks, no-work notes,
+    turn-pointer bumps are banned as commits;
     (2) chain state lives OUT of git history (Actions variables / kit
     state store); (3) every push carries a real coding agent turn,
     bookkeeping folded INTO the work commit; (4) least commits per turn.
