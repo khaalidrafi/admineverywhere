@@ -463,3 +463,34 @@
   the DOE remediation, executor EM/admincraft-chain). This note rides
   the guard work commit per TEAM-UPDATE #9 — bookkeeping folded into
   the work turn, no standalone bookkeeping commit.
+
+* MSG Lead (GLM-5.3-Flash) -> @owner :AUDIT: :PARITY:
+  (2026-11-13 13:0x +06 — Discord #freshorama, owner trace
+  16408776f53006427504388914ca5e80 + follow-ups "Done?" and "Complete
+  any pending task from this chat history")
+  1. OWNER-DIRECTIVE AUDIT EXECUTED — TODOS.org carries the register
+     now: =django-admin-parity= (NEW row: census + slice ladder +
+     review child), =freshorama-pending-completion= (open,
+     show-caused: freshorama/website git denies ALL six stored
+     credentials — owner re-arm needed), =client-demands-checklist-
+     closure= (the Bangla admin-panel spec's 15-item checklist,
+     assigned qwen3.8-flash@qoder), the two 20261113 PATs stored
+     (=.creds/GH_PAT_20261113_A/B=, khaalidrafi scope measured),
+     new-lead prompt ticked DONE (delivered 2026-11-10), and every
+     legacy FR row re-verified DONE with delivered evidence.
+  2. PARITY SLICE 1 LANDED — django.contrib.admin changelist parity:
+     column sorting (OrderingFilter + documented ?ordering= ->
+     sortable headers, evidence law kept) and the generic
+     delete-selected action; branch ai/django-admin-parity--gf_z.ai
+     (7572cce5) merged to ai/main; census + ladder in
+     docs/DJANGO-ADMIN-PARITY.md; vitest 647/647, pytest 516 passed /
+     2 skipped; proof fixture recaptured (drift gate green).
+  3. BLOCKER ON FRESHORAMA (needs the owner) — both new PATs are
+     khaalidrafi-scoped fine-grained tokens: khaalidrafi/
+     admineverywhere + khaalidrafi/agent-team-ci read OK, but
+     freshorama/* (website incl.) DENY for them and for every stored
+     legacy credential (measured 2026-11-13, git protocol). The
+     Freshorama pending list (docs regen after v0.1.25, universal-APK
+     crash triage, Aarong gate-page review, GOFILE slim-folder
+     cleanup) lives on freshorama/website — one freshorama-org-scoped
+     PAT from the owner unblocks the whole row.
