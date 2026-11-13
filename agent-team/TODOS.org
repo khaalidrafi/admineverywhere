@@ -3981,6 +3981,13 @@ Register — owner directives vs the board, measured 2026-11-13:
   generic bulk-delete action, vitest green, docs/DJANGO-ADMIN-PARITY.md
   census landed. Owner-visible answer to "WHERE IS IT?": now on the
   board, assigned, and delivering.
+- Note taken on [2026-11-14 Sat +06] :: Slice-1 PUSHED and re-verified
+  on the App-armed session: ai/main 56023187..2503bebc (slice commit
+  7572cce5, board audit 548bd8a4, merge 2503bebc) and review lane
+  ai/django-admin-parity--gf_z.ai now on origin; vitest 647/647 green
+  (56 files) and the Django ordering leg 7/7 green re-run this
+  session. Next slice per ladder: list-filter rail (deepseek-v4.1-
+  flash@codebuddy, due 11-17).
 :END:
 - Census (measured 2026-11-13, app/src generic surface): PRESENT =
   schema CRUD, search, pagination, bulk selection + actions + audit
@@ -4032,7 +4039,32 @@ Register — owner directives vs the board, measured 2026-11-13:
   triage follow-up, Aarong gate-page review, GOFILE slim-folder
   cleanup) all live on the website repo/board. ETA: 1 tick after the
   owner re-arms a freshorama-org PAT. Nothing else blocks.
-:END:
+- Note taken on [2026-11-14 Sat +06] :: UNBLOCKED + 3 of 4 CLOSED.
+  Owner switched auth to GitHub Apps ("Khalid's Slave" +
+  "Freshorama Agent"): keys stored in .creds/ (the Freshorama Agent
+  PEM arrived with a corrupted private-exponent side — DER length
+  intact — rebuilt d/dp/dq/qi from the intact n/p/q, openssl RSA
+  check ok); five installations verified, covering freshorama/website,
+  khaalidrafi/admineverywhere, agent-team-ci and vault with
+  contents:write + issues:write. Progress on the outstanding list:
+  (1) docs regen after v0.1.25 = QA-R4.8 RESOLVED on website
+  (6a25d7d, merge 887f9d0; semantic :CUSTOM_ID: anchors, exporter
+  honors them, bundle regenerated from org sources, 774/774
+  admin-client vitest green); (2) GOFILE slim-folder cleanup CLOSED
+  (website STATE (30): our 11-02/03 deletes + elapsed ~10-day guest
+  purge; gofile now premium-walls third-party queries so no external
+  re-confirm is possible); (3) universal-APK crash triage was already
+  root-caused 2026-11-03 (slim leg stays dead, full APK passes all
+  six ink gates, sha256 matches SHA256SUMS) — remaining input is the
+  tester's device-launch confirmation (external, RAFI/munna), nothing
+  codeable in-sandbox; (4) Aarong gate-page review = boarded on
+  website as TODO — the original owner reference is on NO board or
+  repo surface (searched 2026-11-14, zero hits), needs the owner to
+  re-share the link. W-4 cross-note: the six AE FRs were filed in
+  PARALLEL by two Lead sessions (issues #19-24 vs #25-30) — our
+  copies closed as duplicates pointing at #25-30, which the website
+  board references. Row stays TODO only for the owner-input item (4)
+  + the external tester confirmation (3).
 
 ** TODO client-demands-checklist-closure — map docs/CLIENT-DEMANDS.md 15-item checklist to AE modules, gaps become build rows (from the owner's pasted Bangla admin-panel spec) :BE:
 :PROPERTIES:
