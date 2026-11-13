@@ -328,3 +328,51 @@ describe("lifecycle discovery (FR-R001)", () => {
     expect(out.models.map((m) => m.id)).toEqual(["orders"]);
   });
 });
+
+describe("changelist sorting discovery (django.contrib.admin parity)", () => {
+  /** Minimal doc: one list model whose GET optionally documents `ordering`. */
+  function docWithOrdering(ordering?: boolean) {
+    const get: Record<string, any> = {
+      responses: { "200": { content: { "application/json": { schema: { $ref: "#/components/schemas/PaginatedThingList" } } } } },
+    };
+    if (ordering) {
+      get.parameters = [{ name: "ordering", in: "query", required: false, schema: { type: "string" } }];
+    }
+    return {
+      paths: {
+        "/api/things/": {
+          get,
+          post: { requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/ThingRequest" } } } } },
+        },
+      },
+      components: {
+        schemas: {
+          Thing: { properties: { id: { type: "integer", readOnly: true }, name: { type: "string" } } },
+          ThingRequest: { properties: { name: { type: "string" } }, required: ["name"] },
+          PaginatedThingList: {
+            properties: { results: { type: "array", items: { $ref: "#/components/schemas/Thing" } } },
+          },
+        },
+      },
+    };
+  }
+
+  it("binds ordering when the list operation documents the param", () => {
+    expect(normalizeOpenAPI(docWithOrdering(true)).byId.things.ordering).toBe(true);
+  });
+
+  it("leaves ordering undefined without the documented param", () => {
+    // The evidence law: no documented param -> no sortable headers and no
+    // param ever sent (the client never fires a query the document does
+    // not promise).
+    expect(normalizeOpenAPI(docWithOrdering()).byId.things.ordering).toBeUndefined();
+  });
+
+  it("the live rig documents ordering on every shop model (OrderingFilter)", () => {
+    // Captured AFTER the rig gained the OrderingFilter backend — a
+    // recapture that drops it is exactly what this assertion must catch.
+    for (const id of ["products", "categories", "customers", "orders", "audit"]) {
+      expect(schema.byId[id]?.ordering, id).toBe(true);
+    }
+  });
+});

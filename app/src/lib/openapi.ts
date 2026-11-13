@@ -227,6 +227,13 @@ export function normalizeOpenAPI(doc: any): AdminSchema {
     const historyPathItem = paths[`${detailPath}history/`];
     const serverHistory = historyPathItem?.get && !historyPathItem?.post ? `${detailPath}history/` : undefined;
 
+    // Changelist sorting (django.contrib.admin parity): bound ONLY when the
+    // list operation documents an `ordering` query parameter. A backend that
+    // does not document it gets no sortable headers and no param sent —
+    // the client never fires a query the document does not promise.
+    const listParams: Array<any> = pathItem?.get?.parameters ?? [];
+    const serverOrdering = listParams.some((p) => p?.in === "query" && p?.name === "ordering");
+
     models.push({
       id,
       name: titleCase(singular),
@@ -239,6 +246,7 @@ export function normalizeOpenAPI(doc: any): AdminSchema {
       ...(serverExport ? { exportPath: serverExport } : {}),
       ...(serverTransition ? { transitionPath: serverTransition } : {}),
       ...(serverHistory ? { historyPath: serverHistory } : {}),
+      ...(serverOrdering ? { ordering: true } : {}),
     });
   }
 

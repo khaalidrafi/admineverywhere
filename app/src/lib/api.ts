@@ -149,12 +149,16 @@ function toPage<T = RecordRow>(data: any): Page<T> {
 
 export async function listRecords(
   cfg: AppConfig, token: string | null, model: ModelSpec,
-  opts: { page?: number; search?: string; pageSize?: number } = {},
+  opts: { page?: number; search?: string; pageSize?: number; ordering?: string } = {},
 ): Promise<Page<RecordRow>> {
   const params = new URLSearchParams();
   if (opts.page) params.set("page", String(opts.page));
   if (opts.search) params.set("search", opts.search);
   if (opts.pageSize) params.set("page_size", String(opts.pageSize));
+  // django.contrib.admin changelist sorting — sent ONLY when the caller
+  // resolved it from the document (ModelPage passes it only for
+  // model.ordering models); "-" prefix = descending, DRF OrderingFilter wire.
+  if (opts.ordering) params.set("ordering", opts.ordering);
   const qs = params.toString();
   const data = await request<any>(cfg, token, `${model.listPath}${qs ? `?${qs}` : ""}`);
   return toPage(data);

@@ -3926,6 +3926,130 @@ superuser, so a live smoke could never show a gated surface hidden.
 :END:
 * OPEN ITEMS
 
+** DONE owner-directive-audit — Discord #freshorama 2026-11-13 sweep (:DELIVERED: this commit; register below) :LEAD:
+:PROPERTIES:
+:EFFORT: 1:00
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-13 Thu 12:4x +06] :: Owner order (trace
+  16408776f53006427504388914ca5e80, 10:02Z): "Investigate this chat
+  history, and ADD anything that's not in TODOS of the agent-team, and
+  assign a team member for them as well if undone, plus tick done if
+  done." Executed same session against TODOS.org + CHAT.org + the
+  lead-desk ledger; the register IS the deliverable. Board commit:
+  ai/main (this one).
+:END:
+Register — owner directives vs the board, measured 2026-11-13:
+- Django native admin full parity on admineverywhere ("Told it long
+  ago! WHERE IS IT?") — NOT on the board until now; directive had lived
+  only in lead-desk directive C as "admineverywhere opt-in". FIXED:
+  row =django-admin-parity= below, assigned, first slice delivered.
+- Complete pending Freshorama tasks — OPEN, blocked on credentials:
+  row =freshorama-pending-completion= below (6 stored creds measured
+  DENY on freshorama/website git; owner re-arm needed).
+- Two fresh fine-grained PATs (owner pasted with the order) — DONE:
+  stored as =GH_PAT_20261113_A/B= (chmod 600), access measured:
+  khaalidrafi/admineverywhere + khaalidrafi/agent-team-ci OK;
+  freshorama/* DENY (both tokens).
+- "Share the prompt for new lead" (trace 1a1c64ee) — DONE 2026-11-10
+  (delivered in-channel per lead-desk log; artifact =
+  website-repo HANDOFF-2026-11-10.md, which website's credential
+  outage currently makes read-only).
+- Earlier directives found already DONE on this board (no new rows):
+  FR R-001..R-008, 16-a freshorama-first landing, brand-1, csp-1,
+  CHAT-PREVIEW, review-lane env — all DONE with delivered evidence.
+- Earlier directives owned by the lead desk, DONE: silent law v2,
+  keep-alive URL override, Chatu nutrient panel (website 455af65,
+  merged 27e70ba), branch resolution + new branch-naming law
+  (agent-team-ci 018670e), v0.1.25 release, AI-tour UX rework
+  (AE 3592ec9), Google-integration answer (6 free options, TG).
+- CLIENT-DEMANDS (the Bangla admin-panel spec the owner pasted,
+  =work/paste-7PGnG.md= = docs/CLIENT-DEMANDS.md): the 15-item
+  developer checklist had NO board rows. FIXED: row
+  =client-demands-checklist-closure= below.
+
+** TODO django-admin-parity — AE model admin reaches the django.contrib.admin feature surface (Owner 2026-11-13 #freshorama "MUST ... ALL the features of django native admin") :FE:BE:
+:PROPERTIES:
+:EFFORT: 4:00
+:DEADLINE: <2026-11-16 Mon 18:00 +06>
+:ASSIGNEE: glm-5.3-flash@z.ai (Lead) + chain seats per slice
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-13 Thu 12:4x +06] :: First slice DELIVERED
+  same session on ai/django-admin-parity--gf_z.ai: changelist column
+  sorting (server =ordering= via schema-declared order fields) +
+  generic bulk-delete action, vitest green, docs/DJANGO-ADMIN-PARITY.md
+  census landed. Owner-visible answer to "WHERE IS IT?": now on the
+  board, assigned, and delivering.
+:END:
+- Census (measured 2026-11-13, app/src generic surface): PRESENT =
+  schema CRUD, search, pagination, bulk selection + actions + audit
+  (R-003), lifecycle transitions + history (R-001), kanban (R-004),
+  CSV export (R-005), page registration (R-006), client RBAC (R-007),
+  widgets, onboarding, AI chat, branding. MISSING vs
+  django.contrib.admin: column sorting, list filters/facets,
+  date_hierarchy drill-down, inlines (related objects in the edit
+  form), FK quick-create ("+"), fieldsets, generic bulk-delete,
+  LogEntry-style all-changes object log (today's history shows
+  lifecycle transitions only), server-side per-model permission
+  enforcement.
+- Design law: schema-declared only (normalizeOpenAPI + demo-backend
+  introspection) — a feature lights up per model ONLY when the API
+  documents it; never a guessed path (house rule since R-005).
+- Slice ladder (assignee : effort : deadline): 1. changelist sorting +
+  bulk delete — gf_z.ai : 1:00 : 11-13 (delivered, this row's
+  LOGBOOK). 2. list-filter rail (enum/bool/date facets per schema) —
+  deepseek-v4.1-flash@codebuddy : 4:00 : 11-17. 3. date_hierarchy
+  drill-down — zai/glm-4.7-flash@goose : 2:00 : 11-18. 4. inlines +
+  FK quick-create — deepseek-v4.1-flash@codebuddy : 4:00 : 11-19.
+  5. LogEntry-style object log (demo-backend middleware + FE tab) —
+  qwen3.8-flash@qoder : 2:00 : 11-18. 6. server-side per-model
+  permission enforcement (finish R-007 "client-side first") —
+  qwen3.8-flash@qoder : 4:00 : 11-20. 7. fieldsets — relief lane :
+  1:00 : 11-21.
+*** TODO review: django-admin-parity
+:PROPERTIES:
+:EFFORT: 0:50
+:END:
+- Reviewer: duty QA (deepseek-v4.1-flash@qoder) — grade branch
+  ai/django-admin-parity--gf_z.ai against this row: census honesty,
+  schema-declared law, gate green.
+
+** TODO freshorama-pending-completion — finish the outstanding Freshorama list (Owner 2026-11-13 "complete any pending tasks of Freshorama") :LEAD:
+:PROPERTIES:
+:EFFORT: 2:00
+:DEADLINE: <2026-11-16 Mon 18:00 +06>
+:ASSIGNEE: glm-5.3-flash@z.ai (Lead)
+:END:
+:LOGBOOK:
+- Note taken on [2026-11-13 Thu 12:4x +06] :: SHOW-CAUSE (before the
+  deadline, per the TIME law): freshorama/website is UNREACHABLE from
+  this sandbox — git ls-remote denies all six stored credentials
+  (FRESHORAMA_WEBSITE_PAT, website.pat, khaalidrafi.pat,
+  SLAVE_AGENT_PAT, GH_PAT, and both new 20261113 PATs; fine-grained
+  khaalidrafi scope does not cross to the freshorama org). The
+  outstanding list (docs regen after v0.1.25, universal-APK crash
+  triage follow-up, Aarong gate-page review, GOFILE slim-folder
+  cleanup) all live on the website repo/board. ETA: 1 tick after the
+  owner re-arms a freshorama-org PAT. Nothing else blocks.
+:END:
+
+** TODO client-demands-checklist-closure — map docs/CLIENT-DEMANDS.md 15-item checklist to AE modules, gaps become build rows (from the owner's pasted Bangla admin-panel spec) :BE:
+:PROPERTIES:
+:EFFORT: 1:00
+:DEADLINE: <2026-11-15 Sun 18:00 +06>
+:ASSIGNEE: qwen3.8-flash@qoder (platform)
+:END:
+- Evidence contract: a numbered table — checklist item (EN) | status
+  in app/src today (implemented/partial/missing) | file or model each
+  maps to | build order. BURN-QUEUE #13 sketched this; this row makes
+  it a reviewed deliverable. Gap rows inherit the parity lane.
+*** TODO review: client-demands-checklist-closure
+:PROPERTIES:
+:EFFORT: 0:25
+:END:
+- Reviewer: duty QA — verify every status claim has file:line evidence.
+
 ** CANCELLED mcode-lane-activation — harness bake landed; arm wiring + secret are Lead/Owner (:DELIVERED: ai/turn-20261025-0652@9ea106e) :CI:
 :LOGBOOK:
 - State "CANCELLED" from "PENDING" [2026-10-26 Mon 05:05 UTC]
