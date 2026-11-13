@@ -202,3 +202,29 @@ describe("fetchCsv (FR-R005 layer 2)", () => {
     expect(out.text.startsWith("﻿")).toBe(true);
   });
 });
+
+describe("changelist ordering (django.contrib.admin parity)", () => {
+  const MODEL = { id: "items", listPath: "/api/items/", detailPath: "/api/items/{id}/", fields: [], byName: {}, name: "Item", singular: "item", labelField: "id" } as any;
+
+  it("sends the documented ordering param through untouched", async () => {
+    let capturedUrl = "";
+    mockFetch.mockImplementationOnce((url: string) => {
+      capturedUrl = url;
+      return Promise.resolve({ ok: true, status: 200, text: async () => JSON.stringify([]) });
+    });
+    const { listRecords } = await import("../api");
+    await listRecords({ apiUrl: "http://localhost" } as any, null, MODEL, { ordering: "-price" });
+    expect(capturedUrl).toBe("http://localhost/api/items/?ordering=-price");
+  });
+
+  it("sends no ordering param when the caller resolved none", async () => {
+    let capturedUrl = "";
+    mockFetch.mockImplementationOnce((url: string) => {
+      capturedUrl = url;
+      return Promise.resolve({ ok: true, status: 200, text: async () => JSON.stringify([]) });
+    });
+    const { listRecords } = await import("../api");
+    await listRecords({ apiUrl: "http://localhost" } as any, null, MODEL, {});
+    expect(capturedUrl).toBe("http://localhost/api/items/");
+  });
+});

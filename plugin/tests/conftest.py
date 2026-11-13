@@ -29,6 +29,9 @@ DEMO_RIG_MODULES = {
     "test_rbac_roles",
     "test_rbac_permissions",
     "test_seed_demo",
+    # changelist sorting (?ordering= contract + schema documentation) runs
+    # against the rig because the OrderingFilter lives on the shop viewsets.
+    "test_changelist_ordering",
     # build_mcp generates from the project's OpenAPI document, so its tests
     # need core.urls (the /api/ router) + the demo SPECTACULAR policy.
     "test_build_mcp",
