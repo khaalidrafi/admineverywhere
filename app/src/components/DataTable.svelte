@@ -20,6 +20,16 @@
     onexport,
     onserverexport,
     exporting = false,
+    /** django.contrib.admin changelist sorting — bound per model by the
+     *  document (model.ordering): headers become sort toggles when true. */
+    ordering = false,
+    sortField = null,
+    sortDir = "asc",
+    onsort,
+    /** generic delete-selected (admin actions parity): bound by ModelPage;
+     *  its presence lights the selection column even with no registered
+     *  bulk actions, and the confirm + batch DELETE live in the page. */
+    onbulkdelete,
   }: {
     model: ModelSpec;
     rows: RecordRow[];
@@ -40,6 +50,11 @@
      *  endpoint (model.exportPath) — the whole collection, flattened. */
     onserverexport?: () => void;
     exporting?: boolean;
+    ordering?: boolean;
+    sortField?: string | null;
+    sortDir?: "asc" | "desc";
+    onsort?: (field: string) => void;
+    onbulkdelete?: (rows: RecordRow[]) => void;
   } = $props();
 
   const columns = $derived(model.fields.filter((f) => f.type !== "json").slice(0, 6));
@@ -53,6 +68,9 @@
   let selectedIds = $state<Set<string | number>>(new Set());
   const selectedRows = $derived(rows.filter((row) => row.id !== undefined && selectedIds.has(row.id)));
   const allSelected = $derived(rows.length > 0 && selectedRows.length === rows.length);
+  /** Selection lights with registered bulk actions OR the generic
+   *  delete-selected binding — a model with neither has no checkboxes. */
+  const canSelect = $derived(bulkActions.length > 0 || onbulkdelete !== undefined);
 
   function toggleRow(row: RecordRow) {
     const next = new Set(selectedIds);
@@ -64,6 +82,13 @@
 
   function toggleAll() {
     selectedIds = allSelected ? new Set() : new Set(rows.map((row) => row.id).filter((id) => id !== undefined));
+  }
+
+  /** Header sort toggle: aria-sort carries the state for AT users, the
+   *  arrow only marks the ACTIVE column. */
+  function ariaSort(field: string): "ascending" | "descending" | undefined {
+    if (!ordering || sortField !== field) return undefined;
+    return sortDir === "asc" ? "ascending" : "descending";
   }
 </script>
 
@@ -86,7 +111,7 @@
       {/if}
     </div>
   {/if}
-  {#if bulkActions.length > 0 && selectedRows.length > 0}
+  {#if (bulkActions.length > 0 || onbulkdelete) && selectedRows.length > 0}
     <div class="flex flex-wrap items-center gap-2 border-b border-text/10 bg-text/5 px-4 py-2 text-sm">
       <span class="text-text/60">{selectedRows.length} selected</span>
       {#each bulkActions as bulk (bulk.id)}
@@ -94,6 +119,12 @@
           {bulk.meta.label}
         </button>
       {/each}
+      {#if onbulkdelete}
+        <button class="btn btn-ghost px-3 py-1.5 text-xs hover:!border-error-line hover:text-error"
+                onclick={() => onbulkdelete(selectedRows)}>
+          Delete selected
+        </button>
+      {/if}
       <button class="btn btn-ghost px-3 py-1.5 text-xs" onclick={() => (selectedIds = new Set())}>Clear</button>
     </div>
   {/if}
@@ -101,14 +132,25 @@
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-text/10 text-left text-xs uppercase tracking-wider text-text/40">
-          {#if bulkActions.length > 0}
+          {#if canSelect}
             <th class="w-8 px-4 py-3">
               <input type="checkbox" class="accent-primary" checked={allSelected} onchange={toggleAll}
                      aria-label="Select all rows" />
             </th>
           {/if}
           {#each columns as col (col.name)}
-            <th class="px-4 py-3 font-medium">{col.name.replace(/_/g, " ")}</th>
+            <th class="px-4 py-3 font-medium" aria-sort={ariaSort(col.name)}>
+              {#if ordering && onsort}
+                <button class="inline-flex items-center gap-1 hover:text-text"
+                        onclick={() => onsort(col.name)}
+                        title="Sort by {col.name}">
+                  {col.name.replace(/_/g, " ")}
+                  {#if sortField === col.name}<span aria-hidden="true">{sortDir === "asc" ? "↑" : "↓"}</span>{/if}
+                </button>
+              {:else}
+                {col.name.replace(/_/g, " ")}
+              {/if}
+            </th>
           {/each}
           <th class="px-4 py-3 text-right font-medium">Actions</th>
         </tr>
@@ -117,7 +159,7 @@
         {#if loading}
           {#each Array(6) as _, r (r)}
             <tr class="border-b border-text/5">
-              {#if bulkActions.length > 0}<td class="px-4 py-3"></td>{/if}
+              {#if canSelect}<td class="px-4 py-3"></td>{/if}
               {#each columns as col (col.name)}
                 <td class="px-4 py-3"><div class="skeleton h-4 w-24"></div></td>
               {/each}
@@ -126,14 +168,14 @@
           {/each}
         {:else if rows.length === 0}
           <tr>
-            <td colspan={columns.length + 1 + (bulkActions.length > 0 ? 1 : 0)} class="px-4 py-12 text-center text-text/40">
+            <td colspan={columns.length + 1 + (canSelect ? 1 : 0)} class="px-4 py-12 text-center text-text/40">
               No records found{#if rows.length === 0 && model}. Create the first one above.{/if}
             </td>
           </tr>
         {:else}
           {#each rows as row (row.id ?? JSON.stringify(row))}
             <tr class="border-b border-text/5 transition-colors hover:bg-text/5">
-              {#if bulkActions.length > 0}
+              {#if canSelect}
                 <td class="px-4 py-3">
                   <input type="checkbox" class="accent-primary"
                          checked={row.id !== undefined && selectedIds.has(row.id)}

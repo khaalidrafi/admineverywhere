@@ -48,6 +48,12 @@ export interface ModelSpec {
    *  buttons — the same evidence law as exportPath and mePath. */
   transitionPath?: string;
   historyPath?: string;
+  /** django.contrib.admin changelist sorting: TRUE only when the document's
+   *  list GET operation carries an `ordering` query parameter (an
+   *  OrderingFilter backend or equivalent). No documented param -> no
+   *  sortable headers and the client never sends one (evidence law, same
+   *  rule as exportPath/transitionPath). */
+  ordering?: boolean;
 }
 
 export interface AdminSchema {

@@ -261,17 +261,21 @@ describe("mounted action registry — the drop-in buttons and the bytes they sen
     expect(JSON.parse(initOf("/bulk_flag/")!.body)).toEqual({ ids: [7], reason: "quarterly sweep" });
   });
 
-  it("a model with no registered action renders no action button and no selection column", async () => {
+  it("a model with no registered action renders no action button but keeps the generic selection column", async () => {
     route();
     const { host } = renderPage(LIVE, "products");
     await vi.waitFor(() => {
       flushSync(() => {});
       expect(host.textContent).toContain("Mango");
     });
-    // meta.model "orders" scopes both reference actions; products must stay plain CRUD
+    // meta.model "orders" scopes both reference actions; products must stay
+    // plain CRUD for ACTIONS — but django.contrib.admin parity binds the
+    // generic delete-selected action to every model, so the selection column
+    // lights even here (checkboxes = rows).
     expect(byLabel(host, "Flag")).toEqual([]);
     expect(byLabel(host, "Flag batch")).toEqual([]);
-    expect(host.querySelectorAll('input[type="checkbox"]').length).toBe(0);
+    // 2 = the select-all header box + the one row's box
+    expect(host.querySelectorAll('input[type="checkbox"]').length).toBe(2);
     expect(flagUrls()).toEqual([]);
     expect(bulkUrls()).toEqual([]);
   });
@@ -286,7 +290,10 @@ describe("mounted action registry — the drop-in buttons and the bytes they sen
     });
     // bulk_flag.ts declares roles: ["managers"]; an auditor keeps the record
     // button and loses the batch one — presentation only, the server still gates.
+    // The selection column itself stays (the generic delete-selected is not
+    // role-scoped; the server is its gate), so 1 checkbox for the 1 row.
     expect(byLabel(host, "Flag batch")).toEqual([]);
-    expect(host.querySelectorAll('input[type="checkbox"]').length).toBe(0);
+    // 2 = the select-all header box + the one row's box
+    expect(host.querySelectorAll('input[type="checkbox"]').length).toBe(2);
   });
 });
