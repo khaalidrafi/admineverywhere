@@ -11,6 +11,15 @@
                 "description": "Append-only audit log (FR-R003): GET list + POST append, nothing else.\n\nNo update/delete mixins exist, so PUT/PATCH/DELETE answer 405 by\nconstruction — the log can only grow. Entries read newest-first\n(triage order — the R-003 ordering ruling; R-001's history replays\noldest-first). Optional ``?object_type=`` / ``?object_id=`` filters\nback the record sub-view and the R-007 activity-log screen. POST\nnever trusts the client with ``actor``: perform_create derives it\nfrom the authenticated request.",
                 "parameters": [
                     {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "page",
                         "required": false,
                         "in": "query",
@@ -134,8 +143,17 @@
         "/api/categories/": {
             "get": {
                 "operationId": "categories_list",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "page",
                         "required": false,
@@ -169,7 +187,7 @@
             },
             "post": {
                 "operationId": "categories_create",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "tags": [
                     "categories"
                 ],
@@ -215,7 +233,7 @@
         "/api/categories/{id}/": {
             "get": {
                 "operationId": "categories_retrieve",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -250,7 +268,7 @@
             },
             "put": {
                 "operationId": "categories_update",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -305,7 +323,7 @@
             },
             "patch": {
                 "operationId": "categories_partial_update",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -359,7 +377,7 @@
             },
             "delete": {
                 "operationId": "categories_destroy",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -389,8 +407,17 @@
         "/api/customers/": {
             "get": {
                 "operationId": "customers_list",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "page",
                         "required": false,
@@ -424,7 +451,7 @@
             },
             "post": {
                 "operationId": "customers_create",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "tags": [
                     "customers"
                 ],
@@ -470,7 +497,7 @@
         "/api/customers/{id}/": {
             "get": {
                 "operationId": "customers_retrieve",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -505,7 +532,7 @@
             },
             "put": {
                 "operationId": "customers_update",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -560,7 +587,7 @@
             },
             "patch": {
                 "operationId": "customers_partial_update",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -614,7 +641,7 @@
             },
             "delete": {
                 "operationId": "customers_destroy",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -672,8 +699,17 @@
         "/api/orders/": {
             "get": {
                 "operationId": "orders_list",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "page",
                         "required": false,
@@ -707,7 +743,7 @@
             },
             "post": {
                 "operationId": "orders_create",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "tags": [
                     "orders"
                 ],
@@ -753,7 +789,7 @@
         "/api/orders/{id}/": {
             "get": {
                 "operationId": "orders_retrieve",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -788,7 +824,7 @@
             },
             "put": {
                 "operationId": "orders_update",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -843,7 +879,7 @@
             },
             "patch": {
                 "operationId": "orders_partial_update",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -897,7 +933,7 @@
             },
             "delete": {
                 "operationId": "orders_destroy",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -994,6 +1030,15 @@
                         },
                         "description": "A unique integer value identifying this order.",
                         "required": true
+                    },
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "tags": [
@@ -1083,6 +1128,15 @@
                 "operationId": "orders_bulk_flag_create",
                 "description": "Bulk-scope custom action (FR-R003 reference): flag many orders with one reason. Requires the `managers` role (FR-R007 phase b — the server is the actual gate; the client's bulk_flag button is hidden without the claim, and the API now answers 403 without it too). Appends one audit entry per order; unknown ids answer 400 with {reason} listing them. Duplicate ids collapse to one entry per order.",
                 "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "page",
                         "required": false,
@@ -1178,8 +1232,17 @@
         "/api/products/": {
             "get": {
                 "operationId": "products_list",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "page",
                         "required": false,
@@ -1213,7 +1276,7 @@
             },
             "post": {
                 "operationId": "products_create",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "tags": [
                     "products"
                 ],
@@ -1259,7 +1322,7 @@
         "/api/products/{id}/": {
             "get": {
                 "operationId": "products_retrieve",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1294,7 +1357,7 @@
             },
             "put": {
                 "operationId": "products_update",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1349,7 +1412,7 @@
             },
             "patch": {
                 "operationId": "products_partial_update",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",
@@ -1403,7 +1466,7 @@
             },
             "delete": {
                 "operationId": "products_destroy",
-                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).",
+                "description": "Generic: filter across `search_fields` with ?search=<term> (icontains).\n\nChangelist sorting (django.contrib.admin parity): each concrete viewset\ndeclares an OrderingFilter with an explicit `ordering_fields` allowlist —\nthe client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it\nagainst the allowlist (400 on anything else) and drf-spectacular documents\nthe parameter, which is what lights the client's sortable headers.",
                 "parameters": [
                     {
                         "in": "path",

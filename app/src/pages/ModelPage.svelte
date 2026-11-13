@@ -48,6 +48,11 @@
   let exporting = $state(false);
   let searchInput = $state("");
   let searchTerm = $state("");
+  /** django.contrib.admin changelist sorting: active column + direction.
+   *  Lit only for models whose document carries an `ordering` param
+   *  (model.ordering) — a backend that documents none gets no headers. */
+  let sortField = $state<string | null>(null);
+  let sortDir = $state<"asc" | "desc">("asc");
   let formOpen = $state(false);
   let editing = $state<RecordRow | null>(null);
   let reqId = 0; // drop stale responses
@@ -78,6 +83,10 @@
         // a board groups one page of records into columns; ten rows spread over
         // four columns says nothing, so the board asks for a wider page
         pageSize: view === "kanban" ? BOARD_PAGE_SIZE : undefined,
+        // changelist sorting: the documented param, DRF OrderingFilter wire
+        ordering: model.ordering && sortField
+          ? `${sortDir === "desc" ? "-" : ""}${sortField}`
+          : undefined,
       });
       if (mine !== reqId) return; // a newer request superseded this one
       rows = p.results;
@@ -105,6 +114,8 @@
     page = 1;
     searchInput = "";
     searchTerm = "";
+    sortField = null;
+    sortDir = "asc";
     // an open editor belongs to the module it was opened from: `editing` is a
     // row of the OLD model while `model` is now the new one, so leaving the
     // modal up would PUT old-model bytes onto a new-model detail path
@@ -126,6 +137,32 @@
       navigate(`#/m/${modelId}`);
     }
   });
+
+  /** django.contrib.admin's delete-selected action, generic: the selection
+   *  bar hands the rows over, one confirm guards the batch, and each record
+   *  goes out as a DELETE on its documented detail path (the server stays
+   *  the gate — a refusal on one row fails that row only). */
+  async function onBulkDelete(selected: RecordRow[]) {
+    if (!model || selected.length === 0) return;
+    if (!confirm(`Delete ${selected.length} ${model.name} record(s)? This cannot be undone.`)) return;
+    let deleted = 0;
+    let failed = 0;
+    for (const row of selected) {
+      if (row.id === undefined) continue;
+      try {
+        await deleteRecord(effectiveConfig(), get(app).token || null, model, row.id as any);
+        deleted += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    if (failed > 0) toast("error", `${deleted} deleted, ${failed} failed`);
+    else toast("success", `${deleted} ${model.name} record${deleted === 1 ? "" : "s"} deleted`);
+    if (deleted > 0) {
+      if (rows.length === deleted && page > 1) page -= 1; // effect reloads
+      else void load();
+    }
+  }
 
   async function onDelete(row: RecordRow) {
     if (!model || row.id === undefined) return;
@@ -159,6 +196,20 @@
   function clearSearch() {
     searchInput = "";
     onSearch("");
+  }
+
+  /** Same column again flips the direction; a new column starts ascending.
+   *  Every change resets to page 1 (a sorted page 3 of the old order is a
+   *  different collection, not a page of the new one). */
+  function toggleSort(field: string) {
+    if (!model?.ordering) return;
+    if (sortField === field) {
+      sortDir = sortDir === "asc" ? "desc" : "asc";
+    } else {
+      sortField = field;
+      sortDir = "asc";
+    }
+    page = 1;
   }
 
   /** FR-R005 layer 1 — the table's own data, client-side, no server call.
@@ -408,7 +459,10 @@
       <DataTable {model} {rows} {loading} onedit={openEdit} ondelete={onDelete} ontransition={onTransition} onshowhistory={showHistory}
                  actions={recordActions} bulkActions={bulkActions} onaction={requestAction}
                  onexport={onExportVisible} onserverexport={model.exportPath ? onServerExport : undefined}
-                 {exporting} />
+                 {exporting}
+                 ordering={model.ordering ?? false}
+                 sortField={sortField} sortDir={sortDir} onsort={toggleSort}
+                 onbulkdelete={onBulkDelete} />
     {/if}
 
     <!-- pagination -->
