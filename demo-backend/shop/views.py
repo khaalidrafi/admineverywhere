@@ -28,6 +28,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import BaseRenderer, BrowsableAPIRenderer, JSONRenderer
@@ -93,9 +94,18 @@ class CSVTextRenderer(BaseRenderer):
 
 
 class SearchableModelViewSet(viewsets.ModelViewSet):
-    """Generic: filter across `search_fields` with ?search=<term> (icontains)."""
+    """Generic: filter across `search_fields` with ?search=<term> (icontains).
+
+    Changelist sorting (django.contrib.admin parity): each concrete viewset
+    declares an OrderingFilter with an explicit `ordering_fields` allowlist —
+    the client sends ?ordering=<field> / ?ordering=-<field>, DRF validates it
+    against the allowlist (400 on anything else) and drf-spectacular documents
+    the parameter, which is what lights the client's sortable headers.
+    """
 
     search_fields: list[str] = []
+    filter_backends = [OrderingFilter]
+    ordering_fields: list[str] = []
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -114,24 +124,28 @@ class CategoryViewSet(SearchableModelViewSet):
     queryset = Category.objects.order_by("id")
     serializer_class = CategorySerializer
     search_fields = ["name"]
+    ordering_fields = ["id", "name", "created_at"]
 
 
 class ProductViewSet(SearchableModelViewSet):
     queryset = Product.objects.select_related("category").order_by("id")
     serializer_class = ProductSerializer
     search_fields = ["name", "description"]
+    ordering_fields = ["id", "name", "price", "stock", "is_active", "launch_date"]
 
 
 class CustomerViewSet(SearchableModelViewSet):
     queryset = Customer.objects.order_by("id")
     serializer_class = CustomerSerializer
     search_fields = ["name", "email"]
+    ordering_fields = ["id", "name", "email", "joined_on", "is_vip"]
 
 
 class OrderViewSet(SearchableModelViewSet):
     queryset = Order.objects.select_related("customer", "product").order_by("-id")
     serializer_class = OrderSerializer
     search_fields = ["notes", "status"]
+    ordering_fields = ["id", "status", "total", "created_at"]
 
     def perform_create(self, serializer):
         """Write the creation entry into the history trail (from_status="")."""
@@ -315,6 +329,10 @@ class AuditEntryViewSet(ListModelMixin, CreateModelMixin, viewsets.GenericViewSe
 
     queryset = AuditEntry.objects.select_related("actor")
     serializer_class = AuditEntrySerializer
+    # Sorting on the log itself (changelist parity): the default stays
+    # newest-first (the R-003 ruling below); ?ordering= re-sorts the read.
+    filter_backends = [OrderingFilter]
+    ordering_fields = ["id", "created_at", "action"]
 
     def get_queryset(self):
         qs = super().get_queryset()
