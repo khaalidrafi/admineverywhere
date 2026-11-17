@@ -16,6 +16,19 @@
  *  those three inputs; they add no input element.
  *
  *  Every entry speaks OpenAI /chat/completions (the app's single wire law).
+ *
+ *  Owner order 2026-11-18 ("audit and make necessary modifications to
+ *  admineverywhere for optional slave-agent integration"): the slave-agent
+ *  preset below is that integration — OPTIONAL, off until the user clicks
+ *  it.  slave-agent (khaalidrafi/slave-agent) serves an OpenAI-compatible
+ *  surface on http://127.0.0.1:8642/v1 (DEFAULT_PORT 8642, endpoints
+ *  /v1/models + /v1/chat/completions, Bearer-gated by API_SERVER_KEY when
+ *  one is configured — contract pinned in that repo's
+ *  tests/gateway/platforms/test_serve_openai_contract.py and exercised by
+ *  scripts/ci/serve_curl_smoke.sh).  The model id "slave-agent" is the
+ *  serve's own default route (its /v1/models catalog id), so a chat request
+ *  naming it rides the agent's configured model without any model_routes
+ *  setup; an empty API key works when the serve runs without API_SERVER_KEY.
  */
 
 export interface ProviderPreset {
@@ -88,9 +101,18 @@ export const AI_PRESETS: ProviderPreset[] = [
     keyless: true,
     note: "Your own machine — nothing leaves it. `ollama serve` must be running.",
   },
+  {
+    id: "slave-agent",
+    label: "slave-agent (local)",
+    baseUrl: "http://127.0.0.1:8642/v1",
+    model: "slave-agent",
+    apiKey: "",
+    keyless: true,
+    note: "Your own slave-agent serve (`slave serve`, port 8642). Leave the key empty unless the serve sets API_SERVER_KEY.",
+  },
 ];
 
-/** The three keyless presets, first-class (owner order: keyless APIs). */
+/** The keyless presets, first-class (owner order: keyless APIs). */
 export const KEYLESS_PRESETS: ProviderPreset[] = AI_PRESETS.filter((p) => p.keyless);
 
 export function presetById(id: string): ProviderPreset | undefined {
