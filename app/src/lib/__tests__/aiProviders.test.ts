@@ -11,9 +11,9 @@ import { describe, expect, it } from "vitest";
 import { AI_PRESETS, KEYLESS_PRESETS, presetById } from "../aiProviders";
 
 describe("aiProviders", () => {
-  it("offers the three cloud-keyless providers plus local Ollama", () => {
+  it("offers the cloud-keyless providers plus local Ollama and slave-agent", () => {
     const ids = KEYLESS_PRESETS.map((p) => p.id);
-    for (const want of ["kilo-free", "aihorde", "pollinations", "ollama"]) {
+    for (const want of ["kilo-free", "aihorde", "pollinations", "ollama", "slave-agent"]) {
       expect(ids, want).toContain(want);
     }
   });
@@ -48,6 +48,20 @@ describe("aiProviders", () => {
     expect(pol.baseUrl).toBe("https://text.pollinations.ai/openai");
     expect(pol.model).toBe("openai");
     expect(pol.apiKey).toBe("");
+  });
+
+  it("ollama preset stays local-loopback keyless", () => {
+    const ollama = presetById("ollama")!;
+    expect(ollama.baseUrl).toBe("http://localhost:11434/v1");
+    expect(ollama.keyless).toBe(true);
+  });
+
+  it("slave-agent preset targets the local serve contract (port 8642)", () => {
+    const sa = presetById("slave-agent")!;
+    expect(sa.baseUrl).toBe("http://127.0.0.1:8642/v1");
+    expect(sa.model).toBe("slave-agent");
+    expect(sa.apiKey).toBe("");
+    expect(sa.keyless).toBe(true);
   });
 
   it("lookup by id is exact", () => {
