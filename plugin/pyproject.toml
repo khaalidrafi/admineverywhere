@@ -16,11 +16,6 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
-# The in-process assistant (Owner decision 2026-11-05; slave-agent specs/014):
-# the panel imports the slave-agent core as a library through
-# admineverywhere.agent_embed. The branch is the GENERATED branded tree
-# (ai/slave-agent) — the artifact users install per FORK.org.
-agent = ["slave-agent @ git+https://github.com/khaalidrafi/slave-agent.git@ai/slave-agent"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
