@@ -31,8 +31,8 @@
   the widget/notification work remains unreleased until the Owner's
   word). PAT rotation (both tokens) remains recommended — Owner side.
 - LEAD TERMINATION — FULL HANDOVER (Owner order 2026-10-31 04:36Z,
-  #admincraft: "You are FIRED! He leads both teams! Write msg to
-  him."): this Lead is TERMINATED; the FRESHORAMA TEAM LEAD now leads
+  #admincraft: the freshorama Lead now leads both teams and takes over
+  the register): this Lead is TERMINATED; the FRESHORAMA TEAM LEAD now leads
   BOTH teams (this one and freshorama) and becomes the register's
   writer. This supersedes the note below — there is NO
   merger/executor continuation; glm-5.3-flash@z.ai signs off with the
@@ -350,9 +350,9 @@
 - Chain mechanics: turn -> finalize(auto-merge behind the landing gate ->
   stall accounting -> self-dispatch). Backoff after 4 no-progress
   segments. Tests red = chain halts + Lead paged.
-- Deadline rationale: Owner order 2026-10-20 19:21Z — "teamify
-  khaalidrafi/admincraft in parallel. I wanna see ALL its TODOs done by
-  the morning."
+- Deadline rationale: Owner order 2026-10-20 19:21Z — teamify
+  khaalidrafi/admincraft in parallel, with all its TODOs done by the
+  morning.
 - DUAL-REPO LEAD + CHAT ROUTING (Owner #hq 19:56Z): the Lead
   (glm-5.3-flash) serves BOTH repos (agent-team.el + admincraft); each
   repo's GLM team chat mirrors to its RESPECTIVE Discord channel —
